@@ -18,7 +18,7 @@ export function TopNav() {
         <nav className="top-nav__links" aria-label="Primary navigation">
           {links.map(([to, label]) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}
         </nav>
-        <span className="top-nav__meta">Stage Intelligence France · M2 2027</span>
+        <span className="top-nav__meta">Internship Intelligence France · M2 2027</span>
       </div>
     </header>
   );

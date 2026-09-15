@@ -1,5 +1,6 @@
 const exactTranslations: Record<string, string> = {
   'À candidater': 'To apply',
+  'Candidater': 'Apply',
   'Candidature envoyée': 'Application sent',
   'Relance': 'Follow-up',
   'Entretien': 'Interview',

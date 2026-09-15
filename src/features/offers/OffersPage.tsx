@@ -62,7 +62,7 @@ export function OffersPage() {
   return (
     <section className="page offers-page">
       <div className="offers-hero">
-        <div><p className="eyebrow">M2 · Nationwide France</p><h1>Find the internship worth applying for.</h1><p>{offers.length} opportunities monitored · ranked by relevance, freshness and quality.</p></div>
+        <div><p className="eyebrow">M2 · ACROSS FRANCE</p><h1>Find the internship worth applying for.</h1><p>{offers.length} opportunities monitored · ranked by relevance, freshness and quality.</p></div>
       </div>
 
       {error && data ? <div className="stale-banner" role="status">Showing cached data — refresh failed. <button onClick={retry}>Try again</button></div> : null}
