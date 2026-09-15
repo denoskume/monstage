@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { OffersApiResponse } from '../api/contract';
-import { fetchOffers, loadCachedOffers } from '../api/client';
+import { fetchOffers } from '../api/client';
 
 export interface UseOffersState {
   data: OffersApiResponse | null;
@@ -10,7 +10,7 @@ export interface UseOffersState {
 }
 
 export function useOffers(): UseOffersState {
-  const [data, setData] = useState<OffersApiResponse | null>(() => loadCachedOffers());
+  const [data, setData] = useState<OffersApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshNonce, setRefreshNonce] = useState(0);
@@ -31,7 +31,7 @@ export function useOffers(): UseOffersState {
       })
       .catch((reason: unknown) => {
         if (!active) return;
-        setError(reason instanceof Error ? reason.message : 'Impossible de charger les offres.');
+        setError(reason instanceof Error ? reason.message : 'MonStage data is temporarily unavailable.');
       })
       .finally(() => {
         if (active) setLoading(false);
