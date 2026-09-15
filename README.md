@@ -1,48 +1,63 @@
 # MonStage
 
-**MonStage** is a responsive internship intelligence frontend for the existing **Stage Intelligence France** system. It turns the Google Sheet source of truth into a modern job-board experience optimized for desktop and mobile.
+**MonStage** is a private, responsive internship intelligence workspace built on top of the existing **Stage Intelligence France** data source. It turns a private Google Sheet into a modern job-board experience optimized for desktop and mobile while keeping runtime access restricted to one authorized Google account.
 
 ## What it includes
 
+- Google Sign-In gate for one authorized account
 - Job-board style offers list with desktop split view
 - Mobile one-column browsing and dedicated offer detail
-- Search, filters, sorting, and **Pour moi** ranking
+- Search, filters, sorting, and personalized ranking
 - Shortlist view
 - Application pipeline view
 - Compact decision dashboard
-- Cached-data fallback when the backend is temporarily unavailable
 - Responsive layouts from **360px** through large desktop screens
 - Structural dark-mode support
 
 ## Architecture
 
 ```text
-Private Google Sheet
-        ↓
+GitHub Pages — React / TypeScript / Vite
+        |
+        | Google Identity Services ID token
+        v
+Cloudflare Worker — authentication + authorization gateway
+        |
+        | server-only POST + gateway secret
+        v
 Google Apps Script Web App
-(read-only sanitized JSON/JSONP)
-        ↓
-React + TypeScript + Vite
-        ↓
-GitHub Pages
+        |
+        v
+Private Google Sheet — Stage Intelligence France
 ```
 
-The Google Sheet remains the operational source of truth. MonStage does not scrape job boards and does not write to the Sheet in V1.
+The browser never calls Apps Script directly in production. The Cloudflare Worker verifies the Google ID token, checks the configured single-user allowlist, and only then proxies a sanitized offers request to Apps Script. Direct Apps Script GET access returns no internship data.
 
-## Security and privacy
+## Security model
 
-The public repository must never contain:
+The public repository contains frontend and Worker source code, but no private runtime credentials.
 
-- the private spreadsheet ID
-- Google credentials or OAuth secrets
-- API credentials with write access
+Never commit:
+
+- private spreadsheet IDs
+- the authorized Google email address
+- Apps Script deployment URLs used by the Worker
+- `MONSTAGE_GATEWAY_SECRET` / `APPS_SCRIPT_GATEWAY_SECRET`
+- Cloudflare API tokens
+- Google OAuth client secrets
+- bearer tokens
 - `.env.local`
 - private notes from `Notes / stratégie`
-- automation email addresses or other personal data not intended for the public frontend
 
-The Apps Script endpoint returns only the explicitly approved fields in `src/api/contract.ts`. `Notes / stratégie` is intentionally omitted from the public payload.
+Public configuration may include:
 
-## Local setup
+- the Google OAuth **Web Client ID**
+- the public Cloudflare Worker origin
+- the GitHub Pages origin
+
+The Google OAuth client ID is intentionally public; authorization is enforced server-side by the Worker.
+
+## Local frontend setup
 
 Requirements: Node.js 22+ and npm.
 
@@ -51,10 +66,11 @@ npm install
 cp .env.example .env.local
 ```
 
-Set the API endpoint in `.env.local`:
+Set public development values in `.env.local`:
 
 ```bash
-VITE_MONSTAGE_API_URL=https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec
+VITE_GOOGLE_CLIENT_ID=YOUR_WEB_CLIENT_ID.apps.googleusercontent.com
+VITE_MONSTAGE_API_URL=https://YOUR_WORKER.workers.dev
 ```
 
 Then run:
@@ -63,45 +79,71 @@ Then run:
 npm run dev
 ```
 
+## Cloudflare Worker
+
+Worker source lives in `worker/`.
+
+```bash
+npm --prefix worker install
+npm run test:worker
+npm run typecheck:worker
+```
+
+Worker configuration:
+
+Public/non-secret bindings:
+
+- `GOOGLE_CLIENT_ID`
+- `ALLOWED_ORIGINS`
+
+Worker secrets:
+
+- `ALLOWED_EMAIL`
+- `APPS_SCRIPT_URL`
+- `APPS_SCRIPT_GATEWAY_SECRET`
+
+Deploy with Wrangler after configuring the bindings and secrets.
+
 ## Google Apps Script backend
 
-See [`apps-script/README.md`](apps-script/README.md) for the one-time deployment steps.
+See [`apps-script/README.md`](apps-script/README.md) for deployment instructions.
 
-In short:
+Required Script Properties:
 
-1. Create a standalone Apps Script project named **MonStage API**.
-2. Add the private spreadsheet ID as the Script Property `SPREADSHEET_ID`.
-3. Deploy `apps-script/Code.gs` as a read-only Web App.
-4. Put the resulting `/exec` URL in `.env.local` locally and in the GitHub repository variable `VITE_MONSTAGE_API_URL` for production.
+- `SPREADSHEET_ID`
+- `MONSTAGE_GATEWAY_SECRET`
 
-Never hard-code the spreadsheet ID in this repository.
-
-For the production GitHub Pages origin, MonStage uses a validated JSONP callback when the endpoint is a `script.google.com` Apps Script URL. This is a read-only transport workaround for Apps Script ContentService browser cross-origin limitations; non-Apps-Script endpoints continue to use normal `fetch()`.
+`MONSTAGE_GATEWAY_SECRET` must match the Worker secret `APPS_SCRIPT_GATEWAY_SECRET`. Apps Script serves offers only from a secret-gated POST request. Its direct GET endpoint returns no offers.
 
 ## Tests
 
 ```bash
 npm test
+npm run test:worker
+npm run typecheck:worker
 npm run build
 npm run test:e2e
 ```
 
-The E2E suite covers desktop Chrome, Pixel 7, and a 360×800 viewport, including horizontal-overflow checks.
+The E2E suite covers desktop Chrome, mobile Chrome, and a 360×800 viewport, including authentication and horizontal-overflow checks.
 
 ## Deployment
 
-GitHub Pages is deployed automatically from `main` using `.github/workflows/deploy-pages.yml`.
+GitHub Pages deploys from `main` through `.github/workflows/deploy-pages.yml`.
 
 Repository setting required once:
 
 - **Settings → Pages → Build and deployment → Source: GitHub Actions**
 
-Repository variable required once:
+Public GitHub Actions repository variables required:
 
-- `VITE_MONSTAGE_API_URL` → the deployed Apps Script `/exec` URL
+- `VITE_GOOGLE_CLIENT_ID` → Google OAuth Web Client ID
+- `VITE_MONSTAGE_API_URL` → public Cloudflare Worker origin
+
+The workflow explicitly rejects an Apps Script URL as `VITE_MONSTAGE_API_URL` and scans the production bundle for protected values before deployment.
 
 The Vite base path is `/monstage/`, and client routing uses `HashRouter` so direct navigation does not produce GitHub Pages 404 errors.
 
 ## Product name
 
-**MonStage — Mes opportunités de stage**
+**MonStage — Private internship intelligence workspace**
