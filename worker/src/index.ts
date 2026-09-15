@@ -1,16 +1,23 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
 import { fetchOffersFromAppsScript } from './appsScript';
+import { getCachedOffers, putCachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
+
+const OFFERS_CACHE_TTL_SECONDS = 300;
 
 export interface WorkerDependencies {
   verifyUser: (token: string, env: Env) => Promise<AuthorizedUser>;
   fetchOffers: (env: Env) => Promise<unknown>;
+  getCachedOffers: () => Promise<unknown | null>;
+  putCachedOffers: (payload: unknown, ttlSeconds: number) => Promise<void>;
 }
 
 const defaultDependencies: WorkerDependencies = {
   verifyUser: verifyAuthorizedUser,
   fetchOffers: fetchOffersFromAppsScript,
+  getCachedOffers,
+  putCachedOffers,
 };
 
 function bearerToken(request: Request): string | null {
@@ -77,7 +84,13 @@ export async function handleRequest(
   }
 
   try {
+    const cachedOffers = await dependencies.getCachedOffers();
+    if (cachedOffers !== null) {
+      return jsonResponse(cachedOffers, 200, origin);
+    }
+
     const offers = await dependencies.fetchOffers(env);
+    await dependencies.putCachedOffers(offers, OFFERS_CACHE_TTL_SECONDS);
     return jsonResponse(offers, 200, origin);
   } catch {
     return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin);
