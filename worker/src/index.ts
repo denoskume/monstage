@@ -1,15 +1,16 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
 import { fetchOffersFromAppsScript } from './appsScript';
-import { getCachedOffers, putCachedOffers } from './cache';
+import { getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
 
-const OFFERS_CACHE_TTL_SECONDS = 300;
+const OFFERS_CACHE_FRESHNESS_MS = 5 * 60 * 1000;
+const OFFERS_CACHE_RETENTION_SECONDS = 24 * 60 * 60;
 
 export interface WorkerDependencies {
   verifyUser: (token: string, env: Env) => Promise<AuthorizedUser>;
   fetchOffers: (env: Env) => Promise<unknown>;
-  getCachedOffers: () => Promise<unknown | null>;
+  getCachedOffers: () => Promise<CachedOffers | null>;
   putCachedOffers: (payload: unknown, ttlSeconds: number) => Promise<void>;
 }
 
@@ -43,6 +44,10 @@ function authErrorResponse(error: unknown, origin: string | null): Response {
     return jsonResponse({ error: 'ACCESS_DENIED' }, 403, origin);
   }
   return jsonResponse({ error: 'UNAUTHORIZED' }, 401, origin);
+}
+
+function isFresh(cached: CachedOffers): boolean {
+  return Date.now() - cached.cachedAt <= OFFERS_CACHE_FRESHNESS_MS;
 }
 
 export async function handleRequest(
@@ -83,16 +88,19 @@ export async function handleRequest(
     return jsonResponse({ user }, 200, origin);
   }
 
-  try {
-    const cachedOffers = await dependencies.getCachedOffers();
-    if (cachedOffers !== null) {
-      return jsonResponse(cachedOffers, 200, origin);
-    }
+  const cachedOffers = await dependencies.getCachedOffers();
+  if (cachedOffers && isFresh(cachedOffers)) {
+    return jsonResponse(cachedOffers.payload, 200, origin);
+  }
 
+  try {
     const offers = await dependencies.fetchOffers(env);
-    await dependencies.putCachedOffers(offers, OFFERS_CACHE_TTL_SECONDS);
+    await dependencies.putCachedOffers(offers, OFFERS_CACHE_RETENTION_SECONDS);
     return jsonResponse(offers, 200, origin);
   } catch {
+    if (cachedOffers) {
+      return jsonResponse(cachedOffers.payload, 200, origin);
+    }
     return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin);
   }
 }
