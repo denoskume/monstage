@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      VITE_GOOGLE_CLIENT_ID: 398882157701-3brttf6bps0ual14rfoh81qnu8d6ceq9.apps.googleusercontent.com
       VITE_MONSTAGE_API_URL: ${{ vars.VITE_MONSTAGE_API_URL }}
     steps:
       - uses: actions/checkout@v4
