@@ -4,13 +4,13 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-export function SearchBar({ value, onChange, placeholder = 'Rechercher un stage, une entreprise, une ville…' }: SearchBarProps) {
+export function SearchBar({ value, onChange, placeholder = 'Search internships, companies, cities…' }: SearchBarProps) {
   return (
     <label className="search-bar">
       <span aria-hidden="true" className="search-bar__icon">⌕</span>
-      <span className="sr-only">Rechercher dans les offres</span>
+      <span className="sr-only">Search job opportunities</span>
       <input value={value} onChange={(event: { target: { value: string } }) => onChange(event.target.value)} placeholder={placeholder} type="search" />
-      {value ? <button type="button" aria-label="Effacer la recherche" onClick={() => onChange('')}>×</button> : null}
+      {value ? <button type="button" aria-label="Clear search" onClick={() => onChange('')}>×</button> : null}
     </label>
   );
 }
