@@ -34,6 +34,14 @@ jobs:
               exit 1
               ;;
           esac
+      - name: Smoke test production auth gateway
+        run: |
+          status="$(curl -sS --retry 5 --retry-all-errors --max-time 20 -o /tmp/monstage-session.json -w '%{http_code}' "$VITE_MONSTAGE_API_URL/api/session")"
+          test "$status" = "401" || { echo "Expected unauthenticated gateway status 401, got $status"; cat /tmp/monstage-session.json; exit 1; }
+          if grep -q '"offers"' /tmp/monstage-session.json; then
+            echo "Unauthenticated gateway response exposed offers"
+            exit 1
+          fi
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Install Worker dependencies
