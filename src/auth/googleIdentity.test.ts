@@ -33,6 +33,26 @@ describe('Google Identity wrapper', () => {
     expect(onCredential).toHaveBeenCalledWith('google-id-token');
   });
 
+  test('concurrent renders leave exactly one Google sign-in button', async () => {
+    const initialize = vi.fn();
+    const renderButton = vi.fn((target: HTMLElement) => {
+      const button = document.createElement('button');
+      button.textContent = 'Sign in with Google';
+      target.appendChild(button);
+    });
+    (window as any).google = { accounts: { id: { initialize, renderButton, disableAutoSelect: vi.fn() } } };
+    const target = document.createElement('div');
+    target.appendChild(document.createElement('span'));
+
+    await Promise.all([
+      renderGoogleSignInButton(target, 'client-id.apps.googleusercontent.com', vi.fn()),
+      renderGoogleSignInButton(target, 'client-id.apps.googleusercontent.com', vi.fn()),
+    ]);
+
+    expect(target.querySelectorAll('button')).toHaveLength(1);
+    expect(target.children).toHaveLength(1);
+  });
+
   test('disables Google auto-select when signing out', () => {
     const disableAutoSelect = vi.fn();
     (window as any).google = { accounts: { id: { initialize: vi.fn(), renderButton: vi.fn(), disableAutoSelect } } };
