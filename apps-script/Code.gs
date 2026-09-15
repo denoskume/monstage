@@ -68,20 +68,32 @@ function mapOffer_(row, headerMap) {
   };
 }
 
-function isSafeJsonpCallback_(value) {
-  return typeof value === 'string' && /^[A-Za-z_$][0-9A-Za-z_$]*$/.test(value);
-}
-
-function createPayloadOutput_(payload, callback) {
-  if (callback && isSafeJsonpCallback_(callback)) {
-    return ContentService
-      .createTextOutput(callback + '(' + JSON.stringify(payload) + ');')
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-
+function jsonOutput_(payload) {
   return ContentService
     .createTextOutput(JSON.stringify(payload))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function secureEquals_(left, right) {
+  left = String(left || '');
+  right = String(right || '');
+  if (left.length !== right.length) return false;
+
+  var mismatch = 0;
+  for (var i = 0; i < left.length; i += 1) {
+    mismatch |= left.charCodeAt(i) ^ right.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+function readGatewaySecret_(e) {
+  if (!e || !e.postData || !e.postData.contents) return null;
+  try {
+    var body = JSON.parse(e.postData.contents);
+    return normalizeText_(body.gatewaySecret);
+  } catch (error) {
+    return null;
+  }
 }
 
 function getOffers_() {
@@ -104,23 +116,37 @@ function getOffers_() {
     });
 }
 
-function doGet(e) {
+function doGet() {
+  return jsonOutput_({
+    error: 'NOT_FOUND',
+    message: 'Not found'
+  });
+}
+
+function doPost(e) {
   try {
-    var payload = {
+    var expectedSecret = PropertiesService
+      .getScriptProperties()
+      .getProperty('MONSTAGE_GATEWAY_SECRET');
+    var providedSecret = readGatewaySecret_(e);
+
+    if (!expectedSecret || !secureEquals_(providedSecret, expectedSecret)) {
+      return jsonOutput_({
+        error: 'UNAUTHORIZED',
+        message: 'Unauthorized'
+      });
+    }
+
+    return jsonOutput_({
       generatedAt: new Date().toISOString(),
       source: 'Stage Intelligence France',
       offers: getOffers_()
-    };
-
-    var callback = e && e.parameter ? normalizeText_(e.parameter.callback) : null;
-    return createPayloadOutput_(payload, callback);
+    });
   } catch (error) {
-    console.error(error);
-    var errorPayload = {
+    console.error('MonStage backend error');
+    return jsonOutput_({
       error: 'MONSTAGE_API_ERROR',
       message: 'Unable to load offers'
-    };
-    var errorCallback = e && e.parameter ? normalizeText_(e.parameter.callback) : null;
-    return createPayloadOutput_(errorPayload, errorCallback);
+    });
   }
 }
