@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest';
 import { AuthError } from '../src/auth';
 import { fetchOffersFromAppsScript } from '../src/appsScript';
 import { handleRequest, type WorkerDependencies } from '../src/index';
+import type { CachedOffers } from '../src/cache';
 import type { Env } from '../src/env';
 
 const env: Env = {
@@ -22,6 +23,12 @@ const offersPayload = {
   generatedAt: '2026-09-15T07:00:00.000Z',
   source: 'Stage Intelligence France',
   offers: [{ id: 'offer-1', company: 'Example', title: 'ML Intern' }],
+};
+
+const refreshedOffersPayload = {
+  generatedAt: '2026-09-15T08:00:00.000Z',
+  source: 'Stage Intelligence France',
+  offers: [{ id: 'offer-2', company: 'Example 2', title: 'CV Intern' }],
 };
 
 function request(path: string, options: { token?: string; origin?: string; method?: string } = {}) {
@@ -106,28 +113,17 @@ describe('MonStage Worker routes', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(offersPayload);
     expect(deps.fetchOffers).toHaveBeenCalledWith(env);
+    expect(deps.putCachedOffers).toHaveBeenCalledWith(offersPayload, 86400);
   });
 
-  test('serves cached offers after authorization without refetching Apps Script', async () => {
-    let cached: unknown = null;
-    const base = dependencies();
-    const deps = {
-      ...base,
-      getCachedOffers: vi.fn(async () => cached),
-      putCachedOffers: vi.fn(async (payload: unknown) => {
-        cached = payload;
-      }),
-    } as WorkerDependencies;
+  test('serves fresh cached offers after authorization without refetching Apps Script', async () => {
+    const deps = dependencies();
+    deps.getCachedOffers = vi.fn(async () => ({
+      payload: offersPayload,
+      cachedAt: Date.now() - 60_000,
+    }));
 
-    const first = await handleRequest(
-      request('/api/offers', {
-        token: 'authorized-token',
-        origin: 'https://denoskume.github.io',
-      }),
-      env,
-      deps,
-    );
-    const second = await handleRequest(
+    const response = await handleRequest(
       request('/api/offers', {
         token: 'authorized-token',
         origin: 'https://denoskume.github.io',
@@ -136,13 +132,33 @@ describe('MonStage Worker routes', () => {
       deps,
     );
 
-    expect(first.status).toBe(200);
-    expect(second.status).toBe(200);
-    expect(await second.json()).toEqual(offersPayload);
-    expect(deps.getCachedOffers).toHaveBeenCalledTimes(2);
-    expect(deps.putCachedOffers).toHaveBeenCalledTimes(1);
-    expect(deps.putCachedOffers).toHaveBeenCalledWith(offersPayload, 300);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(offersPayload);
+    expect(deps.fetchOffers).not.toHaveBeenCalled();
+    expect(deps.putCachedOffers).not.toHaveBeenCalled();
+  });
+
+  test('refreshes stale cached offers when Apps Script is available', async () => {
+    const deps = dependencies();
+    deps.getCachedOffers = vi.fn(async () => ({
+      payload: offersPayload,
+      cachedAt: Date.now() - (10 * 60 * 1000),
+    }));
+    deps.fetchOffers = vi.fn(async () => refreshedOffersPayload);
+
+    const response = await handleRequest(
+      request('/api/offers', {
+        token: 'authorized-token',
+        origin: 'https://denoskume.github.io',
+      }),
+      env,
+      deps,
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(refreshedOffersPayload);
     expect(deps.fetchOffers).toHaveBeenCalledTimes(1);
+    expect(deps.putCachedOffers).toHaveBeenCalledWith(refreshedOffersPayload, 86400);
   });
 
   test('serves stale cached offers when Apps Script refresh fails', async () => {
@@ -167,6 +183,48 @@ describe('MonStage Worker routes', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(offersPayload);
     expect(deps.fetchOffers).toHaveBeenCalledTimes(1);
+    expect(deps.putCachedOffers).not.toHaveBeenCalled();
+  });
+
+  test('never exposes cached offers to an unauthorized account', async () => {
+    const deps = dependencies();
+    deps.getCachedOffers = vi.fn(async (): Promise<CachedOffers> => ({
+      payload: offersPayload,
+      cachedAt: Date.now(),
+    }));
+
+    const response = await handleRequest(
+      request('/api/offers', {
+        token: 'wrong-account-token',
+        origin: 'https://denoskume.github.io',
+      }),
+      env,
+      deps,
+    );
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ error: 'ACCESS_DENIED' });
+    expect(deps.getCachedOffers).not.toHaveBeenCalled();
+    expect(deps.fetchOffers).not.toHaveBeenCalled();
+  });
+
+  test('returns 502 only when both cache and Apps Script are unavailable', async () => {
+    const deps = dependencies();
+    deps.fetchOffers = vi.fn(async () => {
+      throw new Error('BACKEND_UNAVAILABLE');
+    });
+
+    const response = await handleRequest(
+      request('/api/offers', {
+        token: 'authorized-token',
+        origin: 'https://denoskume.github.io',
+      }),
+      env,
+      deps,
+    );
+
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({ error: 'BACKEND_UNAVAILABLE' });
   });
 
   test('does not grant CORS to an unconfigured origin', async () => {
