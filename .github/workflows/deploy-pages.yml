@@ -17,29 +17,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      VITE_MONSTAGE_API_URL: https://script.google.com/macros/s/AKfycbzZYtSYxJNw2fiUy9SO0KPtUdGufUqC2tsY4wbnG3FOYvVXhLO75ZDxHagH0Dya5qN8gQ/exec
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      VITE_MONSTAGE_API_URL: ${{ vars.VITE_MONSTAGE_API_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify MonStage API
+      - name: Verify public auth configuration
         run: |
-          response="$(curl -fsSL --retry 3 --max-time 20 "$VITE_MONSTAGE_API_URL")"
-          echo "$response" | grep -q '"source":"Stage Intelligence France"'
-          echo "$response" | grep -q '"offers":\['
+          test -n "$VITE_GOOGLE_CLIENT_ID" || { echo "VITE_GOOGLE_CLIENT_ID is not configured"; exit 1; }
+          test -n "$VITE_MONSTAGE_API_URL" || { echo "VITE_MONSTAGE_API_URL is not configured"; exit 1; }
+          case "$VITE_MONSTAGE_API_URL" in
+            https://script.google.com/*|https://script.googleusercontent.com/*)
+              echo "VITE_MONSTAGE_API_URL must point to the Cloudflare Worker, not Apps Script"
+              exit 1
+              ;;
+          esac
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Install Worker dependencies
         run: npm --prefix worker install --no-audit --no-fund
       - name: Worker tests
-        run: npm --prefix worker test
+        run: npm run test:worker
       - name: Worker typecheck
-        run: npm --prefix worker run typecheck
+        run: npm run typecheck:worker
       - name: Unit tests
         run: npm test
       - name: Build
         run: npm run build
+      - name: Scan production bundle for protected values
+        run: |
+          if grep -R "script.google.com/macros/s/" dist; then
+            echo "Apps Script URL found in production bundle"
+            exit 1
+          fi
+          if grep -R "@gmail.com" dist; then
+            echo "Personal email found in production bundle"
+            exit 1
+          fi
+          if grep -R "MONSTAGE_GATEWAY_SECRET" dist; then
+            echo "Gateway secret identifier found in production bundle"
+            exit 1
+          fi
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Responsive E2E tests
