@@ -1,0 +1,6 @@
+name = "monstage-auth-gateway"
+main = "src/index.ts"
+compatibility_date = "2026-09-15"
+
+[vars]
+ALLOWED_ORIGINS = "https://denoskume.github.io"
