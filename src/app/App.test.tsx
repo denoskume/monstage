@@ -1,7 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { App } from './App';
 
-test('renders the MonStage brand link', () => {
+test('renders the private MonStage login screen when signed out', async () => {
+  sessionStorage.clear();
   render(<App />);
-  expect(screen.getByRole('link', { name: 'MonStage — Jobs home' })).toBeInTheDocument();
+
+  await waitFor(() => expect(screen.getByRole('heading', { name: 'MonStage' })).toBeInTheDocument());
+  expect(screen.getByText('Private internship intelligence workspace')).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'MonStage — Jobs home' })).not.toBeInTheDocument();
 });
