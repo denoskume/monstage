@@ -1,15 +1,29 @@
-const OFFERS_CACHE_KEY = new Request('https://monstage.internal/cache/offers-v1');
-const OFFERS_CACHE_NAME = 'monstage-offers-v1';
+const OFFERS_CACHE_KEY = new Request('https://monstage.internal/cache/offers-v2');
+const OFFERS_CACHE_NAME = 'monstage-offers-v2';
+
+export interface CachedOffers {
+  payload: unknown;
+  cachedAt: number;
+}
 
 async function offersCache(): Promise<Cache> {
   return caches.open(OFFERS_CACHE_NAME);
 }
 
-export async function getCachedOffers(): Promise<unknown | null> {
+function isCachedOffers(value: unknown): value is CachedOffers {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<CachedOffers>;
+  return typeof candidate.cachedAt === 'number' && 'payload' in candidate;
+}
+
+export async function getCachedOffers(): Promise<CachedOffers | null> {
   try {
     const cache = await offersCache();
     const response = await cache.match(OFFERS_CACHE_KEY);
-    return response ? await response.json() : null;
+    if (!response) return null;
+
+    const cached = await response.json() as unknown;
+    return isCachedOffers(cached) ? cached : null;
   } catch {
     return null;
   }
@@ -18,7 +32,11 @@ export async function getCachedOffers(): Promise<unknown | null> {
 export async function putCachedOffers(payload: unknown, ttlSeconds: number): Promise<void> {
   try {
     const cache = await offersCache();
-    const response = new Response(JSON.stringify(payload), {
+    const cached: CachedOffers = {
+      payload,
+      cachedAt: Date.now(),
+    };
+    const response = new Response(JSON.stringify(cached), {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Cache-Control': `max-age=${ttlSeconds}`,
