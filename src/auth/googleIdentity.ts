@@ -68,6 +68,7 @@ export async function renderGoogleSignInButton(
   onCredential: (credential: string) => void,
 ): Promise<void> {
   const api = await loadGoogleIdentity();
+  target.replaceChildren();
   api.initialize({
     client_id: clientId,
     auto_select: false,
