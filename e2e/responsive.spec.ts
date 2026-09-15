@@ -34,7 +34,7 @@ test('desktop job-board flow works in English without horizontal overflow', asyn
   test.skip(testInfo.project.name !== 'Desktop Chrome', 'desktop acceptance');
   await expect(page.getByText('MonStage').first()).toBeVisible();
   await expect(page.getByText('Computer Vision Intern').first()).toBeVisible();
-  await expect(page.getByText('Likely yes').first()).toBeVisible();
+  await expect(page.locator('.offer-card').first().getByText('Likely yes')).toBeVisible();
   await page.getByRole('button', { name: /Machine Learning Intern/ }).click();
   await expect(page.locator('.offer-detail-pane').getByRole('heading', { name: 'Machine Learning Intern' })).toBeVisible();
   await expect(page.locator('.offer-detail-pane').getByRole('link', { name: /Apply/ })).toHaveAttribute('href', 'https://company.example/jobs/2');
