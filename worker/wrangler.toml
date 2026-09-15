@@ -3,4 +3,5 @@ main = "src/index.ts"
 compatibility_date = "2026-09-15"
 
 [vars]
+GOOGLE_CLIENT_ID = "398882157701-3brttf6bps0ual14rfoh81qnu8d6ceq9.apps.googleusercontent.com"
 ALLOWED_ORIGINS = "https://denoskume.github.io"
