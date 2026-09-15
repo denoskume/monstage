@@ -145,6 +145,30 @@ describe('MonStage Worker routes', () => {
     expect(deps.fetchOffers).toHaveBeenCalledTimes(1);
   });
 
+  test('serves stale cached offers when Apps Script refresh fails', async () => {
+    const deps = dependencies();
+    deps.getCachedOffers = vi.fn(async () => ({
+      payload: offersPayload,
+      cachedAt: Date.now() - (10 * 60 * 1000),
+    }));
+    deps.fetchOffers = vi.fn(async () => {
+      throw new Error('BACKEND_UNAVAILABLE');
+    });
+
+    const response = await handleRequest(
+      request('/api/offers', {
+        token: 'authorized-token',
+        origin: 'https://denoskume.github.io',
+      }),
+      env,
+      deps,
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(offersPayload);
+    expect(deps.fetchOffers).toHaveBeenCalledTimes(1);
+  });
+
   test('does not grant CORS to an unconfigured origin', async () => {
     const response = await handleRequest(
       request('/api/session', {
