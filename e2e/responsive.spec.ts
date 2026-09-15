@@ -27,38 +27,40 @@ test.beforeEach(async ({ page }) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(payload) });
   });
   await page.goto('#/offers');
-  await expect(page.getByText('Trouvez le stage qui vaut votre candidature.')).toBeVisible();
+  await expect(page.getByText('Find the internship worth applying for.')).toBeVisible();
 });
 
-test('desktop job-board flow works without horizontal overflow', async ({ page }, testInfo) => {
+test('desktop job-board flow works in English without horizontal overflow', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Desktop Chrome', 'desktop acceptance');
   await expect(page.getByText('MonStage').first()).toBeVisible();
   await expect(page.getByText('Computer Vision Intern').first()).toBeVisible();
+  await expect(page.getByText('Likely yes').first()).toBeVisible();
   await page.getByRole('button', { name: /Machine Learning Intern/ }).click();
   await expect(page.locator('.offer-detail-pane').getByRole('heading', { name: 'Machine Learning Intern' })).toBeVisible();
-  await expect(page.locator('.offer-detail-pane').getByRole('link', { name: /Candidater/ })).toHaveAttribute('href', 'https://company.example/jobs/2');
+  await expect(page.locator('.offer-detail-pane').getByRole('link', { name: /Apply/ })).toHaveAttribute('href', 'https://company.example/jobs/2');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
-  await page.getByLabel('Score minimum').selectOption('95');
+  await page.getByLabel('Minimum score').selectOption('95');
   await expect(page.getByText('Data AI Intern')).toHaveCount(0);
   await page.locator('.top-nav').getByRole('link', { name: 'Shortlist' }).click();
   await expect(page.getByRole('heading', { name: 'Shortlist' })).toBeVisible();
-  await page.locator('.top-nav').getByRole('link', { name: 'Candidatures' }).click();
-  await expect(page.getByRole('heading', { name: 'Candidatures' })).toBeVisible();
+  await page.locator('.top-nav').getByRole('link', { name: 'Applications' }).click();
+  await expect(page.getByRole('heading', { name: 'Applications' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Application sent' })).toBeVisible();
   await page.locator('.top-nav').getByRole('link', { name: 'Dashboard' }).click();
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 });
 
-test('mobile flow exposes bottom navigation, detail, back and filters', async ({ page }, testInfo) => {
+test('mobile flow exposes English navigation, detail, back and filters', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'Desktop Chrome', 'mobile acceptance');
   await expect(page.locator('.bottom-nav')).toBeVisible();
   await page.getByRole('button', { name: /Computer Vision Intern/ }).click();
-  await expect(page.getByRole('button', { name: '← Retour aux offres' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Candidater/ })).toBeVisible();
-  await page.getByRole('button', { name: '← Retour aux offres' }).click();
-  await page.getByRole('button', { name: /Filtres/ }).click();
-  await expect(page.getByRole('dialog', { name: 'Filtres des offres' })).toBeVisible();
-  await page.getByRole('button', { name: 'Fermer les filtres' }).click();
+  await expect(page.getByRole('button', { name: '← Back to jobs' })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Apply/ })).toBeVisible();
+  await page.getByRole('button', { name: '← Back to jobs' }).click();
+  await page.getByRole('button', { name: /Filters/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close filters' }).click();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
 });

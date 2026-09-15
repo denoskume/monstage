@@ -18,8 +18,8 @@ export function ShortlistPage() {
 
   return (
     <section className="page">
-      <div className="page-header"><div><p className="eyebrow">Sélection premium</p><h1>Shortlist</h1><p>{offers.length} opportunité{offers.length > 1 ? 's' : ''} à traiter en priorité.</p></div></div>
-      {offers.length === 0 ? <EmptyState title="Votre shortlist est vide." /> : (
+      <div className="page-header"><div><p className="eyebrow">Priority selection</p><h1>Shortlist</h1><p>{offers.length} priority {offers.length === 1 ? 'opportunity' : 'opportunities'} to act on.</p></div></div>
+      {offers.length === 0 ? <EmptyState title="Your shortlist is empty." /> : (
         <div className="offers-layout shortlist-layout">
           <div className="offers-list-pane"><OfferList offers={offers} selectedId={selected?.id ?? null} onSelect={(offer) => setSelectedId(offer.id)} /></div>
           <div className="offer-detail-pane card">{selected ? <OfferDetail offer={selected} /> : null}</div>
