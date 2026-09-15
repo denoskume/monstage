@@ -102,13 +102,15 @@ Apps Script Script Properties:
 
 The Worker stores the same gateway secret as a Cloudflare Worker secret.
 
-The Worker calls Apps Script server-to-server and includes the gateway secret as a request parameter. Apps Script compares it against `MONSTAGE_GATEWAY_SECRET` before any spreadsheet read occurs.
+The Worker calls Apps Script server-to-server with `POST` and places the gateway secret in the JSON request body. Apps Script parses the body and compares the submitted secret against `MONSTAGE_GATEWAY_SECRET` before any spreadsheet read occurs.
 
-If the secret is absent or wrong, Apps Script returns only a generic unauthorized error payload and never reads or returns offers.
+Direct `GET /exec` requests do not return offers. The old callback/JSONP code path is removed entirely.
 
-The callback/JSONP code path is removed. The backend returns JSON only.
+If the POST body is missing, malformed, or contains an absent/wrong secret, Apps Script returns only a generic unauthorized error payload and never reads or returns offers.
 
-The gateway secret must never be committed to GitHub, placed in the frontend bundle, printed in CI logs, or sent to the browser.
+The protected backend returns JSON only.
+
+The gateway secret must never be committed to GitHub, placed in the frontend bundle, printed in CI logs, sent in a query string, or sent to the browser.
 
 ## 5. Google Identity Configuration
 
@@ -274,7 +276,7 @@ To keep the migration controlled:
 2. Create the Google OAuth Web Client and configure the production origin.
 3. Create/deploy the Cloudflare Worker and set Worker secrets.
 4. Confirm Worker authentication using the authorized Google account.
-5. Harden and redeploy Apps Script so requests without the gateway secret return no offers.
+5. Harden and redeploy Apps Script so direct GET requests and POST requests without the gateway secret return no offers.
 6. Confirm direct Apps Script access no longer returns offer data.
 7. Configure frontend production variables to point at the Worker.
 8. Deploy MonStage from `main`.
@@ -315,7 +317,7 @@ Detailed technical errors remain in server-side logs and tests, not in the user-
 - unverified email -> `401`;
 - valid token for wrong account -> `403`;
 - valid authorized token -> backend proxy;
-- backend request contains the gateway secret;
+- backend POST body contains the gateway secret;
 - protected responses are `no-store`;
 - CORS allows only configured origins.
 
@@ -323,6 +325,8 @@ Google JWKS and Apps Script are mocked in unit tests.
 
 ### Apps Script tests/verification
 
+- direct GET returns no offers;
+- missing POST body returns no offers;
 - missing gateway secret returns no offers;
 - wrong gateway secret returns no offers;
 - correct gateway secret returns only the existing sanitized public offer fields;
@@ -347,7 +351,8 @@ The feature is complete only when all of the following are true:
 - The public MonStage URL shows no internship data before authentication.
 - Only the configured Google account can obtain a `200` from protected Worker endpoints.
 - Another valid Google account receives `403`.
-- Direct Apps Script access without the Worker secret returns no offers.
+- Direct Apps Script GET access returns no offers.
+- Apps Script POST access without the Worker secret returns no offers.
 - The browser production bundle contains no Apps Script URL, gateway secret, or allowed-account email.
 - Logout and token expiry remove protected data from the UI and session caches.
 - CI/unit/build/E2E checks pass.
