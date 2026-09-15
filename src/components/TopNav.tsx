@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { AccountMenu } from '../features/auth/AccountMenu';
 
 const links = [
   ['/offers', 'Jobs'],
@@ -19,6 +20,7 @@ export function TopNav() {
           {links.map(([to, label]) => <NavLink key={to} to={to} className="nav-link">{label}</NavLink>)}
         </nav>
         <span className="top-nav__meta">Internship Intelligence France · M2 2027</span>
+        <AccountMenu />
       </div>
     </header>
   );
