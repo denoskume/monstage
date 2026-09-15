@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 const makeOffer = (overrides: Record<string, unknown> = {}) => ({
   id: '1', company: 'Assystem', title: 'Computer Vision Intern', domain: 'Computer Vision', city: 'Nantes', region: 'Pays de la Loire',
@@ -22,24 +22,122 @@ const payload = {
   ],
 };
 
-test.beforeEach(async ({ page }) => {
-  await page.route('https://example.test/exec', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(payload) });
+const authorizedUser = {
+  email: 'owner@example.test',
+  name: 'MonStage Owner',
+  picture: null,
+};
+
+async function installGoogleIdentityStub(page: Page, credential: string) {
+  await page.route('https://accounts.google.com/gsi/client', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: `
+        window.google = { accounts: { id: {
+          initialize(options) { window.__monstageGsiOptions = options; },
+          renderButton(target) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = 'Sign in with Google';
+            button.setAttribute('aria-label', 'Sign in with Google');
+            button.addEventListener('click', () => window.__monstageGsiOptions.callback({ credential: ${JSON.stringify(credential)} }));
+            target.appendChild(button);
+          },
+          disableAutoSelect() { window.__monstageAutoSelectDisabled = true; }
+        } } };
+      `,
+    });
   });
+}
+
+async function installWorkerRoutes(page: Page, credential: string, authorized = true) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': 'http://127.0.0.1:5173',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Cache-Control': 'no-store',
+  };
+
+  await page.route('https://example.test/api/**', async (route) => {
+    const request = route.request();
+    if (request.method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: corsHeaders });
+      return;
+    }
+
+    const auth = request.headers()['authorization'];
+    if (auth !== `Bearer ${credential}`) {
+      await route.fulfill({ status: 401, headers: corsHeaders, contentType: 'application/json', body: JSON.stringify({ error: 'UNAUTHORIZED' }) });
+      return;
+    }
+
+    const path = new URL(request.url()).pathname;
+    if (path === '/api/session') {
+      if (!authorized) {
+        await route.fulfill({ status: 403, headers: corsHeaders, contentType: 'application/json', body: JSON.stringify({ error: 'ACCESS_DENIED' }) });
+        return;
+      }
+      await route.fulfill({ status: 200, headers: corsHeaders, contentType: 'application/json', body: JSON.stringify({ user: authorizedUser }) });
+      return;
+    }
+
+    if (path === '/api/offers') {
+      await route.fulfill({ status: 200, headers: corsHeaders, contentType: 'application/json', body: JSON.stringify(payload) });
+      return;
+    }
+
+    await route.fulfill({ status: 404, headers: corsHeaders, contentType: 'application/json', body: '{}' });
+  });
+}
+
+async function openSignedOut(page: Page, credential = 'e2e-owner-token', authorized = true) {
+  await installGoogleIdentityStub(page, credential);
+  await installWorkerRoutes(page, credential, authorized);
   await page.goto('#/offers');
+  await expect(page.getByRole('heading', { name: 'MonStage' })).toBeVisible();
+  await expect(page.getByText('Private internship intelligence workspace')).toBeVisible();
+}
+
+async function signIn(page: Page) {
+  await page.getByRole('button', { name: 'Sign in with Google' }).click();
   await expect(page.getByText('Find the internship worth applying for.')).toBeVisible();
+}
+
+test('signed-out visitors cannot see protected navigation or internship data', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Desktop Chrome', 'desktop security acceptance');
+  await openSignedOut(page);
+
+  await expect(page.getByRole('link', { name: 'Jobs' })).toHaveCount(0);
+  await expect(page.getByText('Computer Vision Intern')).toHaveCount(0);
 });
 
-test('desktop job-board flow works in English without horizontal overflow', async ({ page }, testInfo) => {
+test('wrong Google account is denied and protected data stays hidden', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Desktop Chrome', 'desktop security acceptance');
+  await openSignedOut(page, 'e2e-wrong-token', false);
+
+  await page.getByRole('button', { name: 'Sign in with Google' }).click();
+
+  await expect(page.getByText('Access denied — This MonStage workspace is private.')).toBeVisible();
+  await expect(page.getByText('Computer Vision Intern')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Jobs' })).toHaveCount(0);
+});
+
+test('desktop authenticated flow works and sign out relocks the workspace', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'Desktop Chrome', 'desktop acceptance');
-  await expect(page.getByText('MonStage').first()).toBeVisible();
+  await openSignedOut(page);
+  await signIn(page);
+
+  await expect(page.getByText('owner@example.test')).toBeVisible();
   await expect(page.getByText('Computer Vision Intern').first()).toBeVisible();
   await expect(page.locator('.offer-card').first().getByText('Likely yes')).toBeVisible();
   await page.getByRole('button', { name: /Machine Learning Intern/ }).click();
   await expect(page.locator('.offer-detail-pane').getByRole('heading', { name: 'Machine Learning Intern' })).toBeVisible();
   await expect(page.locator('.offer-detail-pane').getByRole('link', { name: /Apply/ })).toHaveAttribute('href', 'https://company.example/jobs/2');
+
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
+
   await page.getByLabel('Minimum score').selectOption('95');
   await expect(page.getByText('Data AI Intern')).toHaveCount(0);
   await page.locator('.top-nav').getByRole('link', { name: 'Shortlist' }).click();
@@ -49,10 +147,17 @@ test('desktop job-board flow works in English without horizontal overflow', asyn
   await expect(page.getByRole('heading', { name: 'Application sent' })).toBeVisible();
   await page.locator('.top-nav').getByRole('link', { name: 'Dashboard' }).click();
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByText('Private internship intelligence workspace')).toBeVisible();
+  await expect(page.getByText('Computer Vision Intern')).toHaveCount(0);
 });
 
-test('mobile flow exposes English navigation, detail, back and filters', async ({ page }, testInfo) => {
+test('mobile authenticated flow preserves navigation, detail, filters and no overflow', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === 'Desktop Chrome', 'mobile acceptance');
+  await openSignedOut(page);
+  await signIn(page);
+
   await expect(page.locator('.bottom-nav')).toBeVisible();
   await page.getByRole('button', { name: /Computer Vision Intern/ }).click();
   await expect(page.getByRole('button', { name: '← Back to jobs' })).toBeVisible();
@@ -61,6 +166,8 @@ test('mobile flow exposes English navigation, detail, back and filters', async (
   await page.getByRole('button', { name: /Filters/ }).click();
   await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toBeVisible();
   await page.getByRole('button', { name: 'Close filters' }).click();
+
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
+  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
 });
