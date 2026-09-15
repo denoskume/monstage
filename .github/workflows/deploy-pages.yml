@@ -16,19 +16,24 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_MONSTAGE_API_URL: https://script.google.com/macros/s/AKfycbzZYtSYxJNw2fiUy9SO0KPtUdGufUqC2tsY4wbnG3FOYvVXhLO75ZDxHagH0Dya5qN8gQ/exec
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Verify MonStage API
+        run: |
+          response="$(curl -fsSL --retry 3 --max-time 20 "$VITE_MONSTAGE_API_URL")"
+          echo "$response" | grep -q '"source":"Stage Intelligence France"'
+          echo "$response" | grep -q '"offers":\['
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Unit tests
         run: npm test
       - name: Build
         run: npm run build
-        env:
-          VITE_MONSTAGE_API_URL: ${{ vars.VITE_MONSTAGE_API_URL }}
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
       - name: Responsive E2E tests
