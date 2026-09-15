@@ -1,6 +1,13 @@
 import { HashRouter } from 'react-router-dom';
-import { AppRoutes } from './routes';
+import { AuthProvider } from '../auth/AuthProvider';
+import { ProtectedApp } from '../auth/ProtectedApp';
 
 export function App() {
-  return <HashRouter><AppRoutes /></HashRouter>;
+  return (
+    <HashRouter>
+      <AuthProvider>
+        <ProtectedApp />
+      </AuthProvider>
+    </HashRouter>
+  );
 }
