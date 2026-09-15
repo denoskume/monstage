@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:worker": "npm --prefix worker test",
+    "typecheck:worker": "npm --prefix worker run typecheck"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",
