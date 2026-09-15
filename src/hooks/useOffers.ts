@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { OffersApiResponse } from '../api/contract';
+import { ApiAuthError } from '../api/authClient';
 import { fetchOffers } from '../api/client';
+import type { OffersApiResponse } from '../api/contract';
+import { useAuth } from '../auth/useAuth';
 
 export interface UseOffersState {
   data: OffersApiResponse | null;
@@ -10,8 +12,9 @@ export interface UseOffersState {
 }
 
 export function useOffers(): UseOffersState {
+  const { status, token, invalidateSession } = useAuth();
   const [data, setData] = useState<OffersApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(status === 'authenticated');
   const [error, setError] = useState<string | null>(null);
   const [refreshNonce, setRefreshNonce] = useState(0);
 
@@ -20,18 +23,37 @@ export function useOffers(): UseOffersState {
   }, []);
 
   useEffect(() => {
+    if (status !== 'authenticated' || !token) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     let active = true;
     setLoading(true);
     setError(null);
 
-    fetchOffers()
+    fetchOffers(token)
       .then((fresh) => {
         if (!active) return;
         setData(fresh);
       })
       .catch((reason: unknown) => {
         if (!active) return;
-        setError(reason instanceof Error ? reason.message : 'MonStage data is temporarily unavailable.');
+        setData(null);
+
+        if (reason instanceof ApiAuthError) {
+          if (reason.status === 401) {
+            setError(null);
+            invalidateSession();
+            return;
+          }
+          setError('Access denied — This MonStage workspace is private.');
+          return;
+        }
+
+        setError('MonStage data is temporarily unavailable.');
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -40,7 +62,7 @@ export function useOffers(): UseOffersState {
     return () => {
       active = false;
     };
-  }, [refreshNonce]);
+  }, [status, token, invalidateSession, refreshNonce]);
 
   return { data, loading, error, retry };
 }
