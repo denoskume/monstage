@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/monstage/',
   test: {
+    include: ['src/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     globals: true,
