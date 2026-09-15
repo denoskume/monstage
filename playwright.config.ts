@@ -14,7 +14,8 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     env: {
       ...process.env,
-      VITE_MONSTAGE_API_URL: 'https://example.test/exec',
+      VITE_MONSTAGE_API_URL: 'https://example.test',
+      VITE_GOOGLE_CLIENT_ID: 'e2e-client-id.apps.googleusercontent.com',
     },
   },
   projects: [
