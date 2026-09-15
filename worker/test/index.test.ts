@@ -42,6 +42,8 @@ function dependencies(): WorkerDependencies {
       throw new AuthError(401, 'INVALID_TOKEN');
     }),
     fetchOffers: vi.fn(async () => offersPayload),
+    getCachedOffers: vi.fn(async () => null),
+    putCachedOffers: vi.fn(async () => undefined),
   };
 }
 
@@ -115,10 +117,7 @@ describe('MonStage Worker routes', () => {
       putCachedOffers: vi.fn(async (payload: unknown) => {
         cached = payload;
       }),
-    } as WorkerDependencies & {
-      getCachedOffers: ReturnType<typeof vi.fn>;
-      putCachedOffers: ReturnType<typeof vi.fn>;
-    };
+    } as WorkerDependencies;
 
     const first = await handleRequest(
       request('/api/offers', {
@@ -142,6 +141,7 @@ describe('MonStage Worker routes', () => {
     expect(await second.json()).toEqual(offersPayload);
     expect(deps.getCachedOffers).toHaveBeenCalledTimes(2);
     expect(deps.putCachedOffers).toHaveBeenCalledTimes(1);
+    expect(deps.putCachedOffers).toHaveBeenCalledWith(offersPayload, 300);
     expect(deps.fetchOffers).toHaveBeenCalledTimes(1);
   });
 
