@@ -31,7 +31,7 @@ function loadGoogleIdentity(): Promise<GoogleIdentityApi> {
   if (existing) return Promise.resolve(existing);
   if (loadPromise) return loadPromise;
 
-  loadPromise = new Promise((resolve, reject) => {
+  const pending = new Promise<GoogleIdentityApi>((resolve, reject) => {
     const prior = document.querySelector<HTMLScriptElement>('script[data-monstage-gis]');
     const script = prior ?? document.createElement('script');
 
@@ -58,7 +58,8 @@ function loadGoogleIdentity(): Promise<GoogleIdentityApi> {
     throw error;
   });
 
-  return loadPromise;
+  loadPromise = pending;
+  return pending;
 }
 
 export async function renderGoogleSignInButton(
