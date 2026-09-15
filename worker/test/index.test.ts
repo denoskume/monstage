@@ -106,6 +106,45 @@ describe('MonStage Worker routes', () => {
     expect(deps.fetchOffers).toHaveBeenCalledWith(env);
   });
 
+  test('serves cached offers after authorization without refetching Apps Script', async () => {
+    let cached: unknown = null;
+    const base = dependencies();
+    const deps = {
+      ...base,
+      getCachedOffers: vi.fn(async () => cached),
+      putCachedOffers: vi.fn(async (payload: unknown) => {
+        cached = payload;
+      }),
+    } as WorkerDependencies & {
+      getCachedOffers: ReturnType<typeof vi.fn>;
+      putCachedOffers: ReturnType<typeof vi.fn>;
+    };
+
+    const first = await handleRequest(
+      request('/api/offers', {
+        token: 'authorized-token',
+        origin: 'https://denoskume.github.io',
+      }),
+      env,
+      deps,
+    );
+    const second = await handleRequest(
+      request('/api/offers', {
+        token: 'authorized-token',
+        origin: 'https://denoskume.github.io',
+      }),
+      env,
+      deps,
+    );
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(await second.json()).toEqual(offersPayload);
+    expect(deps.getCachedOffers).toHaveBeenCalledTimes(2);
+    expect(deps.putCachedOffers).toHaveBeenCalledTimes(1);
+    expect(deps.fetchOffers).toHaveBeenCalledTimes(1);
+  });
+
   test('does not grant CORS to an unconfigured origin', async () => {
     const response = await handleRequest(
       request('/api/session', {
