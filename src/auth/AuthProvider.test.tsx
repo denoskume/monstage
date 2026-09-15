@@ -1,5 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { ApiAuthError, type AuthenticatedUser } from '../api/authClient';
 import { AuthProvider } from './AuthProvider';
 import { useAuth } from './useAuth';
@@ -50,8 +50,6 @@ describe('AuthProvider', () => {
     mockedFetchSession.mockReset();
     mockedDisableAutoSelect.mockReset();
   });
-
-  afterEach(() => vi.restoreAllMocks());
 
   test('starts signed out when there is no stored token', async () => {
     render(<AuthProvider><Probe /></AuthProvider>);
@@ -118,9 +116,11 @@ describe('AuthProvider', () => {
     });
     await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('authenticated'));
 
-    screen.getByRole('button', { name: 'Sign out test' }).click();
+    await act(async () => {
+      screen.getByRole('button', { name: 'Sign out test' }).click();
+    });
 
-    expect(screen.getByTestId('status')).toHaveTextContent('signedOut');
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('signedOut'));
     expect(sessionStorage.getItem('monstage:google-id-token:v1')).toBeNull();
     expect(mockedDisableAutoSelect).toHaveBeenCalledOnce();
   });
