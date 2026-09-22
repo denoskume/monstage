@@ -8,6 +8,8 @@
 
 *Authenticated Jobs view — internship discovery, relevance ranking, search, and multi-criteria filtering across France. The live workspace remains intentionally restricted; the preview is sanitized for public display.*
 
+**Live app:** [Open MonStage](https://denoskume.github.io/monstage/) *(restricted access)*
+
 ## What it includes
 
 - Google Sign-In gate for one authorized account
