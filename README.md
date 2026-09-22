@@ -4,7 +4,7 @@
 
 ## Product preview
 
-![MonStage Jobs view](docs/assets/monstage-jobs-preview.png)
+![MonStage Jobs view](docs/assets/monstage_preview_sanitized.png)
 
 *Authenticated Jobs view — internship discovery, relevance ranking, search, and multi-criteria filtering across France. The live workspace remains intentionally restricted; the preview is sanitized for public display.*
 
