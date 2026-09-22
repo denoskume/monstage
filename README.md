@@ -2,6 +2,12 @@
 
 **MonStage** is a private, responsive internship intelligence workspace built on top of the existing **Stage Intelligence France** data source. It turns a private Google Sheet into a modern job-board experience optimized for desktop and mobile while keeping runtime access restricted to one authorized Google account.
 
+## Product preview
+
+![MonStage Jobs view](docs/assets/monstage-jobs-preview.webp)
+
+*Authenticated Jobs view — internship discovery, relevance ranking, search, and multi-criteria filtering across France. The live workspace remains intentionally restricted; the preview is sanitized for public display.*
+
 ## What it includes
 
 - Google Sign-In gate for one authorized account
