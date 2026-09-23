@@ -1,5 +1,5 @@
-const OFFERS_CACHE_KEY = new Request('https://monstage.internal/cache/offers-v2');
-const OFFERS_CACHE_NAME = 'monstage-offers-v2';
+const OFFERS_CACHE_KEY = new Request('https://monstage.internal/cache/offers-v3');
+const OFFERS_CACHE_NAME = 'monstage-offers-v3';
 
 export interface CachedOffers {
   payload: unknown;
