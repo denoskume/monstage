@@ -5,7 +5,7 @@ import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
 
 const OFFERS_CACHE_FRESHNESS_MS = 5 * 60 * 1000;
-const OFFERS_CACHE_RETENTION_SECONDS = 24 * 60 * 60;
+const OFFERS_CACHE_MAX_STALE_MS = 15 * 60 * 1000;\nconst OFFERS_CACHE_RETENTION_SECONDS = 15 * 60;
 
 export interface WorkerDependencies {
   verifyUser: (token: string, env: Env) => Promise<AuthorizedUser>;
