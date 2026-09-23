@@ -113,7 +113,7 @@ describe('MonStage Worker routes', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(offersPayload);
     expect(deps.fetchOffers).toHaveBeenCalledWith(env);
-    expect(deps.putCachedOffers).toHaveBeenCalledWith(offersPayload, 86400);
+    expect(deps.putCachedOffers).toHaveBeenCalledWith(offersPayload, 900);
   });
 
   test('serves fresh cached offers after authorization without refetching Apps Script', async () => {
@@ -158,7 +158,7 @@ describe('MonStage Worker routes', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(refreshedOffersPayload);
     expect(deps.fetchOffers).toHaveBeenCalledTimes(1);
-    expect(deps.putCachedOffers).toHaveBeenCalledWith(refreshedOffersPayload, 86400);
+    expect(deps.putCachedOffers).toHaveBeenCalledWith(refreshedOffersPayload, 900);
   });
 
   test('serves stale cached offers when Apps Script refresh fails', async () => {
@@ -186,7 +186,7 @@ describe('MonStage Worker routes', () => {
     expect(deps.putCachedOffers).not.toHaveBeenCalled();
   });
 
-  test('never exposes cached offers to an unauthorized account', async () => {
+  test('rejects cache older than 15 minutes when Apps Script refresh fails', async () => {\n    const deps = dependencies();\n    deps.getCachedOffers = vi.fn(async () => ({\n      payload: offersPayload,\n      cachedAt: Date.now() - (16 * 60 * 1000),\n    }));\n    deps.fetchOffers = vi.fn(async () => {\n      throw new Error('BACKEND_UNAVAILABLE');\n    });\n\n    const response = await handleRequest(\n      request('/api/offers', {\n        token: 'authorized-token',\n        origin: 'https://denoskume.github.io',\n      }),\n      env,\n      deps,\n    );\n\n    expect(response.status).toBe(502);\n    expect(await response.json()).toEqual({ error: 'BACKEND_UNAVAILABLE' });\n  });\n\n  test('never exposes cached offers to an unauthorized account', async () => {
     const deps = dependencies();
     deps.getCachedOffers = vi.fn(async (): Promise<CachedOffers> => ({
       payload: offersPayload,
