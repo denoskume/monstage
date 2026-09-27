@@ -1,9 +1,3 @@
-<p>
-  <img align="left" src="https://www.ec-nantes.fr/medias/photo/logocn-rvb_1648479844750-png?ID_FICHE=178994&amp;INLINE=FALSE" alt="Centrale Nantes" height="64">
-</p>
-<p align="right"><strong>MSc. CORO DASSIP</strong></p>
-<br clear="both">
-
 <h1 align="center">MonStage</h1>
 
 **MonStage** is a private, responsive internship intelligence workspace built on top of the existing **Stage Intelligence France** data source. It turns a private Google Sheet into a modern job-board experience optimized for desktop and mobile while keeping runtime access restricted to one authorized Google account.
