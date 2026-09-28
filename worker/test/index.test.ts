@@ -186,7 +186,30 @@ describe('MonStage Worker routes', () => {
     expect(deps.putCachedOffers).not.toHaveBeenCalled();
   });
 
-  test('rejects cache older than 15 minutes when Apps Script refresh fails', async () => {\n    const deps = dependencies();\n    deps.getCachedOffers = vi.fn(async () => ({\n      payload: offersPayload,\n      cachedAt: Date.now() - (16 * 60 * 1000),\n    }));\n    deps.fetchOffers = vi.fn(async () => {\n      throw new Error('BACKEND_UNAVAILABLE');\n    });\n\n    const response = await handleRequest(\n      request('/api/offers', {\n        token: 'authorized-token',\n        origin: 'https://denoskume.github.io',\n      }),\n      env,\n      deps,\n    );\n\n    expect(response.status).toBe(502);\n    expect(await response.json()).toEqual({ error: 'BACKEND_UNAVAILABLE' });\n  });\n\n  test('never exposes cached offers to an unauthorized account', async () => {
+  test('rejects cache older than 15 minutes when Apps Script refresh fails', async () => {
+    const deps = dependencies();
+    deps.getCachedOffers = vi.fn(async () => ({
+      payload: offersPayload,
+      cachedAt: Date.now() - (16 * 60 * 1000),
+    }));
+    deps.fetchOffers = vi.fn(async () => {
+      throw new Error('BACKEND_UNAVAILABLE');
+    });
+
+    const response = await handleRequest(
+      request('/api/offers', {
+        token: 'authorized-token',
+        origin: 'https://denoskume.github.io',
+      }),
+      env,
+      deps,
+    );
+
+    expect(response.status).toBe(502);
+    expect(await response.json()).toEqual({ error: 'BACKEND_UNAVAILABLE' });
+  });
+
+  test('never exposes cached offers to an unauthorized account', async () => {
     const deps = dependencies();
     deps.getCachedOffers = vi.fn(async (): Promise<CachedOffers> => ({
       payload: offersPayload,
