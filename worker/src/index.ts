@@ -51,6 +51,10 @@ function isFresh(cached: CachedOffers): boolean {
   return Date.now() - cached.cachedAt <= OFFERS_CACHE_FRESHNESS_MS;
 }
 
+function isWithinMaxStale(cached: CachedOffers): boolean {
+  return Date.now() - cached.cachedAt <= OFFERS_CACHE_MAX_STALE_MS;
+}
+
 export async function handleRequest(
   request: Request,
   env: Env,
@@ -99,7 +103,7 @@ export async function handleRequest(
     await dependencies.putCachedOffers(offers, OFFERS_CACHE_RETENTION_SECONDS);
     return jsonResponse(offers, 200, origin);
   } catch {
-    if (cachedOffers) {
+    if (cachedOffers && isWithinMaxStale(cachedOffers)) {
       return jsonResponse(cachedOffers.payload, 200, origin);
     }
     return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin);
