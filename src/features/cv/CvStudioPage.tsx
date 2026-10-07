@@ -310,7 +310,31 @@ export function CvStudioPage() {
 
           <section className="cv-editor-section">
             <h2>{draft.language === 'FR' ? 'Compétences, langues & centres d’intérêt' : 'Skills, languages & interests'}</h2>
-            <label>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical skills'}<textarea rows={3} value={draft.skills} onChange={(e) => patch('skills', e.target.value)} /></label>
+            <div className="cv-interest-editor">
+              <span className="cv-interest-editor__label">{draft.language === 'FR' ? 'Compétences techniques' : 'Technical skills'}</span>
+              {(draft.skills.split('\n').length ? draft.skills.split('\n') : ['']).map((value, index, values) => (
+                <div className="cv-interest-row" key={index}>
+                  <input
+                    aria-label={`${draft.language === 'FR' ? 'Compétence' : 'Skill'} ${index + 1}`}
+                    placeholder={draft.language === 'FR' ? 'Ex. Python & Calcul scientifique : Python, NumPy, SciPy...' : 'e.g. Python & Scientific Computing: Python, NumPy, SciPy...'}
+                    value={value}
+                    onChange={(e) => {
+                      const next = [...values];
+                      next[index] = e.target.value;
+                      patch('skills', next.join('\n'));
+                    }}
+                  />
+                  <button className="cv-remove-button cv-remove-button--compact" type="button" aria-label={draft.language === 'FR' ? 'Supprimer la compétence' : 'Remove skill'} onClick={() => {
+                    const next = values.filter((_, current) => current !== index);
+                    patch('skills', next.join('\n'));
+                  }}>−</button>
+                </div>
+              ))}
+              <button className="button button--secondary cv-add-button" type="button" onClick={() => {
+                const values = draft.skills ? draft.skills.split('\n') : [];
+                patch('skills', [...values, ''].join('\n'));
+              }}>+ {draft.language === 'FR' ? 'Ajouter' : 'Add'}</button>
+            </div>
             <label>{draft.language === 'FR' ? 'Langues' : 'Languages'}<input value={draft.languages} onChange={(e) => patch('languages', e.target.value)} /></label>
             <div className="cv-interest-editor">
               <span className="cv-interest-editor__label">{draft.language === 'FR' ? 'Centres d’intérêt (max. 2)' : 'Interests (max. 2)'}</span>
@@ -376,7 +400,9 @@ export function CvStudioPage() {
             </div>)}
           </section> : null}
 
-          <section><h2>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'}</h2><p>{draft.skills}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'}</h2>
+            {draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => <p key={index}>{line}</p>)}
+          </section>
           <section><h2>{draft.language === 'FR' ? 'Langues' : 'Languages'}</h2><p>{draft.languages}</p></section>
           {draft.interests.trim() ? <section><h2>{draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests'}</h2><p>{draft.interests}</p></section> : null}
         </article>
