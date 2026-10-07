@@ -41,7 +41,7 @@ function wrapText(text: string, maxWidth: number, font: any, size: number): stri
   return lines;
 }
 
-export async function buildCvPdfBlob(draft: CvDraft): Promise<Blob> {
+export async function buildCvPdfDataUri(draft: CvDraft): Promise<string> {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -160,9 +160,7 @@ export async function buildCvPdfBlob(draft: CvDraft): Promise<Blob> {
     drawLines(draft.languages.trim(), 9.5);
   }
 
-  const bytes = await pdf.save();
-  const pdfBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  return new Blob([pdfBuffer], { type: 'application/pdf' });
+  return pdf.saveAsBase64({ dataUri: true });
 }
 
 
