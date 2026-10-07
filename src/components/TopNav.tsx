@@ -14,7 +14,6 @@ export function TopNav() {
     <header className="top-nav">
       <div className="top-nav__inner">
         <NavLink to="/offers" className="brand" aria-label="MonStage — Jobs home">
-          <span className="brand__mark" aria-hidden="true">M</span>
           <span className="brand__name">MonStage</span>
         </NavLink>
         <nav className="top-nav__links" aria-label="Primary navigation">
