@@ -51,7 +51,8 @@ export interface CvDraft {
   interests: string;
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v2:';
+const KEY_PREFIX = 'monstage:cv-studio:v3:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v2:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -176,14 +177,47 @@ export function freshCvDraft(language: CvLanguage): CvDraft {
   return structuredClone(language === 'FR' ? defaultCvFr : defaultCvEn);
 }
 
+function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft {
+  const defaults = freshCvDraft(language);
+  const migrated = { ...defaults, ...saved, language };
+
+  // Keep the user's saved CV content, but refresh the built-in education records
+  // when MonStage ships an updated official degree title or programme description.
+  migrated.education = (saved.education ?? defaults.education).map((item) => {
+    const official = defaults.education.find((entry) => entry.id === item.id);
+    if (!official || !['ecn', 'kju'].includes(item.id)) return item;
+    return {
+      ...item,
+      school: official.school,
+      degree: official.degree,
+      location: official.location,
+      period: official.period,
+      details: official.details,
+    };
+  });
+
+  return migrated;
+}
+
 export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
   try {
     const raw = localStorage.getItem(KEY_PREFIX + language);
     if (raw) return { ...freshCvDraft(language), ...JSON.parse(raw), language };
 
+    const previous = localStorage.getItem(PREVIOUS_KEY_PREFIX + language);
+    if (previous) {
+      const migrated = migrateCvDraft(language, JSON.parse(previous));
+      localStorage.setItem(KEY_PREFIX + language, JSON.stringify(migrated));
+      return migrated;
+    }
+
     if (language === 'EN') {
       const legacy = localStorage.getItem(LEGACY_KEY);
-      if (legacy) return { ...freshCvDraft('EN'), ...JSON.parse(legacy), language: 'EN' };
+      if (legacy) {
+        const migrated = migrateCvDraft('EN', JSON.parse(legacy));
+        localStorage.setItem(KEY_PREFIX + 'EN', JSON.stringify(migrated));
+        return migrated;
+      }
     }
     return freshCvDraft(language);
   } catch {
