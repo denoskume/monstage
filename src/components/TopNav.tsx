@@ -6,8 +6,7 @@ const links = [
   ['/shortlist', 'Saved'],
   ['/applications', 'Applications'],
   ['/workspace', 'Workspace'],
-  ['/cv', 'CV'],
-  ['/cl', 'CL'],
+  ['/studio', 'Studio'],
   ['/dashboard', 'Insights'],
 ] as const;
 
