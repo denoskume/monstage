@@ -21,12 +21,11 @@ beforeEach(() => {
   });
 });
 
-test('shows the Worker-validated email and signs out', async () => {
+test('keeps the signed-in account private in the header and signs out', async () => {
   const user = userEvent.setup();
   render(<AccountMenu />);
 
-  expect(screen.getByText('owner@example.test')).toBeInTheDocument();
+  expect(screen.queryByText('owner@example.test')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Sign out' }));
-
   expect(signOut).toHaveBeenCalledOnce();
 });
