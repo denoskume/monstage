@@ -226,3 +226,41 @@
   .brand__name { display: inline; }
   .bottom-nav .nav-link { font-size: .64rem; }
 }
+
+
+@media (max-width: 1023px) {
+  .jobs-search-shell { max-width: none; }
+  .offers-layout { max-width: none; grid-template-columns: minmax(320px, 41%) minmax(0, 59%); }
+  .offer-detail-pane { top: 72px; max-height: calc(100vh - 88px); }
+}
+
+@media (max-width: 767px) {
+  .jobs-search-shell { padding-top: 4px; margin-bottom: 14px; }
+  .jobs-search-shell__title h1 { font-size: 1.5rem; }
+  .jobs-search-shell__title p { font-size: .82rem; }
+  .jobs-search-shell__controls { grid-template-columns: 1fr auto; }
+  .jobs-search-shell .search-bar { min-height: 48px; box-shadow: none; }
+  .jobs-filter-button { min-width: 92px; padding-inline: 12px; }
+  .jobs-quickbar { align-items: flex-start; }
+  .jobs-sort span { display: none; }
+  .jobs-results-header { margin-bottom: 7px; }
+  .offers-layout { display: block; }
+  .offer-detail-pane { display: none; position: static; max-height: none; }
+  .mobile-detail-open .offers-list-pane { display: none; }
+  .mobile-detail-open .offer-detail-pane { display: block; }
+  .offer-detail__header { padding: 18px 17px 15px; }
+  .offer-detail__actions { padding: 0 17px 17px; flex-direction: column; align-items: stretch; }
+  .offer-detail__actions .button { width: 100%; }
+  .detail-section { padding: 19px 17px; }
+  .detail-grid--facts { grid-template-columns: 1fr 1fr; }
+  .filters-overlay--active { align-items: flex-end; padding: 0; }
+  .filters-sheet--desktop { width: 100%; border-radius: 16px 16px 0 0; }
+}
+
+@media (max-width: 420px) {
+  .jobs-search-shell__controls { grid-template-columns: 1fr; }
+  .jobs-filter-button { min-height: 42px; }
+  .jobs-quickbar { align-items: center; }
+  .offer-card__button { padding: 15px; }
+  .detail-grid--facts { grid-template-columns: 1fr; }
+}

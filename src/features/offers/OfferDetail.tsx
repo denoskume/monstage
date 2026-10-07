@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import type { InternshipOffer } from '../../api/contract';
-import { Badge } from '../../components/Badge';
 import { displayValue } from '../../i18n/display';
 import { getCvMatch } from '../workspace/intelligence';
 
@@ -14,77 +13,77 @@ export function OfferDetail({ offer, onBack }: { offer: InternshipOffer; onBack?
   const match = getCvMatch(offer);
 
   return (
-    <article className="offer-detail">
+    <article className="offer-detail card">
       {onBack ? <button className="mobile-back" type="button" onClick={onBack}>← Back to jobs</button> : null}
+
       <header className="offer-detail__header">
-        <div>
+        <div className="offer-detail__identity">
           <p className="offer-detail__company">{offer.company}</p>
           <h1>{offer.title}</h1>
           <p className="offer-detail__location">{[offer.city, offer.region].filter(Boolean).join(' · ') || 'Location not specified'}</p>
+          <p className="offer-detail__type">
+            {offer.duration ? displayValue(offer.duration) : 'Internship'}
+            {offer.compensation ? ' · ' + offer.compensation : ''}
+          </p>
         </div>
-        <span className="offer-detail__shortlist" aria-label={offer.shortlist ? 'In shortlist' : 'Not in shortlist'}>{offer.shortlist ? '★' : '☆'}</span>
+        <button className="offer-detail__save" type="button" aria-label={offer.shortlist ? 'Saved' : 'Save job'}>{offer.shortlist ? '★' : '☆'}</button>
       </header>
 
-      <div className="offer-detail__badges">
-        <Badge tone={offer.priority === 'A+' ? 'success' : 'accent'}>{offer.priority || 'Priority —'}</Badge>
-        {offer.decisionScore !== null ? <Badge tone="accent">Decision {offer.decisionScore}/100</Badge> : null}
-        {offer.technicalFit !== null ? <Badge>Technical fit {offer.technicalFit}/100</Badge> : null}
-        <Badge tone={match.score >= 80 ? 'success' : 'accent'}>CV match {match.score}/100</Badge>
-        {offer.m2Fit ? <Badge tone={offer.m2Fit.startsWith('Oui') ? 'success' : 'warning'}>M2 · {displayValue(offer.m2Fit)}</Badge> : null}
+      <div className="offer-detail__actions">
+        {offer.applicationUrl ? (
+          <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">Open application page</a>
+        ) : (
+          <button className="button button--primary button--large" disabled>Application link unavailable</button>
+        )}
+        <Link className="button button--secondary button--large" to={'/workspace?offer=' + encodeURIComponent(offer.id)}>Prepare application</Link>
       </div>
 
-      <section className="detail-section">
-        <h2>Internship profile</h2>
-        <dl className="detail-grid">
-          <DetailItem label="Domain" value={offer.domain} />
-          <DetailItem label="Specialization" value={offer.specialization} />
+      <section className="detail-section detail-section--summary">
+        <h2>Job details</h2>
+        <dl className="detail-grid detail-grid--facts">
           <DetailItem label="Start" value={offer.start} />
           <DetailItem label="Duration" value={offer.duration} />
           <DetailItem label="Compensation" value={offer.compensation} />
-          <DetailItem label="Calendar fit" value={offer.calendarFit} />
+          <DetailItem label="Specialization" value={offer.specialization ?? offer.domain} />
         </dl>
-        {offer.skills.length ? <div className="skill-list" aria-label="Key skills">{offer.skills.map((skill) => <span key={skill}>{skill}</span>)}</div> : null}
       </section>
 
       <section className="detail-section">
-        <h2>CV intelligence</h2>
-        <div className="match-meter"><span style={{ width: `${match.score}%` }} /></div>
-        {match.matched.length ? <p className="match-positive"><strong>Already supported:</strong> {match.matched.slice(0, 7).join(', ')}</p> : <p>No explicit skill list was provided by the source; the score falls back to existing fit signals.</p>}
-        {match.missing.length ? <p className="match-warning"><strong>Prepare / strengthen:</strong> {match.missing.slice(0, 6).join(', ')}</p> : null}
+        <div className="detail-section__heading">
+          <h2>Why this fits you</h2>
+          <strong>{match.score}% CV match</strong>
+        </div>
+        <div className="match-meter"><span style={{ width: match.score + '%' }} /></div>
+        {match.matched.length ? <p><strong>Strong overlap:</strong> {match.matched.slice(0, 6).join(', ')}.</p> : <p>The source does not expose enough skill detail for a full comparison.</p>}
+        {match.missing.length ? <p><strong>Prepare:</strong> {match.missing.slice(0, 5).join(', ')}.</p> : null}
       </section>
 
+      {offer.skills.length ? (
+        <section className="detail-section">
+          <h2>Skills</h2>
+          <div className="skill-list">{offer.skills.map((skill) => <span key={skill}>{skill}</span>)}</div>
+        </section>
+      ) : null}
+
       <section className="detail-section">
-        <h2>Decision & tracking</h2>
+        <h2>Application intelligence</h2>
         <dl className="detail-grid">
+          <DetailItem label="Priority" value={offer.priority} />
+          <DetailItem label="Decision score" value={offer.decisionScore !== null ? offer.decisionScore + '/100' : null} />
           <DetailItem label="Application status" value={offer.applicationStatus} />
           <DetailItem label="Next action" value={offer.nextAction ?? offer.actionLevel} />
-          <DetailItem label="Freshness" value={offer.freshness} />
-          <DetailItem label="Verified at" value={offer.verifiedAt} />
           <DetailItem label="Source" value={offer.sourceQuality} />
-          <DetailItem label="Confidence" value={offer.confidence} />
+          <DetailItem label="Verified" value={offer.verifiedAt} />
         </dl>
       </section>
 
-      <section className="detail-section">
-        <h2>Company / role intelligence</h2>
-        <dl className="detail-grid">
-          <DetailItem label="Company" value={offer.company} />
-          <DetailItem label="Location" value={[offer.city, offer.region].filter(Boolean).join(' · ') || null} />
-          <DetailItem label="Source quality" value={offer.sourceQuality} />
-          <DetailItem label="Compensation" value={offer.compensation} />
-        </dl>
-        {offer.relevance ? <p>{offer.relevance}</p> : null}
-        {offer.gaps ? <p className="detail-note">To confirm: {offer.gaps}</p> : null}
-      </section>
-
-      <div className="offer-detail__cta offer-detail__cta--dual">
-        <Link className="button button--secondary button--large" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Prepare application</Link>
-        {offer.applicationUrl ? (
-          <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a>
-        ) : (
-          <button className="button button--primary button--large" disabled title="No direct application link available">Application link unavailable</button>
-        )}
-      </div>
+      {offer.relevance || offer.gaps ? (
+        <section className="detail-section">
+          <h2>Role notes</h2>
+          {offer.relevance ? <p>{offer.relevance}</p> : null}
+          {offer.gaps ? <p><strong>To confirm:</strong> {offer.gaps}</p> : null}
+        </section>
+      ) : null}
     </article>
   );
 }

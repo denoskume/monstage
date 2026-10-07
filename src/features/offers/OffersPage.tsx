@@ -18,7 +18,6 @@ function initialFilters(): OfferFilterState {
 }
 
 const resetFilters: OfferFilterState = { query: '', specialization: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
-
 const sortLabels: Record<SortMode, string> = { best: 'Best match', recent: 'Most recent', score: 'Highest score', priority: 'Priority', city: 'City' };
 
 export function OffersPage() {
@@ -28,7 +27,7 @@ export function OffersPage() {
   const [sort, setSort] = useState<SortMode>(initialPrefs.sort);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
-  const [mobileFilters, setMobileFilters] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const offers = data?.offers ?? [];
   const visibleOffers = useMemo(() => sortOffers(filterOffers(offers, filters), sort), [offers, filters, sort]);
@@ -46,7 +45,7 @@ export function OffersPage() {
   function resetAll() {
     setFilters(resetFilters);
     setSort(defaultPreferences.sort);
-    setMobileFilters(false);
+    setFiltersOpen(false);
   }
 
   function chooseOffer(offer: InternshipOffer) {
@@ -61,33 +60,35 @@ export function OffersPage() {
 
   return (
     <section className="page offers-page">
-      <div className="offers-hero">
-        <div><p className="eyebrow">M2 · ACROSS FRANCE</p><h1>Find the internship worth applying for.</h1><p>{offers.length} opportunities monitored · ranked by relevance, freshness and quality.</p></div>
-      </div>
-
-      {error && data ? <div className="stale-banner" role="status">Showing cached data — refresh failed. <button onClick={retry}>Try again</button></div> : null}
-
-      <div className="offers-toolbar card">
-        <SearchBar value={filters.query} onChange={(query) => setFilters({ ...filters, query })} />
-        <div className="toolbar-actions">
-          <button type="button" className={`toggle-chip${filters.onlyForMe ? ' active' : ''}`} aria-pressed={filters.onlyForMe} onClick={() => setFilters({ ...filters, onlyForMe: !filters.onlyForMe })}>✦ For you</button>
-          <button type="button" className="filter-trigger" onClick={() => setMobileFilters(true)}>Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}</button>
-          <label className="sort-field"><span className="sr-only">Sort opportunities</span><select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}><option value="best">Best match</option><option value="recent">Most recent</option><option value="score">Highest score</option><option value="priority">Priority</option><option value="city">City</option></select></label>
+      <div className="jobs-search-shell">
+        <div className="jobs-search-shell__title">
+          <h1>Internships for you</h1>
+          <p>ML, Computer Vision and Applied AI opportunities across France.</p>
+        </div>
+        <div className="jobs-search-shell__controls">
+          <SearchBar value={filters.query} onChange={(query) => setFilters({ ...filters, query })} placeholder="Job title, skill or company" />
+          <button type="button" className="jobs-filter-button" onClick={() => setFiltersOpen(true)}>
+            Filters{activeFilterCount ? <span>{activeFilterCount}</span> : null}
+          </button>
+        </div>
+        <div className="jobs-quickbar">
+          <button type="button" className={'quick-filter' + (filters.onlyForMe ? ' active' : '')} aria-pressed={filters.onlyForMe} onClick={() => setFilters({ ...filters, onlyForMe: !filters.onlyForMe })}>Recommended for me</button>
+          <label className="jobs-sort"><span>Sort by</span><select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}><option value="best">Best match</option><option value="recent">Most recent</option><option value="score">Highest score</option><option value="priority">Priority</option><option value="city">City</option></select></label>
         </div>
       </div>
 
-      <div className="desktop-filters"><OfferFilters offers={offers} filters={filters} onChange={setFilters} onReset={resetAll} /></div>
+      {error && data ? <div className="stale-banner" role="status">Showing cached data. <button onClick={retry}>Refresh</button></div> : null}
 
-      {mobileFilters ? <div className="filters-overlay" role="dialog" aria-modal="true" aria-label="Opportunity filters"><div className="filters-sheet"><OfferFilters mobile offers={offers} filters={filters} onChange={setFilters} onReset={resetAll} onClose={() => setMobileFilters(false)} /></div></div> : null}
+      {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={offers} filters={filters} onChange={setFilters} onReset={resetAll} onClose={() => setFiltersOpen(false)} /></div></div> : null}
 
       {visibleOffers.length === 0 ? <EmptyState actionLabel="Reset filters" onAction={resetAll} /> : (
-        <div className={`offers-layout${mobileDetail ? ' mobile-detail-open' : ''}`}>
-          <div className="offers-list-pane">
-            <div className="results-line"><strong>{visibleOffers.length}</strong> {visibleOffers.length === 1 ? 'result' : 'results'}<span>Sort: {sortLabels[sort]}</span></div>
-            <OfferList offers={visibleOffers} selectedId={selectedOffer?.id ?? null} onSelect={chooseOffer} />
+        <>
+          <div className="jobs-results-header"><div><strong>{visibleOffers.length}</strong> opportunities</div><span>{sortLabels[sort]}</span></div>
+          <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
+            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedId={selectedOffer?.id ?? null} onSelect={chooseOffer} /></div>
+            <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} /> : null}</div>
           </div>
-          <div className="offer-detail-pane card">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} /> : null}</div>
-        </div>
+        </>
       )}
     </section>
   );
