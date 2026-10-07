@@ -1201,3 +1201,28 @@ h1, h2, h3 { color: var(--text); }
 .cl-signature-editor { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .cl-signature-editor img { max-width: 160px; max-height: 64px; object-fit: contain; background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 6px; }
 .cl-preview__signature { display: block; max-width: 140px; max-height: 56px; object-fit: contain; margin-top: 6px; }
+
+
+/* Signed CL reference template */
+.cl-preview--template { padding: 44px 52px 58px; font-family: Arial, Helvetica, sans-serif; line-height: 1.42; }
+.cl-preview--template .cl-preview__sender--right {
+  justify-items: end;
+  text-align: right;
+  margin: 0 0 14px auto;
+}
+.cl-preview--template .cl-preview__sender--right strong { font-size: 18px; line-height: 1.1; margin-bottom: 4px; }
+.cl-preview--template .cl-preview__sender--right span { font-size: 10px; line-height: 1.25; }
+.cl-preview__recipient { display: grid; justify-items: start; margin-top: 10px; font-size: 10.8px; line-height: 1.35; }
+.cl-preview__recipient strong,
+.cl-preview__recipient span { display: block; }
+.cl-preview__date { text-align: right !important; margin: 8px 0 30px !important; font-size: 10.8px !important; }
+.cl-preview--template .cl-preview__subject {
+  margin: 0 0 12px !important;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #9b9b9b;
+  font-size: 11px !important;
+}
+.cl-preview--template > p { margin-bottom: 10px; font-size: 10.8px; line-height: 1.42; }
+.cl-preview--template .cl-preview__closing { margin-top: 28px; }
+.cl-preview--template .cl-preview__closing p { font-size: 10.8px; margin-bottom: 8px; }
+.cl-preview--template .cl-preview__signature { max-width: 155px; max-height: 62px; margin-top: 2px; }
