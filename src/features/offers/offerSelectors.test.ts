@@ -83,3 +83,79 @@ test('city filter returns only offers from the selected city', () => {
   expect(result.map((offer) => offer.id)).toEqual(['nantes']);
   expect(result.every((offer) => offer.city === 'Nantes')).toBe(true);
 });
+
+
+test('every categorical filter returns only matching offers across a mixed dataset', () => {
+  const offers = [
+    { ...base, id: 'match', city: 'Nantes', specialization: 'Computer Vision / 3D', priority: 'A+', freshness: 'Vérifié <24h', m2Fit: 'Oui', sourceQuality: 'Officiel / direct', applicationStatus: 'À candidater', decisionScore: 96 },
+    { ...base, id: 'other-city', city: 'Paris' },
+    { ...base, id: 'other-specialization', specialization: 'Data Science' },
+    { ...base, id: 'other-priority', priority: 'B' },
+    { ...base, id: 'other-freshness', freshness: 'Ancien' },
+    { ...base, id: 'other-m2', m2Fit: 'Possible' },
+    { ...base, id: 'other-source', sourceQuality: 'Agrégateur' },
+    { ...base, id: 'other-status', applicationStatus: 'Entretien' },
+    { ...base, id: 'other-score', decisionScore: 72 },
+  ];
+
+  const cases: Array<[Partial<OfferFilters>, string]> = [
+    [{ city: 'Nantes' }, 'match'],
+    [{ specialization: 'Computer Vision / 3D' }, 'match'],
+    [{ priority: 'A+' }, 'match'],
+    [{ freshness: 'Vérifié <24h' }, 'match'],
+    [{ m2Fit: 'Oui' }, 'match'],
+    [{ sourceQuality: 'Officiel / direct' }, 'match'],
+    [{ applicationStatus: 'À candidater' }, 'match'],
+    [{ minScore: 90 }, 'match'],
+  ];
+
+  for (const [partial, expectedId] of cases) {
+    const result = filterOffers(offers, { ...filters, ...partial });
+    expect(result.some((offer) => offer.id === expectedId)).toBe(true);
+    for (const offer of result) {
+      if (partial.city) expect(offer.city).toBe(partial.city);
+      if (partial.specialization) expect(offer.specialization).toBe(partial.specialization);
+      if (partial.priority) expect(offer.priority).toBe(partial.priority);
+      if (partial.freshness) expect(offer.freshness).toBe(partial.freshness);
+      if (partial.m2Fit) expect(offer.m2Fit).toBe(partial.m2Fit);
+      if (partial.sourceQuality) expect(offer.sourceQuality).toBe(partial.sourceQuality);
+      if (partial.applicationStatus) expect(offer.applicationStatus).toBe(partial.applicationStatus);
+      if (partial.minScore) expect(offer.decisionScore).not.toBeNull(), expect(offer.decisionScore!).toBeGreaterThanOrEqual(partial.minScore);
+    }
+  }
+});
+
+test('combined filters use AND logic and exclude any partially matching offer', () => {
+  const offers = [
+    { ...base, id: 'exact', city: 'Nantes', specialization: 'Computer Vision / 3D', priority: 'A+', m2Fit: 'Oui', sourceQuality: 'Officiel / direct', freshness: 'Vérifié <24h', applicationStatus: 'À candidater', decisionScore: 96 },
+    { ...base, id: 'wrong-city', city: 'Paris' },
+    { ...base, id: 'wrong-priority', priority: 'B+' },
+    { ...base, id: 'wrong-score', decisionScore: 89 },
+    { ...base, id: 'wrong-status', applicationStatus: 'Entretien' },
+  ];
+
+  const result = filterOffers(offers, {
+    ...filters,
+    city: 'Nantes',
+    specialization: 'Computer Vision / 3D',
+    priority: 'A+',
+    minScore: 90,
+    m2Fit: 'Oui',
+    sourceQuality: 'Officiel / direct',
+    freshness: 'Vérifié <24h',
+    applicationStatus: 'À candidater',
+  });
+
+  expect(result.map((offer) => offer.id)).toEqual(['exact']);
+});
+
+test('query and structured filters are combined with AND logic', () => {
+  const offers = [
+    { ...base, id: 'nantes-cv', city: 'Nantes', title: 'Computer Vision Intern', skills: ['OpenCV'] },
+    { ...base, id: 'nantes-data', city: 'Nantes', title: 'Data Analyst Intern', skills: ['Pandas'] },
+    { ...base, id: 'paris-cv', city: 'Paris', title: 'Computer Vision Intern', skills: ['OpenCV'] },
+  ];
+
+  const result = filterOffers(offers, { ...filters, query: 'opencv', city: 'Nantes' });
+  expect(result.map((offer) => offer.id)).toEqual(['nantes-cv']);
+});
