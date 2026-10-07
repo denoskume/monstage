@@ -143,9 +143,13 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
 
   await page.getByRole('button', { name: /Filters/ }).click();
   await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toBeVisible();
-  await page.getByLabel('Minimum score').selectOption('95');
-  await page.getByRole('button', { name: 'Close filters' }).click();
+  await page.getByLabel('City').selectOption('Nantes');
+  await expect(page.getByText('Computer Vision Intern').first()).toBeVisible();
+  await expect(page.getByText('Machine Learning Intern')).toHaveCount(0);
   await expect(page.getByText('Data AI Intern')).toHaveCount(0);
+  await expect(page.getByText('Deep Learning Intern')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toHaveCount(0);
   await page.locator('.top-nav').getByRole('link', { name: 'Saved jobs' }).click();
   await expect(page.getByRole('heading', { name: 'My jobs' })).toBeVisible();
   await page.getByRole('tab', { name: /Applications/ }).click();
