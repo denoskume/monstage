@@ -110,7 +110,7 @@ export const defaultCvEn: CvDraft = {
       ],
     },
   ],
-  skills: 'Python, NumPy, pandas, SciPy, scikit-learn, Jupyter, PyTorch, OpenCV, Git, GitHub, Linux, FastAPI, Streamlit, React, TypeScript',
+  skills: 'Python & Scientific Computing: Python, NumPy, SciPy, pandas, Matplotlib, Jupyter\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\nComputer Vision & Image Processing: OpenCV, scikit-image, computer vision, image processing\nEngineering Tools: Git, GitHub, Linux, VS Code, Streamlit',
   languages: 'French — Native | English — C1',
   interests: 'Artificial Intelligence & Technology | Football',
 };
@@ -169,7 +169,7 @@ export const defaultCvFr: CvDraft = {
       ],
     },
   ],
-  skills: 'Python, NumPy, pandas, SciPy, scikit-learn, Jupyter, PyTorch, OpenCV, Git, GitHub, Linux, FastAPI, Streamlit, React, TypeScript',
+  skills: 'Python & Calcul scientifique : Python, NumPy, SciPy, pandas, Matplotlib, Jupyter\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\nComputer Vision & Traitement d’image : OpenCV, scikit-image, computer vision, traitement d’image\nOutils d’ingénierie : Git, GitHub, Linux, VS Code, Streamlit',
   languages: 'Français — Langue maternelle | Anglais — C1',
   interests: 'Intelligence artificielle & technologie | Football',
 };
