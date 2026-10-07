@@ -9,7 +9,7 @@ function SelectField({ label, value, onChange, options }: { label: string; value
   );
 }
 
-export function OfferFilters({ offers, filters, onChange, onReset, onClose, mobile = false }: { offers: InternshipOffer[]; filters: OfferFilters; onChange: (next: OfferFilters) => void; onReset: () => void; onClose?: () => void; mobile?: boolean }) {
+export function OfferFilters({ offers, filters, onChange, onReset, onClose, onApply, mobile = false }: { offers: InternshipOffer[]; filters: OfferFilters; onChange: (next: OfferFilters) => void; onReset: () => void; onClose?: () => void; onApply?: () => void; mobile?: boolean }) {
   return (
     <div className={`filters-panel${mobile ? ' filters-panel--mobile' : ''}`}>
       <div className="filters-panel__header"><div><strong>Filters</strong><span>Refine your results</span></div>{onClose ? <button type="button" aria-label="Close filters" onClick={onClose}>×</button> : null}</div>
@@ -23,7 +23,7 @@ export function OfferFilters({ offers, filters, onChange, onReset, onClose, mobi
         <SelectField label="Source" value={filters.sourceQuality} onChange={(value) => onChange({ ...filters, sourceQuality: value })} options={uniqueValues(offers, 'sourceQuality')} />
         <SelectField label="Status" value={filters.applicationStatus} onChange={(value) => onChange({ ...filters, applicationStatus: value })} options={uniqueValues(offers, 'applicationStatus')} />
       </div>
-      <div className="filters-panel__actions"><button type="button" className="button button--ghost" onClick={onReset}>Reset</button>{onClose ? <button type="button" className="button button--primary" onClick={onClose}>Apply</button> : null}</div>
+      <div className="filters-panel__actions"><button type="button" className="button button--ghost" onClick={onReset}>Reset</button>{onApply ? <button type="button" className="button button--primary" onClick={onApply}>Apply filters</button> : null}</div>
     </div>
   );
 }
