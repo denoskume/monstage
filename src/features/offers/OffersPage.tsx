@@ -29,6 +29,7 @@ export function OffersPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [draftFilters, setDraftFilters] = useState<OfferFilterState>(() => initialFilters());
   const [actionNotice, setActionNotice] = useState<{ text: string; offerId?: string } | null>(null);
   const actions = useOfferActions();
 
@@ -50,7 +51,18 @@ export function OffersPage() {
 
   function resetAll() {
     setFilters(resetFilters);
+    setDraftFilters(resetFilters);
     setSort(defaultPreferences.sort);
+    setFiltersOpen(false);
+  }
+
+  function openFilters() {
+    setDraftFilters(filters);
+    setFiltersOpen(true);
+  }
+
+  function applyFilters() {
+    setFilters(draftFilters);
     setFiltersOpen(false);
   }
 
@@ -94,7 +106,7 @@ export function OffersPage() {
       <div className="jobs-search-shell">
         <div className="jobs-search-shell__controls">
           <SearchBar value={filters.query} onChange={(query) => setFilters({ ...filters, query })} placeholder="Job title, skill or company" />
-          <button type="button" className="jobs-filter-button" onClick={() => setFiltersOpen(true)}>
+          <button type="button" className="jobs-filter-button" onClick={openFilters}>
             Filters{activeFilterCount ? <span>{activeFilterCount}</span> : null}
           </button>
         </div>
@@ -107,7 +119,7 @@ export function OffersPage() {
       {error && data ? <div className="stale-banner" role="status">Showing cached data. <button onClick={retry}>Refresh</button></div> : null}
       {actionNotice ? <div className="offer-action-notice" role="status"><span>{actionNotice.text}</span>{actionNotice.offerId ? <button type="button" onClick={() => { actions.unhideOffer(actionNotice.offerId!); setActionNotice(null); }}>Undo</button> : <button type="button" onClick={() => setActionNotice(null)}>×</button>}</div> : null}
 
-      {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={offers} filters={filters} onChange={setFilters} onReset={resetAll} onClose={() => setFiltersOpen(false)} /></div></div> : null}
+      {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={offers} filters={draftFilters} onChange={setDraftFilters} onReset={() => setDraftFilters(resetFilters)} onClose={() => setFiltersOpen(false)} onApply={applyFilters} /></div></div> : null}
 
       {visibleOffers.length === 0 ? <EmptyState actionLabel="Reset filters" onAction={resetAll} /> : (
         <>
