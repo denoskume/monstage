@@ -11,6 +11,7 @@ import { OfferDetail } from './OfferDetail';
 import { OfferFilters } from './OfferFilters';
 import { OfferList } from './OfferList';
 import type { InternshipOffer } from '../../api/contract';
+import { useOfferActions } from './offerActions';
 
 function initialFilters(): OfferFilterState {
   const prefs = loadPreferences();
@@ -28,9 +29,14 @@ export function OffersPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [actionNotice, setActionNotice] = useState<{ text: string; offerId?: string } | null>(null);
+  const actions = useOfferActions();
 
   const offers = data?.offers ?? [];
-  const visibleOffers = useMemo(() => sortOffers(filterOffers(offers, filters), sort), [offers, filters, sort]);
+  const visibleOffers = useMemo(
+    () => sortOffers(filterOffers(offers.filter((offer) => !actions.isHidden(offer.id)), filters), sort),
+    [offers, filters, sort, actions.hidden],
+  );
   const selectedOffer = visibleOffers.find((offer) => offer.id === selectedId) ?? visibleOffers[0] ?? null;
 
   useEffect(() => {
@@ -51,6 +57,33 @@ export function OffersPage() {
   function chooseOffer(offer: InternshipOffer) {
     setSelectedId(offer.id);
     setMobileDetail(true);
+  }
+
+  function toggleSaved(offer: InternshipOffer) {
+    const willSave = !(offer.shortlist || actions.isSaved(offer.id));
+    actions.toggleSaved(offer.id);
+    setActionNotice({ text: willSave ? 'Saved to your jobs.' : 'Removed from saved jobs.' });
+  }
+
+  function hideOffer(offer: InternshipOffer) {
+    actions.hideOffer(offer.id);
+    setActionNotice({ text: 'Job hidden.', offerId: offer.id });
+    if (offer.id === selectedId) setMobileDetail(false);
+  }
+
+  async function shareOffer(offer: InternshipOffer) {
+    const url = offer.applicationUrl || window.location.href;
+    const text = `${offer.title} — ${offer.company}`;
+    try {
+      if (navigator.share) await navigator.share({ title: offer.title, text, url });
+      else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        setActionNotice({ text: 'Job link copied.' });
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      setActionNotice({ text: 'Unable to share this job.' });
+    }
   }
 
   const activeFilterCount = [filters.specialization, filters.city, filters.priority, filters.freshness, filters.m2Fit, filters.sourceQuality, filters.applicationStatus].filter(Boolean).length + (filters.minScore > 0 ? 1 : 0) + (filters.onlyForMe ? 1 : 0);
@@ -74,6 +107,7 @@ export function OffersPage() {
       </div>
 
       {error && data ? <div className="stale-banner" role="status">Showing cached data. <button onClick={retry}>Refresh</button></div> : null}
+      {actionNotice ? <div className="offer-action-notice" role="status"><span>{actionNotice.text}</span>{actionNotice.offerId ? <button type="button" onClick={() => { actions.unhideOffer(actionNotice.offerId!); setActionNotice(null); }}>Undo</button> : <button type="button" onClick={() => setActionNotice(null)}>×</button>}</div> : null}
 
       {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) setFiltersOpen(false); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={offers} filters={filters} onChange={setFilters} onReset={resetAll} onClose={() => setFiltersOpen(false)} /></div></div> : null}
 
@@ -81,8 +115,8 @@ export function OffersPage() {
         <>
           <div className="jobs-results-header"><div><strong>{visibleOffers.length}</strong> opportunities</div><span>{sortLabels[sort]}</span></div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
-            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedId={selectedOffer?.id ?? null} onSelect={chooseOffer} /></div>
-            <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} /> : null}</div>
+            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedId={selectedOffer?.id ?? null} onSelect={chooseOffer} isSaved={(offer) => offer.shortlist || actions.isSaved(offer.id)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
+            <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} saved={selectedOffer.shortlist || actions.isSaved(selectedOffer.id)} onToggleSave={() => toggleSaved(selectedOffer)} onHide={() => hideOffer(selectedOffer)} onShare={() => void shareOffer(selectedOffer)} /> : null}</div>
           </div>
         </>
       )}
