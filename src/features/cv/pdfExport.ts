@@ -117,12 +117,12 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   y -= 12;
 
   if (draft.summary.trim()) {
-    drawSectionTitle('Professional Summary');
+    drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Professional Summary');
     drawLines(draft.summary.trim(), 9.5);
   }
 
   if (draft.education.length) {
-    drawSectionTitle('Education');
+    drawSectionTitle(draft.language === 'FR' ? 'Formation' : 'Education');
     for (const item of draft.education) {
       drawEntryHeader(item.school, item.period);
       drawEntryHeader(item.degree, item.location);
@@ -132,7 +132,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   }
 
   if (draft.experience.length) {
-    drawSectionTitle('Experience');
+    drawSectionTitle(draft.language === 'FR' ? 'Expérience' : 'Experience');
     for (const item of draft.experience) {
       drawEntryHeader(item.role + ' — ' + item.company, item.period);
       if (item.location) drawLines(item.location, 9.2);
@@ -142,7 +142,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   }
 
   if (draft.projects.length) {
-    drawSectionTitle('Selected Projects');
+    drawSectionTitle(draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects');
     for (const item of draft.projects) {
       drawEntryHeader(item.name, '');
       for (const bullet of item.bullets.filter((value) => value.trim())) drawBullet(bullet.trim());
@@ -151,12 +151,12 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   }
 
   if (draft.skills.trim()) {
-    drawSectionTitle('Technical Skills');
+    drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
     drawLines(draft.skills.trim(), 9.5);
   }
 
   if (draft.languages.trim()) {
-    drawSectionTitle('Languages');
+    drawSectionTitle(draft.language === 'FR' ? 'Langues' : 'Languages');
     drawLines(draft.languages.trim(), 9.5);
   }
 
