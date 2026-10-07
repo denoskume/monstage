@@ -1331,3 +1331,41 @@ h1, h2, h3 { color: var(--text); }
   .offer-detail__actions--indeed .button--primary,
   .offer-detail__actions--indeed .button--secondary { flex: 1 1 100%; }
 }
+
+
+/* Top navigation quick actions */
+.top-nav__icon-links { display:flex; align-items:center; gap:4px; }
+.top-nav__icon-link {
+  width:40px;
+  height:40px;
+  border:0;
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:transparent;
+  color:var(--text-muted);
+}
+.top-nav__icon-link:hover,
+.top-nav__icon-link.active {
+  background:var(--surface-muted);
+  color:var(--text);
+}
+.top-nav__icon-link svg { width:21px; height:21px; }
+.account-menu { position:relative; }
+.account-menu__trigger { cursor:pointer; }
+.account-menu__popover {
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  z-index:120;
+  min-width:220px;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:var(--surface);
+  box-shadow:var(--shadow-float);
+}
+.account-menu__identity { display:grid; gap:3px; padding:7px 8px 10px; border-bottom:1px solid var(--border); margin-bottom:6px; }
+.account-menu__identity span { color:var(--text-muted); font-size:.8rem; overflow:hidden; text-overflow:ellipsis; }
+.account-menu__signout { width:100%; text-align:left; border:0; background:transparent; padding:8px; border-radius:8px; }
+.account-menu__signout:hover { background:var(--surface-muted); }
