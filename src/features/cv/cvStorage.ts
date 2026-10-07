@@ -63,10 +63,10 @@ export const defaultCvEn: CvDraft = {
   phone: '',
   linkedin: 'linkedin.com/in/denoskume',
   github: 'github.com/denoskume',
-  summary: 'Final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a 6-month end-of-studies internship from February 2027.',
+  summary: 'Final-year MSc. student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a 6-month end-of-studies internship from February 2027.',
   education: [
-    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Machine learning, computer vision, image processing, signal processing and deep learning.' },
-    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc — Computer Science & Electronics', location: 'Bengaluru, India', period: '2021–2024', details: 'Computer science and electronics, from software fundamentals to hardware and embedded systems.' },
+    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Program focused on understanding and developing state-of-the-art methodologies for data analysis, machine learning, and signal and image processing.' },
+    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, India', period: '2021–2024', details: 'Dual-major programme focused on programming, algorithms, software development and data analysis alongside digital electronics, communication systems, embedded systems, and hardware–software integration.' },
   ],
   experience: [
     { id: 'unified', role: 'Data Analyst Intern', company: 'Unified Mentor Pvt. Ltd.', location: 'Bengaluru, India', period: 'Sep–Dec 2024', bullets: [
@@ -122,10 +122,10 @@ export const defaultCvFr: CvDraft = {
   phone: '',
   linkedin: 'linkedin.com/in/denoskume',
   github: 'github.com/denoskume',
-  summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de 6 mois à partir de février 2027.',
+  summary: 'Étudiant en dernière année de MSc. Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de 6 mois à partir de février 2027.',
   education: [
-    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Machine learning, computer vision, traitement d’image, traitement du signal et deep learning.' },
-    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc — Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2024', details: 'Formation en informatique et électronique, des fondamentaux logiciels aux systèmes matériels et embarqués.' },
+    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur la compréhension et le développement de méthodes de pointe pour l’analyse de données, le machine learning et le traitement du signal et de l’image.' },
+    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2024', details: 'Double cursus centré sur la programmation, les algorithmes, le développement logiciel et l’analyse de données, ainsi que l’électronique numérique, les systèmes de communication, les systèmes embarqués et l’intégration matériel–logiciel.' },
   ],
   experience: [
     { id: 'unified', role: 'Stagiaire Data Analyst', company: 'Unified Mentor Pvt. Ltd.', location: 'Bengaluru, Inde', period: 'Sept.–Déc. 2024', bullets: [
