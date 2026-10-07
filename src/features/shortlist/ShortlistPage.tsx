@@ -110,21 +110,28 @@ export function ShortlistPage() {
           <div className="my-jobs-saved-list">
             {savedOffers.map((offer) => (
               <article className="my-jobs-saved-row" key={offer.id}>
+                <div className="my-jobs-company-mark" aria-hidden="true">
+                  {offer.company.trim().slice(0, 2).toUpperCase()}
+                </div>
+
                 <div className="my-jobs-saved-row__main">
                   <h2>{offer.title}</h2>
                   <p>{offer.company}</p>
                   <span>{offer.city ?? 'City not specified'}</span>
-                  <small>Saved job</small>
+                  <small>Saved in My jobs</small>
                 </div>
+
                 <div className="my-jobs-saved-row__actions">
                   {offer.applicationUrl ? (
-                    <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply</a>
+                    <a className="button button--primary my-jobs-apply" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply</a>
                   ) : (
-                    <button className="button button--primary" type="button" disabled>Apply</button>
+                    <button className="button button--primary my-jobs-apply" type="button" disabled>Apply</button>
                   )}
-                  <button className="offer-action-icon is-active" type="button" onClick={() => toggleSaved(offer)} aria-label="Remove from saved jobs" title="Saved">
+
+                  <button className="offer-action-icon is-active my-jobs-bookmark" type="button" onClick={() => toggleSaved(offer)} aria-label="Remove from saved jobs" title="Saved">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.55L6 21V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                   </button>
+
                   <button className="my-jobs-more" type="button" onClick={() => void shareOffer(offer)} aria-label="More actions" title="Share job">•••</button>
                 </div>
               </article>
