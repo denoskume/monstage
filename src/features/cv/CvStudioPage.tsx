@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft } from './cvStorage';
+import { downloadCvPdf } from './pdfExport';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
   return items.map((item, current) => current === index ? next : item);
@@ -63,7 +64,7 @@ export function CvStudioPage() {
         <div className="cv-studio-actions">
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
-          <button className="button button--primary" type="button" onClick={() => window.print()}>Export PDF</button>
+          <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadCvPdf(draft)} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
         </div>
       </div>
 
