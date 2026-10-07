@@ -51,7 +51,7 @@ export function ShortlistPage() {
 
   return (
     <section className="page">
-      <div className="page-header"><div><h1>Saved jobs</h1><p>{offers.length} saved {offers.length === 1 ? 'job' : 'jobs'}</p></div></div>
+      <div className="page-header"><div><h1>Shortlist</h1><p>{offers.length} saved {offers.length === 1 ? 'job' : 'jobs'}</p></div></div>
       {notice ? <div className="offer-action-notice" role="status"><span>{notice}</span><button type="button" onClick={() => setNotice(null)}>×</button></div> : null}
       {offers.length === 0 ? <EmptyState title="Your saved jobs are empty." /> : (
         <div className="offers-layout shortlist-layout">
