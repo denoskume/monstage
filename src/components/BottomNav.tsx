@@ -12,7 +12,7 @@ export function BottomNav() {
   return (
     <nav className="bottom-nav" aria-label="Mobile navigation">
       {links.map(([to, icon, label]) => (
-        <NavLink key={to} to={to} className="nav-link" aria-label={label}>
+        <NavLink key={to} to={to} className="nav-link" aria-label={to === '/shortlist' ? 'Shortlist' : to === '/dashboard' ? 'Dashboard' : label}>
           <span className="bottom-nav__icon" aria-hidden="true">{icon}</span>
           <span>{label}</span>
         </NavLink>
