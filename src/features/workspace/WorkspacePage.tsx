@@ -8,6 +8,7 @@ import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { useOffers } from '../../hooks/useOffers';
 import { displayValue } from '../../i18n/display';
 import { getCvMatch, getFollowUpAdvice } from './intelligence';
+import { ApplyCenter } from '../offers/ApplyCenter';
 import {
   getWorkspaceState,
   loadWorkspace,
@@ -48,8 +49,10 @@ function WorkspaceCard({
   const match = getCvMatch(offer);
   const progress = packageProgress(state);
   const followUp = getFollowUpAdvice(offer, state.followUpDate);
+  const [applyOpen, setApplyOpen] = useState(false);
 
   return (
+    <>
     <article className={`workspace-card card${selected ? ' workspace-card--selected' : ''}`}>
       <header className="workspace-card__header">
         <div>
@@ -121,10 +124,12 @@ function WorkspaceCard({
       </section>
 
       <footer className="workspace-actions">
-        {offer.applicationUrl ? <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Open employer page ↗</a> : null}
-        <span>Opening the external page does not change application status.</span>
+        {offer.applicationUrl ? <button className="button button--primary" type="button" onClick={() => setApplyOpen(true)}>Apply in MonStage</button> : null}
+        <span>Status changes only after a successful submission or verified evidence.</span>
       </footer>
     </article>
+      {applyOpen ? <ApplyCenter offer={offer} onClose={() => setApplyOpen(false)} /> : null}
+    </>
   );
 }
 

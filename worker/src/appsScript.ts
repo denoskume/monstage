@@ -6,21 +6,28 @@ interface OffersPayload {
   offers?: unknown;
 }
 
-export async function fetchOffersFromAppsScript(
+export async function postToAppsScript(
   env: Env,
+  payload: Record<string, unknown>,
   fetchImpl: typeof fetch = fetch,
-): Promise<unknown> {
-  const response = await fetchImpl(env.APPS_SCRIPT_URL, {
+): Promise<Response> {
+  return fetchImpl(env.APPS_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       gatewaySecret: env.APPS_SCRIPT_GATEWAY_SECRET,
+      ...payload,
     }),
   });
+}
 
-  if (!response.ok) {
-    throw new Error('BACKEND_UNAVAILABLE');
-  }
+export async function fetchOffersFromAppsScript(
+  env: Env,
+  fetchImpl: typeof fetch = fetch,
+): Promise<unknown> {
+  const response = await postToAppsScript(env, { action: 'offers' }, fetchImpl);
+
+  if (!response.ok) throw new Error('BACKEND_UNAVAILABLE');
 
   const payload = await response.json() as OffersPayload;
   if (
@@ -32,4 +39,22 @@ export async function fetchOffersFromAppsScript(
   }
 
   return payload;
+}
+
+export async function submitApplicationToAppsScript(
+  env: Env,
+  application: unknown,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ status: number; payload: unknown }> {
+  const response = await postToAppsScript(env, {
+    action: 'submitApplication',
+    application,
+  }, fetchImpl);
+
+  let payload: unknown = null;
+  try { payload = await response.json(); } catch { payload = { error: 'INVALID_BACKEND_PAYLOAD' }; }
+  const logicalStatus = payload && typeof payload === 'object' && typeof (payload as { status?: unknown }).status === 'number'
+    ? Number((payload as { status: number }).status)
+    : response.status;
+  return { status: logicalStatus, payload };
 }

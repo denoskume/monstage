@@ -543,6 +543,245 @@ function installAutonomyTriggers() {
   syncApplicationEvents();
 }
 
+
+function parseRequestBody_(e) {
+  if (!e || !e.postData || !e.postData.contents) return {};
+  try { return JSON.parse(e.postData.contents) || {}; } catch (error) { return {}; }
+}
+
+function parseMailtoRecipient_(url) {
+  var text = String(url || '');
+  if (text.toLowerCase().indexOf('mailto:') !== 0) return null;
+  return decodeURIComponent(text.slice(7).split('?')[0]).trim() || null;
+}
+
+function buildAttachmentBlobs_(attachments) {
+  if (!Array.isArray(attachments)) return [];
+  return attachments.slice(0, 2).map(function (attachment) {
+    var name = normalizeText_(attachment && attachment.name);
+    var mimeType = normalizeText_(attachment && attachment.mimeType) || 'application/octet-stream';
+    var dataBase64 = normalizeText_(attachment && attachment.dataBase64);
+    if (!name || !dataBase64) return null;
+    if (dataBase64.length > 9 * 1024 * 1024) throw new Error('Attachment too large');
+    return Utilities.newBlob(Utilities.base64Decode(dataBase64), mimeType, name);
+  }).filter(Boolean);
+}
+
+function recordMonStageSubmission_(spreadsheet, offerId, company, provider, reference) {
+  var eventSheet = getEventSheet_(spreadsheet);
+  var now = new Date();
+  var definition = {
+    type: 'submitted',
+    confidence: 1,
+    status: 'Candidature envoyée',
+    action: 'Préparer la relance et l’entretien'
+  };
+  var event = {
+    id: 'monstage:' + offerId + ':' + now.getTime(),
+    offerId: offerId,
+    company: company,
+    type: 'submitted',
+    confidence: 1,
+    source: 'monstage',
+    detectedAt: now.toISOString(),
+    evidence: 'Submitted directly by MonStage via ' + provider + (reference ? ' · reference=' + reference : '') + '.'
+  };
+  appendApplicationEvent_(eventSheet, event);
+  applyDetectedStatus_(spreadsheet, offerId, definition, event.detectedAt);
+}
+
+
+function parseLeverPosting_(url) {
+  var match = String(url || '').match(/^https:\/\/jobs(\.eu)?\.lever\.co\/([^/?#]+)\/([^/?#]+)/i);
+  if (!match) return null;
+  return {
+    eu: !!match[1],
+    site: decodeURIComponent(match[2]),
+    postingId: decodeURIComponent(match[3])
+  };
+}
+
+function submitLeverApplication_(application) {
+  var apiKey = PropertiesService.getScriptProperties().getProperty('LEVER_API_KEY');
+  if (!apiKey) return { status: 409, payload: { submitted: false, provider: 'lever', reference: null, error: 'EMPLOYER_INTEGRATION_REQUIRED', message: 'Lever API access is not configured for this employer.' } };
+
+  var posting = parseLeverPosting_(application.applicationUrl);
+  if (!posting) return { status: 400, payload: { submitted: false, provider: 'lever', reference: null, error: 'INVALID_LEVER_URL', message: 'Unable to identify this Lever posting.' } };
+
+  var fullName = ((application.firstName || '') + ' ' + (application.lastName || '')).trim();
+  var payload = {
+    name: fullName,
+    email: application.authenticatedEmail || application.email,
+    phone: application.phone || '',
+    comments: application.message || '',
+    source: 'MonStage',
+    silent: false
+  };
+
+  var attachments = buildAttachmentBlobs_(application.attachments);
+  if (attachments.length) payload.resume = attachments[0];
+
+  var base = posting.eu ? 'https://api.eu.lever.co' : 'https://api.lever.co';
+  var endpoint = base + '/v0/postings/' + encodeURIComponent(posting.site) + '/' + encodeURIComponent(posting.postingId) + '?key=' + encodeURIComponent(apiKey);
+  var response = UrlFetchApp.fetch(endpoint, {
+    method: 'post',
+    payload: payload,
+    muteHttpExceptions: true
+  });
+
+  var status = response.getResponseCode();
+  if (status >= 200 && status < 300) {
+    return { status: 200, payload: { submitted: true, provider: 'lever', reference: posting.postingId, message: 'Application submitted to Lever from MonStage.' } };
+  }
+
+  if (status === 429) return { status: 429, payload: { submitted: false, provider: 'lever', reference: null, error: 'RATE_LIMITED', message: 'Lever rate limit reached. Retry later from MonStage.' } };
+  return { status: 409, payload: { submitted: false, provider: 'lever', reference: null, error: 'LEVER_REJECTED', message: 'Lever requires additional employer-specific fields or authorization for this role.' } };
+}
+
+function parseSmartRecruitersPosting_(url) {
+  var text = String(url || '');
+  var uuid = text.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
+  return uuid ? uuid[0] : null;
+}
+
+function submitSmartRecruitersApplication_(application) {
+  var token = PropertiesService.getScriptProperties().getProperty('SMARTRECRUITERS_TOKEN');
+  if (!token) return { status: 409, payload: { submitted: false, provider: 'smartrecruiters', reference: null, error: 'EMPLOYER_INTEGRATION_REQUIRED', message: 'SmartRecruiters OAuth access is not configured for this employer.' } };
+
+  var postingId = parseSmartRecruitersPosting_(application.applicationUrl);
+  if (!postingId) return { status: 400, payload: { submitted: false, provider: 'smartrecruiters', reference: null, error: 'INVALID_SMARTRECRUITERS_URL', message: 'Unable to identify this SmartRecruiters posting.' } };
+
+  var endpoint = 'https://api.smartrecruiters.com/postings/' + postingId + '/candidates';
+  var body = {
+    firstName: application.firstName || '',
+    lastName: application.lastName || '',
+    email: application.authenticatedEmail || application.email,
+    phoneNumber: application.phone || '',
+    messageToHiringManager: application.message || '',
+    conditionalsIncluded: true
+  };
+
+  var response = UrlFetchApp.fetch(endpoint, {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' },
+    payload: JSON.stringify(body),
+    muteHttpExceptions: true
+  });
+
+  var status = response.getResponseCode();
+  if (status >= 200 && status < 300) {
+    var parsed = {};
+    try { parsed = JSON.parse(response.getContentText() || '{}'); } catch (error) {}
+    return { status: 200, payload: { submitted: true, provider: 'smartrecruiters', reference: parsed.id || postingId, message: 'Application submitted to SmartRecruiters from MonStage.' } };
+  }
+
+  if (status === 429) return { status: 429, payload: { submitted: false, provider: 'smartrecruiters', reference: null, error: 'RATE_LIMITED', message: 'SmartRecruiters rate limit reached. Retry later from MonStage.' } };
+  if (status === 400) return { status: 409, payload: { submitted: false, provider: 'smartrecruiters', reference: null, error: 'SCREENING_REQUIRED', message: 'This role requires employer-specific screening or consent answers. Complete them in the integrated application browser.' } };
+  return { status: 409, payload: { submitted: false, provider: 'smartrecruiters', reference: null, error: 'SMARTRECRUITERS_REJECTED', message: 'SmartRecruiters did not accept the direct submission for this role.' } };
+}
+
+function submitApplication_(application) {
+  application = application || {};
+  var provider = normalizeText_(application.provider) || 'generic';
+  var applicationUrl = normalizeText_(application.applicationUrl);
+  var offerId = normalizeText_(application.offerId);
+  var company = normalizeText_(application.company) || '';
+  var title = normalizeText_(application.title) || 'Internship application';
+  var firstName = normalizeText_(application.firstName) || '';
+  var lastName = normalizeText_(application.lastName) || '';
+  var email = normalizeText_(application.authenticatedEmail) || normalizeText_(application.email);
+  var phone = normalizeText_(application.phone) || '';
+  var location = normalizeText_(application.location) || '';
+  var message = normalizeText_(application.message) || '';
+  var consent = application.consent === true;
+
+  if (!offerId || !applicationUrl || !email || !consent) {
+    return { status: 400, payload: { error: 'INVALID_APPLICATION', message: 'Missing required application data.' } };
+  }
+
+  if (provider === 'email' || String(applicationUrl).toLowerCase().indexOf('mailto:') === 0) {
+    var recipient = parseMailtoRecipient_(applicationUrl);
+    if (!recipient) {
+      return { status: 400, payload: { error: 'INVALID_APPLICATION_EMAIL', message: 'Application email is invalid.' } };
+    }
+
+    var fullName = (firstName + ' ' + lastName).trim();
+    var subject = 'Application — ' + title + (fullName ? ' — ' + fullName : '');
+    var body = [
+      'Hello,',
+      '',
+      message || ('Please find my application for the position "' + title + '".'),
+      '',
+      fullName ? 'Candidate: ' + fullName : null,
+      'Email: ' + email,
+      phone ? 'Phone: ' + phone : null,
+      location ? 'Location: ' + location : null
+    ].filter(function (line) { return line !== null; }).join('\n');
+
+    var options = {
+      name: fullName || 'MonStage candidate',
+      replyTo: email
+    };
+    var blobs = buildAttachmentBlobs_(application.attachments);
+    if (blobs.length) options.attachments = blobs;
+
+    GmailApp.sendEmail(recipient, subject, body, options);
+
+    var spreadsheet = getSpreadsheet_();
+    recordMonStageSubmission_(spreadsheet, offerId, company, 'email', recipient);
+    return {
+      status: 200,
+      payload: {
+        submitted: true,
+        provider: 'email',
+        reference: recipient,
+        message: 'Application sent from MonStage.'
+      }
+    };
+  }
+
+  if (provider === 'lever') {
+    var leverResult = submitLeverApplication_(application);
+    if (leverResult.payload && leverResult.payload.submitted) {
+      recordMonStageSubmission_(getSpreadsheet_(), offerId, company, 'lever', leverResult.payload.reference);
+    }
+    return leverResult;
+  }
+
+  if (provider === 'smartrecruiters') {
+    var smartResult = submitSmartRecruitersApplication_(application);
+    if (smartResult.payload && smartResult.payload.submitted) {
+      recordMonStageSubmission_(getSpreadsheet_(), offerId, company, 'smartrecruiters', smartResult.payload.reference);
+    }
+    return smartResult;
+  }
+
+  if (provider === 'greenhouse') {
+    return {
+      status: 409,
+      payload: {
+        submitted: false,
+        provider: 'greenhouse',
+        reference: null,
+        error: 'EMPLOYER_INTEGRATION_REQUIRED',
+        message: 'Greenhouse requires employer-side recruiting integration access for direct candidate submission.'
+      }
+    };
+  }
+
+  return {
+    status: 409,
+    payload: {
+      submitted: false,
+      provider: provider,
+      reference: null,
+      error: 'IN_APP_BROWSER_REQUIRED',
+      message: 'Direct API submission is unavailable for this employer. Continue in the integrated MonStage application browser.'
+    }
+  };
+}
+
 function doGet() {
   return jsonOutput_({
     error: 'NOT_FOUND',
@@ -558,10 +797,17 @@ function doPost(e) {
     var providedSecret = readGatewaySecret_(e);
 
     if (!expectedSecret || !secureEquals_(providedSecret, expectedSecret)) {
-      return jsonOutput_({
-        error: 'UNAUTHORIZED',
-        message: 'Unauthorized'
-      });
+      return jsonOutput_({ error: 'UNAUTHORIZED', message: 'Unauthorized' });
+    }
+
+    var body = parseRequestBody_(e);
+    var action = normalizeText_(body.action) || 'offers';
+
+    if (action === 'submitApplication') {
+      var result = submitApplication_(body.application || {});
+      var responsePayload = result.payload || {};
+      responsePayload.status = result.status;
+      return jsonOutput_(responsePayload);
     }
 
     return jsonOutput_({
@@ -574,7 +820,7 @@ function doPost(e) {
     console.error('MonStage backend error');
     return jsonOutput_({
       error: 'MONSTAGE_API_ERROR',
-      message: 'Unable to load offers'
+      message: 'Unable to process request'
     });
   }
 }

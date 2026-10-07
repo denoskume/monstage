@@ -1,5 +1,5 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
-import { fetchOffersFromAppsScript } from './appsScript';
+import { fetchOffersFromAppsScript, submitApplicationToAppsScript } from './appsScript';
 import { getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
@@ -11,6 +11,7 @@ const OFFERS_CACHE_RETENTION_SECONDS = 15 * 60;
 export interface WorkerDependencies {
   verifyUser: (token: string, env: Env) => Promise<AuthorizedUser>;
   fetchOffers: (env: Env) => Promise<unknown>;
+  submitApplication?: (env: Env, application: unknown) => Promise<{ status: number; payload: unknown }>;
   getCachedOffers: () => Promise<CachedOffers | null>;
   putCachedOffers: (payload: unknown, ttlSeconds: number) => Promise<void>;
 }
@@ -18,6 +19,7 @@ export interface WorkerDependencies {
 const defaultDependencies: WorkerDependencies = {
   verifyUser: verifyAuthorizedUser,
   fetchOffers: fetchOffersFromAppsScript,
+  submitApplication: submitApplicationToAppsScript,
   getCachedOffers,
   putCachedOffers,
 };
@@ -29,11 +31,7 @@ function bearerToken(request: Request): string | null {
   return token || null;
 }
 
-function jsonResponse(
-  payload: unknown,
-  status: number,
-  origin: string | null,
-): Response {
+function jsonResponse(payload: unknown, status: number, origin: string | null): Response {
   return new Response(JSON.stringify(payload), {
     status,
     headers: responseHeaders(origin),
@@ -64,23 +62,19 @@ export async function handleRequest(
   const url = new URL(request.url);
 
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: responseHeaders(origin),
-    });
+    return new Response(null, { status: 204, headers: responseHeaders(origin) });
   }
 
   const isSessionRoute = request.method === 'GET' && url.pathname === '/api/session';
   const isOffersRoute = request.method === 'GET' && url.pathname === '/api/offers';
+  const isSubmitRoute = request.method === 'POST' && url.pathname === '/api/applications/submit';
 
-  if (!isSessionRoute && !isOffersRoute) {
+  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute) {
     return jsonResponse({ error: 'NOT_FOUND' }, 404, origin);
   }
 
   const token = bearerToken(request);
-  if (!token) {
-    return jsonResponse({ error: 'UNAUTHORIZED' }, 401, origin);
-  }
+  if (!token) return jsonResponse({ error: 'UNAUTHORIZED' }, 401, origin);
 
   let user: AuthorizedUser;
   try {
@@ -89,23 +83,38 @@ export async function handleRequest(
     return authErrorResponse(error, origin);
   }
 
-  if (isSessionRoute) {
-    return jsonResponse({ user }, 200, origin);
+  if (isSessionRoute) return jsonResponse({ user }, 200, origin);
+
+  if (isSubmitRoute) {
+    let body: unknown;
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin); }
+    if (!body || typeof body !== 'object') return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin);
+
+    const candidate = body as Record<string, unknown>;
+    const application = {
+      ...candidate,
+      authenticatedEmail: user.email,
+      authenticatedName: user.name,
+    };
+
+    try {
+      const submitApplication = dependencies.submitApplication ?? defaultDependencies.submitApplication!;
+      const result = await submitApplication(env, application);
+      return jsonResponse(result.payload, result.status, origin);
+    } catch {
+      return jsonResponse({ error: 'BACKEND_UNAVAILABLE', message: 'Application backend unavailable.' }, 502, origin);
+    }
   }
 
   const cachedOffers = await dependencies.getCachedOffers();
-  if (cachedOffers && isFresh(cachedOffers)) {
-    return jsonResponse(cachedOffers.payload, 200, origin);
-  }
+  if (cachedOffers && isFresh(cachedOffers)) return jsonResponse(cachedOffers.payload, 200, origin);
 
   try {
     const offers = await dependencies.fetchOffers(env);
     await dependencies.putCachedOffers(offers, OFFERS_CACHE_RETENTION_SECONDS);
     return jsonResponse(offers, 200, origin);
   } catch {
-    if (cachedOffers && isWithinMaxStale(cachedOffers)) {
-      return jsonResponse(cachedOffers.payload, 200, origin);
-    }
+    if (cachedOffers && isWithinMaxStale(cachedOffers)) return jsonResponse(cachedOffers.payload, 200, origin);
     return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin);
   }
 }

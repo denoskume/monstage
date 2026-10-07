@@ -299,7 +299,7 @@ describe('Apps Script proxy', () => {
     const mockFetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       expect(init?.method).toBe('POST');
       expect(init?.headers).toEqual({ 'Content-Type': 'application/json' });
-      expect(JSON.parse(String(init?.body))).toEqual({ gatewaySecret: 'gateway-secret' });
+      expect(JSON.parse(String(init?.body))).toEqual({ gatewaySecret: 'gateway-secret', action: 'offers' });
       return new Response(JSON.stringify(offersPayload), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },

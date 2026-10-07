@@ -22,7 +22,7 @@ export function responseHeaders(origin: string | null): Headers {
   if (origin) {
     headers.set('Access-Control-Allow-Origin', origin);
     headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-    headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   }
 
   return headers;
