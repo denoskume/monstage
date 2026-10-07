@@ -44,7 +44,7 @@ export function TopNav() {
           <NavLink to="/messages" className="top-nav__icon-link" aria-label="Recruiter activity" title="Recruiter activity">
             <MessageIcon />
           </NavLink>
-          <NavLink to="/applications" className="top-nav__icon-link" aria-label="Application alerts" title="Application alerts">
+          <NavLink to="/notifications" className="top-nav__icon-link" aria-label="Notifications" title="Notifications">
             <BellIcon />
           </NavLink>
         </nav>
