@@ -10,7 +10,7 @@ const activityStatuses = new Set(['Réponse recruteur', 'Entretien', 'Test techn
 
 function activityLabel(status: string | null): string {
   if (!status) return 'Recruiter activity';
-  return displayValue(status);
+  return displayValue(status) ?? status;
 }
 
 export function MessagesPage() {
