@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage } from './cvStorage';
 import { useAuth } from '../../auth/useAuth';
 import { apiBaseUrl } from '../../api/authClient';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
@@ -38,7 +38,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 
 export function CvStudioPage() {
   const { token } = useAuth();
-  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft());
+  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft('EN'));
   const [saved, setSaved] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
@@ -54,8 +54,14 @@ export function CvStudioPage() {
     setSaved(true);
   }
 
+  function switchLanguage(language: CvLanguage) {
+    saveCvDraft(draft);
+    setDraft(loadCvDraft(language));
+    setSaved(false);
+  }
+
   function reset() {
-    const next = resetCvDraft();
+    const next = resetCvDraft(draft.language);
     setDraft(next);
     setSaved(false);
   }
@@ -145,9 +151,13 @@ export function CvStudioPage() {
       <div className="page-header cv-studio-header">
         <div>
           <h1>CV Studio</h1>
-          <p>Create and tailor a clean ATS-friendly CV directly in MonStage.</p>
+          <p>{draft.language === 'FR' ? 'Créez et adaptez un CV ATS clair avec un contenu rédigé naturellement en français.' : 'Create and tailor a clean ATS-friendly CV written naturally for English-speaking recruiters.'}</p>
         </div>
         <div className="cv-studio-actions">
+          <div className="cl-language-toggle" aria-label="CV language">
+            <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
+            <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
+          </div>
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
           {pdfReady && pdfBytes ? (
@@ -250,9 +260,9 @@ export function CvStudioPage() {
             <p className="cv-preview__contact">{[draft.location, draft.email, draft.phone, draft.linkedin, draft.github].filter(Boolean).join(' | ')}</p>
           </header>
 
-          <section><h2>Professional Summary</h2><p>{draft.summary}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Profil' : 'Professional Summary'}</h2><p>{draft.summary}</p></section>
 
-          <section><h2>Education</h2>
+          <section><h2>{draft.language === 'FR' ? 'Formation' : 'Education'}</h2>
             {draft.education.map((item) => <div className="cv-entry" key={item.id}>
               <div className="cv-entry__top"><strong>{item.school}</strong><span>{item.period}</span></div>
               <div className="cv-entry__top"><span>{item.degree}</span><span>{item.location}</span></div>
@@ -260,7 +270,7 @@ export function CvStudioPage() {
             </div>)}
           </section>
 
-          <section><h2>Experience</h2>
+          <section><h2>{draft.language === 'FR' ? 'Expérience' : 'Experience'}</h2>
             {draft.experience.map((item) => <div className="cv-entry" key={item.id}>
               <div className="cv-entry__top"><strong>{item.role} — {item.company}</strong><span>{item.period}</span></div>
               <div className="cv-entry__top"><span>{item.location}</span><span /></div>
@@ -268,15 +278,15 @@ export function CvStudioPage() {
             </div>)}
           </section>
 
-          <section><h2>Selected Projects</h2>
+          <section><h2>{draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects'}</h2>
             {draft.projects.map((item) => <div className="cv-entry" key={item.id}>
               <strong>{item.name}</strong>
               <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
             </div>)}
           </section>
 
-          <section><h2>Technical Skills</h2><p>{draft.skills}</p></section>
-          <section><h2>Languages</h2><p>{draft.languages}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'}</h2><p>{draft.skills}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Langues' : 'Languages'}</h2><p>{draft.languages}</p></section>
         </article>
       </div>
     </section>
