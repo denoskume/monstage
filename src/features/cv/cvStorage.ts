@@ -24,6 +24,14 @@ export interface CvProject {
   bullets: string[];
 }
 
+export interface CvLeadership {
+  id: string;
+  role: string;
+  organization: string;
+  period: string;
+  bullets: string[];
+}
+
 export interface CvDraft {
   language: CvLanguage;
   name: string;
@@ -37,6 +45,7 @@ export interface CvDraft {
   education: CvEducation[];
   experience: CvExperience[];
   projects: CvProject[];
+  leadership: CvLeadership[];
   skills: string;
   languages: string;
   interests: string;
@@ -87,6 +96,18 @@ export const defaultCvEn: CvDraft = {
       'Connected recognition to structured country intelligence generation with PDF/JSON export.',
     ]},
   ],
+  leadership: [
+    {
+      id: 'secretary',
+      role: 'Secretary',
+      organization: 'Academic Student Leadership',
+      period: '2 years',
+      bullets: [
+        'Supported coordination and communication across student activities and academic responsibilities.',
+        'Helped organize information, follow-ups and day-to-day coordination between students and stakeholders.',
+      ],
+    },
+  ],
   skills: 'Python, NumPy, pandas, SciPy, scikit-learn, Jupyter, PyTorch, OpenCV, Git, GitHub, Linux, FastAPI, Streamlit, React, TypeScript',
   languages: 'French — Native | English — C1',
   interests: 'Artificial Intelligence & Technology | Football',
@@ -133,6 +154,18 @@ export const defaultCvFr: CvDraft = {
       'Évalué Top-1/Top-5, précision/rappel/F1 macro, calibration et robustesse open-set.',
       'Relié la reconnaissance à la génération structurée d’informations pays avec export PDF/JSON.',
     ]},
+  ],
+  leadership: [
+    {
+      id: 'secretary',
+      role: 'Secrétaire',
+      organization: 'Responsabilité étudiante',
+      period: '2 ans',
+      bullets: [
+        'Contribué à la coordination et à la communication autour des activités étudiantes et académiques.',
+        'Aidée à organiser les informations, les suivis et la coordination quotidienne entre étudiants et interlocuteurs.',
+      ],
+    },
   ],
   skills: 'Python, NumPy, pandas, SciPy, scikit-learn, Jupyter, PyTorch, OpenCV, Git, GitHub, Linux, FastAPI, Streamlit, React, TypeScript',
   languages: 'Français — Langue maternelle | Anglais — C1',
