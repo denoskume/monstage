@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft } from './cvStorage';
-import { buildCvPdfDataUri, cvPdfFileName } from './pdfExport';
+import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
   return items.map((item, current) => current === index ? next : item);
@@ -37,7 +37,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 export function CvStudioPage() {
   const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft());
   const [saved, setSaved] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
   const [downloadError, setDownloadError] = useState('');
 
@@ -58,19 +58,11 @@ export function CvStudioPage() {
   }
 
   async function downloadPreparedPdf() {
-    if (!pdfReady || !pdfUrl) return;
+    if (!pdfReady || !pdfBytes) return;
 
     try {
-      const commaIndex = pdfUrl.indexOf(',');
-      const base64 = commaIndex >= 0 ? pdfUrl.slice(commaIndex + 1) : '';
-      const binary = window.atob(base64);
-      const bytes = new Uint8Array(binary.length);
-
-      for (let index = 0; index < binary.length; index += 1) {
-        bytes[index] = binary.charCodeAt(index);
-      }
-
-      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
+      const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
       const desktopSavePicker = (window as typeof window & {
         showSaveFilePicker?: (options?: {
           suggestedName?: string;
@@ -89,7 +81,7 @@ export function CvStudioPage() {
           types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
         });
         const writable = await handle.createWritable();
-        await writable.write(blob);
+        await writable.write(pdfBuffer);
         await writable.close();
         setDownloadError('');
         return;
@@ -118,10 +110,10 @@ export function CvStudioPage() {
     setPdfReady(false);
     setDownloadError('');
 
-    void buildCvPdfDataUri(draft)
-      .then((dataUri) => {
+    void buildCvPdfBytes(draft)
+      .then((bytes) => {
         if (cancelled) return;
-        setPdfUrl(dataUri);
+        setPdfBytes(bytes);
         setPdfReady(true);
       })
       .catch((error) => {
@@ -144,7 +136,7 @@ export function CvStudioPage() {
         <div className="cv-studio-actions">
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
-          {pdfReady && pdfUrl ? (
+          {pdfReady && pdfBytes ? (
             <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPreparedPdf()} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
           ) : (
             <button className="button button--primary cv-download-button" type="button" disabled aria-label="Preparing CV PDF" title="Preparing CV PDF">…</button>
