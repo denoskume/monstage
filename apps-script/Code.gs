@@ -202,24 +202,160 @@ function companyMatchScore_(offer, haystack) {
   return matched / tokens.length;
 }
 
-function findOfferForSignal_(offers, signalText) {
+function meaningfulTokens_(value) {
+  var stopwords = {
+    'stage': true, 'intern': true, 'internship': true, 'stagiaire': true,
+    'engineer': true, 'ingenieur': true, 'ingenieure': true, 'data': true,
+    'science': true, 'scientist': true, 'machine': true, 'learning': true,
+    'intelligence': true, 'artificielle': true, 'artificial': true, 'h': true,
+    'f': true, 'hf': true, 'fh': true, 'pour': true, 'avec': true, 'dans': true,
+    'the': true, 'and': true, 'for': true, 'with': true, 'from': true
+  };
+
+  return normalizeComparable_(value)
+    .split(' ')
+    .filter(function (token) {
+      return token.length >= 4 && !stopwords[token];
+    });
+}
+
+function tokenOverlapScore_(tokens, haystack) {
+  if (!tokens.length) return 0;
+  var unique = {};
+  tokens.forEach(function (token) { unique[token] = true; });
+  var list = Object.keys(unique);
+  var hits = list.filter(function (token) { return haystack.indexOf(token) !== -1; }).length;
+  return hits / list.length;
+}
+
+function parseApplicationDate_(value) {
+  if (!value) return null;
+  if (Object.prototype.toString.call(value) === '[object Date]' && !isNaN(value.getTime())) return value;
+
+  var text = String(value).trim();
+  var parsed = new Date(text);
+  if (!isNaN(parsed.getTime())) return parsed;
+
+  var match = text.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})$/);
+  if (!match) return null;
+  parsed = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function dateProximityScore_(offer, signalDate) {
+  var applied = parseApplicationDate_(offer.appliedAt);
+  if (!applied || !signalDate) return 0;
+
+  var days = Math.abs(signalDate.getTime() - applied.getTime()) / (24 * 60 * 60 * 1000);
+  if (days <= 2) return 1;
+  if (days <= 7) return 0.9;
+  if (days <= 14) return 0.7;
+  if (days <= 30) return 0.45;
+  if (days <= 60) return 0.2;
+  return 0;
+}
+
+function applicationLifecycleScore_(offer, eventType) {
+  var status = normalizeText_(offer.applicationStatus) || 'À candidater';
+
+  if (eventType === 'submitted') {
+    if (status === 'À candidater') return 0.65;
+    if (status === 'Application commencée') return 1;
+    return 0.9;
+  }
+
+  if (['Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue'].indexOf(status) !== -1) {
+    return 1;
+  }
+
+  if (offer.appliedAt) return 0.9;
+  if (offer.shortlist) return 0.35;
+  return 0;
+}
+
+function applicationUrlScore_(offer, haystack) {
+  var url = normalizeText_(offer.applicationUrl);
+  if (!url) return 0;
+
+  var normalizedUrl = normalizeComparable_(url);
+  var tokens = normalizedUrl.split(' ').filter(function (token) {
+    return token.length >= 5 || /^\d{5,}$/.test(token);
+  });
+  if (!tokens.length) return 0;
+
+  var hits = tokens.filter(function (token) { return haystack.indexOf(token) !== -1; }).length;
+  return Math.min(1, hits / Math.min(tokens.length, 5));
+}
+
+function scoreOfferForSignal_(offer, signalText, signalDate, eventType) {
   var haystack = normalizeComparable_(signalText);
-  var best = null;
-  var bestScore = 0;
+  var company = companyMatchScore_(offer, haystack);
+  var title = tokenOverlapScore_(meaningfulTokens_(offer.title), haystack);
+  var lifecycle = applicationLifecycleScore_(offer, eventType);
+  var date = dateProximityScore_(offer, signalDate);
+  var url = applicationUrlScore_(offer, haystack);
 
-  offers.forEach(function (offer) {
-    var score = companyMatchScore_(offer, haystack);
-    var titleTokens = normalizeComparable_(offer.title).split(' ').filter(function (token) { return token.length >= 5; });
-    var titleHits = titleTokens.filter(function (token) { return haystack.indexOf(token) !== -1; }).length;
-    if (titleTokens.length) score += Math.min(0.35, (titleHits / titleTokens.length) * 0.35);
+  var score =
+    (company * 0.34) +
+    (title * 0.30) +
+    (lifecycle * 0.18) +
+    (date * 0.10) +
+    (url * 0.08);
 
-    if (score > bestScore) {
-      best = offer;
-      bestScore = score;
-    }
+  if (company < 0.5 && title < 0.55 && url < 0.6) score *= 0.45;
+
+  return {
+    score: score,
+    company: company,
+    title: title,
+    lifecycle: lifecycle,
+    date: date,
+    url: url
+  };
+}
+
+function findOfferForSignal_(offers, signalText, signalDate, eventType) {
+  var ranked = offers.map(function (offer) {
+    return {
+      offer: offer,
+      details: scoreOfferForSignal_(offer, signalText, signalDate, eventType)
+    };
+  }).sort(function (left, right) {
+    return right.details.score - left.details.score;
   });
 
-  return bestScore >= 0.65 ? { offer: best, score: Math.min(1, bestScore) } : null;
+  if (!ranked.length) return null;
+
+  var best = ranked[0];
+  var second = ranked.length > 1 ? ranked[1] : null;
+  var margin = second ? best.details.score - second.details.score : best.details.score;
+
+  var strongIdentity =
+    best.details.title >= 0.45 ||
+    best.details.url >= 0.6 ||
+    (best.details.company >= 0.95 && best.details.lifecycle >= 0.9 && best.details.date >= 0.45);
+
+  if (best.details.score < 0.58 || !strongIdentity) return null;
+  if (second && margin < 0.10) return null;
+
+  return {
+    offer: best.offer,
+    score: Math.min(1, best.details.score),
+    margin: margin,
+    details: best.details
+  };
+}
+
+function matchingEvidenceSummary_(match) {
+  var details = match.details;
+  return [
+    'company=' + details.company.toFixed(2),
+    'title=' + details.title.toFixed(2),
+    'lifecycle=' + details.lifecycle.toFixed(2),
+    'date=' + details.date.toFixed(2),
+    'reference=' + details.url.toFixed(2),
+    'margin=' + match.margin.toFixed(2)
+  ].join('; ');
 }
 
 function eventAlreadyRecorded_(sheet, eventId) {
@@ -300,13 +436,18 @@ function scanGmailSignals_(spreadsheet, offers, eventSheet) {
 
   threads.forEach(function (thread) {
     thread.getMessages().forEach(function (message) {
-      var definition = applicationEventDefinition_(message.getSubject() + ' ' + message.getFrom());
+      var subject = message.getSubject() || '';
+      var sender = message.getFrom() || '';
+      var body = message.getPlainBody() || '';
+      var classificationText = subject + ' ' + sender + ' ' + body.slice(0, 5000);
+      var definition = applicationEventDefinition_(classificationText);
       if (!definition) return;
 
-      var match = findOfferForSignal_(offers, message.getSubject() + ' ' + message.getFrom());
+      var signalDate = message.getDate();
+      var match = findOfferForSignal_(offers, classificationText, signalDate, definition.type);
       if (!match || !match.offer) return;
 
-      var confidence = Math.min(0.99, definition.confidence * (0.75 + (match.score * 0.25)));
+      var confidence = Math.min(0.99, definition.confidence * (0.72 + (match.score * 0.28)));
       var event = {
         id: 'gmail:' + message.getId(),
         offerId: match.offer.id,
@@ -314,11 +455,11 @@ function scanGmailSignals_(spreadsheet, offers, eventSheet) {
         type: definition.type,
         confidence: Number(confidence.toFixed(2)),
         source: 'gmail',
-        detectedAt: message.getDate().toISOString(),
-        evidence: 'Matched company/role metadata and application-event language; email body is not stored.'
+        detectedAt: signalDate.toISOString(),
+        evidence: 'Multi-signal match: ' + matchingEvidenceSummary_(match) + '. Email content is analyzed transiently and not stored.'
       };
 
-      if (appendApplicationEvent_(eventSheet, event) && event.confidence >= 0.82) {
+      if (appendApplicationEvent_(eventSheet, event) && event.confidence >= 0.86) {
         applyDetectedStatus_(spreadsheet, event.offerId, definition, event.detectedAt);
       }
     });
@@ -333,10 +474,12 @@ function scanCalendarSignals_(spreadsheet, offers, eventSheet) {
 
   events.forEach(function (calendarEvent) {
     var title = calendarEvent.getTitle() || '';
-    var normalized = normalizeComparable_(title);
+    var description = calendarEvent.getDescription() || '';
+    var signalText = title + ' ' + description.slice(0, 3000);
+    var normalized = normalizeComparable_(signalText);
     if (normalized.indexOf('interview') === -1 && normalized.indexOf('entretien') === -1) return;
 
-    var match = findOfferForSignal_(offers, title);
+    var match = findOfferForSignal_(offers, signalText, calendarEvent.getStartTime(), 'interview');
     if (!match || !match.offer) return;
 
     var definition = {
@@ -345,18 +488,19 @@ function scanCalendarSignals_(spreadsheet, offers, eventSheet) {
       status: 'Entretien',
       action: 'Préparer l’entretien et confirmer les modalités'
     };
+    var confidence = Math.min(0.99, definition.confidence * (0.74 + (match.score * 0.26)));
     var event = {
       id: 'calendar:' + calendarEvent.getId(),
       offerId: match.offer.id,
       company: match.offer.company,
       type: 'interview',
-      confidence: 0.97,
+      confidence: Number(confidence.toFixed(2)),
       source: 'calendar',
       detectedAt: calendarEvent.getStartTime().toISOString(),
-      evidence: 'Interview calendar event matched to company/role metadata; event description is not stored.'
+      evidence: 'Multi-signal calendar match: ' + matchingEvidenceSummary_(match) + '. Calendar description is analyzed transiently and not stored.'
     };
 
-    if (appendApplicationEvent_(eventSheet, event)) {
+    if (appendApplicationEvent_(eventSheet, event) && event.confidence >= 0.88) {
       applyDetectedStatus_(spreadsheet, event.offerId, definition, event.detectedAt);
     }
   });
