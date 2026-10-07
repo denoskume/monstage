@@ -18,9 +18,9 @@ type CoverLetterDraft = {
 
 const WIDTH = 595.28;
 const HEIGHT = 841.89;
-const MX = 52;
-const TOP = 52;
-const BOTTOM = 52;
+const MX = 42.52;
+const TOP = 42.52;
+const BOTTOM = 42.52;
 
 function safeText(value: unknown): string {
   return String(value ?? '')
@@ -59,7 +59,7 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
   const color = rgb(0.05, 0.05, 0.05);
   const lineColor = rgb(0.55, 0.55, 0.55);
   const usable = WIDTH - (MX * 2);
-  let y = HEIGHT - 42;
+  let y = HEIGHT - TOP;
 
   const ensure = (height: number) => {
     if (y - height < BOTTOM) {
