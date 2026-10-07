@@ -160,15 +160,12 @@ export async function downloadCvPdf(draft: CvDraft): Promise<void> {
     drawLines(draft.languages.trim(), 9.5);
   }
 
-  const bytes = await pdf.save();
-  const pdfBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-  const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
-  const url = URL.createObjectURL(blob);
+  const dataUri = await pdf.saveAsBase64({ dataUri: true });
   const anchor = document.createElement('a');
-  anchor.href = url;
+  anchor.href = dataUri;
   anchor.download = safeFileName(draft.name) + '_CV.pdf';
+  anchor.style.display = 'none';
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
