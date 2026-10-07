@@ -188,7 +188,7 @@ export function ClStudioPage() {
             {draft.recipientLocation ? <span>{draft.recipientLocation}</span> : null}
           </div>
 
-          {draft.date ? <p className="cl-preview__date">Nantes, le {draft.date}</p> : null}
+          {draft.date ? <p className="cl-preview__date">{draft.language === 'FR' ? `Nantes, le ${draft.date}` : `Nantes, ${draft.date}`}</p> : null}
 
           <p className="cl-preview__subject"><strong>{subjectLine(draft)}</strong></p>
 
