@@ -114,7 +114,7 @@ export function ClStudioPage() {
       <div className="page-header cl-studio-header">
         <div>
           <h1>CL Studio</h1>
-          <p>Create and tailor a clean cover letter directly in MonStage.</p>
+          <p>Keep the structure clear and specific: You → Me → Us → Conclusion. Avoid generic formulas; every paragraph should connect directly to the offer.</p>
         </div>
         <div className="cl-studio-actions">
           <div className="cl-language-toggle" aria-label="Cover letter language">
@@ -150,11 +150,16 @@ export function ClStudioPage() {
 
           <section className="cv-editor-section">
             <h2>Letter body</h2>
-            {draft.paragraphs.map((paragraph, index) => (
-              <label key={index}>Paragraph {index + 1}
-                <textarea rows={index === 3 ? 6 : 5} value={paragraph} onChange={(e) => updateParagraph(index, e.target.value)} />
-              </label>
-            ))}
+            {draft.paragraphs.map((paragraph, index) => {
+              const labels = draft.language === 'FR'
+                ? ['Vous — Pourquoi cette entreprise', 'Moi — Preuves concrètes', 'Nous — Contribution + apprentissage', 'Conclusion — Invitation à échanger']
+                : ['You — Why this company', 'Me — Concrete evidence', 'Us — Contribution + learning', 'Conclusion — Invite a discussion'];
+              return (
+                <label key={index}>{labels[index] || `Paragraph ${index + 1}`}
+                  <textarea rows={index === 3 ? 6 : 5} value={paragraph} onChange={(e) => updateParagraph(index, e.target.value)} />
+                </label>
+              );
+            })}
           </section>
 
           <section className="cv-editor-section">
