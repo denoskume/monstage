@@ -43,7 +43,7 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
   recipientRole: "Responsable d’équipe",
   recipientLocation: 'Nantes / Carquefou, France',
   internshipTitle: 'Ingénieur Data Science - février 2027',
-  greeting: 'Madame, Monsieur,',
+  greeting: 'Monsieur Vallière,',
   paragraphs: [
     "Je souhaite rejoindre Assystem pour un stage de six mois en Data Science à partir de février 2027. L’IA m’intéresse autant par ce qu’elle permet de construire que par la façon dont ses résultats sont évalués. Je veux mettre cette curiosité au service de problématiques industrielles concrètes. La performance, la qualité et la fiabilité y ont un impact direct.",
     "Votre équipe m’attire par son approche complète du problème. Le travail ne s’arrête pas au modèle. Il part de la qualité des données. Il passe par l’automatisation, l’expérimentation et le benchmark. Il va jusqu’à l’analyse des limites et aux recommandations. C’est cette chaîne complète que je veux découvrir et à laquelle je veux contribuer. Votre accompagnement structuré et vos cas d’usage réels sont aussi une vraie occasion de progresser au sein d’une équipe expérimentée.",
@@ -78,7 +78,11 @@ export function freshCoverLetter(language: CoverLetterLanguage): CoverLetterDraf
 export function loadCoverLetter(): CoverLetterDraft {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...defaultCoverLetterEn, ...JSON.parse(raw) } : freshCoverLetter('FR');
+    if (!raw) return freshCoverLetter('FR');
+
+    const stored = JSON.parse(raw) as Partial<CoverLetterDraft>;
+    const base = stored.language === 'EN' ? defaultCoverLetterEn : defaultCoverLetterFr;
+    return { ...base, ...stored };
   } catch {
     return freshCoverLetter('FR');
   }
