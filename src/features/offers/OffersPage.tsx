@@ -61,8 +61,9 @@ export function OffersPage() {
     setFiltersOpen(true);
   }
 
-  function applyFilters() {
-    setFilters(draftFilters);
+  function applyFilters(nextFilters: OfferFilterState) {
+    setFilters({ ...nextFilters });
+    setDraftFilters({ ...nextFilters });
     setFiltersOpen(false);
   }
 
