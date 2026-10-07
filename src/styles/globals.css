@@ -1701,3 +1701,17 @@ h1, h2, h3 { color: var(--text); }
     grid-column: 1;
   }
 }
+
+
+/* My jobs secondary action */
+.my-jobs-secondary-action {
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  background:transparent;
+  color:var(--text-muted);
+}
+.my-jobs-secondary-action:hover {
+  background:var(--surface-muted);
+  color:var(--text);
+}
