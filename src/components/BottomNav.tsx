@@ -5,6 +5,7 @@ const links = [
   ['/shortlist', '☆', 'Saved'],
   ['/applications', '✓', 'Apps'],
   ['/workspace', '□', 'Workspace'],
+  ['/cv', 'CV', 'CV'],
   ['/dashboard', '▦', 'Insights'],
 ] as const;
 
