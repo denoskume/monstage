@@ -1286,8 +1286,11 @@ h1, h2, h3 { color: var(--text); }
 }
 .offer-action-icon.is-active {
   color: var(--accent);
-  background: var(--accent-soft);
+  background: var(--surface);
   border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+}
+.offer-action-icon.is-active svg path:first-child {
+  fill: currentColor;
 }
 .offer-action-icon svg {
   width: 20px;
