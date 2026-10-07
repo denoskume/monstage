@@ -93,7 +93,12 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
 
   y -= 4;
   const recipientTop = y;
-  if (draft.recipientName) drawWrapped('A l’attention de ' + draft.recipientName, 10.2, bold, 13.6);
+  if (draft.recipientName) {
+    const recipientLabel = draft.language === 'FR'
+      ? 'A l’attention de ' + draft.recipientName
+      : 'Attn: ' + draft.recipientName;
+    drawWrapped(recipientLabel, 10.2, bold, 13.6);
+  }
   const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
   if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6);
   if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6);
