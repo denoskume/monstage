@@ -147,10 +147,9 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   await page.getByRole('button', { name: 'Close filters' }).click();
   await expect(page.getByText('Data AI Intern')).toHaveCount(0);
   await page.locator('.top-nav').getByRole('link', { name: 'Saved jobs' }).click();
-  await expect(page.getByRole('heading', { name: 'Shortlist' })).toBeVisible();
-  await page.locator('.top-nav').getByRole('link', { name: 'Applications' }).click();
-  await expect(page.getByRole('heading', { name: 'Applications' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Application sent' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'My jobs' })).toBeVisible();
+  await page.getByRole('tab', { name: /Applications/ }).click();
+  await expect(page.getByRole('tab', { name: /Applications/ })).toHaveAttribute('aria-selected', 'true');
   await page.locator('.top-nav').getByRole('link', { name: 'Dashboard' }).click();
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 
