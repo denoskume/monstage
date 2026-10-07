@@ -57,6 +57,35 @@ export function CvStudioPage() {
     setSaved(false);
   }
 
+  function downloadPreparedPdf() {
+    if (!pdfReady || !pdfUrl) return;
+
+    try {
+      const commaIndex = pdfUrl.indexOf(',');
+      const base64 = commaIndex >= 0 ? pdfUrl.slice(commaIndex + 1) : '';
+      const binary = window.atob(base64);
+      const bytes = new Uint8Array(binary.length);
+
+      for (let index = 0; index < binary.length; index += 1) {
+        bytes[index] = binary.charCodeAt(index);
+      }
+
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = cvPdfFileName(draft.name);
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+      setDownloadError('');
+    } catch (error) {
+      setDownloadError(error instanceof Error ? error.message : 'Unable to download the PDF.');
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
     setPdfReady(false);
@@ -89,7 +118,7 @@ export function CvStudioPage() {
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
           {pdfReady && pdfUrl ? (
-            <a className="button button--primary cv-download-button" href={pdfUrl} download={cvPdfFileName(draft.name)} aria-label="Download CV PDF" title="Download CV PDF">⇩</a>
+            <button className="button button--primary cv-download-button" type="button" onClick={downloadPreparedPdf} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
           ) : (
             <button className="button button--primary cv-download-button" type="button" disabled aria-label="Preparing CV PDF" title="Preparing CV PDF">…</button>
           )}
