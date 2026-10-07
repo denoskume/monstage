@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { InternshipOffer } from '../../api/contract';
 import { filterOffers } from './offerSelectors';
 import type { OfferFilters as OfferFilterState } from './offerTypes';
-import { OfferFiltersComponent } from './OfferFiltersComponent';
+import { OfferFilters as OfferFiltersComponent } from './OfferFilters';
 
 const base: InternshipOffer = {
   id: 'base',
