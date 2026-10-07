@@ -1369,3 +1369,20 @@ h1, h2, h3 { color: var(--text); }
 .account-menu__identity span { color:var(--text-muted); font-size:.8rem; overflow:hidden; text-overflow:ellipsis; }
 .account-menu__signout { width:100%; text-align:left; border:0; background:transparent; padding:8px; border-radius:8px; }
 .account-menu__signout:hover { background:var(--surface-muted); }
+
+
+/* Recruiter activity */
+.messages-list { display:grid; gap:10px; }
+.message-row { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:14px; align-items:start; padding:16px 18px; }
+.message-row__marker { width:10px; height:10px; margin-top:7px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+.message-row__content { min-width:0; }
+.message-row__top { display:flex; align-items:center; justify-content:space-between; gap:12px; color:var(--text-muted); font-size:.8rem; }
+.message-row__top strong { color:var(--text); font-size:.9rem; }
+.message-row h2 { margin:6px 0 4px; font-size:1rem; }
+.message-row p { margin:0; color:var(--text-muted); line-height:1.5; }
+.message-row__evidence { margin-top:8px !important; color:var(--text) !important; }
+.message-row__meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:9px; color:var(--text-subtle); font-size:.76rem; }
+@media (max-width:720px) {
+  .message-row { grid-template-columns:auto minmax(0,1fr); }
+  .message-row > .button { grid-column:2; justify-self:start; }
+}
