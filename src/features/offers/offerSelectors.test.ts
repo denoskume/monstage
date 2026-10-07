@@ -47,3 +47,27 @@ test('recent sort prefers verifiedAt then publishedAt', () => {
   ];
   expect(sortOffers(offers, 'recent').map((offer) => offer.id)).toEqual(['new', 'old']);
 });
+
+
+test('search is accent-insensitive and supports multiple tokens in any order', () => {
+  const offer = { ...base, company: 'Électricité de France', title: 'Vision par ordinateur', city: 'Saint-Étienne' };
+  expect(filterOffers([offer], { ...filters, query: 'vision france' })).toHaveLength(1);
+  expect(filterOffers([offer], { ...filters, query: 'saint etienne' })).toHaveLength(1);
+  expect(filterOffers([offer], { ...filters, query: 'vision lyon' })).toHaveLength(0);
+});
+
+test('each exact filter criterion is enforced', () => {
+  expect(filterOffers([base], { ...filters, specialization: 'Computer Vision / 3D' })).toHaveLength(1);
+  expect(filterOffers([base], { ...filters, city: 'Nantes' })).toHaveLength(1);
+  expect(filterOffers([base], { ...filters, priority: 'A+' })).toHaveLength(1);
+  expect(filterOffers([base], { ...filters, freshness: 'Vérifié <24h' })).toHaveLength(1);
+  expect(filterOffers([base], { ...filters, m2Fit: 'Oui' })).toHaveLength(1);
+  expect(filterOffers([base], { ...filters, sourceQuality: 'Officiel / direct' })).toHaveLength(1);
+  expect(filterOffers([base], { ...filters, applicationStatus: 'À candidater' })).toHaveLength(1);
+  expect(filterOffers([base], { ...filters, city: 'Lyon' })).toHaveLength(0);
+});
+
+test('minimum score excludes offers with missing scores when a threshold is active', () => {
+  expect(filterOffers([{ ...base, decisionScore: null }], { ...filters, minScore: 70 })).toHaveLength(0);
+  expect(filterOffers([{ ...base, decisionScore: null }], filters)).toHaveLength(1);
+});
