@@ -183,7 +183,7 @@ export function ClStudioPage() {
           </header>
 
           <div className="cl-preview__recipient">
-            {draft.recipientName ? <strong>À l’attention de {draft.recipientName}</strong> : null}
+            {draft.recipientName ? <strong>{draft.language === 'FR' ? `À l’attention de ${draft.recipientName}` : `Attn: ${draft.recipientName}`}</strong> : null}
             {recipientCompany ? <strong>{recipientCompany}</strong> : null}
             {draft.recipientLocation ? <span>{draft.recipientLocation}</span> : null}
           </div>
