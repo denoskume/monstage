@@ -69,7 +69,7 @@ export function CvStudioPage() {
           types?: Array<{ description?: string; accept: Record<string, string[]> }>;
         }) => Promise<{
           createWritable: () => Promise<{
-            write: (data: Blob) => Promise<void>;
+            write: (data: Blob | ArrayBuffer) => Promise<void>;
             close: () => Promise<void>;
           }>;
         }>;
