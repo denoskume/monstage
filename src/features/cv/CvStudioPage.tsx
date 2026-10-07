@@ -8,6 +8,14 @@ function updateAt<T>(items: T[], index: number, next: T): T[] {
   return items.map((item, current) => current === index ? next : item);
 }
 
+function removeAt<T>(items: T[], index: number): T[] {
+  return items.filter((_, current) => current !== index);
+}
+
+function uid(prefix: string): string {
+  return prefix + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+}
+
 function AtsScore({ draft }: { draft: CvDraft }) {
   const checks = useMemo(() => {
     const hasContact = Boolean(draft.email && draft.location);
@@ -193,7 +201,10 @@ export function CvStudioPage() {
           </section>
 
           <section className="cv-editor-section">
-            <h2>Education</h2>
+            <div className="cv-editor-section__header">
+              <h2>{draft.language === 'FR' ? 'Formation' : 'Education'}</h2>
+              <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('education', [...draft.education, { id: uid('edu'), school: '', degree: '', location: '', period: '', details: '' }])}>+ {draft.language === 'FR' ? 'Ajouter' : 'Add'}</button>
+            </div>
             {draft.education.map((item, index) => (
               <div className="cv-editor-block" key={item.id}>
                 <label>School<input value={item.school} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, school: e.target.value }))} /></label>
@@ -203,12 +214,16 @@ export function CvStudioPage() {
                   <label>Period<input value={item.period} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, period: e.target.value }))} /></label>
                 </div>
                 <label>Details<textarea rows={2} value={item.details} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, details: e.target.value }))} /></label>
+                <button className="cv-remove-button" type="button" onClick={() => patch('education', removeAt(draft.education, index))}>{draft.language === 'FR' ? 'Supprimer' : 'Remove'}</button>
               </div>
             ))}
           </section>
 
           <section className="cv-editor-section">
-            <h2>Experience</h2>
+            <div className="cv-editor-section__header">
+              <h2>{draft.language === 'FR' ? 'Expérience' : 'Experience'}</h2>
+              <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('experience', [...draft.experience, { id: uid('exp'), role: '', company: '', location: '', period: '', bullets: [''] }])}>+ {draft.language === 'FR' ? 'Ajouter' : 'Add'}</button>
+            </div>
             {draft.experience.map((item, index) => (
               <div className="cv-editor-block" key={item.id}>
                 <label>Role<input value={item.role} onChange={(e) => patch('experience', updateAt(draft.experience, index, { ...item, role: e.target.value }))} /></label>
@@ -218,30 +233,47 @@ export function CvStudioPage() {
                   <label>Period<input value={item.period} onChange={(e) => patch('experience', updateAt(draft.experience, index, { ...item, period: e.target.value }))} /></label>
                 </div>
                 {item.bullets.map((bullet, bulletIndex) => (
-                  <label key={bulletIndex}>Bullet {bulletIndex + 1}
-                    <textarea rows={2} value={bullet} onChange={(e) => {
-                      const bullets = item.bullets.map((value, current) => current === bulletIndex ? e.target.value : value);
-                      patch('experience', updateAt(draft.experience, index, { ...item, bullets }));
-                    }} />
-                  </label>
+                  <div className="cv-bullet-row" key={bulletIndex}>
+                    <label>Bullet {bulletIndex + 1}
+                      <textarea rows={2} value={bullet} onChange={(e) => {
+                        const bullets = item.bullets.map((value, current) => current === bulletIndex ? e.target.value : value);
+                        patch('experience', updateAt(draft.experience, index, { ...item, bullets }));
+                      }} />
+                    </label>
+                    <button className="cv-remove-button cv-remove-button--compact" type="button" onClick={() => patch('experience', updateAt(draft.experience, index, { ...item, bullets: removeAt(item.bullets, bulletIndex) }))}>−</button>
+                  </div>
                 ))}
+                <div className="cv-inline-actions">
+                  <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('experience', updateAt(draft.experience, index, { ...item, bullets: [...item.bullets, ''] }))}>+ {draft.language === 'FR' ? 'Ajouter un bullet' : 'Add bullet'}</button>
+                  <button className="cv-remove-button" type="button" onClick={() => patch('experience', removeAt(draft.experience, index))}>{draft.language === 'FR' ? 'Supprimer l’expérience' : 'Remove experience'}</button>
+                </div>
               </div>
             ))}
           </section>
 
           <section className="cv-editor-section">
-            <h2>Projects</h2>
+            <div className="cv-editor-section__header">
+              <h2>{draft.language === 'FR' ? 'Projets' : 'Projects'}</h2>
+              <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('projects', [...draft.projects, { id: uid('project'), name: '', bullets: [''] }])}>+ {draft.language === 'FR' ? 'Ajouter' : 'Add'}</button>
+            </div>
             {draft.projects.map((item, index) => (
               <div className="cv-editor-block" key={item.id}>
                 <label>Project<input value={item.name} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, name: e.target.value }))} /></label>
                 {item.bullets.map((bullet, bulletIndex) => (
-                  <label key={bulletIndex}>Bullet {bulletIndex + 1}
-                    <textarea rows={2} value={bullet} onChange={(e) => {
-                      const bullets = item.bullets.map((value, current) => current === bulletIndex ? e.target.value : value);
-                      patch('projects', updateAt(draft.projects, index, { ...item, bullets }));
-                    }} />
-                  </label>
+                  <div className="cv-bullet-row" key={bulletIndex}>
+                    <label>Bullet {bulletIndex + 1}
+                      <textarea rows={2} value={bullet} onChange={(e) => {
+                        const bullets = item.bullets.map((value, current) => current === bulletIndex ? e.target.value : value);
+                        patch('projects', updateAt(draft.projects, index, { ...item, bullets }));
+                      }} />
+                    </label>
+                    <button className="cv-remove-button cv-remove-button--compact" type="button" onClick={() => patch('projects', updateAt(draft.projects, index, { ...item, bullets: removeAt(item.bullets, bulletIndex) }))}>−</button>
+                  </div>
                 ))}
+                <div className="cv-inline-actions">
+                  <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('projects', updateAt(draft.projects, index, { ...item, bullets: [...item.bullets, ''] }))}>+ {draft.language === 'FR' ? 'Ajouter un bullet' : 'Add bullet'}</button>
+                  <button className="cv-remove-button" type="button" onClick={() => patch('projects', removeAt(draft.projects, index))}>{draft.language === 'FR' ? 'Supprimer le projet' : 'Remove project'}</button>
+                </div>
               </div>
             ))}
           </section>
@@ -250,7 +282,28 @@ export function CvStudioPage() {
             <h2>{draft.language === 'FR' ? 'Compétences, langues & centres d’intérêt' : 'Skills, languages & interests'}</h2>
             <label>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical skills'}<textarea rows={3} value={draft.skills} onChange={(e) => patch('skills', e.target.value)} /></label>
             <label>{draft.language === 'FR' ? 'Langues' : 'Languages'}<input value={draft.languages} onChange={(e) => patch('languages', e.target.value)} /></label>
-            <label>{draft.language === 'FR' ? 'Centres d’intérêt (max. 2)' : 'Interests (max. 2)'}<input value={draft.interests} onChange={(e) => patch('interests', e.target.value)} /></label>
+            <div className="cv-interest-editor">
+              <span className="cv-interest-editor__label">{draft.language === 'FR' ? 'Centres d’intérêt (max. 2)' : 'Interests (max. 2)'}</span>
+              {draft.interests.split('|').map((value, index, values) => (
+                <div className="cv-interest-row" key={index}>
+                  <input value={value.trim()} onChange={(e) => {
+                    const next = values.map((item) => item.trim());
+                    next[index] = e.target.value;
+                    patch('interests', next.filter((item, current) => item || current === index).join(' | '));
+                  }} />
+                  <button className="cv-remove-button cv-remove-button--compact" type="button" onClick={() => {
+                    const next = values.map((item) => item.trim()).filter((_, current) => current !== index);
+                    patch('interests', next.join(' | '));
+                  }}>−</button>
+                </div>
+              ))}
+              {draft.interests.split('|').filter((item) => item.trim()).length < 2 ? (
+                <button className="button button--secondary cv-add-button" type="button" onClick={() => {
+                  const values = draft.interests.split('|').map((item) => item.trim()).filter(Boolean);
+                  patch('interests', [...values, ''].join(' | '));
+                }}>+ {draft.language === 'FR' ? 'Ajouter un intérêt' : 'Add interest'}</button>
+              ) : null}
+            </div>
           </section>
         </aside>
 
