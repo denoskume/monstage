@@ -11,10 +11,17 @@ import { useOfferActions } from '../offers/offerActions';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'archived';
 
-const applicationStatuses = new Set(['Candidature envoyée', 'Réponse recruteur', 'Relance', 'Test technique', 'Offre reçue']);
-const archivedStatuses = new Set(['Refus', 'Abandonné']);
-
-function TrackingList({ offers, emptyTitle }: { offers: InternshipOffer[]; emptyTitle: string }) {
+function TrackingList({
+  offers,
+  emptyTitle,
+  stage,
+  onMove,
+}: {
+  offers: InternshipOffer[];
+  emptyTitle: string;
+  stage: 'application' | 'interview' | 'archived';
+  onMove: (offer: InternshipOffer, next: 'application' | 'interview' | 'archived' | null) => void;
+}) {
   if (offers.length === 0) return <EmptyState title={emptyTitle} />;
 
   return (
@@ -29,12 +36,14 @@ function TrackingList({ offers, emptyTitle }: { offers: InternshipOffer[]; empty
             <h2>{offer.title}</h2>
             <p>{offer.company}</p>
             <span>{offer.city ?? 'City not specified'}</span>
-            <small>{displayValue(offer.applicationStatus) ?? offer.applicationStatus ?? 'Application update'}</small>
+            <small>{stage === 'application' ? 'Application' : stage === 'interview' ? 'Interview' : 'Archived'}</small>
           </div>
 
           <div className="my-jobs-saved-row__actions">
             <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Open</Link>
-
+            {stage === 'application' ? <button className="button button--secondary" type="button" onClick={() => onMove(offer, 'interview')}>Mark interview</button> : null}
+            {stage === 'interview' ? <button className="button button--secondary" type="button" onClick={() => onMove(offer, 'application')}>Back to applications</button> : null}
+            {stage !== 'archived' ? <button className="button button--secondary" type="button" onClick={() => onMove(offer, 'archived')}>Archive</button> : <button className="button button--secondary" type="button" onClick={() => onMove(offer, null)}>Restore</button>}
             {offer.applicationUrl ? (
               <a className="offer-action-icon my-jobs-secondary-action" href={offer.applicationUrl} target="_blank" rel="noreferrer" aria-label="View job" title="View job">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -61,20 +70,24 @@ export function ShortlistPage() {
     [data, actions.savedIds, actions.unsavedIds, actions.hidden],
   );
   const applications = useMemo(
-    () => allOffers.filter((offer) => applicationStatuses.has(offer.applicationStatus ?? '')),
-    [data],
+    () => allOffers.filter((offer) => actions.stages[offer.id] === 'application'),
+    [data, actions.stages],
   );
   const interviews = useMemo(
-    () => allOffers.filter((offer) => offer.applicationStatus === 'Entretien'),
-    [data],
+    () => allOffers.filter((offer) => actions.stages[offer.id] === 'interview'),
+    [data, actions.stages],
   );
   const archived = useMemo(
-    () => allOffers.filter((offer) => archivedStatuses.has(offer.applicationStatus ?? '')),
-    [data],
+    () => allOffers.filter((offer) => actions.stages[offer.id] === 'archived'),
+    [data, actions.stages],
   );
 
   function toggleSaved(offer: InternshipOffer) {
     actions.toggleSaved(offer.id, offer.shortlist);
+  }
+
+  function moveOffer(offer: InternshipOffer, next: 'application' | 'interview' | 'archived' | null) {
+    actions.setStage(offer.id, next);
   }
 
   async function shareOffer(offer: InternshipOffer) {
@@ -139,6 +152,7 @@ export function ShortlistPage() {
                   ) : (
                     <button className="button button--primary my-jobs-apply" type="button" disabled>Apply</button>
                   )}
+                  <button className="button button--secondary" type="button" onClick={() => moveOffer(offer, 'application')}>Mark applied</button>
 
                   <button className="offer-action-icon is-active my-jobs-bookmark" type="button" onClick={() => toggleSaved(offer)} aria-label="Remove from saved jobs" title="Saved">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.55L6 21V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
@@ -152,9 +166,9 @@ export function ShortlistPage() {
         )
       ) : null}
 
-      {tab === 'applications' ? <TrackingList offers={applications} emptyTitle="No applications yet." /> : null}
-      {tab === 'interviews' ? <TrackingList offers={interviews} emptyTitle="No interviews scheduled yet." /> : null}
-      {tab === 'archived' ? <TrackingList offers={archived} emptyTitle="No archived applications." /> : null}
+      {tab === 'applications' ? <TrackingList offers={applications} emptyTitle="No applications yet." stage="application" onMove={moveOffer} /> : null}
+      {tab === 'interviews' ? <TrackingList offers={interviews} emptyTitle="No interviews scheduled yet." stage="interview" onMove={moveOffer} /> : null}
+      {tab === 'archived' ? <TrackingList offers={archived} emptyTitle="No archived applications." stage="archived" onMove={moveOffer} /> : null}
     </section>
   );
 }
