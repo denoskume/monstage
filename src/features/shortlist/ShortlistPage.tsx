@@ -16,13 +16,13 @@ export function ShortlistPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const offers = useMemo(
-    () => sortOffers((data?.offers ?? []).filter((offer) => !actions.isHidden(offer.id) && (offer.shortlist || actions.isSaved(offer.id))), 'best'),
-    [data, actions.savedIds, actions.hidden],
+    () => sortOffers((data?.offers ?? []).filter((offer) => !actions.isHidden(offer.id) && (actions.isSaved(offer.id, offer.shortlist))), 'best'),
+    [data, actions.savedIds, actions.unsavedIds, actions.hidden],
   );
   const selected = offers.find((offer) => offer.id === selectedId) ?? offers[0] ?? null;
 
   function toggleSaved(offer: InternshipOffer) {
-    actions.toggleSaved(offer.id);
+    actions.toggleSaved(offer.id, offer.shortlist);
     setNotice(actions.isSaved(offer.id) || offer.shortlist ? 'Removed from saved jobs.' : 'Saved to your jobs.');
   }
 
@@ -60,7 +60,7 @@ export function ShortlistPage() {
               offers={offers}
               selectedId={selected?.id ?? null}
               onSelect={(offer) => setSelectedId(offer.id)}
-              isSaved={(offer) => offer.shortlist || actions.isSaved(offer.id)}
+              isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)}
               onToggleSave={toggleSaved}
               onHide={hideOffer}
               onShare={(offer) => void shareOffer(offer)}
@@ -70,7 +70,7 @@ export function ShortlistPage() {
             {selected ? (
               <OfferDetail
                 offer={selected}
-                saved={selected.shortlist || actions.isSaved(selected.id)}
+                saved={actions.isSaved(selected.id, selected.shortlist)}
                 onToggleSave={() => toggleSaved(selected)}
                 onHide={() => hideOffer(selected)}
                 onShare={() => void shareOffer(selected)}
