@@ -46,7 +46,7 @@ const offers: InternshipOffer[] = [
   { ...base, id: 'grenoble', company: 'Grenoble Co', city: 'Grenoble' },
 ];
 
-const emptyFilters: OfferFiltersComponent = {
+const emptyFilters: OfferFilterState = {
   query: '',
   specialization: null,
   city: null,
@@ -60,8 +60,8 @@ const emptyFilters: OfferFiltersComponent = {
 };
 
 function Harness() {
-  const [draft, setDraft] = useState<OfferFiltersComponent>(emptyFilters);
-  const [applied, setApplied] = useState<OfferFiltersComponent>(emptyFilters);
+  const [draft, setDraft] = useState<OfferFilterState>(emptyFilters);
+  const [applied, setApplied] = useState<OfferFilterState>(emptyFilters);
   const visible = filterOffers(offers, applied);
 
   return (
