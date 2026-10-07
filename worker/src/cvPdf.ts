@@ -13,6 +13,7 @@ type CvDraft = {
   education?: Array<{ school?: string; degree?: string; location?: string; period?: string; details?: string }>;
   experience?: Array<{ role?: string; company?: string; location?: string; period?: string; bullets?: string[] }>;
   projects?: Array<{ name?: string; bullets?: string[] }>;
+  leadership?: Array<{ role?: string; organization?: string; period?: string; bullets?: string[] }>;
   skills?: string;
   languages?: string;
   interests?: string;
@@ -147,6 +148,15 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
     section(draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects');
     for (const item of draft.projects) {
       entry(item.name || '', '');
+      for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
+      y -= 4;
+    }
+  }
+
+  if (draft.leadership?.length) {
+    section('Leadership');
+    for (const item of draft.leadership) {
+      entry([item.role, item.organization].filter(Boolean).join(' - '), item.period || '');
       for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
       y -= 4;
     }
