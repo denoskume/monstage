@@ -62,8 +62,7 @@ export function ShortlistPage() {
   );
 
   function toggleSaved(offer: InternshipOffer) {
-    const saved = actions.toggleSaved(offer.id, offer.shortlist);
-    setNotice(saved ? 'Saved to your jobs.' : 'Removed from saved jobs.');
+    actions.toggleSaved(offer.id, offer.shortlist);
   }
 
   async function shareOffer(offer: InternshipOffer) {
