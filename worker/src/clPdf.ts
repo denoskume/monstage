@@ -101,7 +101,9 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
   const recipientBottom = y;
   y = recipientTop - 50;
   if (draft.date) {
-    const dateText = 'Nantes, le ' + safeText(draft.date);
+    const dateText = draft.language === 'FR'
+      ? 'Nantes, le ' + safeText(draft.date)
+      : 'Nantes, ' + safeText(draft.date);
     const width = regular.widthOfTextAtSize(dateText, 10.2);
     page.drawText(dateText, { x: WIDTH - MX - width, y, size: 10.2, font: regular, color });
   }
