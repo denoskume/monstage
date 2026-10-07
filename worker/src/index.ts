@@ -4,6 +4,7 @@ import { getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
 import { buildCvPdfResponse } from './cvPdf';
+import { buildCoverLetterPdfResponse } from './clPdf';
 
 const OFFERS_CACHE_FRESHNESS_MS = 5 * 60 * 1000;
 const OFFERS_CACHE_MAX_STALE_MS = 15 * 60 * 1000;
@@ -70,15 +71,16 @@ export async function handleRequest(
   const isOffersRoute = request.method === 'GET' && url.pathname === '/api/offers';
   const isSubmitRoute = request.method === 'POST' && url.pathname === '/api/applications/submit';
   const isCvPdfRoute = request.method === 'POST' && url.pathname === '/api/cv/pdf';
+  const isClPdfRoute = request.method === 'POST' && url.pathname === '/api/cl/pdf';
 
-  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isCvPdfRoute) {
+  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isCvPdfRoute && !isClPdfRoute) {
     return jsonResponse({ error: 'NOT_FOUND' }, 404, origin);
   }
 
   let token = bearerToken(request);
   let cvDraftFromForm: unknown = null;
 
-  if (isCvPdfRoute && !token) {
+  if ((isCvPdfRoute || isClPdfRoute) && !token) {
     try {
       const form = await request.formData();
       token = String(form.get('credential') || '').trim() || null;
@@ -100,14 +102,16 @@ export async function handleRequest(
 
   if (isSessionRoute) return jsonResponse({ user }, 200, origin);
 
-  if (isCvPdfRoute) {
+  if (isCvPdfRoute || isClPdfRoute) {
     let draft = cvDraftFromForm;
     if (!draft) {
       try { draft = await request.json(); } catch { return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin); }
     }
     if (!draft || typeof draft !== 'object') return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin);
     try {
-      return await buildCvPdfResponse(draft as Record<string, unknown>, origin);
+      return isClPdfRoute
+        ? await buildCoverLetterPdfResponse(draft as Record<string, unknown>, origin)
+        : await buildCvPdfResponse(draft as Record<string, unknown>, origin);
     } catch {
       return jsonResponse({ error: 'PDF_GENERATION_FAILED' }, 500, origin);
     }
