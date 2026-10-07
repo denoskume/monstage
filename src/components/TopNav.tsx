@@ -20,7 +20,7 @@ export function TopNav() {
         <nav className="top-nav__links" aria-label="Primary navigation">
           {links.map(([to, label]) => <NavLink key={to} to={to} className="nav-link" aria-label={to === '/shortlist' ? 'Shortlist' : to === '/dashboard' ? 'Dashboard' : label}>{label}</NavLink>)}
         </nav>
-        <span className="top-nav__meta">Internships · France · 2027</span>
+        <span className="top-nav__spacer" aria-hidden="true" />
         <AccountMenu />
       </div>
     </header>

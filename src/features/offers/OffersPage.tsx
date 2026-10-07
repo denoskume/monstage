@@ -61,10 +61,6 @@ export function OffersPage() {
   return (
     <section className="page offers-page">
       <div className="jobs-search-shell">
-        <div className="jobs-search-shell__title">
-          <h1>Internships for you</h1>
-          <p>ML, Computer Vision and Applied AI opportunities across France.</p>
-        </div>
         <div className="jobs-search-shell__controls">
           <SearchBar value={filters.query} onChange={(query) => setFilters({ ...filters, query })} placeholder="Job title, skill or company" />
           <button type="button" className="jobs-filter-button" onClick={() => setFiltersOpen(true)}>

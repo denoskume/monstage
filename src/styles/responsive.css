@@ -264,3 +264,5 @@
   .offer-card__button { padding: 15px; }
   .detail-grid--facts { grid-template-columns: 1fr; }
 }
+
+.top-nav__spacer { margin-left: auto; }

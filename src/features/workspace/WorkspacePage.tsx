@@ -150,18 +150,7 @@ export function WorkspacePage() {
 
   return (
     <section className="page workspace-page">
-      <div className="page-header">
-        <div>
-          <p className="eyebrow">Autonomous application operating system</p>
-          <h1>Workspace</h1>
-          <p>Prepare applications while MonStage independently watches for real evidence of submission, recruiter activity and interviews.</p>
-        </div>
-      </div>
-
-      <div className="workspace-principles card">
-        <strong>Evidence-first</strong>
-        <span>Open employer page ≠ Applied · Confirmation email = Submitted · Recruiter email = Response · Calendar invite = Interview</span>
-      </div>
+      <div className="page-header"><div><h1>Workspace</h1></div></div>
 
       {offers.length === 0 ? <EmptyState title="No priority applications yet." /> : (
         <div className="workspace-list">

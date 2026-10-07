@@ -55,7 +55,7 @@ export function ApplicationsPage() {
 
   return (
     <section className="page applications-page">
-      <div className="page-header"><div><p className="eyebrow">Autonomous pipeline</p><h1>Applications</h1><p>{total} tracked {total === 1 ? 'application' : 'applications'} with evidence-based status updates.</p></div></div>
+      <div className="page-header"><div><h1>Applications</h1></div></div>
       {data?.autonomyLastSync ? <div className="autonomy-sync card"><span>Autonomy engine</span><strong>Last sync: {new Date(data.autonomyLastSync).toLocaleString()}</strong></div> : null}
       {total === 0 ? <EmptyState title="No active applications yet." /> : grouped.map((group) => (
         <section className="application-group" key={group.status}><div className="application-group__heading"><h2>{displayValue(group.status)}</h2><span>{group.offers.length}</span></div><div className="application-group__list">{group.offers.map((offer) => <ApplicationRow key={offer.id || `${offer.company}-${offer.title}`} offer={offer} />)}</div></section>

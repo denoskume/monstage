@@ -29,7 +29,7 @@ export function DashboardPage() {
 
   return (
     <section className="page dashboard-page">
-      <div className="page-header"><div><p className="eyebrow">Decision overview</p><h1>Dashboard</h1><p>A compact view of what deserves your attention right now.</p></div></div>
+      <div className="page-header"><div><h1>Dashboard</h1></div></div>
       <div className="kpi-grid">{cards.map(([label, value]) => <article className="kpi-card card" key={label}><span>{label}</span><strong>{value}</strong></article>)}</div>
 
       <article className="conversion-card card">
