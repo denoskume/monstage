@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft } from './cvStorage';
-import { downloadCvPdf } from './pdfExport';
+import { buildCvPdfBlob, cvPdfFileName } from './pdfExport';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
   return items.map((item, current) => current === index ? next : item);
@@ -37,7 +37,8 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 export function CvStudioPage() {
   const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft());
   const [saved, setSaved] = useState(false);
-  const [downloading, setDownloading] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfReady, setPdfReady] = useState(false);
   const [downloadError, setDownloadError] = useState('');
 
   function patch<K extends keyof CvDraft>(key: K, value: CvDraft[K]) {
@@ -56,17 +57,32 @@ export function CvStudioPage() {
     setSaved(false);
   }
 
-  async function downloadPdf() {
-    setDownloading(true);
+  useEffect(() => {
+    let cancelled = false;
+    let currentUrl = '';
+    setPdfReady(false);
     setDownloadError('');
-    try {
-      await downloadCvPdf(draft);
-    } catch (error) {
-      setDownloadError(error instanceof Error ? error.message : 'Unable to generate the PDF.');
-    } finally {
-      setDownloading(false);
-    }
-  }
+
+    void buildCvPdfBlob(draft)
+      .then((blob) => {
+        if (cancelled) return;
+        currentUrl = URL.createObjectURL(blob);
+        setPdfUrl((previous) => {
+          if (previous) URL.revokeObjectURL(previous);
+          return currentUrl;
+        });
+        setPdfReady(true);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setDownloadError(error instanceof Error ? error.message : 'Unable to generate the PDF.');
+      });
+
+    return () => {
+      cancelled = true;
+      if (currentUrl) URL.revokeObjectURL(currentUrl);
+    };
+  }, [draft]);
 
   return (
     <section className="page cv-studio-page">
@@ -78,7 +94,11 @@ export function CvStudioPage() {
         <div className="cv-studio-actions">
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
-          <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPdf()} aria-label="Download CV PDF" title="Download CV PDF" disabled={downloading}>{downloading ? '…' : '⇩'}</button>
+          {pdfReady && pdfUrl ? (
+            <a className="button button--primary cv-download-button" href={pdfUrl} download={cvPdfFileName(draft.name)} aria-label="Download CV PDF" title="Download CV PDF">⇩</a>
+          ) : (
+            <button className="button button--primary cv-download-button" type="button" disabled aria-label="Preparing CV PDF" title="Preparing CV PDF">…</button>
+          )}
         </div>
       </div>
 
