@@ -114,7 +114,7 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
     : 'Re: Application for ' + (draft.internshipTitle || '[INTERNSHIP TITLE]');
   drawWrapped(subject, 10.8, bold, 14.5);
   page.drawLine({ start: { x: MX, y: y + 6 }, end: { x: WIDTH - MX, y: y + 6 }, thickness: 0.55, color: lineColor });
-  y -= 4;
+  y -= 14;
 
   drawWrapped(draft.greeting || (draft.language === 'FR' ? 'Madame, Monsieur,' : 'Dear Hiring Manager,'), 10.4, regular, 14.1);
   y -= 4;
