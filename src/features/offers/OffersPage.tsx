@@ -60,9 +60,7 @@ export function OffersPage() {
   }
 
   function toggleSaved(offer: InternshipOffer) {
-    const willSave = !(actions.isSaved(offer.id, offer.shortlist));
     actions.toggleSaved(offer.id, offer.shortlist);
-    setActionNotice({ text: willSave ? 'Saved to your jobs.' : 'Removed from saved jobs.' });
   }
 
   function hideOffer(offer: InternshipOffer) {
