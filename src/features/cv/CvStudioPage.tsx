@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft } from './cvStorage';
-import { buildCvPdfBlob, cvPdfFileName } from './pdfExport';
+import { buildCvPdfDataUri, cvPdfFileName } from './pdfExport';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
   return items.map((item, current) => current === index ? next : item);
@@ -59,18 +59,13 @@ export function CvStudioPage() {
 
   useEffect(() => {
     let cancelled = false;
-    let currentUrl = '';
     setPdfReady(false);
     setDownloadError('');
 
-    void buildCvPdfBlob(draft)
-      .then((blob) => {
+    void buildCvPdfDataUri(draft)
+      .then((dataUri) => {
         if (cancelled) return;
-        currentUrl = URL.createObjectURL(blob);
-        setPdfUrl((previous) => {
-          if (previous) URL.revokeObjectURL(previous);
-          return currentUrl;
-        });
+        setPdfUrl(dataUri);
         setPdfReady(true);
       })
       .catch((error) => {
@@ -80,7 +75,6 @@ export function CvStudioPage() {
 
     return () => {
       cancelled = true;
-      if (currentUrl) URL.revokeObjectURL(currentUrl);
     };
   }, [draft]);
 
