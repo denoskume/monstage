@@ -3,7 +3,7 @@ import { OfferCard } from './OfferCard';
 
 export function OfferList({
   offers,
-  selectedId,
+  selectedKey,
   onSelect,
   isSaved,
   onToggleSave,
@@ -11,20 +11,22 @@ export function OfferList({
   onShare,
 }: {
   offers: InternshipOffer[];
-  selectedId: string | null;
+  selectedKey: string | null;
   onSelect: (offer: InternshipOffer) => void;
   isSaved: (offer: InternshipOffer) => boolean;
   onToggleSave: (offer: InternshipOffer) => void;
   onHide: (offer: InternshipOffer) => void;
   onShare: (offer: InternshipOffer) => void;
 }) {
+  const selectionKey = (offer: InternshipOffer) => [offer.id, offer.company, offer.title, offer.applicationUrl ?? ''].join('::');
+
   return (
     <div className="offer-list">
       {offers.map((offer) => (
         <OfferCard
           key={offer.id || `${offer.company}-${offer.title}`}
           offer={offer}
-          selected={offer.id === selectedId}
+          selected={selectionKey(offer) === selectedKey}
           saved={isSaved(offer)}
           onSelect={() => onSelect(offer)}
           onToggleSave={() => onToggleSave(offer)}
