@@ -39,6 +39,7 @@ export interface CvDraft {
   projects: CvProject[];
   skills: string;
   languages: string;
+  interests: string;
 }
 
 const KEY_PREFIX = 'monstage:cv-studio:v2:';
@@ -88,6 +89,7 @@ export const defaultCvEn: CvDraft = {
   ],
   skills: 'Python, NumPy, pandas, SciPy, scikit-learn, Jupyter, PyTorch, OpenCV, Git, GitHub, Linux, FastAPI, Streamlit, React, TypeScript',
   languages: 'French — Native | English — C1',
+  interests: 'Artificial Intelligence & Technology | Football',
 };
 
 export const defaultCvFr: CvDraft = {
@@ -134,6 +136,7 @@ export const defaultCvFr: CvDraft = {
   ],
   skills: 'Python, NumPy, pandas, SciPy, scikit-learn, Jupyter, PyTorch, OpenCV, Git, GitHub, Linux, FastAPI, Streamlit, React, TypeScript',
   languages: 'Français — Langue maternelle | Anglais — C1',
+  interests: 'Intelligence artificielle & technologie | Football',
 };
 
 export function freshCvDraft(language: CvLanguage): CvDraft {
