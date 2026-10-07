@@ -57,7 +57,7 @@ export function CvStudioPage() {
     setSaved(false);
   }
 
-  function downloadPreparedPdf() {
+  async function downloadPreparedPdf() {
     if (!pdfReady || !pdfUrl) return;
 
     try {
@@ -71,6 +71,30 @@ export function CvStudioPage() {
       }
 
       const blob = new Blob([bytes], { type: 'application/pdf' });
+      const desktopSavePicker = (window as typeof window & {
+        showSaveFilePicker?: (options?: {
+          suggestedName?: string;
+          types?: Array<{ description?: string; accept: Record<string, string[]> }>;
+        }) => Promise<{
+          createWritable: () => Promise<{
+            write: (data: Blob) => Promise<void>;
+            close: () => Promise<void>;
+          }>;
+        }>;
+      }).showSaveFilePicker;
+
+      if (typeof desktopSavePicker === 'function' && window.matchMedia('(pointer: fine)').matches) {
+        const handle = await desktopSavePicker({
+          suggestedName: cvPdfFileName(draft.name),
+          types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        setDownloadError('');
+        return;
+      }
+
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
@@ -82,6 +106,9 @@ export function CvStudioPage() {
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
       setDownloadError('');
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return;
+      }
       setDownloadError(error instanceof Error ? error.message : 'Unable to download the PDF.');
     }
   }
@@ -118,7 +145,7 @@ export function CvStudioPage() {
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
           {pdfReady && pdfUrl ? (
-            <button className="button button--primary cv-download-button" type="button" onClick={downloadPreparedPdf} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
+            <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPreparedPdf()} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
           ) : (
             <button className="button button--primary cv-download-button" type="button" disabled aria-label="Preparing CV PDF" title="Preparing CV PDF">…</button>
           )}
