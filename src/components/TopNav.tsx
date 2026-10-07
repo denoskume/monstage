@@ -3,12 +3,19 @@ import { AccountMenu } from '../features/auth/AccountMenu';
 
 const links = [
   ['/offers', 'Jobs'],
-  ['/shortlist', 'Saved'],
   ['/applications', 'Applications'],
   ['/workspace', 'Workspace'],
   ['/studio', 'Studio'],
   ['/dashboard', 'Insights'],
 ] as const;
+
+function BookmarkIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.55L6 21V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>;
+}
+
+function BellIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 8h18c0-1-3-1-3-8ZM10 21h4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
 
 export function TopNav() {
   return (
@@ -17,10 +24,24 @@ export function TopNav() {
         <NavLink to="/offers" className="brand" aria-label="MonStage — Jobs home">
           <span className="brand__name" aria-hidden="true">MonStage</span>
         </NavLink>
+
         <nav className="top-nav__links" aria-label="Primary navigation">
-          {links.map(([to, label]) => <NavLink key={to} to={to} className="nav-link" aria-label={to === '/shortlist' ? 'Shortlist' : to === '/dashboard' ? 'Dashboard' : label}>{label}</NavLink>)}
+          {links.map(([to, label]) => (
+            <NavLink key={to} to={to} className="nav-link" aria-label={to === '/dashboard' ? 'Dashboard' : label}>{label}</NavLink>
+          ))}
         </nav>
+
         <span className="top-nav__spacer" aria-hidden="true" />
+
+        <nav className="top-nav__icon-links" aria-label="Quick actions">
+          <NavLink to="/shortlist" className="top-nav__icon-link" aria-label="Saved jobs" title="Saved jobs">
+            <BookmarkIcon />
+          </NavLink>
+          <NavLink to="/applications" className="top-nav__icon-link" aria-label="Application alerts" title="Application alerts">
+            <BellIcon />
+          </NavLink>
+        </nav>
+
         <AccountMenu />
       </div>
     </header>
