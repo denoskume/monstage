@@ -1239,3 +1239,18 @@ h1, h2, h3 { color: var(--text); }
   .studio-grid { grid-template-columns: 1fr; }
   .studio-card { min-height: 150px; padding: 18px; }
 }
+
+
+.cv-editor-section__header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+.cv-editor-section__header h2 { margin:0; }
+.cv-add-button { min-height:34px; padding:6px 10px; font-size:.82rem; }
+.cv-inline-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; }
+.cv-remove-button { border:0; background:transparent; color:var(--danger); font-weight:700; padding:6px 0; }
+.cv-remove-button:hover { text-decoration:underline; }
+.cv-remove-button--compact { width:34px; min-width:34px; height:34px; padding:0; border:1px solid var(--border); border-radius:9px; display:grid; place-items:center; background:var(--surface); text-decoration:none; }
+.cv-remove-button--compact:hover { border-color:color-mix(in srgb, var(--danger) 35%, var(--border)); background:var(--danger-soft); text-decoration:none; }
+.cv-bullet-row, .cv-interest-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:end; }
+.cv-bullet-row label { margin:0; }
+.cv-interest-editor { display:grid; gap:8px; }
+.cv-interest-editor__label { font-weight:700; font-size:.9rem; }
+.cv-interest-row input { width:100%; }
