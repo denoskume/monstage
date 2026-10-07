@@ -96,7 +96,7 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
   if (draft.recipientName) {
     const recipientLabel = draft.language === 'FR'
       ? 'A l’attention de ' + draft.recipientName
-      : 'Attn: ' + draft.recipientName;
+      : draft.recipientName;
     drawWrapped(recipientLabel, 10.2, bold, 13.6);
   }
   const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
