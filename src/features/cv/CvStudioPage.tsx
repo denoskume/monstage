@@ -279,6 +279,35 @@ export function CvStudioPage() {
           </section>
 
           <section className="cv-editor-section">
+            <div className="cv-editor-section__header">
+              <h2>{draft.language === 'FR' ? 'Leadership' : 'Leadership'}</h2>
+              <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('leadership', [...draft.leadership, { id: uid('lead'), role: '', organization: '', period: '', bullets: [''] }])}>+ {draft.language === 'FR' ? 'Ajouter' : 'Add'}</button>
+            </div>
+            {draft.leadership.map((item, index) => (
+              <div className="cv-editor-block" key={item.id}>
+                <label>{draft.language === 'FR' ? 'Rôle' : 'Role'}<input value={item.role} onChange={(e) => patch('leadership', updateAt(draft.leadership, index, { ...item, role: e.target.value }))} /></label>
+                <label>{draft.language === 'FR' ? 'Organisation' : 'Organization'}<input value={item.organization} onChange={(e) => patch('leadership', updateAt(draft.leadership, index, { ...item, organization: e.target.value }))} /></label>
+                <label>{draft.language === 'FR' ? 'Période' : 'Period'}<input value={item.period} onChange={(e) => patch('leadership', updateAt(draft.leadership, index, { ...item, period: e.target.value }))} /></label>
+                {item.bullets.map((bullet, bulletIndex) => (
+                  <div className="cv-bullet-row" key={bulletIndex}>
+                    <label>Bullet {bulletIndex + 1}
+                      <textarea rows={2} value={bullet} onChange={(e) => {
+                        const bullets = item.bullets.map((value, current) => current === bulletIndex ? e.target.value : value);
+                        patch('leadership', updateAt(draft.leadership, index, { ...item, bullets }));
+                      }} />
+                    </label>
+                    <button className="cv-remove-button cv-remove-button--compact" type="button" onClick={() => patch('leadership', updateAt(draft.leadership, index, { ...item, bullets: removeAt(item.bullets, bulletIndex) }))}>−</button>
+                  </div>
+                ))}
+                <div className="cv-inline-actions">
+                  <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('leadership', updateAt(draft.leadership, index, { ...item, bullets: [...item.bullets, ''] }))}>+ {draft.language === 'FR' ? 'Ajouter un bullet' : 'Add bullet'}</button>
+                  <button className="cv-remove-button" type="button" onClick={() => patch('leadership', removeAt(draft.leadership, index))}>{draft.language === 'FR' ? 'Supprimer' : 'Remove'}</button>
+                </div>
+              </div>
+            ))}
+          </section>
+
+          <section className="cv-editor-section">
             <h2>{draft.language === 'FR' ? 'Compétences, langues & centres d’intérêt' : 'Skills, languages & interests'}</h2>
             <label>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical skills'}<textarea rows={3} value={draft.skills} onChange={(e) => patch('skills', e.target.value)} /></label>
             <label>{draft.language === 'FR' ? 'Langues' : 'Languages'}<input value={draft.languages} onChange={(e) => patch('languages', e.target.value)} /></label>
@@ -338,6 +367,13 @@ export function CvStudioPage() {
               <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
             </div>)}
           </section>
+
+          {draft.leadership.length ? <section><h2>Leadership</h2>
+            {draft.leadership.map((item) => <div className="cv-entry" key={item.id}>
+              <div className="cv-entry__top"><strong>{item.role}{item.organization ? ` — ${item.organization}` : ''}</strong><span>{item.period}</span></div>
+              <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
+            </div>)}
+          </section> : null}
 
           <section><h2>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'}</h2><p>{draft.skills}</p></section>
           <section><h2>{draft.language === 'FR' ? 'Langues' : 'Languages'}</h2><p>{draft.languages}</p></section>
