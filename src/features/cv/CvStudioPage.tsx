@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft } from './cvStorage';
+import { useAuth } from '../../auth/useAuth';
+import { apiBaseUrl } from '../../api/authClient';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
@@ -35,6 +37,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 }
 
 export function CvStudioPage() {
+  const { token } = useAuth();
   const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft());
   const [saved, setSaved] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
@@ -61,32 +64,46 @@ export function CvStudioPage() {
     if (!pdfReady || !pdfBytes) return;
 
     try {
-      const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
-      const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
-      const desktopSavePicker = (window as typeof window & {
-        showSaveFilePicker?: (options?: {
-          suggestedName?: string;
-          types?: Array<{ description?: string; accept: Record<string, string[]> }>;
-        }) => Promise<{
-          createWritable: () => Promise<{
-            write: (data: Blob | ArrayBuffer) => Promise<void>;
-            close: () => Promise<void>;
-          }>;
-        }>;
-      }).showSaveFilePicker;
+      const isDesktop = window.matchMedia('(pointer: fine)').matches;
 
-      if (typeof desktopSavePicker === 'function' && window.matchMedia('(pointer: fine)').matches) {
-        const handle = await desktopSavePicker({
-          suggestedName: cvPdfFileName(draft.name),
-          types: [{ description: 'PDF document', accept: { 'application/pdf': ['.pdf'] } }],
-        });
-        const writable = await handle.createWritable();
-        await writable.write(pdfBuffer);
-        await writable.close();
+      if (isDesktop) {
+        if (!token) throw new Error('Authentication required for PDF download.');
+
+        const iframeName = 'monstage-cv-download-' + Date.now();
+        const iframe = document.createElement('iframe');
+        iframe.name = iframeName;
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = apiBaseUrl() + '/api/cv/pdf';
+        form.target = iframeName;
+        form.style.display = 'none';
+
+        const credentialInput = document.createElement('input');
+        credentialInput.type = 'hidden';
+        credentialInput.name = 'credential';
+        credentialInput.value = token;
+
+        const draftInput = document.createElement('input');
+        draftInput.type = 'hidden';
+        draftInput.name = 'draft';
+        draftInput.value = JSON.stringify(draft);
+
+        form.appendChild(credentialInput);
+        form.appendChild(draftInput);
+        document.body.appendChild(form);
+        form.submit();
+        form.remove();
+
+        window.setTimeout(() => iframe.remove(), 15_000);
         setDownloadError('');
         return;
       }
 
+      const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
+      const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
@@ -98,9 +115,6 @@ export function CvStudioPage() {
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
       setDownloadError('');
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        return;
-      }
       setDownloadError(error instanceof Error ? error.message : 'Unable to download the PDF.');
     }
   }
