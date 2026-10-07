@@ -168,17 +168,29 @@ export function ApplyCenter({ offer, onClose }: { offer: InternshipOffer; onClos
               <span>Employer application</span>
               <a href={offer.applicationUrl} target="_blank" rel="noreferrer">Emergency external fallback ↗</a>
             </div>
-            <iframe
-              className="apply-center__frame"
-              src={offer.applicationUrl}
-              title={'Application — ' + offer.company}
-              referrerPolicy="strict-origin-when-cross-origin"
-              sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
-            />
-            <div className="apply-center__fallback">
-              <strong>If the employer blocks embedded applications</strong>
-              <span>MonStage cannot override the employer's browser security, CAPTCHA, account login, or ATS authorization rules. The external fallback is only for those cases.</span>
-            </div>
+            {capability.embeddable ? (
+              <>
+                <iframe
+                  className="apply-center__frame"
+                  src={offer.applicationUrl}
+                  title={'Application — ' + offer.company}
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+                />
+                <div className="apply-center__fallback">
+                  <strong>If the employer blocks embedded applications</strong>
+                  <span>MonStage cannot override the employer's browser security, CAPTCHA, account login, or ATS authorization rules. The external fallback is only for those cases.</span>
+                </div>
+              </>
+            ) : (
+              <div className="apply-center__blocked">
+                <strong>{capability.label} does not allow embedded applications.</strong>
+                <span>Your MonStage application profile stays available here, but the employer requires the final application step on its own secured website.</span>
+                <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">
+                  Continue securely on {capability.label} ↗
+                </a>
+              </div>
+            )}
           </section>
         </div>
       </div>
