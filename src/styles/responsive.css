@@ -294,3 +294,29 @@
 @media (max-width: 1023px) {
   .brand { font-size: 1.26rem; }
 }
+
+
+/* MonStage brand lockup — stronger visual identity */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0;
+  color: var(--accent);
+  font-size: 1.58rem;
+  font-weight: 860;
+  letter-spacing: -.062em;
+  line-height: .95;
+}
+.brand:visited,
+.brand:hover,
+.brand:focus { color: var(--accent); background: transparent; }
+.brand__name {
+  display: inline-block;
+  color: var(--accent);
+  line-height: .95;
+  transform: translateY(-1px);
+}
+@media (max-width: 1023px) {
+  .brand { font-size: 1.46rem; }
+}
