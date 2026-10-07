@@ -10,6 +10,7 @@ export interface CoverLetterDraft {
   paragraphs: string[];
   closing: string;
   signer: string;
+  signatureDataUrl: string;
 }
 
 const KEY = 'monstage:cl-studio:v1';
@@ -40,6 +41,7 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
   paragraphs: frParagraphs,
   closing: 'Cordialement,',
   signer: 'Denos Kume',
+  signatureDataUrl: '',
 };
 
 export const defaultCoverLetterEn: CoverLetterDraft = {
@@ -52,6 +54,7 @@ export const defaultCoverLetterEn: CoverLetterDraft = {
   paragraphs: enParagraphs,
   closing: 'Sincerely,',
   signer: 'Denos Kume',
+  signatureDataUrl: '',
 };
 
 export function freshCoverLetter(language: CoverLetterLanguage): CoverLetterDraft {
