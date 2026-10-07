@@ -21,6 +21,7 @@ export interface CvEducation {
 export interface CvProject {
   id: string;
   name: string;
+  period: string;
   bullets: string[];
 }
 
@@ -51,8 +52,8 @@ export interface CvDraft {
   interests: string;
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v3:';
-const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v2:';
+const KEY_PREFIX = 'monstage:cv-studio:v4:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v3:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -84,13 +85,13 @@ export const defaultCvEn: CvDraft = {
     ]},
   ],
   projects: [
-    { id: 'fraud', name: 'Credit Card Fraud Detection', bullets: [
+    { id: 'fraud', name: 'Credit Card Fraud Detection', period: 'Oct 2026', bullets: [
       'Built a leakage-safe fraud benchmark on 284,807 transactions including 492 fraud cases.',
       'Compared Logistic Regression, Random Forest, XGBoost and a compact PyTorch MLP using PR-AUC as the primary metric.',
       'Selected XGBoost with 0.8557 PR-AUC, 0.9763 ROC-AUC and 0.8384 recall on the final test set.',
       'Added validation-based threshold selection and global/local SHAP explanations.',
     ]},
-    { id: 'flag', name: 'Flag Intelligence', bullets: [
+    { id: 'flag', name: 'Flag Intelligence', period: 'Sep 2026', bullets: [
       'Built and deployed a MobileNetV3-Small application covering 250 flag classes.',
       'Implemented confidence, decision margin, ranked alternatives and open-set logic.',
       'Evaluated Top-1/Top-5, macro precision/recall/F1, calibration and open-set robustness.',
@@ -143,13 +144,13 @@ export const defaultCvFr: CvDraft = {
     ]},
   ],
   projects: [
-    { id: 'fraud', name: 'Détection de fraude par carte bancaire', bullets: [
+    { id: 'fraud', name: 'Détection de fraude par carte bancaire', period: 'Oct. 2026', bullets: [
       'Construit un benchmark sans fuite de données sur 284 807 transactions, dont 492 cas de fraude.',
       'Comparé Logistic Regression, Random Forest, XGBoost et un MLP PyTorch compact avec la PR-AUC comme métrique principale.',
       'Retenu XGBoost avec 0,8557 de PR-AUC, 0,9763 de ROC-AUC et 0,8384 de rappel sur le jeu de test final.',
       'Ajouté une sélection du seuil sur validation et des explications SHAP globales et locales.',
     ]},
-    { id: 'flag', name: 'Flag Intelligence', bullets: [
+    { id: 'flag', name: 'Flag Intelligence', period: 'Sept. 2026', bullets: [
       'Développé et déployé une application MobileNetV3-Small couvrant 250 classes de drapeaux.',
       'Intégré confiance, marge de décision, alternatives classées et logique open-set.',
       'Évalué Top-1/Top-5, précision/rappel/F1 macro, calibration et robustesse open-set.',
@@ -193,6 +194,14 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
       location: official.location,
       period: official.period,
       details: official.details,
+    };
+  });
+
+  migrated.projects = (saved.projects ?? defaults.projects).map((item) => {
+    const official = defaults.projects.find((entry) => entry.id === item.id);
+    return {
+      ...item,
+      period: item.period || official?.period || '',
     };
   });
 
