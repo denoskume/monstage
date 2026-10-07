@@ -6,6 +6,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { WorkspacePage } from '../features/workspace/WorkspacePage';
 import { CvStudioPage } from '../features/cv/CvStudioPage';
 import { ClStudioPage } from '../features/cl/ClStudioPage';
+import { StudioPage } from '../features/studio/StudioPage';
 import { AppShell } from './AppShell';
 
 export function AppRoutes() {
@@ -17,6 +18,7 @@ export function AppRoutes() {
         <Route path="/shortlist" element={<ShortlistPage />} />
         <Route path="/applications" element={<ApplicationsPage />} />
         <Route path="/workspace" element={<WorkspacePage />} />
+        <Route path="/studio" element={<StudioPage />} />
         <Route path="/cv" element={<CvStudioPage />} />
         <Route path="/cl" element={<ClStudioPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
