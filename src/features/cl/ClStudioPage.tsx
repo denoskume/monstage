@@ -46,6 +46,26 @@ export function ClStudioPage() {
     patch('paragraphs', draft.paragraphs.map((paragraph, current) => current === index ? value : paragraph));
   }
 
+  function uploadSignature(file: File | null) {
+    if (!file) return;
+    if (!['image/png', 'image/jpeg'].includes(file.type)) {
+      setDownloadError('Signature must be a PNG or JPG image.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setDownloadError('Signature image must be 2 MB or smaller.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      patch('signatureDataUrl', String(reader.result || ''));
+      setDownloadError('');
+    };
+    reader.onerror = () => setDownloadError('Unable to read the signature image.');
+    reader.readAsDataURL(file);
+  }
+
   function downloadPdf() {
     if (!token) {
       setDownloadError('Authentication required for PDF download.');
@@ -138,7 +158,15 @@ export function ClStudioPage() {
           <section className="cv-editor-section">
             <h2>Closing</h2>
             <label>Closing<input value={draft.closing} onChange={(e) => patch('closing', e.target.value)} /></label>
-            <label>Name<input value={draft.signer} onChange={(e) => patch('signer', e.target.value)} /></label>
+            <label>Signature image
+              <input type="file" accept="image/png,image/jpeg" onChange={(e) => uploadSignature(e.target.files?.[0] ?? null)} />
+            </label>
+            {draft.signatureDataUrl ? (
+              <div className="cl-signature-editor">
+                <img src={draft.signatureDataUrl} alt="Signature preview" />
+                <button className="button button--secondary" type="button" onClick={() => patch('signatureDataUrl', '')}>Remove signature</button>
+              </div>
+            ) : null}
           </section>
         </aside>
 
@@ -161,7 +189,7 @@ export function ClStudioPage() {
 
           <div className="cl-preview__closing">
             <p>{draft.closing}</p>
-            <strong>{draft.signer}</strong>
+            {draft.signatureDataUrl ? <img className="cl-preview__signature" src={draft.signatureDataUrl} alt="Signature" /> : null}
           </div>
         </article>
       </div>
