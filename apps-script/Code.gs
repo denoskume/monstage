@@ -517,6 +517,17 @@ function syncApplicationEvents() {
   PropertiesService.getScriptProperties().setProperty('AUTONOMY_LAST_SYNC', new Date().toISOString());
 }
 
+function rebuildAutonomyEvidence() {
+  var spreadsheet = getSpreadsheet_();
+  var eventSheet = getEventSheet_(spreadsheet);
+
+  if (eventSheet.getLastRow() > 1) {
+    eventSheet.getRange(2, 1, eventSheet.getLastRow() - 1, eventSheet.getLastColumn()).clearContent();
+  }
+
+  syncApplicationEvents();
+}
+
 function installAutonomyTriggers() {
   ScriptApp.getProjectTriggers().forEach(function (trigger) {
     if (trigger.getHandlerFunction() === 'syncApplicationEvents') {
