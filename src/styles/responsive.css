@@ -266,3 +266,31 @@
 }
 
 .top-nav__spacer { margin-left: auto; }
+
+
+/* MonStage wordmark */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 2px;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 1.34rem;
+  font-weight: 820;
+  letter-spacing: -.052em;
+  line-height: 1;
+}
+.brand:hover { background: transparent; }
+.brand__name {
+  display: inline-flex;
+  align-items: baseline;
+  line-height: 1;
+}
+.brand__mon { color: var(--text); }
+.brand__stage { color: var(--accent); }
+@media (prefers-color-scheme: dark) {
+  .brand__mon { color: #f5f7fa; }
+}
+@media (max-width: 1023px) {
+  .brand { font-size: 1.26rem; }
+}

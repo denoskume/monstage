@@ -14,7 +14,7 @@ export function TopNav() {
     <header className="top-nav">
       <div className="top-nav__inner">
         <NavLink to="/offers" className="brand" aria-label="MonStage — Jobs home">
-          <span className="brand__name">MonStage</span>
+          <span className="brand__name" aria-hidden="true"><span className="brand__mon">Mon</span><span className="brand__stage">Stage</span></span>
         </NavLink>
         <nav className="top-nav__links" aria-label="Primary navigation">
           {links.map(([to, label]) => <NavLink key={to} to={to} className="nav-link" aria-label={to === '/shortlist' ? 'Shortlist' : to === '/dashboard' ? 'Dashboard' : label}>{label}</NavLink>)}
