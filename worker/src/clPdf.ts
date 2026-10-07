@@ -18,9 +18,9 @@ type CoverLetterDraft = {
 
 const WIDTH = 595.28;
 const HEIGHT = 841.89;
-const MX = 42.52;
-const TOP = 42.52;
-const BOTTOM = 42.52;
+const MX = 56.69;
+const TOP = 56.69;
+const BOTTOM = 56.69;
 
 function safeText(value: unknown): string {
   return String(value ?? '')
