@@ -2,15 +2,18 @@ import { useCallback, useEffect, useState } from 'react';
 
 type HiddenReason = 'not_relevant' | 'wrong_location' | 'salary' | 'already_applied' | 'not_interested';
 
+type ManualJobStage = 'application' | 'interview' | 'archived';
+
 interface OfferActionState {
   saved: string[];
   unsaved: string[];
   hidden: Record<string, HiddenReason>;
+  stages: Record<string, ManualJobStage>;
 }
 
 const KEY = 'monstage:offer-actions:v1';
 const EVENT = 'monstage:offer-actions-changed';
-const emptyState: OfferActionState = { saved: [], unsaved: [], hidden: {} };
+const emptyState: OfferActionState = { saved: [], unsaved: [], hidden: {}, stages: {} };
 
 function readState(): OfferActionState {
   try {
@@ -21,6 +24,7 @@ function readState(): OfferActionState {
       saved: Array.isArray(parsed.saved) ? parsed.saved.filter((id): id is string => typeof id === 'string') : [],
       unsaved: Array.isArray(parsed.unsaved) ? parsed.unsaved.filter((id): id is string => typeof id === 'string') : [],
       hidden: parsed.hidden && typeof parsed.hidden === 'object' ? parsed.hidden as Record<string, HiddenReason> : {},
+      stages: parsed.stages && typeof parsed.stages === 'object' ? parsed.stages as Record<string, ManualJobStage> : {},
     };
   } catch {
     return emptyState;
@@ -91,16 +95,26 @@ export function useOfferActions() {
     commit({ ...current, hidden });
   }, [commit]);
 
+  const setStage = useCallback((offerId: string, stage: ManualJobStage | null) => {
+    const current = readState();
+    const stages = { ...current.stages };
+    if (stage === null) delete stages[offerId];
+    else stages[offerId] = stage;
+    commit({ ...current, stages });
+  }, [commit]);
+
   return {
     savedIds: state.saved,
     unsavedIds: state.unsaved,
     hidden: state.hidden,
+    stages: state.stages,
     isSaved,
     isHidden: (offerId: string) => Boolean(state.hidden[offerId]),
     toggleSaved,
     hideOffer,
     unhideOffer,
+    setStage,
   };
 }
 
-export type { HiddenReason };
+export type { HiddenReason, ManualJobStage };
