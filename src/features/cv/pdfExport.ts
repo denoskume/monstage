@@ -161,7 +161,9 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   if (draft.skills.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-    drawLines(draft.skills.trim(), 9.5);
+    for (const skillLine of draft.skills.split('\n').map((line) => line.trim()).filter(Boolean)) {
+      drawLines(skillLine, 9.5);
+    }
   }
 
   if (draft.languages.trim()) {
