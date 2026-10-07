@@ -1217,7 +1217,7 @@ h1, h2, h3 { color: var(--text); }
 .cl-preview__recipient span { display: block; }
 .cl-preview__date { text-align: right !important; margin: 8px 0 30px !important; font-size: 10.8px !important; }
 .cl-preview--template .cl-preview__subject {
-  margin: 0 0 12px !important;
+  margin: 0 0 22px !important;
   padding-bottom: 4px;
   border-bottom: 1px solid #9b9b9b;
   font-size: 11px !important;
