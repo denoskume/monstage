@@ -160,6 +160,11 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     drawLines(draft.languages.trim(), 9.5);
   }
 
+  if (draft.interests.trim()) {
+    drawSectionTitle(draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests');
+    drawLines(draft.interests.trim(), 9.5);
+  }
+
   return pdf.save();
 }
 
