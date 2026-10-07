@@ -7,8 +7,6 @@ import { useOffers } from '../../hooks/useOffers';
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 import { sortOffers } from '../offers/offerSelectors';
-import { OfferDetail } from '../offers/OfferDetail';
-import { OfferList } from '../offers/OfferList';
 import { useOfferActions } from '../offers/offerActions';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'archived';
@@ -42,7 +40,6 @@ function TrackingList({ offers, emptyTitle }: { offers: InternshipOffer[]; empty
 export function ShortlistPage() {
   const { data, loading, error, retry } = useOffers();
   const actions = useOfferActions();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<MyJobsTab>('saved');
 
@@ -64,16 +61,9 @@ export function ShortlistPage() {
     [data],
   );
 
-  const selected = savedOffers.find((offer) => offer.id === selectedId) ?? savedOffers[0] ?? null;
-
   function toggleSaved(offer: InternshipOffer) {
     const saved = actions.toggleSaved(offer.id, offer.shortlist);
     setNotice(saved ? 'Saved to your jobs.' : 'Removed from saved jobs.');
-  }
-
-  function hideOffer(offer: InternshipOffer) {
-    actions.hideOffer(offer.id);
-    setNotice('Job hidden.');
   }
 
   async function shareOffer(offer: InternshipOffer) {
@@ -118,29 +108,28 @@ export function ShortlistPage() {
 
       {tab === 'saved' ? (
         savedOffers.length === 0 ? <EmptyState title="Your saved jobs are empty." /> : (
-          <div className="offers-layout shortlist-layout">
-            <div className="offers-list-pane">
-              <OfferList
-                offers={savedOffers}
-                selectedId={selected?.id ?? null}
-                onSelect={(offer) => setSelectedId(offer.id)}
-                isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)}
-                onToggleSave={toggleSaved}
-                onHide={hideOffer}
-                onShare={(offer) => void shareOffer(offer)}
-              />
-            </div>
-            <div className="offer-detail-pane card">
-              {selected ? (
-                <OfferDetail
-                  offer={selected}
-                  saved={actions.isSaved(selected.id, selected.shortlist)}
-                  onToggleSave={() => toggleSaved(selected)}
-                  onHide={() => hideOffer(selected)}
-                  onShare={() => void shareOffer(selected)}
-                />
-              ) : null}
-            </div>
+          <div className="my-jobs-saved-list">
+            {savedOffers.map((offer) => (
+              <article className="my-jobs-saved-row" key={offer.id}>
+                <div className="my-jobs-saved-row__main">
+                  <h2>{offer.title}</h2>
+                  <p>{offer.company}</p>
+                  <span>{offer.city ?? 'City not specified'}</span>
+                  <small>Saved job</small>
+                </div>
+                <div className="my-jobs-saved-row__actions">
+                  {offer.applicationUrl ? (
+                    <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply</a>
+                  ) : (
+                    <button className="button button--primary" type="button" disabled>Apply</button>
+                  )}
+                  <button className="offer-action-icon is-active" type="button" onClick={() => toggleSaved(offer)} aria-label="Remove from saved jobs" title="Saved">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.55L6 21V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
+                  </button>
+                  <button className="my-jobs-more" type="button" onClick={() => void shareOffer(offer)} aria-label="More actions" title="Share job">•••</button>
+                </div>
+              </article>
+            ))}
           </div>
         )
       ) : null}
