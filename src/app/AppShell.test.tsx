@@ -18,7 +18,7 @@ test('renders keyboard-focusable primary navigation links', () => {
       <MemoryRouter><AppShell /></MemoryRouter>
     </AuthContext.Provider>,
   );
-  for (const label of ['Jobs', 'Shortlist', 'Applications', 'Dashboard']) {
+  for (const label of ['Jobs', 'Shortlist', 'Studio', 'Dashboard']) {
     const links = screen.getAllByRole('link', { name: label });
     expect(links.length).toBeGreaterThan(0);
     expect(links[0]).toHaveAttribute('href');
