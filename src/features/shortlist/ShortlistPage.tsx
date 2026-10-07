@@ -18,19 +18,31 @@ function TrackingList({ offers, emptyTitle }: { offers: InternshipOffer[]; empty
   if (offers.length === 0) return <EmptyState title={emptyTitle} />;
 
   return (
-    <div className="my-jobs-tracking-list">
+    <div className="my-jobs-saved-list">
       {offers.map((offer) => (
-        <article className="application-row card" key={offer.id}>
-          <div className="application-row__main">
-            <p>{offer.company}</p>
+        <article className="my-jobs-saved-row" key={offer.id}>
+          <div className="my-jobs-company-mark" aria-hidden="true">
+            {offer.company.trim().slice(0, 2).toUpperCase()}
+          </div>
+
+          <div className="my-jobs-saved-row__main">
             <h2>{offer.title}</h2>
+            <p>{offer.company}</p>
             <span>{offer.city ?? 'City not specified'}</span>
+            <small>{displayValue(offer.applicationStatus) ?? offer.applicationStatus ?? 'Application update'}</small>
           </div>
-          <div className="my-jobs-tracking-status">
-            <strong>{displayValue(offer.applicationStatus) ?? offer.applicationStatus}</strong>
-            <span>{offer.nextAction ? displayValue(offer.nextAction) : 'No action required'}</span>
+
+          <div className="my-jobs-saved-row__actions">
+            <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Open</Link>
+
+            {offer.applicationUrl ? (
+              <a className="offer-action-icon my-jobs-secondary-action" href={offer.applicationUrl} target="_blank" rel="noreferrer" aria-label="View job" title="View job">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M14 5h5v5M19 5l-8 8M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+            ) : null}
           </div>
-          <Link className="application-row__link" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Open workspace →</Link>
         </article>
       ))}
     </div>
