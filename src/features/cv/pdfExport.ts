@@ -11,8 +11,21 @@ function safeFileName(value: string): string {
   return value.trim().replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'MonStage_CV';
 }
 
+function pdfSafeText(value: string): string {
+  return String(value ?? '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\u2022/g, '-')
+    .replace(/\u00B7/g, '-')
+    .replace(/\u00B2/g, '2')
+    .replace(/[^\x20-\x7E]/g, '');
+}
+
 function wrapText(text: string, maxWidth: number, font: any, size: number): string[] {
-  const words = text.trim().split(/\s+/).filter(Boolean);
+  const words = pdfSafeText(text).trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const lines: string[] = [];
   let line = words[0];
@@ -48,8 +61,9 @@ export async function downloadCvPdf(draft: CvDraft): Promise<void> {
   };
 
   const drawCentered = (text: string, size: number, font: any) => {
-    const width = font.widthOfTextAtSize(text, size);
-    page.drawText(text, { x: Math.max(MARGIN_X, (A4_WIDTH - width) / 2), y, size, font, color: textColor });
+    const safe = pdfSafeText(text);
+    const width = font.widthOfTextAtSize(safe, size);
+    page.drawText(safe, { x: Math.max(MARGIN_X, (A4_WIDTH - width) / 2), y, size, font, color: textColor });
     y -= size + 5;
   };
 
@@ -65,20 +79,21 @@ export async function downloadCvPdf(draft: CvDraft): Promise<void> {
   const drawSectionTitle = (title: string) => {
     ensureSpace(24);
     y -= 4;
-    page.drawText(title.toUpperCase(), { x: MARGIN_X, y, size: 10.5, font: bold, color: textColor });
+    page.drawText(pdfSafeText(title.toUpperCase()), { x: MARGIN_X, y, size: 10.5, font: bold, color: textColor });
     y -= 5;
     page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 0.8, color: ruleColor });
     y -= 12;
   };
 
   const drawRightAligned = (text: string, yValue: number, size = 9.5, font = regular) => {
-    const width = font.widthOfTextAtSize(text, size);
-    page.drawText(text, { x: A4_WIDTH - MARGIN_X - width, y: yValue, size, font, color: textColor });
+    const safe = pdfSafeText(text);
+    const width = font.widthOfTextAtSize(safe, size);
+    page.drawText(safe, { x: A4_WIDTH - MARGIN_X - width, y: yValue, size, font, color: textColor });
   };
 
   const drawEntryHeader = (left: string, right: string) => {
     ensureSpace(18);
-    page.drawText(left, { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
+    page.drawText(pdfSafeText(left), { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
     if (right) drawRightAligned(right, y, 9.5, regular);
     y -= 13;
   };
@@ -87,7 +102,7 @@ export async function downloadCvPdf(draft: CvDraft): Promise<void> {
     const bulletIndent = 12;
     const lines = wrapText(text, usableWidth - bulletIndent, regular, 9.2);
     ensureSpace(lines.length * 12 + 3);
-    page.drawText('•', { x: MARGIN_X, y, size: 9.2, font: regular, color: textColor });
+    page.drawText('-', { x: MARGIN_X, y, size: 9.2, font: regular, color: textColor });
     lines.forEach((line, index) => {
       page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: 9.2, font: regular, color: textColor });
       y -= 12;
