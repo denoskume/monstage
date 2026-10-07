@@ -150,6 +150,15 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     }
   }
 
+  if (draft.leadership?.length) {
+    drawSectionTitle('Leadership');
+    for (const item of draft.leadership) {
+      drawEntryHeader([item.role, item.organization].filter(Boolean).join(' — '), item.period);
+      for (const bullet of item.bullets.filter((value) => value.trim())) drawBullet(bullet.trim());
+      y -= 4;
+    }
+  }
+
   if (draft.skills.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
     drawLines(draft.skills.trim(), 9.5);
