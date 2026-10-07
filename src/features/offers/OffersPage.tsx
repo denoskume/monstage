@@ -21,12 +21,16 @@ function initialFilters(): OfferFilterState {
 const resetFilters: OfferFilterState = { query: '', specialization: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
 const sortLabels: Record<SortMode, string> = { best: 'Best match', recent: 'Most recent', score: 'Highest score', priority: 'Priority', city: 'City' };
 
+function selectionKey(offer: InternshipOffer): string {
+  return [offer.id, offer.company, offer.title, offer.applicationUrl ?? ''].join('::');
+}
+
 export function OffersPage() {
   const { data, loading, error, retry } = useOffers();
   const initialPrefs = useMemo(() => loadPreferences(), []);
   const [filters, setFilters] = useState<OfferFilterState>(() => initialFilters());
   const [sort, setSort] = useState<SortMode>(initialPrefs.sort);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [draftFilters, setDraftFilters] = useState<OfferFilterState>(() => initialFilters());
@@ -38,12 +42,12 @@ export function OffersPage() {
     () => sortOffers(filterOffers(offers.filter((offer) => !actions.isHidden(offer.id)), filters), sort),
     [offers, filters, sort, actions.hidden],
   );
-  const selectedOffer = visibleOffers.find((offer) => offer.id === selectedId) ?? visibleOffers[0] ?? null;
+  const selectedOffer = visibleOffers.find((offer) => selectionKey(offer) === selectedKey) ?? visibleOffers[0] ?? null;
 
   useEffect(() => {
-    if (selectedOffer && selectedOffer.id !== selectedId) setSelectedId(selectedOffer.id);
-    if (!selectedOffer) setSelectedId(null);
-  }, [selectedOffer, selectedId]);
+    if (selectedOffer && selectionKey(selectedOffer) !== selectedKey) setSelectedKey(selectionKey(selectedOffer));
+    if (!selectedOffer) setSelectedKey(null);
+  }, [selectedOffer, selectedKey]);
 
   useEffect(() => {
     savePreferences({ query: filters.query, sort, onlyForMe: filters.onlyForMe, minScore: filters.minScore });
@@ -68,7 +72,7 @@ export function OffersPage() {
   }
 
   function chooseOffer(offer: InternshipOffer) {
-    setSelectedId(offer.id);
+    setSelectedKey(selectionKey(offer));
     setMobileDetail(true);
   }
 
@@ -79,7 +83,7 @@ export function OffersPage() {
   function hideOffer(offer: InternshipOffer) {
     actions.hideOffer(offer.id);
     setActionNotice({ text: 'Job hidden.', offerId: offer.id });
-    if (offer.id === selectedId) setMobileDetail(false);
+    if (selectionKey(offer) === selectedKey) setMobileDetail(false);
   }
 
   async function shareOffer(offer: InternshipOffer) {
@@ -126,7 +130,7 @@ export function OffersPage() {
         <>
           <div className="jobs-results-header"><div><strong>{visibleOffers.length}</strong> opportunities</div><span>{sortLabels[sort]}</span></div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
-            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedId={selectedOffer?.id ?? null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
+            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedKey={selectedOffer ? selectionKey(selectedOffer) : null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
             <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} saved={actions.isSaved(selectedOffer.id, selectedOffer.shortlist)} onToggleSave={() => toggleSaved(selectedOffer)} onHide={() => hideOffer(selectedOffer)} onShare={() => void shareOffer(selectedOffer)} /> : null}</div>
           </div>
         </>
