@@ -60,8 +60,8 @@ export function OffersPage() {
   }
 
   function toggleSaved(offer: InternshipOffer) {
-    const willSave = !(offer.shortlist || actions.isSaved(offer.id));
-    actions.toggleSaved(offer.id);
+    const willSave = !(actions.isSaved(offer.id, offer.shortlist));
+    actions.toggleSaved(offer.id, offer.shortlist);
     setActionNotice({ text: willSave ? 'Saved to your jobs.' : 'Removed from saved jobs.' });
   }
 
@@ -115,8 +115,8 @@ export function OffersPage() {
         <>
           <div className="jobs-results-header"><div><strong>{visibleOffers.length}</strong> opportunities</div><span>{sortLabels[sort]}</span></div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
-            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedId={selectedOffer?.id ?? null} onSelect={chooseOffer} isSaved={(offer) => offer.shortlist || actions.isSaved(offer.id)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
-            <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} saved={selectedOffer.shortlist || actions.isSaved(selectedOffer.id)} onToggleSave={() => toggleSaved(selectedOffer)} onHide={() => hideOffer(selectedOffer)} onShare={() => void shareOffer(selectedOffer)} /> : null}</div>
+            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedId={selectedOffer?.id ?? null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
+            <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} saved={actions.isSaved(selectedOffer.id, selectedOffer.shortlist)} onToggleSave={() => toggleSaved(selectedOffer)} onHide={() => hideOffer(selectedOffer)} onShare={() => void shareOffer(selectedOffer)} /> : null}</div>
           </div>
         </>
       )}
