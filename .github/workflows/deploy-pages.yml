@@ -112,11 +112,12 @@ jobs:
         run: npm --prefix worker run deploy
       - name: Restore Worker backend secrets
         if: steps.cloudflare.outputs.configured == 'true'
+        working-directory: worker
         run: |
-          printf '%s' "$APPS_SCRIPT_URL" | npx --prefix worker wrangler secret put APPS_SCRIPT_URL
-          printf '%s' "$APPS_SCRIPT_GATEWAY_SECRET" | npx --prefix worker wrangler secret put APPS_SCRIPT_GATEWAY_SECRET
-          npx --prefix worker wrangler secret list | grep -q '"APPS_SCRIPT_URL"'
-          npx --prefix worker wrangler secret list | grep -q '"APPS_SCRIPT_GATEWAY_SECRET"'
+          printf '%s' "$APPS_SCRIPT_URL" | npx wrangler secret put APPS_SCRIPT_URL
+          printf '%s' "$APPS_SCRIPT_GATEWAY_SECRET" | npx wrangler secret put APPS_SCRIPT_GATEWAY_SECRET
+          npx wrangler secret list | grep -q '"APPS_SCRIPT_URL"'
+          npx wrangler secret list | grep -q '"APPS_SCRIPT_GATEWAY_SECRET"'
 
 
   deploy-apps-script:
