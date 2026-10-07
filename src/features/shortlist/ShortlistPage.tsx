@@ -22,8 +22,8 @@ export function ShortlistPage() {
   const selected = offers.find((offer) => offer.id === selectedId) ?? offers[0] ?? null;
 
   function toggleSaved(offer: InternshipOffer) {
-    actions.toggleSaved(offer.id, offer.shortlist);
-    setNotice(actions.isSaved(offer.id) || offer.shortlist ? 'Removed from saved jobs.' : 'Saved to your jobs.');
+    const saved = actions.toggleSaved(offer.id, offer.shortlist);
+    setNotice(saved ? 'Saved to your jobs.' : 'Removed from saved jobs.');
   }
 
   function hideOffer(offer: InternshipOffer) {
