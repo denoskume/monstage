@@ -247,9 +247,10 @@ export function CvStudioPage() {
           </section>
 
           <section className="cv-editor-section">
-            <h2>Skills & languages</h2>
-            <label>Technical skills<textarea rows={3} value={draft.skills} onChange={(e) => patch('skills', e.target.value)} /></label>
-            <label>Languages<input value={draft.languages} onChange={(e) => patch('languages', e.target.value)} /></label>
+            <h2>{draft.language === 'FR' ? 'Compétences, langues & centres d’intérêt' : 'Skills, languages & interests'}</h2>
+            <label>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical skills'}<textarea rows={3} value={draft.skills} onChange={(e) => patch('skills', e.target.value)} /></label>
+            <label>{draft.language === 'FR' ? 'Langues' : 'Languages'}<input value={draft.languages} onChange={(e) => patch('languages', e.target.value)} /></label>
+            <label>{draft.language === 'FR' ? 'Centres d’intérêt (max. 2)' : 'Interests (max. 2)'}<input value={draft.interests} onChange={(e) => patch('interests', e.target.value)} /></label>
           </section>
         </aside>
 
@@ -287,6 +288,7 @@ export function CvStudioPage() {
 
           <section><h2>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'}</h2><p>{draft.skills}</p></section>
           <section><h2>{draft.language === 'FR' ? 'Langues' : 'Languages'}</h2><p>{draft.languages}</p></section>
+          {draft.interests.trim() ? <section><h2>{draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests'}</h2><p>{draft.interests}</p></section> : null}
         </article>
       </div>
     </section>
