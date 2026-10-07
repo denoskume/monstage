@@ -15,6 +15,7 @@ type CvDraft = {
   projects?: Array<{ name?: string; bullets?: string[] }>;
   skills?: string;
   languages?: string;
+  interests?: string;
 };
 
 const WIDTH = 595.28;
@@ -153,6 +154,7 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
 
   if (draft.skills?.trim()) { section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'); lines(draft.skills); }
   if (draft.languages?.trim()) { section(draft.language === 'FR' ? 'Langues' : 'Languages'); lines(draft.languages); }
+  if (draft.interests?.trim()) { section(draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests'); lines(draft.interests); }
 
   const bytes = await pdf.save();
   const headers = new Headers({
