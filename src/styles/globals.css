@@ -1389,3 +1389,61 @@ h1, h2, h3 { color: var(--text); }
   .message-row { grid-template-columns:auto minmax(0,1fr); }
   .message-row > .button { grid-column:2; justify-self:start; }
 }
+
+
+/* My jobs */
+.my-jobs-tabs {
+  display:flex;
+  gap:6px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:18px;
+  overflow-x:auto;
+}
+.my-jobs-tabs button {
+  min-width:130px;
+  border:0;
+  border-bottom:3px solid transparent;
+  background:transparent;
+  color:var(--text-muted);
+  padding:10px 14px 12px;
+  display:grid;
+  gap:3px;
+  text-align:left;
+}
+.my-jobs-tabs button span { font-size:.78rem; }
+.my-jobs-tabs button strong { font-size:.9rem; }
+.my-jobs-tabs button.is-active {
+  color:var(--text);
+  border-bottom-color:var(--accent);
+}
+.my-jobs-tracking-list { display:grid; gap:10px; }
+.my-jobs-tracking-status { display:grid; gap:5px; color:var(--text-muted); }
+.my-jobs-tracking-status strong { color:var(--text); }
+
+/* Notifications */
+.notifications-list { display:grid; gap:10px; }
+.notification-row {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:14px;
+  align-items:start;
+  padding:16px 18px;
+}
+.notification-row__icon {
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:900;
+}
+.notification-row__content { min-width:0; display:grid; gap:4px; }
+.notification-row__content h2 { margin:0; font-size:1rem; }
+.notification-row__content p,
+.notification-row__content span { margin:0; color:var(--text-muted); font-size:.84rem; }
+@media (max-width:720px) {
+  .notification-row { grid-template-columns:auto minmax(0,1fr); }
+  .notification-row > .button { grid-column:2; justify-self:start; }
+}
