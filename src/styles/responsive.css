@@ -22,7 +22,7 @@
   .top-nav__inner { padding: 0 18px; }
   .top-nav__links { display: none; }
   .top-nav__meta { display: none; }
-  .bottom-nav { position: fixed; z-index: 60; bottom: 0; left: 0; right: 0; height: var(--mobile-nav-height); display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: blur(18px); padding-bottom: env(safe-area-inset-bottom); }
+  .bottom-nav { position: fixed; z-index: 60; bottom: 0; left: 0; right: 0; height: var(--mobile-nav-height); display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 96%, transparent); backdrop-filter: blur(18px); padding-bottom: env(safe-area-inset-bottom); }
   .bottom-nav .nav-link { border-radius: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: .73rem; padding: 7px 4px; }
   .bottom-nav__icon { font-size: 1.05rem; line-height: 1; }
 }
@@ -93,4 +93,30 @@
   .funnel-item { display: flex; align-items: center; justify-content: space-between; text-align: left; }
   .funnel-item span { min-height: auto; }
   .funnel-item strong { margin: 0; }
+}
+
+
+@media (max-width: 900px) {
+  .workspace-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace-grid { grid-template-columns: 1fr; gap: 12px; }
+  .workspace-grid > div + div { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 12px; }
+  .conversion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .offer-detail__cta--dual { grid-template-columns: 1fr; }
+  .workspace-principles { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .workspace-card { padding: 16px; }
+  .workspace-card__header { gap: 12px; }
+  .workspace-score { width: 68px; min-height: 64px; }
+  .workspace-checks { grid-template-columns: 1fr; }
+  .workspace-actions { align-items: flex-start; flex-direction: column; }
+  .workspace-actions .button { width: 100%; }
+  .conversion-grid { grid-template-columns: 1fr 1fr; }
+  .application-row__actions { grid-column: 1 / -1; justify-self: start; }
+}
+
+@media (max-width: 420px) {
+  .conversion-grid { grid-template-columns: 1fr; }
+  .bottom-nav .nav-link { font-size: .66rem; padding-inline: 2px; }
 }

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
-import { countByCity, countBySpecialization, getApplicationFunnel, getDashboardKpis } from './dashboardSelectors';
+import { countByCity, countBySpecialization, getApplicationFunnel, getConversionMetrics, getDashboardKpis } from './dashboardSelectors';
 
 const makeOffer = (partial: Partial<InternshipOffer>): InternshipOffer => ({
   id: '1', company: 'Acme', title: 'ML Intern', domain: null, city: 'Paris', region: null, m2Fit: 'Oui', start: null, duration: null,
@@ -29,4 +29,16 @@ test('returns ordered application funnel', () => {
   const funnel = getApplicationFunnel(offers);
   expect(funnel.map((item) => item.label)).toEqual(['Candidature envoyée','Relance','Entretien','Test technique','Offre reçue']);
   expect(funnel.find((item) => item.label === 'Entretien')?.count).toBe(1);
+});
+
+test('derives outcome conversion metrics', () => {
+  expect(getConversionMetrics(offers)).toEqual({
+    applications: 3,
+    recruiterResponses: 2,
+    interviews: 1,
+    offers: 0,
+    responseRate: 67,
+    interviewRate: 33,
+    offerRate: 0,
+  });
 });

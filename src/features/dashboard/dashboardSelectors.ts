@@ -9,6 +9,16 @@ export interface DashboardKpis {
   interviews: number;
 }
 
+export interface ConversionMetrics {
+  applications: number;
+  recruiterResponses: number;
+  interviews: number;
+  offers: number;
+  responseRate: number;
+  interviewRate: number;
+  offerRate: number;
+}
+
 export interface CountItem {
   label: string;
   count: number;
@@ -25,6 +35,28 @@ export function getDashboardKpis(offers: InternshipOffer[]): DashboardKpis {
     shortlist: offers.filter((offer) => offer.shortlist).length,
     applicationsSent: offers.filter((offer) => applicationProgressStatuses.includes(offer.applicationStatus ?? '')).length,
     interviews: offers.filter((offer) => offer.applicationStatus === 'Entretien').length,
+  };
+}
+
+export function getConversionMetrics(offers: InternshipOffer[]): ConversionMetrics {
+  const applicationStatuses = ['Candidature envoyée', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus'];
+  const responseStatuses = ['Entretien', 'Test technique', 'Offre reçue', 'Refus'];
+  const interviewStatuses = ['Entretien', 'Test technique', 'Offre reçue'];
+
+  const applications = offers.filter((offer) => applicationStatuses.includes(offer.applicationStatus ?? '')).length;
+  const recruiterResponses = offers.filter((offer) => responseStatuses.includes(offer.applicationStatus ?? '')).length;
+  const interviews = offers.filter((offer) => interviewStatuses.includes(offer.applicationStatus ?? '')).length;
+  const receivedOffers = offers.filter((offer) => offer.applicationStatus === 'Offre reçue').length;
+  const rate = (value: number) => applications ? Math.round((value / applications) * 100) : 0;
+
+  return {
+    applications,
+    recruiterResponses,
+    interviews,
+    offers: receivedOffers,
+    responseRate: rate(recruiterResponses),
+    interviewRate: rate(interviews),
+    offerRate: rate(receivedOffers),
   };
 }
 

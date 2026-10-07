@@ -3,6 +3,7 @@ import { OffersPage } from '../features/offers/OffersPage';
 import { ShortlistPage } from '../features/shortlist/ShortlistPage';
 import { ApplicationsPage } from '../features/applications/ApplicationsPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { WorkspacePage } from '../features/workspace/WorkspacePage';
 import { AppShell } from './AppShell';
 
 export function AppRoutes() {
@@ -13,6 +14,7 @@ export function AppRoutes() {
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/shortlist" element={<ShortlistPage />} />
         <Route path="/applications" element={<ApplicationsPage />} />
+        <Route path="/workspace" element={<WorkspacePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="*" element={<Navigate to="/offers" replace />} />
       </Route>

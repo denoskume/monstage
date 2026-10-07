@@ -1,6 +1,6 @@
 <h1 align="center">MonStage</h1>
 
-**MonStage** is a private, responsive internship intelligence workspace built on top of the existing **Stage Intelligence France** data source. It turns a private Google Sheet into a modern job-board experience optimized for desktop and mobile while keeping runtime access restricted to one authorized Google account.
+**MonStage** is a private, responsive internship intelligence and application operating system built on top of the existing **Stage Intelligence France** data source. It turns a private Google Sheet into a modern job-board experience optimized for desktop and mobile while keeping runtime access restricted to one authorized Google account.
 
 ## Product preview
 
@@ -10,6 +10,12 @@
 
 **Live app:** [Open MonStage](https://denoskume.github.io/monstage/) *(restricted access)*
 
+## Product flow
+
+**Discover → Evaluate → Prioritize → Prepare → Apply → Follow up → Interview → Learn**
+
+MonStage is intentionally candidate-first. It does not try to reproduce employer-side ATS, job advertising, sponsorship, or recruiter sourcing features.
+
 ## What it includes
 
 - Google Sign-In gate for one authorized account
@@ -18,7 +24,14 @@
 - Search, filters, sorting, and personalized ranking
 - Shortlist view
 - Application pipeline view
+- **Application Workspace** for each priority opportunity
+- **Personalized CV match** against the candidate's current technical profile
+- **Application package checklist**: tailored CV, cover letter/message, interview prep, submission
+- **Follow-up intelligence** with recommended timing
+- **Company / role intelligence** grounded in the monitored offer data
+- **Private per-offer notes** stored only in the authenticated browser
 - Compact decision dashboard
+- **Outcome analytics**: response, interview, and offer conversion rates
 - Responsive layouts from **360px** through large desktop screens
 - Structural dark-mode support
 
@@ -40,6 +53,8 @@ Private Google Sheet — Stage Intelligence France
 ```
 
 The browser never calls Apps Script directly in production. The Cloudflare Worker verifies the Google ID token, checks the configured single-user allowlist, and only then proxies a sanitized offers request to Apps Script. Direct Apps Script GET access returns no internship data.
+
+Application Workspace notes and package readiness are stored locally in the authenticated browser. The public frontend does **not** receive credentials for private GitHub repositories such as application document archives.
 
 ## Security model
 
@@ -154,4 +169,4 @@ The Vite base path is `/monstage/`, and client routing uses `HashRouter` so dire
 
 ## Product name
 
-**MonStage — Private internship intelligence workspace**
+**MonStage — Internship Intelligence & Application OS**
