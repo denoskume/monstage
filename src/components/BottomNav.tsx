@@ -2,10 +2,10 @@ import { NavLink } from 'react-router-dom';
 
 const links = [
   ['/offers', '⌕', 'Jobs'],
-  ['/shortlist', '★', 'Shortlist'],
+  ['/shortlist', '☆', 'Saved'],
   ['/applications', '✓', 'Apps'],
-  ['/workspace', '◫', 'Workspace'],
-  ['/dashboard', '▥', 'Dashboard'],
+  ['/workspace', '□', 'Workspace'],
+  ['/dashboard', '▦', 'Insights'],
 ] as const;
 
 export function BottomNav() {

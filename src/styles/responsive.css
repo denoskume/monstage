@@ -120,3 +120,109 @@
   .conversion-grid { grid-template-columns: 1fr; }
   .bottom-nav .nav-link { font-size: .66rem; padding-inline: 2px; }
 }
+
+
+/* V3.1 — shell and responsive polish */
+.app-main {
+  width: min(100%, var(--content-max));
+  padding: 22px 24px 44px;
+}
+
+.top-nav {
+  height: var(--nav-height);
+  background: color-mix(in srgb, var(--surface) 98%, transparent);
+  backdrop-filter: blur(12px);
+}
+.top-nav__inner {
+  max-width: var(--content-max);
+  padding: 0 24px;
+  gap: 22px;
+}
+.brand {
+  gap: 9px;
+  font-size: 1.08rem;
+  font-weight: 760;
+  letter-spacing: -.022em;
+}
+.brand__mark {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--accent);
+  box-shadow: none;
+  font-size: .82rem;
+}
+.brand__name { line-height: 1; }
+.top-nav__links {
+  align-self: stretch;
+  gap: 2px;
+}
+.top-nav .nav-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 11px;
+  border-radius: 0;
+  color: var(--text-muted);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.top-nav .nav-link:hover {
+  color: var(--text);
+  background: transparent;
+}
+.top-nav .nav-link.active {
+  color: var(--text);
+  background: transparent;
+}
+.top-nav .nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 11px;
+  right: 11px;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+}
+.top-nav__meta {
+  margin-left: auto;
+  color: var(--text-subtle);
+  font-size: .76rem;
+}
+
+@media (max-width: 1023px) {
+  .app-main { padding: 18px 18px 90px; }
+  .top-nav__inner { padding: 0 16px; }
+  .bottom-nav {
+    height: var(--mobile-nav-height);
+    background: color-mix(in srgb, var(--surface) 98%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .bottom-nav .nav-link {
+    color: var(--text-muted);
+    font-weight: 560;
+  }
+  .bottom-nav .nav-link.active {
+    color: var(--accent);
+    background: transparent;
+  }
+  .bottom-nav__icon { font-size: 1rem; }
+  .offers-layout { grid-template-columns: minmax(330px, 42%) minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .app-main { padding: 14px 12px 86px; }
+  .offers-hero h1 { font-size: 1.65rem; }
+  .offers-toolbar { padding: 8px; border-radius: 7px; }
+  .offer-card__button { padding: 15px; }
+  .offer-detail { padding: 18px 16px 88px; }
+  .workspace-card { padding: 15px; }
+  .page-header h1 { font-size: 1.55rem; }
+}
+
+@media (max-width: 420px) {
+  .brand__name { display: inline; }
+  .bottom-nav .nav-link { font-size: .64rem; }
+}
