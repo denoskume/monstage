@@ -3,8 +3,6 @@ import { AccountMenu } from '../features/auth/AccountMenu';
 
 const links = [
   ['/offers', 'Jobs'],
-  ['/applications', 'Applications'],
-  ['/workspace', 'Workspace'],
   ['/studio', 'Studio'],
   ['/dashboard', 'Insights'],
 ] as const;
