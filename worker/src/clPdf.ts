@@ -123,5 +123,6 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
     headers.set('Access-Control-Allow-Origin', origin);
     headers.set('Vary', 'Origin');
   }
-  return new Response(bytes, { status: 200, headers });
+  const body = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  return new Response(body, { status: 200, headers });
 }
