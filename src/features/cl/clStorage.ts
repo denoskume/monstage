@@ -5,6 +5,9 @@ export interface CoverLetterDraft {
   date: string;
   company: string;
   team: string;
+  recipientName: string;
+  recipientRole: string;
+  recipientLocation: string;
   internshipTitle: string;
   greeting: string;
   paragraphs: string[];
@@ -34,11 +37,19 @@ const enParagraphs = [
 export const defaultCoverLetterFr: CoverLetterDraft = {
   language: 'FR',
   date: '',
-  company: '',
+  company: 'Assystem',
   team: '',
-  internshipTitle: '',
+  recipientName: 'M. Karl Vallière',
+  recipientRole: "Responsable d’équipe",
+  recipientLocation: 'Nantes / Carquefou, France',
+  internshipTitle: 'Ingénieur Data Science - février 2027',
   greeting: 'Madame, Monsieur,',
-  paragraphs: frParagraphs,
+  paragraphs: [
+    "Je souhaite rejoindre Assystem pour un stage de six mois en Data Science à partir de février 2027. L’IA m’intéresse autant par ce qu’elle permet de construire que par la façon dont ses résultats sont évalués. Je veux mettre cette curiosité au service de problématiques industrielles concrètes. La performance, la qualité et la fiabilité y ont un impact direct.",
+    "Votre équipe m’attire par son approche complète du problème. Le travail ne s’arrête pas au modèle. Il part de la qualité des données. Il passe par l’automatisation, l’expérimentation et le benchmark. Il va jusqu’à l’analyse des limites et aux recommandations. C’est cette chaîne complète que je veux découvrir et à laquelle je veux contribuer. Votre accompagnement structuré et vos cas d’usage réels sont aussi une vraie occasion de progresser au sein d’une équipe expérimentée.",
+    "Mes projets académiques m’ont appris à comparer des méthodes et à mesurer leurs performances. Ils m’ont aussi appris à regarder leurs limites. J’ai notamment travaillé sur plusieurs stratégies de segmentation en imagerie fluoroscopique. Chez RWS, j’ai évalué des sorties d’IA selon des critères structurés. J’y ai identifié leurs défaillances. Chez Unified Mentor, j’ai travaillé sur le nettoyage, l’analyse, la visualisation et la restitution de données. Je veux maintenant transposer ces bases à la détection et à la prédiction d’anomalies industrielles.",
+    "Je veux apporter à votre équipe cette manière d’expérimenter, comparer et expliquer les résultats avec rigueur. En retour, je souhaite apprendre à traiter des problématiques industrielles plus complexes. Je veux aussi contribuer progressivement aux différentes étapes du projet. Je serais heureux d’échanger avec vous pour vous présenter ma démarche et ce que je pourrais apporter à cette mission.",
+  ],
   closing: 'Cordialement,',
   signer: 'Denos Kume',
   signatureDataUrl: '',
@@ -49,6 +60,9 @@ export const defaultCoverLetterEn: CoverLetterDraft = {
   date: '',
   company: '',
   team: '',
+  recipientName: '',
+  recipientRole: '',
+  recipientLocation: '',
   internshipTitle: '',
   greeting: 'Dear Hiring Manager,',
   paragraphs: enParagraphs,
