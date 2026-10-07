@@ -155,7 +155,6 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Account' }).click();
-  await page.getByRole('button', { name: 'Account' }).click();
   await page.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByText('Private internship intelligence workspace')).toBeVisible();
   await expect(page.getByText('Computer Vision Intern')).toHaveCount(0);
