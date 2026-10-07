@@ -37,6 +37,8 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 export function CvStudioPage() {
   const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft());
   const [saved, setSaved] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState('');
 
   function patch<K extends keyof CvDraft>(key: K, value: CvDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -54,6 +56,18 @@ export function CvStudioPage() {
     setSaved(false);
   }
 
+  async function downloadPdf() {
+    setDownloading(true);
+    setDownloadError('');
+    try {
+      await downloadCvPdf(draft);
+    } catch (error) {
+      setDownloadError(error instanceof Error ? error.message : 'Unable to generate the PDF.');
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   return (
     <section className="page cv-studio-page">
       <div className="page-header cv-studio-header">
@@ -64,9 +78,11 @@ export function CvStudioPage() {
         <div className="cv-studio-actions">
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
-          <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadCvPdf(draft)} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
+          <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPdf()} aria-label="Download CV PDF" title="Download CV PDF" disabled={downloading}>{downloading ? '…' : '⇩'}</button>
         </div>
       </div>
+
+      {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
 
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
