@@ -10,6 +10,7 @@ type CoverLetterDraft = {
   paragraphs?: string[];
   closing?: string;
   signer?: string;
+  signatureDataUrl?: string;
 };
 
 const WIDTH = 595.28;
@@ -111,7 +112,24 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
   y -= 4;
   drawLines(draft.closing || (draft.language === 'FR' ? 'Cordialement,' : 'Sincerely,'), 10.5, regular, 15);
   y -= 8;
-  drawLines(draft.signer || 'Denos Kume', 10.5, bold, 15);
+
+  if (draft.signatureDataUrl) {
+    const match = draft.signatureDataUrl.match(/^data:image\/(png|jpeg);base64,(.+)$/i);
+    if (match) {
+      const imageBytes = Uint8Array.from(atob(match[2]), (char) => char.charCodeAt(0));
+      const signature = match[1].toLowerCase() === 'png'
+        ? await pdf.embedPng(imageBytes)
+        : await pdf.embedJpg(imageBytes);
+      const maxWidth = 120;
+      const maxHeight = 48;
+      const scale = Math.min(maxWidth / signature.width, maxHeight / signature.height, 1);
+      const width = signature.width * scale;
+      const height = signature.height * scale;
+      ensure(height + 8);
+      page.drawImage(signature, { x: MX, y: y - height, width, height });
+      y -= height + 8;
+    }
+  }
 
   const bytes = await pdf.save();
   const headers = new Headers({
