@@ -7,8 +7,18 @@ const offer: InternshipOffer = {
   m2Fit: 'Oui probable', start: 'PFE / à confirmer', duration: '6 mois', compensation: '1 300 €/mois', skills: ['Python','Computer Vision'], publishedAt: '2026-09-15', offerStatus: 'Active', applicationStatus: 'À candidater', nextAction: 'Candidater', applicationUrl: 'https://example.com', shortlist: true, appliedAt: null, followUpAt: null, specialization: 'Computer Vision / 3D', technicalFit: 98, decisionScore: 100, priority: 'A+', freshness: 'Vérifié <24h', verifiedAt: '15/09/2026 05:16:28', sourceQuality: 'Officiel / direct', actionLevel: 'CANDIDATER 24H', calendarFit: '✅ Probable', confidence: 'Haute', relevance: null, gaps: null,
 };
 
-test('renders a concise job-card summary', () => {
-  render(<OfferCard offer={offer} selected={false} onSelect={() => undefined} />);
+test('renders a concise job-card summary and actions', () => {
+  render(
+    <OfferCard
+      offer={offer}
+      selected={false}
+      saved
+      onSelect={() => undefined}
+      onToggleSave={() => undefined}
+      onHide={() => undefined}
+      onShare={() => undefined}
+    />,
+  );
   expect(screen.getByText('Assystem')).toBeInTheDocument();
   expect(screen.getByText(offer.title)).toBeInTheDocument();
   expect(screen.getByText(/Courbevoie/)).toBeInTheDocument();
@@ -17,5 +27,7 @@ test('renders a concise job-card summary', () => {
   expect(screen.getByText('A+ priority')).toBeInTheDocument();
   expect(screen.getByText('Likely yes')).toBeInTheDocument();
   expect(screen.getByText('Verified <24h')).toBeInTheDocument();
-  expect(screen.getByLabelText('Saved')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Remove from saved jobs' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Not interested' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Share job' })).toBeInTheDocument();
 });
