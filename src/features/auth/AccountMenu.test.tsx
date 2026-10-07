@@ -26,6 +26,8 @@ test('keeps the signed-in account private in the header and signs out', async ()
   render(<AccountMenu />);
 
   expect(screen.queryByText('owner@example.test')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: 'Account' }));
+  expect(screen.getByText('owner@example.test')).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: 'Sign out' }));
   expect(signOut).toHaveBeenCalledOnce();
 });
