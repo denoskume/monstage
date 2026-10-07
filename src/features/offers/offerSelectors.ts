@@ -13,21 +13,24 @@ function normalize(value: string | null | undefined): string {
 }
 
 function textMatches(offer: InternshipOffer, query: string): boolean {
-  const needle = normalize(query);
-  if (!needle) return true;
-  const haystack = [
+  const tokens = normalize(query).split(/\\s+/).filter(Boolean);
+  if (tokens.length === 0) return true;
+  const haystack = normalize([
     offer.company,
     offer.title,
     offer.city,
     offer.region,
     offer.specialization,
     offer.domain,
+    offer.compensation,
+    offer.duration,
+    offer.sourceQuality,
     ...offer.skills,
-  ].map(normalize).join(' ');
-  return haystack.includes(needle);
+  ].filter(Boolean).join(' '));
+  return tokens.every((token) => haystack.includes(token));
 }
 
-function equalsNullable(actual: string | null, expected: string | null): boolean {
+function equalsNullable(actual: string | null | undefined, expected: string | null): boolean {
   return expected === null || normalize(actual) === normalize(expected);
 }
 
@@ -44,8 +47,8 @@ export function filterOffers(offers: InternshipOffer[], filters: OfferFilters): 
     if (!textMatches(offer, filters.query)) return false;
     if (!equalsNullable(offer.specialization, filters.specialization)) return false;
     if (!equalsNullable(offer.city, filters.city)) return false;
-    if (filters.priority !== null && offer.priority !== filters.priority) return false;
-    if ((offer.decisionScore ?? 0) < filters.minScore) return false;
+    if (filters.priority !== null && normalize(offer.priority) !== normalize(filters.priority)) return false;
+    if (filters.minScore > 0 && (offer.decisionScore === null || offer.decisionScore < filters.minScore)) return false;
     if (!equalsNullable(offer.freshness, filters.freshness)) return false;
     if (!equalsNullable(offer.m2Fit, filters.m2Fit)) return false;
     if (!equalsNullable(offer.sourceQuality, filters.sourceQuality)) return false;
