@@ -4,12 +4,13 @@ type HiddenReason = 'not_relevant' | 'wrong_location' | 'salary' | 'already_appl
 
 interface OfferActionState {
   saved: string[];
+  unsaved: string[];
   hidden: Record<string, HiddenReason>;
 }
 
 const KEY = 'monstage:offer-actions:v1';
 const EVENT = 'monstage:offer-actions-changed';
-const emptyState: OfferActionState = { saved: [], hidden: {} };
+const emptyState: OfferActionState = { saved: [], unsaved: [], hidden: {} };
 
 function readState(): OfferActionState {
   try {
@@ -18,6 +19,7 @@ function readState(): OfferActionState {
     const parsed = JSON.parse(raw) as Partial<OfferActionState>;
     return {
       saved: Array.isArray(parsed.saved) ? parsed.saved.filter((id): id is string => typeof id === 'string') : [],
+      unsaved: Array.isArray(parsed.unsaved) ? parsed.unsaved.filter((id): id is string => typeof id === 'string') : [],
       hidden: parsed.hidden && typeof parsed.hidden === 'object' ? parsed.hidden as Record<string, HiddenReason> : {},
     };
   } catch {
@@ -30,7 +32,7 @@ function writeState(state: OfferActionState) {
     localStorage.setItem(KEY, JSON.stringify(state));
     window.dispatchEvent(new CustomEvent(EVENT));
   } catch {
-    // Offer actions remain usable for the current session even if persistence is unavailable.
+    // Non-critical local persistence failure.
   }
 }
 
@@ -52,12 +54,30 @@ export function useOfferActions() {
     writeState(next);
   }, []);
 
-  const toggleSaved = useCallback((offerId: string) => {
+  const isSaved = useCallback((offerId: string, sourceSaved = false) => {
+    if (state.unsaved.includes(offerId)) return false;
+    return state.saved.includes(offerId) || sourceSaved;
+  }, [state.saved, state.unsaved]);
+
+  const toggleSaved = useCallback((offerId: string, sourceSaved = false) => {
     const current = readState();
-    const saved = current.saved.includes(offerId)
-      ? current.saved.filter((id) => id !== offerId)
-      : [...current.saved, offerId];
-    commit({ ...current, saved });
+    const currentlySaved = !current.unsaved.includes(offerId) && (current.saved.includes(offerId) || sourceSaved);
+
+    if (currentlySaved) {
+      commit({
+        ...current,
+        saved: current.saved.filter((id) => id !== offerId),
+        unsaved: sourceSaved ? Array.from(new Set([...current.unsaved, offerId])) : current.unsaved.filter((id) => id !== offerId),
+      });
+      return false;
+    }
+
+    commit({
+      ...current,
+      saved: Array.from(new Set([...current.saved, offerId])),
+      unsaved: current.unsaved.filter((id) => id !== offerId),
+    });
+    return true;
   }, [commit]);
 
   const hideOffer = useCallback((offerId: string, reason: HiddenReason = 'not_interested') => {
@@ -74,9 +94,9 @@ export function useOfferActions() {
 
   return {
     savedIds: state.saved,
+    unsavedIds: state.unsaved,
     hidden: state.hidden,
-    savedCount: state.saved.length,
-    isSaved: (offerId: string) => state.saved.includes(offerId),
+    isSaved,
     isHidden: (offerId: string) => Boolean(state.hidden[offerId]),
     toggleSaved,
     hideOffer,
