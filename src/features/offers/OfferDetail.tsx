@@ -59,7 +59,16 @@ export function OfferDetail({ offer, onBack }: { offer: InternshipOffer; onBack?
         </div>
         <div className="match-meter"><span style={{ width: match.score + '%' }} /></div>
         {match.matched.length ? <p><strong>Strong overlap:</strong> {match.matched.slice(0, 6).join(', ')}.</p> : <p>The source does not expose enough skill detail for a full comparison.</p>}
+        {match.alignedProjects.length ? <p><strong>Best project evidence:</strong> {match.alignedProjects.join(', ')}.</p> : null}
         {match.missing.length ? <p><strong>Prepare:</strong> {match.missing.slice(0, 5).join(', ')}.</p> : null}
+        <dl className="detail-grid">
+          <DetailItem label="Skills" value={match.breakdown.skills + '/100'} />
+          <DetailItem label="Projects" value={match.breakdown.projects + '/100'} />
+          <DetailItem label="Education" value={match.breakdown.education + '/100'} />
+          <DetailItem label="Experience" value={match.breakdown.experience + '/100'} />
+          <DetailItem label="Domain" value={match.breakdown.domain + '/100'} />
+          <DetailItem label="Internship fit" value={match.breakdown.constraints + '/100'} />
+        </dl>
       </section>
 
       {offer.skills.length ? (
