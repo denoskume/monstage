@@ -66,6 +66,7 @@ jobs:
             exit 1
           fi
       - name: Install Playwright Chromium
+        timeout-minutes: 10
         run: npx playwright install --with-deps chromium
       - name: Responsive E2E tests
         run: npm run test:e2e
