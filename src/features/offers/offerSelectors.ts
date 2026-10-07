@@ -13,7 +13,7 @@ function normalize(value: string | null | undefined): string {
 }
 
 function textMatches(offer: InternshipOffer, query: string): boolean {
-  const tokens = normalize(query).split(/\\s+/).filter(Boolean);
+  const tokens = normalize(query).split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return true;
   const haystack = normalize([
     offer.company,
