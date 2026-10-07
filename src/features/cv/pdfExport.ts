@@ -41,7 +41,7 @@ function wrapText(text: string, maxWidth: number, font: any, size: number): stri
   return lines;
 }
 
-export async function downloadCvPdf(draft: CvDraft): Promise<void> {
+export async function buildCvPdfBlob(draft: CvDraft): Promise<Blob> {
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -160,12 +160,12 @@ export async function downloadCvPdf(draft: CvDraft): Promise<void> {
     drawLines(draft.languages.trim(), 9.5);
   }
 
-  const dataUri = await pdf.saveAsBase64({ dataUri: true });
-  const anchor = document.createElement('a');
-  anchor.href = dataUri;
-  anchor.download = safeFileName(draft.name) + '_CV.pdf';
-  anchor.style.display = 'none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
+  const bytes = await pdf.save();
+  const pdfBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  return new Blob([pdfBuffer], { type: 'application/pdf' });
+}
+
+
+export function cvPdfFileName(name: string): string {
+  return safeFileName(name) + '_CV.pdf';
 }
