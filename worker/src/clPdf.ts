@@ -5,6 +5,9 @@ type CoverLetterDraft = {
   date?: string;
   company?: string;
   team?: string;
+  recipientName?: string;
+  recipientRole?: string;
+  recipientLocation?: string;
   internshipTitle?: string;
   greeting?: string;
   paragraphs?: string[];
@@ -53,9 +56,10 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   let page = pdf.addPage([WIDTH, HEIGHT]);
-  let y = HEIGHT - TOP;
-  const color = rgb(0.07, 0.07, 0.07);
+  const color = rgb(0.05, 0.05, 0.05);
+  const lineColor = rgb(0.55, 0.55, 0.55);
   const usable = WIDTH - (MX * 2);
+  let y = HEIGHT - 42;
 
   const ensure = (height: number) => {
     if (y - height < BOTTOM) {
@@ -64,54 +68,63 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
     }
   };
 
-  const drawLines = (value: string, size = 10.5, font = regular, leading = 15) => {
-    const lines = wrap(value, usable, font, size);
-    ensure(lines.length * leading + 6);
-    for (const line of lines) {
-      page.drawText(line, { x: MX, y, size, font, color });
+  const drawWrapped = (value: string, size = 10.4, font = regular, leading = 14.1, x = MX, maxWidth = usable) => {
+    const wrapped = wrap(value, maxWidth, font, size);
+    ensure(wrapped.length * leading + 4);
+    for (const line of wrapped) {
+      page.drawText(line, { x, y, size, font, color });
       y -= leading;
     }
   };
 
-  const drawCentered = (value: string, size: number, font: any) => {
+  const drawRight = (value: string, size: number, font: any, right = WIDTH - MX) => {
     const text = safeText(value);
     const width = font.widthOfTextAtSize(text, size);
-    page.drawText(text, { x: Math.max(MX, (WIDTH - width) / 2), y, size, font, color });
-    y -= size + 5;
+    page.drawText(text, { x: right - width, y, size, font, color });
+    y -= size + 3.4;
   };
 
-  drawCentered(draft.signer || 'Denos Kume', 17, bold);
-  drawCentered('Nantes, France | denoskume@yahoo.com', 9.5, regular);
-  y -= 10;
-
-  if (draft.date) {
-    drawLines(draft.date, 10, regular, 14);
-    y -= 4;
-  }
-
-  const recipient = [draft.company, draft.team].filter(Boolean).join(' - ');
-  if (recipient) {
-    drawLines(recipient, 10.5, bold, 14);
-    y -= 6;
-  }
-
-  const subject = draft.language === 'FR'
-    ? 'Objet : Candidature - ' + (draft.internshipTitle || '[INTITULE DU STAGE]')
-    : 'Re: Application for ' + (draft.internshipTitle || '[INTERNSHIP TITLE]');
-  drawLines(subject, 10.5, bold, 14);
-  y -= 12;
-
-  drawLines(draft.greeting || (draft.language === 'FR' ? 'Madame, Monsieur,' : 'Dear Hiring Manager,'), 10.5, regular, 15);
-  y -= 8;
-
-  for (const paragraph of (draft.paragraphs || []).filter((value) => value?.trim())) {
-    drawLines(paragraph, 10.5, regular, 15);
-    y -= 10;
-  }
+  drawRight(draft.signer || 'Denos Kume', 17.5, bold);
+  drawRight('Nantes, France', 9.3, regular);
+  drawRight('+33 6 62 91 94 68', 9.3, regular);
+  drawRight('denoskume@yahoo.com', 9.3, regular);
+  drawRight('github.com/denoskume', 9.3, regular);
+  drawRight('linkedin.com/in/denoskume', 9.3, regular);
 
   y -= 4;
-  drawLines(draft.closing || (draft.language === 'FR' ? 'Cordialement,' : 'Sincerely,'), 10.5, regular, 15);
-  y -= 8;
+  const recipientTop = y;
+  if (draft.recipientName) drawWrapped('A l’attention de ' + draft.recipientName, 10.2, bold, 13.6);
+  const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
+  if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6);
+  if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6);
+
+  const recipientBottom = y;
+  y = recipientTop - 50;
+  if (draft.date) {
+    const dateText = 'Nantes, le ' + safeText(draft.date);
+    const width = regular.widthOfTextAtSize(dateText, 10.2);
+    page.drawText(dateText, { x: WIDTH - MX - width, y, size: 10.2, font: regular, color });
+  }
+  y = Math.min(recipientBottom - 34, y - 35);
+
+  const subject = draft.language === 'FR'
+    ? 'Objet : Candidature au stage ' + (draft.internshipTitle || '[INTITULE DU STAGE]')
+    : 'Re: Application for ' + (draft.internshipTitle || '[INTERNSHIP TITLE]');
+  drawWrapped(subject, 10.8, bold, 14.5);
+  page.drawLine({ start: { x: MX, y: y + 6 }, end: { x: WIDTH - MX, y: y + 6 }, thickness: 0.55, color: lineColor });
+  y -= 4;
+
+  drawWrapped(draft.greeting || (draft.language === 'FR' ? 'Madame, Monsieur,' : 'Dear Hiring Manager,'), 10.4, regular, 14.1);
+  y -= 4;
+
+  for (const paragraph of (draft.paragraphs || []).filter((value) => value?.trim())) {
+    drawWrapped(paragraph, 10.4, regular, 14.1);
+    y -= 7;
+  }
+
+  y += 2;
+  drawWrapped(draft.closing || (draft.language === 'FR' ? 'Cordialement,' : 'Sincerely,'), 10.4, regular, 14.1);
+  y -= 4;
 
   if (draft.signatureDataUrl) {
     const match = draft.signatureDataUrl.match(/^data:image\/(png|jpeg);base64,(.+)$/i);
@@ -120,8 +133,8 @@ export async function buildCoverLetterPdfResponse(draft: CoverLetterDraft, origi
       const signature = match[1].toLowerCase() === 'png'
         ? await pdf.embedPng(imageBytes)
         : await pdf.embedJpg(imageBytes);
-      const maxWidth = 120;
-      const maxHeight = 48;
+      const maxWidth = 150;
+      const maxHeight = 58;
       const scale = Math.min(maxWidth / signature.width, maxHeight / signature.height, 1);
       const width = signature.width * scale;
       const height = signature.height * scale;
