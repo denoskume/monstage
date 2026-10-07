@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { InternshipOffer } from '../../api/contract';
 import { filterOffers } from './offerSelectors';
-import type { OfferFilters } from './offerTypes';
-import { OfferFilters } from './OfferFilters';
+import type { OfferFilters as OfferFilterState } from './offerTypes';
+import { OfferFiltersComponent } from './OfferFiltersComponent';
 
 const base: InternshipOffer = {
   id: 'base',
@@ -46,7 +46,7 @@ const offers: InternshipOffer[] = [
   { ...base, id: 'grenoble', company: 'Grenoble Co', city: 'Grenoble' },
 ];
 
-const emptyFilters: OfferFilters = {
+const emptyFilters: OfferFiltersComponent = {
   query: '',
   specialization: null,
   city: null,
@@ -60,13 +60,13 @@ const emptyFilters: OfferFilters = {
 };
 
 function Harness() {
-  const [draft, setDraft] = useState<OfferFilters>(emptyFilters);
-  const [applied, setApplied] = useState<OfferFilters>(emptyFilters);
+  const [draft, setDraft] = useState<OfferFiltersComponent>(emptyFilters);
+  const [applied, setApplied] = useState<OfferFiltersComponent>(emptyFilters);
   const visible = filterOffers(offers, applied);
 
   return (
     <>
-      <OfferFilters
+      <OfferFiltersComponent
         offers={offers}
         filters={draft}
         onChange={setDraft}
