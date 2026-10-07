@@ -162,7 +162,10 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
     }
   }
 
-  if (draft.skills?.trim()) { section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'); lines(draft.skills); }
+  if (draft.skills?.trim()) {
+    section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
+    for (const skillLine of draft.skills.split('\n').map((line) => line.trim()).filter(Boolean)) lines(skillLine);
+  }
   if (draft.languages?.trim()) { section(draft.language === 'FR' ? 'Langues' : 'Languages'); lines(draft.languages); }
   if (draft.interests?.trim()) { section(draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests'); lines(draft.interests); }
 
