@@ -29,15 +29,15 @@ export const builtInCvProfile: BuiltInCvProfile = {
   education: [
     {
       school: 'Centrale Nantes',
-      degree: 'MSc Data Science, Signal & Image Processing',
+      degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing',
       period: '2025–2027',
       keywords: ['msc', 'master 2', 'm2', 'data science', 'machine learning', 'computer vision', 'image processing', 'signal processing', 'deep learning'],
     },
     {
       school: 'Kristu Jayanti University',
-      degree: 'BSc Computer Science & Electronics',
+      degree: 'BSc. Computer Science & Electronics',
       period: '2021–2024',
-      keywords: ['bsc', 'computer science', 'electronics', 'programming', 'data analysis'],
+      keywords: ['bsc', 'computer science', 'electronics', 'programming', 'algorithms', 'software development', 'data analysis', 'digital electronics', 'communication systems', 'embedded systems', 'hardware-software integration'],
     },
   ],
   skills: {
