@@ -71,3 +71,15 @@ test('minimum score excludes offers with missing scores when a threshold is acti
   expect(filterOffers([{ ...base, decisionScore: null }], { ...filters, minScore: 70 })).toHaveLength(0);
   expect(filterOffers([{ ...base, decisionScore: null }], filters)).toHaveLength(1);
 });
+
+
+test('city filter returns only offers from the selected city', () => {
+  const offers = [
+    { ...base, id: 'nantes', city: 'Nantes' },
+    { ...base, id: 'paris', city: 'Paris' },
+    { ...base, id: 'lyon', city: 'Lyon' },
+  ];
+  const result = filterOffers(offers, { ...filters, city: 'Nantes' });
+  expect(result.map((offer) => offer.id)).toEqual(['nantes']);
+  expect(result.every((offer) => offer.city === 'Nantes')).toBe(true);
+});
