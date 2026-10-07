@@ -144,7 +144,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   if (draft.projects.length) {
     drawSectionTitle(draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects');
     for (const item of draft.projects) {
-      drawEntryHeader(item.name, '');
+      drawEntryHeader(item.name, item.period || '');
       for (const bullet of item.bullets.filter((value) => value.trim())) drawBullet(bullet.trim());
       y -= 4;
     }
