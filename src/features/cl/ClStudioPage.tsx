@@ -11,7 +11,7 @@ import {
 } from './clStorage';
 
 function subjectLine(draft: CoverLetterDraft): string {
-  if (draft.language === 'FR') return `Objet : Candidature — ${draft.internshipTitle || '[INTITULÉ DU STAGE]'}`;
+  if (draft.language === 'FR') return `Objet : Candidature au stage ${draft.internshipTitle || '[INTITULÉ DU STAGE]'}`;
   return `Re: Application for ${draft.internshipTitle || '[INTERNSHIP TITLE]'}`;
 }
 
@@ -107,7 +107,7 @@ export function ClStudioPage() {
     }
   }
 
-  const recipient = [draft.company, draft.team].filter(Boolean).join(' — ');
+  const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
 
   return (
     <section className="page cl-studio-page">
@@ -136,7 +136,9 @@ export function ClStudioPage() {
             <div className="cv-editor-grid">
               <label>Date<input value={draft.date} onChange={(e) => patch('date', e.target.value)} placeholder={draft.language === 'FR' ? '7 octobre 2026' : '7 October 2026'} /></label>
               <label>Company<input value={draft.company} onChange={(e) => patch('company', e.target.value)} /></label>
-              <label>Team<input value={draft.team} onChange={(e) => patch('team', e.target.value)} /></label>
+              <label>Recipient<input value={draft.recipientName} onChange={(e) => patch('recipientName', e.target.value)} placeholder="M. / Mme Nom" /></label>
+              <label>Recipient role<input value={draft.recipientRole} onChange={(e) => patch('recipientRole', e.target.value)} /></label>
+              <label>Recipient location<input value={draft.recipientLocation} onChange={(e) => patch('recipientLocation', e.target.value)} /></label>
               <label>Internship title<input value={draft.internshipTitle} onChange={(e) => patch('internshipTitle', e.target.value)} /></label>
             </div>
           </section>
@@ -170,18 +172,25 @@ export function ClStudioPage() {
           </section>
         </aside>
 
-        <article className="cl-preview">
-          <header className="cl-preview__sender">
+        <article className="cl-preview cl-preview--template">
+          <header className="cl-preview__sender cl-preview__sender--right">
             <strong>{draft.signer}</strong>
             <span>Nantes, France</span>
+            <span>+33 6 62 91 94 68</span>
             <span>denoskume@yahoo.com</span>
+            <span>github.com/denoskume</span>
+            <span>linkedin.com/in/denoskume</span>
           </header>
 
-          <div className="cl-preview__meta">
-            {draft.date ? <p>{draft.date}</p> : null}
-            {recipient ? <p><strong>{recipient}</strong></p> : null}
-            <p className="cl-preview__subject"><strong>{subjectLine(draft)}</strong></p>
+          <div className="cl-preview__recipient">
+            {draft.recipientName ? <strong>À l’attention de {draft.recipientName}</strong> : null}
+            {recipientCompany ? <strong>{recipientCompany}</strong> : null}
+            {draft.recipientLocation ? <span>{draft.recipientLocation}</span> : null}
           </div>
+
+          {draft.date ? <p className="cl-preview__date">Nantes, le {draft.date}</p> : null}
+
+          <p className="cl-preview__subject"><strong>{subjectLine(draft)}</strong></p>
 
           <p>{draft.greeting}</p>
 
