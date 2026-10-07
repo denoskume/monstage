@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 type CvDraft = {
+  language?: 'FR' | 'EN';
   name?: string;
   headline?: string;
   location?: string;
@@ -119,10 +120,10 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   page.drawLine({ start: { x: MX, y }, end: { x: WIDTH - MX, y }, thickness: 1, color: text });
   y -= 12;
 
-  if (draft.summary?.trim()) { section('Professional Summary'); lines(draft.summary); }
+  if (draft.summary?.trim()) { section(draft.language === 'FR' ? 'Profil' : 'Professional Summary'); lines(draft.summary); }
 
   if (draft.education?.length) {
-    section('Education');
+    section(draft.language === 'FR' ? 'Formation' : 'Education');
     for (const item of draft.education) {
       entry(item.school || '', item.period || '');
       entry(item.degree || '', item.location || '');
@@ -132,7 +133,7 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   }
 
   if (draft.experience?.length) {
-    section('Experience');
+    section(draft.language === 'FR' ? 'Expérience' : 'Experience');
     for (const item of draft.experience) {
       entry([item.role, item.company].filter(Boolean).join(' - '), item.period || '');
       if (item.location) lines(item.location, 9.2);
@@ -142,7 +143,7 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   }
 
   if (draft.projects?.length) {
-    section('Selected Projects');
+    section(draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects');
     for (const item of draft.projects) {
       entry(item.name || '', '');
       for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
@@ -150,8 +151,8 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
     }
   }
 
-  if (draft.skills?.trim()) { section('Technical Skills'); lines(draft.skills); }
-  if (draft.languages?.trim()) { section('Languages'); lines(draft.languages); }
+  if (draft.skills?.trim()) { section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'); lines(draft.skills); }
+  if (draft.languages?.trim()) { section(draft.language === 'FR' ? 'Langues' : 'Languages'); lines(draft.languages); }
 
   const bytes = await pdf.save();
   const headers = new Headers({
