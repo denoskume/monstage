@@ -254,11 +254,12 @@ export function CvStudioPage() {
           <section className="cv-editor-section">
             <div className="cv-editor-section__header">
               <h2>{draft.language === 'FR' ? 'Projets' : 'Projects'}</h2>
-              <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('projects', [...draft.projects, { id: uid('project'), name: '', bullets: [''] }])}>+ {draft.language === 'FR' ? 'Ajouter' : 'Add'}</button>
+              <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('projects', [...draft.projects, { id: uid('project'), name: '', period: '', bullets: [''] }])}>+ {draft.language === 'FR' ? 'Ajouter' : 'Add'}</button>
             </div>
             {draft.projects.map((item, index) => (
               <div className="cv-editor-block" key={item.id}>
                 <label>Project<input value={item.name} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, name: e.target.value }))} /></label>
+                <label>{draft.language === 'FR' ? 'Période' : 'Period'}<input value={item.period} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, period: e.target.value }))} /></label>
                 {item.bullets.map((bullet, bulletIndex) => (
                   <div className="cv-bullet-row" key={bulletIndex}>
                     <label>Bullet {bulletIndex + 1}
@@ -363,7 +364,7 @@ export function CvStudioPage() {
 
           <section><h2>{draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects'}</h2>
             {draft.projects.map((item) => <div className="cv-entry" key={item.id}>
-              <strong>{item.name}</strong>
+              <div className="cv-entry__top"><strong>{item.name}</strong><span>{item.period}</span></div>
               <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
             </div>)}
           </section>
