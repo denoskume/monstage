@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { InternshipOffer } from '../../api/contract';
 import { submitNativeApplication } from '../../api/applications';
 import { useAuth } from '../../auth/useAuth';
@@ -112,7 +113,7 @@ export function ApplyCenter({ offer, onClose }: { offer: InternshipOffer; onClos
     }
   }
 
-  return (
+  return createPortal(
     <div className="apply-center" role="dialog" aria-modal="true" aria-label={'Apply to ' + offer.title}>
       <div className="apply-center__shell">
         <header className="apply-center__header">
@@ -181,6 +182,7 @@ export function ApplyCenter({ offer, onClose }: { offer: InternshipOffer; onClos
           </section>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
