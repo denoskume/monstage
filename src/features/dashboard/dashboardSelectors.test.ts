@@ -27,7 +27,7 @@ test('groups specialization and city counts', () => {
 
 test('returns ordered application funnel', () => {
   const funnel = getApplicationFunnel(offers);
-  expect(funnel.map((item) => item.label)).toEqual(['Candidature envoyée','Relance','Entretien','Test technique','Offre reçue']);
+  expect(funnel.map((item) => item.label)).toEqual(['Candidature envoyée','Réponse recruteur','Entretien','Test technique','Offre reçue']);
   expect(funnel.find((item) => item.label === 'Entretien')?.count).toBe(1);
 });
 

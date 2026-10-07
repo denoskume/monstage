@@ -67,7 +67,15 @@ function WorkspaceCard({
         <Badge tone={offer.priority === 'A+' ? 'success' : 'accent'}>{offer.priority || '—'}</Badge>
         <Badge>{progress}% package</Badge>
         {offer.applicationStatus ? <Badge>{displayValue(offer.applicationStatus)}</Badge> : null}
+        {offer.autonomy?.source ? <Badge tone="success">Auto · {offer.autonomy.source}</Badge> : null}
       </div>
+
+      {offer.autonomy ? <section className="workspace-section autonomy-evidence">
+        <div className="workspace-section__heading"><h3>Autonomy evidence</h3><span>{offer.autonomy.confidence !== null ? Math.round(offer.autonomy.confidence * 100) + '% confidence' : 'confidence n/a'}</span></div>
+        <p><strong>{offer.autonomy.type}</strong> detected from {offer.autonomy.source}.</p>
+        {offer.autonomy.evidence ? <p>{offer.autonomy.evidence}</p> : null}
+        {offer.autonomy.detectedAt ? <small>{new Date(offer.autonomy.detectedAt).toLocaleString()}</small> : null}
+      </section> : null}
 
       <section className="workspace-section">
         <div className="workspace-section__heading">
@@ -79,8 +87,9 @@ function WorkspaceCard({
           <PackageCheck label="Tailored CV" checked={state.cvReady} onChange={(cvReady) => onUpdate({ cvReady })} />
           <PackageCheck label="Cover letter / message" checked={state.coverLetterReady} onChange={(coverLetterReady) => onUpdate({ coverLetterReady })} />
           <PackageCheck label="Interview prep" checked={state.interviewPrepReady} onChange={(interviewPrepReady) => onUpdate({ interviewPrepReady })} />
-          <PackageCheck label="Application submitted" checked={state.submitted} onChange={(submitted) => onUpdate({ submitted })} />
+          <PackageCheck label="Local package complete" checked={state.submitted} onChange={(submitted) => onUpdate({ submitted })} />
         </div>
+        <p className="workspace-note">External application status is evidence-driven. Opening the employer page never marks an application as submitted.</p>
       </section>
 
       <section className="workspace-section workspace-grid">
@@ -101,7 +110,7 @@ function WorkspaceCard({
 
       <section className="workspace-section workspace-grid">
         <label className="workspace-field">
-          <span>Follow-up date</span>
+          <span>Manual fallback follow-up date</span>
           <input type="date" value={state.followUpDate} onChange={(event) => onUpdate({ followUpDate: event.target.value })} />
           <small>{followUp}</small>
         </label>
@@ -112,8 +121,8 @@ function WorkspaceCard({
       </section>
 
       <footer className="workspace-actions">
-        {offer.applicationUrl ? <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a> : null}
-        <span>Saved only in this browser.</span>
+        {offer.applicationUrl ? <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Open employer page ↗</a> : null}
+        <span>Opening the external page does not change application status.</span>
       </footer>
     </article>
   );
@@ -143,15 +152,15 @@ export function WorkspacePage() {
     <section className="page workspace-page">
       <div className="page-header">
         <div>
-          <p className="eyebrow">Application operating system</p>
+          <p className="eyebrow">Autonomous application operating system</p>
           <h1>Workspace</h1>
-          <p>Evaluate, prepare, apply, follow up and defend each high-value internship from one place.</p>
+          <p>Prepare applications while MonStage independently watches for real evidence of submission, recruiter activity and interviews.</p>
         </div>
       </div>
 
       <div className="workspace-principles card">
-        <strong>Flow</strong>
-        <span>Discover → Evaluate → Prioritize → Prepare → Apply → Follow up → Interview → Learn</span>
+        <strong>Evidence-first</strong>
+        <span>Open employer page ≠ Applied · Confirmation email = Submitted · Recruiter email = Response · Calendar invite = Interview</span>
       </div>
 
       {offers.length === 0 ? <EmptyState title="No priority applications yet." /> : (

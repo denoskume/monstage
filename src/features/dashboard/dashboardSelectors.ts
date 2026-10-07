@@ -24,8 +24,8 @@ export interface CountItem {
   count: number;
 }
 
-const applicationProgressStatuses = ['Candidature envoyée', 'Relance', 'Entretien', 'Test technique', 'Offre reçue'];
-const funnelOrder = ['Candidature envoyée', 'Relance', 'Entretien', 'Test technique', 'Offre reçue'];
+const applicationProgressStatuses = ['Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue'];
+const funnelOrder = ['Candidature envoyée', 'Réponse recruteur', 'Entretien', 'Test technique', 'Offre reçue'];
 
 export function getDashboardKpis(offers: InternshipOffer[]): DashboardKpis {
   return {
@@ -34,13 +34,13 @@ export function getDashboardKpis(offers: InternshipOffer[]): DashboardKpis {
     apply24h: offers.filter((offer) => offer.actionLevel === 'CANDIDATER 24H').length,
     shortlist: offers.filter((offer) => offer.shortlist).length,
     applicationsSent: offers.filter((offer) => applicationProgressStatuses.includes(offer.applicationStatus ?? '')).length,
-    interviews: offers.filter((offer) => offer.applicationStatus === 'Entretien').length,
+    interviews: offers.filter((offer) => ['Entretien', 'Test technique', 'Offre reçue'].includes(offer.applicationStatus ?? '')).length,
   };
 }
 
 export function getConversionMetrics(offers: InternshipOffer[]): ConversionMetrics {
-  const applicationStatuses = ['Candidature envoyée', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus'];
-  const responseStatuses = ['Entretien', 'Test technique', 'Offre reçue', 'Refus'];
+  const applicationStatuses = ['Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus'];
+  const responseStatuses = ['Réponse recruteur', 'Entretien', 'Test technique', 'Offre reçue', 'Refus'];
   const interviewStatuses = ['Entretien', 'Test technique', 'Offre reçue'];
 
   const applications = offers.filter((offer) => applicationStatuses.includes(offer.applicationStatus ?? '')).length;

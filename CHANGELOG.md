@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.0 — Autonomous application evidence
+
+- Added evidence-driven application status architecture.
+- Added Gmail confirmation/recruiter signal classification.
+- Added Calendar interview-event detection.
+- Added confidence-scored application events with privacy-minimized audit records.
+- Added automatic Sheet pipeline updates from detected evidence.
+- Added a 15-minute autonomy trigger installer.
+- Added read-only Gmail and Calendar scopes.
+- Added autonomy badges, evidence details and last-sync visibility.
+- Opening an employer page no longer implies a submitted application.
+
+# Changelog
+
 ## 0.2.0 — Application OS
 
 - Added a dedicated Application Workspace.

@@ -1,5 +1,13 @@
 export type Priority = 'A+' | 'A' | 'B+' | 'B' | string;
 
+export interface AutonomyEvidence {
+  type: string | null;
+  confidence: number | null;
+  source: 'gmail' | 'calendar' | 'monstage' | string | null;
+  detectedAt: string | null;
+  evidence: string | null;
+}
+
 export interface InternshipOffer {
   id: string;
   company: string;
@@ -32,10 +40,12 @@ export interface InternshipOffer {
   confidence: string | null;
   relevance: string | null;
   gaps: string | null;
+  autonomy?: AutonomyEvidence | null;
 }
 
 export interface OffersApiResponse {
   generatedAt: string;
   source: 'Stage Intelligence France';
+  autonomyLastSync?: string | null;
   offers: InternshipOffer[];
 }
