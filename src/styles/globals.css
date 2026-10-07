@@ -1254,3 +1254,80 @@ h1, h2, h3 { color: var(--text); }
 .cv-interest-editor { display:grid; gap:8px; }
 .cv-interest-editor__label { font-weight:700; font-size:.9rem; }
 .cv-interest-row input { width:100%; }
+
+
+/* Offer actions — save, hide, share */
+.offer-card { position: relative; }
+.offer-card__button { padding-right: 132px; }
+.offer-card__actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+.offer-action-icon {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--surface);
+  color: var(--text-muted);
+  transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease;
+}
+.offer-action-icon:hover {
+  background: var(--surface-muted);
+  color: var(--text);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+.offer-action-icon.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+}
+.offer-action-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.offer-action-icon--large {
+  width: 46px;
+  height: 46px;
+  border-radius: 11px;
+}
+.offer-detail__actions--indeed {
+  flex-wrap: wrap;
+}
+.offer-detail__actions--indeed .button--primary {
+  min-width: 180px;
+}
+.offer-action-notice {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: var(--shadow-card);
+  font-size: .86rem;
+}
+.offer-action-notice button {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 800;
+  padding: 3px 6px;
+}
+@media (max-width: 720px) {
+  .offer-card__button { padding-right: 18px; padding-bottom: 60px; }
+  .offer-card__actions { top: auto; bottom: 12px; left: 14px; right: auto; }
+  .offer-detail__actions--indeed .button--primary,
+  .offer-detail__actions--indeed .button--secondary { flex: 1 1 100%; }
+}
