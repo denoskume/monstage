@@ -54,8 +54,8 @@ export interface CvDraft {
   sectionOrder: CvSectionKey[];
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v6:';
-const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v5:';
+const KEY_PREFIX = 'monstage:cv-studio:v7:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v6:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -93,11 +93,11 @@ export const defaultCvEn: CvDraft = {
       'Selected XGBoost with 0.8557 PR-AUC, 0.9763 ROC-AUC and 0.8384 recall on the final test set.',
       'Added validation-based threshold selection and global/local SHAP explanations.',
     ]},
-    { id: 'flag', name: 'Flag Intelligence', period: 'Sep 2026', bullets: [
-      'Built and deployed a MobileNetV3-Small application covering 250 flag classes.',
-      'Implemented confidence, decision margin, ranked alternatives and open-set logic.',
-      'Evaluated Top-1/Top-5, macro precision/recall/F1, calibration and open-set robustness.',
-      'Connected recognition to structured country intelligence generation with PDF/JSON export.',
+    { id: 'flag', name: 'Flag Intelligence', period: 'Sep 2026–Present', bullets: [
+      'Developing a MobileNetV3-Small application covering 250 flag classes.',
+      'Integrating confidence, decision margin, ranked alternatives and open-set logic.',
+      'Evaluating Top-1/Top-5, macro precision/recall/F1, calibration and open-set robustness.',
+      'Improving system robustness, error analysis and structured country intelligence generation with PDF/JSON export.',
     ]},
   ],
   leadership: [
@@ -153,11 +153,11 @@ export const defaultCvFr: CvDraft = {
       'Retenu XGBoost avec 0,8557 de PR-AUC, 0,9763 de ROC-AUC et 0,8384 de rappel sur le jeu de test final.',
       'Ajouté une sélection du seuil sur validation et des explications SHAP globales et locales.',
     ]},
-    { id: 'flag', name: 'Flag Intelligence', period: 'Sept. 2026', bullets: [
-      'Développé et déployé une application MobileNetV3-Small couvrant 250 classes de drapeaux.',
-      'Intégré confiance, marge de décision, alternatives classées et logique open-set.',
-      'Évalué Top-1/Top-5, précision/rappel/F1 macro, calibration et robustesse open-set.',
-      'Relié la reconnaissance à la génération structurée d’informations pays avec export PDF/JSON.',
+    { id: 'flag', name: 'Flag Intelligence', period: 'Sept. 2026–En cours', bullets: [
+      'Développe une application MobileNetV3-Small couvrant 250 classes de drapeaux.',
+      'Intègre confiance, marge de décision, alternatives classées et logique open-set.',
+      'Évalue Top-1/Top-5, précision/rappel/F1 macro, calibration et robustesse open-set.',
+      'Améliore la robustesse du système, l’analyse des erreurs et la génération structurée d’informations pays avec export PDF/JSON.',
     ]},
   ],
   leadership: [
@@ -203,6 +203,14 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
 
   migrated.projects = (saved.projects ?? defaults.projects).map((item) => {
     const official = defaults.projects.find((entry) => entry.id === item.id);
+    if (item.id === 'flag' && official) {
+      return {
+        ...item,
+        name: official.name,
+        period: official.period,
+        bullets: official.bullets,
+      };
+    }
     return {
       ...item,
       period: item.period || official?.period || '',
