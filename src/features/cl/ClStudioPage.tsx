@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { apiBaseUrl } from '../../api/authClient';
-import { useAuth } from '../../auth/useAuth';
 import {
   freshCoverLetter,
   loadCoverLetter,
@@ -9,6 +7,7 @@ import {
   type CoverLetterDraft,
   type CoverLetterLanguage,
 } from './clStorage';
+import { buildCoverLetterPdfBytes, coverLetterPdfFileName } from './pdfExport';
 
 function subjectLine(draft: CoverLetterDraft): string {
   if (draft.language === 'FR') return `Objet : Candidature au stage ${draft.internshipTitle || '[INTITULÉ DU STAGE]'}`;
@@ -16,7 +15,6 @@ function subjectLine(draft: CoverLetterDraft): string {
 }
 
 export function ClStudioPage() {
-  const { token } = useAuth();
   const [draft, setDraft] = useState<CoverLetterDraft>(() => loadCoverLetter());
   const [saved, setSaved] = useState(false);
   const [downloadError, setDownloadError] = useState('');
@@ -67,44 +65,14 @@ export function ClStudioPage() {
   }
 
   async function downloadPdf() {
-    if (!token) {
-      setDownloadError('Authentication required for PDF download.');
-      return;
-    }
-
     try {
-      const response = await fetch(apiBaseUrl() + '/api/cl/pdf', {
-        method: 'POST',
-        cache: 'no-store',
-        headers: {
-          Authorization: 'Bearer ' + token,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(draft),
-      });
-
-      if (!response.ok) {
-        let message = 'Unable to download the cover letter PDF.';
-        try {
-          const errorBody = await response.json() as { error?: string; message?: string };
-          message = errorBody.message || errorBody.error || message;
-        } catch {}
-        throw new Error(message);
-      }
-
-      const blob = await response.blob();
-      if (blob.type && blob.type !== 'application/pdf') {
-        throw new Error('The server did not return a valid PDF.');
-      }
-
+      const bytes = await buildCoverLetterPdfBytes(draft);
+      const pdfBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+      const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
-
-      const disposition = response.headers.get('Content-Disposition') || '';
-      const fileNameMatch = disposition.match(/filename="([^"]+)"/i);
-      const fallbackName = (draft.signer || 'MonStage').replace(/[^a-z0-9_-]+/gi, '_') + '_CL_' + draft.language + '.pdf';
-      anchor.download = fileNameMatch?.[1] || fallbackName;
+      anchor.download = coverLetterPdfFileName(draft);
       anchor.style.display = 'none';
 
       document.body.appendChild(anchor);
