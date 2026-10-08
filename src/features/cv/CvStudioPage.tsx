@@ -95,7 +95,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
     const onePageFriendly = draft.projects.length <= 3 && draft.experience.length <= 3;
     return [
       ['Contact details', hasContact],
-      ['Focused summary', hasSummary],
+      ['Focused objective', hasSummary],
       ['Keyword-rich skills', hasSkills],
       ['Experience bullets', hasExperienceBullets],
       ['Project evidence', hasProjectBullets],
@@ -464,7 +464,7 @@ export function CvStudioPage() {
             <p className="cv-preview__contact">{[draft.location, draft.email, draft.phone, draft.linkedin, draft.github].filter(Boolean).join(' | ')}</p>
           </header>
 
-          <section><h2>{draft.language === 'FR' ? 'Profil' : 'Professional Summary'}</h2><p>{draft.summary}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Objectif' : 'Objective'}</h2><p>{draft.summary}</p></section>
 
           {draft.sectionOrder.map((section) => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>
