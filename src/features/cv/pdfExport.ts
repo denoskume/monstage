@@ -117,7 +117,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   y -= 12;
 
   if (draft.summary.trim()) {
-    drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Professional Summary');
+    drawSectionTitle(draft.language === 'FR' ? 'Objectif' : 'Objective');
     drawLines(draft.summary.trim(), 9.5);
   }
 
