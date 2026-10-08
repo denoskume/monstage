@@ -5,7 +5,7 @@ import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { SearchBar } from '../../components/SearchBar';
 import { useOffers } from '../../hooks/useOffers';
 import { defaultPreferences, loadPreferences, savePreferences, type SortMode } from '../../storage/preferences';
-import { filterOffers, sortOffers } from './offerSelectors';
+import { dedupeOffers, filterOffers, offerIdentity, sortOffers } from './offerSelectors';
 import type { OfferFilters as OfferFilterState } from './offerTypes';
 import { OfferDetail } from './OfferDetail';
 import { OfferFilters } from './OfferFilters';
@@ -33,7 +33,7 @@ const resetFilters: OfferFilterState = { query: '', specialization: null, city: 
 const sortLabels: Record<SortMode, string> = { best: 'Best match', recent: 'Most recent', score: 'Highest score', priority: 'Priority', city: 'City' };
 
 function selectionKey(offer: InternshipOffer): string {
-  return [offer.id, offer.company, offer.title, offer.applicationUrl ?? ''].join('::');
+  return offerIdentity(offer);
 }
 
 export function OffersPage() {
@@ -50,7 +50,7 @@ export function OffersPage() {
 
   const offers = data?.offers ?? [];
   const availableOffers = useMemo(
-    () => offers.filter((offer) => !actions.isHidden(offer.id)),
+    () => dedupeOffers(offers.filter((offer) => !actions.isHidden(offer.id))),
     [offers, actions.hidden],
   );
   const filteredOffers = useMemo(
