@@ -1,6 +1,6 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
-import { fetchOffersFromAppsScript, submitApplicationToAppsScript } from './appsScript';
-import { getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
+import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript } from './appsScript';
+import { clearCachedOffers, getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
 import { buildCvPdfResponse } from './cvPdf';
@@ -14,7 +14,9 @@ export interface WorkerDependencies {
   verifyUser: (token: string, env: Env) => Promise<AuthorizedUser>;
   fetchOffers: (env: Env) => Promise<unknown>;
   submitApplication?: (env: Env, application: unknown) => Promise<{ status: number; payload: unknown }>;
+  addExternalApplication?: (env: Env, application: unknown) => Promise<{ status: number; payload: unknown }>;
   getCachedOffers: () => Promise<CachedOffers | null>;
+  clearCachedOffers?: () => Promise<void>;
   putCachedOffers: (payload: unknown, ttlSeconds: number) => Promise<void>;
 }
 
@@ -22,7 +24,9 @@ const defaultDependencies: WorkerDependencies = {
   verifyUser: verifyAuthorizedUser,
   fetchOffers: fetchOffersFromAppsScript,
   submitApplication: submitApplicationToAppsScript,
+  addExternalApplication: addExternalApplicationToAppsScript,
   getCachedOffers,
+  clearCachedOffers,
   putCachedOffers,
 };
 
@@ -70,10 +74,11 @@ export async function handleRequest(
   const isSessionRoute = request.method === 'GET' && url.pathname === '/api/session';
   const isOffersRoute = request.method === 'GET' && url.pathname === '/api/offers';
   const isSubmitRoute = request.method === 'POST' && url.pathname === '/api/applications/submit';
+  const isExternalApplicationRoute = request.method === 'POST' && url.pathname === '/api/applications/external';
   const isCvPdfRoute = request.method === 'POST' && url.pathname === '/api/cv/pdf';
   const isClPdfRoute = request.method === 'POST' && url.pathname === '/api/cl/pdf';
 
-  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isCvPdfRoute && !isClPdfRoute) {
+  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isExternalApplicationRoute && !isCvPdfRoute && !isClPdfRoute) {
     return jsonResponse({ error: 'NOT_FOUND' }, 404, origin);
   }
 
@@ -114,6 +119,27 @@ export async function handleRequest(
         : await buildCvPdfResponse(draft as Record<string, unknown>, origin);
     } catch {
       return jsonResponse({ error: 'PDF_GENERATION_FAILED' }, 500, origin);
+    }
+  }
+
+  if (isExternalApplicationRoute) {
+    let body: unknown;
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin); }
+    if (!body || typeof body !== 'object') return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin);
+
+    try {
+      const addExternalApplication = dependencies.addExternalApplication ?? defaultDependencies.addExternalApplication!;
+      const result = await addExternalApplication(env, {
+        ...(body as Record<string, unknown>),
+        authenticatedEmail: user.email,
+        authenticatedName: user.name,
+      });
+      if (result.status >= 200 && result.status < 300) {
+        await (dependencies.clearCachedOffers ?? clearCachedOffers)();
+      }
+      return jsonResponse(result.payload, result.status, origin);
+    } catch {
+      return jsonResponse({ error: 'BACKEND_UNAVAILABLE', message: 'Application tracking backend unavailable.' }, 502, origin);
     }
   }
 
