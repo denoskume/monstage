@@ -123,26 +123,41 @@ jobs:
         if: steps.cloudflare.outputs.configured == 'true'
         run: |
           python - <<'PY'
-          import json, os, urllib.request
+          import json, os, time, urllib.error, urllib.request
+
           payload = json.dumps({
               "gatewaySecret": os.environ["APPS_SCRIPT_GATEWAY_SECRET"],
               "action": "offers",
           }).encode()
-          request = urllib.request.Request(
-              os.environ["APPS_SCRIPT_URL"],
-              data=payload,
-              headers={"Content-Type": "application/json"},
-              method="POST",
-          )
-          with urllib.request.urlopen(request, timeout=30) as response:
-              body = json.loads(response.read().decode())
-          if body.get("source") != "Stage Intelligence France":
-              raise SystemExit("Apps Script backend returned an unexpected source")
-          if not isinstance(body.get("offers"), list):
-              raise SystemExit("Apps Script backend did not return an offers array")
-          if not isinstance(body.get("generatedAt"), str):
-              raise SystemExit("Apps Script backend did not return generatedAt")
-          print("Apps Script offers backend is healthy")
+
+          last_error = None
+          for attempt in range(1, 4):
+              try:
+                  request = urllib.request.Request(
+                      os.environ["APPS_SCRIPT_URL"],
+                      data=payload,
+                      headers={"Content-Type": "application/json"},
+                      method="POST",
+                  )
+                  with urllib.request.urlopen(request, timeout=60) as response:
+                      body = json.loads(response.read().decode())
+
+                  if body.get("source") != "Stage Intelligence France":
+                      raise RuntimeError("Apps Script backend returned an unexpected source")
+                  if not isinstance(body.get("offers"), list):
+                      raise RuntimeError("Apps Script backend did not return an offers array")
+                  if not isinstance(body.get("generatedAt"), str):
+                      raise RuntimeError("Apps Script backend did not return generatedAt")
+
+                  print(f"Apps Script offers backend is healthy on attempt {attempt}")
+                  break
+              except (TimeoutError, urllib.error.URLError, urllib.error.HTTPError, RuntimeError, json.JSONDecodeError) as error:
+                  last_error = error
+                  print(f"Smoke test attempt {attempt}/3 failed: {error}")
+                  if attempt < 3:
+                      time.sleep(attempt * 5)
+          else:
+              raise SystemExit(f"Apps Script backend smoke test failed after 3 attempts: {last_error}")
           PY
 
 
