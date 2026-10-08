@@ -4,6 +4,27 @@ import type { OfferFilters } from './offerTypes';
 
 const priorityRank: Record<string, number> = { 'A+': 4, A: 3, 'B+': 2, B: 1 };
 
+export function offerIdentity(offer: InternshipOffer): string {
+  return [
+    offer.id || '',
+    offer.company || '',
+    offer.title || '',
+    offer.city || '',
+    offer.publishedAt || '',
+    offer.applicationUrl || '',
+  ].join('::');
+}
+
+export function dedupeOffers(offers: InternshipOffer[]): InternshipOffer[] {
+  const seen = new Set<string>();
+  return offers.filter((offer) => {
+    const identity = offerIdentity(offer);
+    if (seen.has(identity)) return false;
+    seen.add(identity);
+    return true;
+  });
+}
+
 function normalize(value: string | null | undefined): string {
   return (value ?? '')
     .normalize('NFD')
