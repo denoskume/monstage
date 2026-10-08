@@ -7,7 +7,7 @@ const MX = 56.69;
 const TOP = 56.69;
 const BOTTOM = 56.69;
 
-function safeText(value: unknown): string {
+export function normalizeCoverLetterPdfText(value: unknown): string {
   return String(value ?? '')
     .normalize('NFC')
     .replace(/[\u2018\u2019]/g, "'")
@@ -20,12 +20,12 @@ function safeText(value: unknown): string {
 }
 
 export function coverLetterPdfFileName(draft: CoverLetterDraft): string {
-  const signer = safeText(draft.signer).trim().replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'MonStage';
+  const signer = normalizeCoverLetterPdfText(draft.signer).trim().replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'MonStage';
   return signer + '_CL_' + draft.language + '.pdf';
 }
 
 function wrap(text: string, maxWidth: number, font: any, size: number): string[] {
-  const words = safeText(text).trim().split(/\s+/).filter(Boolean);
+  const words = normalizeCoverLetterPdfText(text).trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const lines: string[] = [];
   let line = words[0];
@@ -77,7 +77,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   };
 
   const drawRight = (value: string, size: number, font: any, right = WIDTH - MX) => {
-    const text = safeText(value);
+    const text = normalizeCoverLetterPdfText(value);
     const width = font.widthOfTextAtSize(text, size);
     page.drawText(text, { x: right - width, y, size, font, color });
     y -= size + 3.4;
@@ -93,7 +93,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   y -= 4;
   const recipientTop = y;
   if (draft.recipientName) {
-    drawWrapped(draft.language === 'FR' ? 'A l attention de ' + draft.recipientName : draft.recipientName, 10.2, bold, 13.6);
+    drawWrapped(draft.language === 'FR' ? 'À l’attention de ' + draft.recipientName : draft.recipientName, 10.2, bold, 13.6);
   }
   const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
   if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6);
@@ -102,7 +102,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   const recipientBottom = y;
   y = recipientTop - 50;
   if (draft.date) {
-    const dateText = draft.language === 'FR' ? 'Nantes, le ' + safeText(draft.date) : 'Nantes, ' + safeText(draft.date);
+    const dateText = draft.language === 'FR' ? 'Nantes, le ' + normalizeCoverLetterPdfText(draft.date) : 'Nantes, ' + normalizeCoverLetterPdfText(draft.date);
     const width = regular.widthOfTextAtSize(dateText, 10.2);
     page.drawText(dateText, { x: WIDTH - MX - width, y, size: 10.2, font: regular, color });
   }
