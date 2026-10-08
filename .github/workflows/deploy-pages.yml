@@ -9,6 +9,9 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: monstage-pages-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -183,3 +186,6 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1200000
+          reporting_interval: 5000
