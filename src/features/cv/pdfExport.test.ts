@@ -14,3 +14,9 @@ describe('CV PDF text normalization', () => {
     expect(normalized).toContain('février');
   });
 });
+
+
+test('preserves bullet characters instead of converting them to dashes', () => {
+  expect(normalizeCvPdfText('• Première puce')).toBe('• Première puce');
+  expect(normalizeCvPdfText('· Deuxième puce')).toBe('• Deuxième puce');
+});
