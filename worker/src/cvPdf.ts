@@ -17,6 +17,7 @@ type CvDraft = {
   skills?: string;
   languages?: string;
   interests?: string;
+  sectionOrder?: Array<'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'languages' | 'interests'>;
 };
 
 const WIDTH = 595.28;
@@ -124,50 +125,64 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
 
   if (draft.summary?.trim()) { section(draft.language === 'FR' ? 'Profil' : 'Professional Summary'); lines(draft.summary); }
 
-  if (draft.education?.length) {
-    section(draft.language === 'FR' ? 'Formation' : 'Education');
-    for (const item of draft.education) {
-      entry(item.school || '', item.period || '');
-      entry(item.degree || '', item.location || '');
-      if (item.details?.trim()) lines(item.details, 9.2);
-      y -= 4;
+  const sectionOrder = draft.sectionOrder?.length
+    ? draft.sectionOrder
+    : ['education', 'projects', 'experience', 'skills', 'languages', 'leadership', 'interests'];
+
+  for (const sectionKey of sectionOrder) {
+    if (sectionKey === 'education' && draft.education?.length) {
+      section(draft.language === 'FR' ? 'Formation' : 'Education');
+      for (const item of draft.education) {
+        entry(item.school || '', item.period || '');
+        entry(item.degree || '', item.location || '');
+        if (item.details?.trim()) lines(item.details, 9.2);
+        y -= 4;
+      }
+    }
+
+    if (sectionKey === 'projects' && draft.projects?.length) {
+      section(draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects');
+      for (const item of draft.projects) {
+        entry(item.name || '', item.period || '');
+        for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
+        y -= 4;
+      }
+    }
+
+    if (sectionKey === 'experience' && draft.experience?.length) {
+      section(draft.language === 'FR' ? 'Expérience' : 'Experience');
+      for (const item of draft.experience) {
+        entry([item.role, item.company].filter(Boolean).join(' - '), item.period || '');
+        if (item.location) lines(item.location, 9.2);
+        for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
+        y -= 4;
+      }
+    }
+
+    if (sectionKey === 'leadership' && draft.leadership?.length) {
+      section('Leadership');
+      for (const item of draft.leadership) {
+        entry([item.role, item.organization].filter(Boolean).join(' - '), item.period || '');
+        for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
+        y -= 4;
+      }
+    }
+
+    if (sectionKey === 'skills' && draft.skills?.trim()) {
+      section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
+      for (const line of draft.skills.split('\n').filter((v) => v.trim())) lines(line, 9.5);
+    }
+
+    if (sectionKey === 'languages' && draft.languages?.trim()) {
+      section(draft.language === 'FR' ? 'Langues' : 'Languages');
+      lines(draft.languages);
+    }
+
+    if (sectionKey === 'interests' && draft.interests?.trim()) {
+      section(draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests');
+      lines(draft.interests);
     }
   }
-
-  if (draft.experience?.length) {
-    section(draft.language === 'FR' ? 'Expérience' : 'Experience');
-    for (const item of draft.experience) {
-      entry([item.role, item.company].filter(Boolean).join(' - '), item.period || '');
-      if (item.location) lines(item.location, 9.2);
-      for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
-      y -= 4;
-    }
-  }
-
-  if (draft.projects?.length) {
-    section(draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects');
-    for (const item of draft.projects) {
-      entry(item.name || '', item.period || '');
-      for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
-      y -= 4;
-    }
-  }
-
-  if (draft.leadership?.length) {
-    section('Leadership');
-    for (const item of draft.leadership) {
-      entry([item.role, item.organization].filter(Boolean).join(' - '), item.period || '');
-      for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
-      y -= 4;
-    }
-  }
-
-  if (draft.skills?.trim()) {
-    section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-    for (const skillLine of draft.skills.split('\n').map((line) => line.trim()).filter(Boolean)) lines(skillLine);
-  }
-  if (draft.languages?.trim()) { section(draft.language === 'FR' ? 'Langues' : 'Languages'); lines(draft.languages); }
-  if (draft.interests?.trim()) { section(draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests'); lines(draft.interests); }
 
   const bytes = await pdf.save();
   const headers = new Headers({
