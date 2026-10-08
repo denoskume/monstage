@@ -7,7 +7,7 @@ export function ExternalApplicationForm({
   onCreated,
 }: {
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (offerId: string) => void;
 }) {
   const { token } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -20,7 +20,7 @@ export function ExternalApplicationForm({
     setFormError(null);
 
     try {
-      await addExternalApplication(token, {
+      const result = await addExternalApplication(token, {
         company: String(form.get('company') || '').trim(),
         title: String(form.get('title') || '').trim(),
         city: String(form.get('city') || '').trim(),
@@ -31,7 +31,7 @@ export function ExternalApplicationForm({
         domain: String(form.get('domain') || '').trim(),
         specialization: String(form.get('specialization') || '').trim(),
       });
-      onCreated();
+      onCreated(result.offerId);
     } catch (error) {
       setFormError(error instanceof Error ? error.message : 'Unable to add this application.');
     } finally {
