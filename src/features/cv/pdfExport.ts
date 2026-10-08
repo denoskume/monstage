@@ -11,7 +11,7 @@ function safeFileName(value: string): string {
   return value.trim().replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'MonStage_CV';
 }
 
-function pdfSafeText(value: string): string {
+export function normalizeCvPdfText(value: string): string {
   return String(value ?? '')
     .normalize('NFC')
     .replace(/[\u2018\u2019]/g, "'")
@@ -26,7 +26,7 @@ function pdfSafeText(value: string): string {
 }
 
 function wrapText(text: string, maxWidth: number, font: any, size: number): string[] {
-  const words = pdfSafeText(text).trim().split(/\s+/).filter(Boolean);
+  const words = normalizeCvPdfText(text).trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const lines: string[] = [];
   let line = words[0];
@@ -62,7 +62,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   };
 
   const drawCentered = (text: string, size: number, font: any) => {
-    const safe = pdfSafeText(text);
+    const safe = normalizeCvPdfText(text);
     const width = font.widthOfTextAtSize(safe, size);
     page.drawText(safe, { x: Math.max(MARGIN_X, (A4_WIDTH - width) / 2), y, size, font, color: textColor });
     y -= size + 5;
@@ -80,21 +80,21 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   const drawSectionTitle = (title: string) => {
     ensureSpace(24);
     y -= 4;
-    page.drawText(pdfSafeText(title.toUpperCase()), { x: MARGIN_X, y, size: 10.5, font: bold, color: textColor });
+    page.drawText(normalizeCvPdfText(title.toUpperCase()), { x: MARGIN_X, y, size: 10.5, font: bold, color: textColor });
     y -= 5;
     page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 0.8, color: ruleColor });
     y -= 12;
   };
 
   const drawRightAligned = (text: string, yValue: number, size = 9.5, font = regular) => {
-    const safe = pdfSafeText(text);
+    const safe = normalizeCvPdfText(text);
     const width = font.widthOfTextAtSize(safe, size);
     page.drawText(safe, { x: A4_WIDTH - MARGIN_X - width, y: yValue, size, font, color: textColor });
   };
 
   const drawEntryHeader = (left: string, right: string) => {
     ensureSpace(18);
-    page.drawText(pdfSafeText(left), { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
+    page.drawText(normalizeCvPdfText(left), { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
     if (right) drawRightAligned(right, y, 9.5, regular);
     y -= 13;
   };
