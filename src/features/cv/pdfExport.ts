@@ -17,8 +17,8 @@ export function normalizeCvPdfText(value: string): string {
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2013\u2014]/g, '-')
-    .replace(/\u2022/g, '-')
-    .replace(/\u00B7/g, '-')
+    .replace(/\u2022/g, '•')
+    .replace(/\u00B7/g, '•')
     .replace(/\u00B2/g, '2')
     .replace(/\u2026/g, '...')
     .replace(/\u00A0/g, ' ')
@@ -103,7 +103,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     const bulletIndent = 12;
     const lines = wrapText(text, usableWidth - bulletIndent, regular, 9.2);
     ensureSpace(lines.length * 12 + 3);
-    page.drawText('-', { x: MARGIN_X, y, size: 9.2, font: regular, color: textColor });
+    page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
     lines.forEach((line, index) => {
       page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: 9.2, font: regular, color: textColor });
       y -= 12;
