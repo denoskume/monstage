@@ -66,41 +66,51 @@ export function ClStudioPage() {
     reader.readAsDataURL(file);
   }
 
-  function downloadPdf() {
+  async function downloadPdf() {
     if (!token) {
       setDownloadError('Authentication required for PDF download.');
       return;
     }
 
     try {
-      const iframeName = 'monstage-cl-download-' + Date.now();
-      const iframe = document.createElement('iframe');
-      iframe.name = iframeName;
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
+      const response = await fetch(apiBaseUrl() + '/api/cl/pdf', {
+        method: 'POST',
+        cache: 'no-store',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(draft),
+      });
 
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = apiBaseUrl() + '/api/cl/pdf';
-      form.target = iframeName;
-      form.style.display = 'none';
+      if (!response.ok) {
+        let message = 'Unable to download the cover letter PDF.';
+        try {
+          const errorBody = await response.json() as { error?: string; message?: string };
+          message = errorBody.message || errorBody.error || message;
+        } catch {}
+        throw new Error(message);
+      }
 
-      const credential = document.createElement('input');
-      credential.type = 'hidden';
-      credential.name = 'credential';
-      credential.value = token;
+      const blob = await response.blob();
+      if (blob.type && blob.type !== 'application/pdf') {
+        throw new Error('The server did not return a valid PDF.');
+      }
 
-      const payload = document.createElement('input');
-      payload.type = 'hidden';
-      payload.name = 'draft';
-      payload.value = JSON.stringify(draft);
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
 
-      form.appendChild(credential);
-      form.appendChild(payload);
-      document.body.appendChild(form);
-      form.submit();
-      form.remove();
-      window.setTimeout(() => iframe.remove(), 15_000);
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const fileNameMatch = disposition.match(/filename="([^"]+)"/i);
+      const fallbackName = (draft.signer || 'MonStage').replace(/[^a-z0-9_-]+/gi, '_') + '_CL_' + draft.language + '.pdf';
+      anchor.download = fileNameMatch?.[1] || fallbackName;
+      anchor.style.display = 'none';
+
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
       setDownloadError('');
     } catch (error) {
       setDownloadError(error instanceof Error ? error.message : 'Unable to download the cover letter PDF.');
