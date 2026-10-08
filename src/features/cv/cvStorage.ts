@@ -1,4 +1,5 @@
 export type CvLanguage = 'FR' | 'EN';
+export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'languages' | 'interests';
 
 export interface CvExperience {
   id: string;
@@ -50,10 +51,11 @@ export interface CvDraft {
   skills: string;
   languages: string;
   interests: string;
+  sectionOrder: CvSectionKey[];
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v4:';
-const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v3:';
+const KEY_PREFIX = 'monstage:cv-studio:v5:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v4:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -113,6 +115,7 @@ export const defaultCvEn: CvDraft = {
   skills: 'Python & Scientific Computing: Python, NumPy, SciPy, pandas, Matplotlib, Jupyter\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\nComputer Vision & Image Processing: OpenCV, scikit-image, computer vision, image processing\nEngineering Tools: Git, GitHub, Linux, VS Code, Streamlit',
   languages: 'French — Native | English — C1',
   interests: 'Artificial Intelligence & Technology | Football',
+  sectionOrder: ['education', 'projects', 'experience', 'skills', 'languages', 'leadership', 'interests'],
 };
 
 export const defaultCvFr: CvDraft = {
@@ -172,6 +175,7 @@ export const defaultCvFr: CvDraft = {
   skills: 'Python & Calcul scientifique : Python, NumPy, SciPy, pandas, Matplotlib, Jupyter\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\nComputer Vision & Traitement d’image : OpenCV, scikit-image, computer vision, traitement d’image\nOutils d’ingénierie : Git, GitHub, Linux, VS Code, Streamlit',
   languages: 'Français — Langue maternelle | Anglais — C1',
   interests: 'Intelligence artificielle & technologie | Football',
+  sectionOrder: ['education', 'projects', 'experience', 'skills', 'languages', 'leadership', 'interests'],
 };
 
 export function freshCvDraft(language: CvLanguage): CvDraft {
@@ -204,6 +208,10 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
       period: item.period || official?.period || '',
     };
   });
+
+  const validSections: CvSectionKey[] = ['education', 'projects', 'experience', 'leadership', 'skills', 'languages', 'interests'];
+  const savedOrder = Array.isArray(saved.sectionOrder) ? saved.sectionOrder.filter((key): key is CvSectionKey => validSections.includes(key as CvSectionKey)) : [];
+  migrated.sectionOrder = [...savedOrder, ...defaults.sectionOrder.filter((key) => !savedOrder.includes(key))];
 
   return migrated;
 }
