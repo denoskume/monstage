@@ -47,3 +47,13 @@ export async function putCachedOffers(payload: unknown, ttlSeconds: number): Pro
     // Cache failures must never make the protected backend unavailable.
   }
 }
+
+
+export async function clearCachedOffers(): Promise<void> {
+  try {
+    const cache = await offersCache();
+    await cache.delete(OFFERS_CACHE_KEY);
+  } catch {
+    // Cache invalidation failures must not block application tracking.
+  }
+}
