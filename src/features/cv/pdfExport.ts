@@ -22,7 +22,7 @@ export function normalizeCvPdfText(value: string): string {
     .replace(/\u00B2/g, '2')
     .replace(/\u2026/g, '...')
     .replace(/\u00A0/g, ' ')
-    .replace(/[^\x20-\x7E\xA0-\xFF\u0152\u0153\u20AC]/g, '');
+    .replace(/[^\x20-\x7E\xA0-\xFF\u0152\u0153\u2022\u20AC]/g, '');
 }
 
 function wrapText(text: string, maxWidth: number, font: any, size: number): string[] {
