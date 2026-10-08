@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
-import { filterOffers, isForMe, sortOffers } from './offerSelectors';
+import { filterOffers, isForMe, selectVisibleOffers, sortOffers } from './offerSelectors';
 import type { OfferFilters } from './offerTypes';
 
 const base: InternshipOffer = {
@@ -40,12 +40,27 @@ test('best sort ranks decision score then priority then technical fit', () => {
   expect(sortOffers(offers, 'best').map((offer) => offer.id)).toEqual(['b', 'c', 'a']);
 });
 
-test('recent sort prefers verifiedAt then publishedAt', () => {
+test('recent sort prefers publication date and uses verification date only as fallback', () => {
   const offers = [
-    { ...base, id: 'old', verifiedAt: null, publishedAt: '2026-09-01' },
-    { ...base, id: 'new', verifiedAt: '2026-09-15T08:00:00Z' },
+    { ...base, id: 'older-published', publishedAt: '2026-09-01', verifiedAt: '2026-10-01T08:00:00Z' },
+    { ...base, id: 'newer-published', publishedAt: '2026-09-20', verifiedAt: '2026-09-21T08:00:00Z' },
+    { ...base, id: 'fallback-verified', publishedAt: '', verifiedAt: '2026-09-25T08:00:00Z' },
   ];
-  expect(sortOffers(offers, 'recent').map((offer) => offer.id)).toEqual(['new', 'old']);
+  expect(sortOffers(offers, 'recent').map((offer) => offer.id)).toEqual(['fallback-verified', 'newer-published', 'older-published']);
+});
+
+test('filtering is applied before sorting and sorting never reintroduces excluded cities', () => {
+  const offers = [
+    { ...base, id: 'nantes-old', city: 'Nantes', publishedAt: '2026-09-01' },
+    { ...base, id: 'paris-new', city: 'Paris', publishedAt: '2026-10-01' },
+    { ...base, id: 'nantes-new', city: 'Nantes', publishedAt: '2026-09-25' },
+    { ...base, id: 'lyon-newer', city: 'Lyon', publishedAt: '2026-10-05' },
+  ];
+
+  const result = selectVisibleOffers(offers, { ...filters, city: 'Nantes' }, 'recent');
+
+  expect(result.map((offer) => offer.id)).toEqual(['nantes-new', 'nantes-old']);
+  expect(result.every((offer) => offer.city === 'Nantes')).toBe(true);
 });
 
 
