@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey } from './cvStorage';
 import { useAuth } from '../../auth/useAuth';
 import { apiBaseUrl } from '../../api/authClient';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
@@ -14,6 +14,75 @@ function removeAt<T>(items: T[], index: number): T[] {
 
 function uid(prefix: string): string {
   return prefix + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+}
+
+function sectionLabel(section: CvSectionKey, language: CvLanguage): string {
+  const labels: Record<CvSectionKey, [string, string]> = {
+    education: ['Formation', 'Education'],
+    projects: ['Projets sélectionnés', 'Selected Projects'],
+    experience: ['Expérience', 'Experience'],
+    leadership: ['Leadership', 'Leadership'],
+    skills: ['Compétences techniques', 'Technical Skills'],
+    languages: ['Langues', 'Languages'],
+    interests: ['Centres d’intérêt', 'Interests'],
+  };
+  return language === 'FR' ? labels[section][0] : labels[section][1];
+}
+
+function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: CvDraft }) {
+  if (section === 'education') return (
+    <section><h2>{sectionLabel(section, draft.language)}</h2>
+      {draft.education.map((item) => <div className="cv-entry" key={item.id}>
+        <div className="cv-entry__top"><strong>{item.school}</strong><span>{item.period}</span></div>
+        <div className="cv-entry__top"><span>{item.degree}</span><span>{item.location}</span></div>
+        {item.details ? <p>{item.details}</p> : null}
+      </div>)}
+    </section>
+  );
+
+  if (section === 'projects') return (
+    <section><h2>{sectionLabel(section, draft.language)}</h2>
+      {draft.projects.map((item) => <div className="cv-entry" key={item.id}>
+        <div className="cv-entry__top"><strong>{item.name}</strong><span>{item.period}</span></div>
+        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
+      </div>)}
+    </section>
+  );
+
+  if (section === 'experience') return (
+    <section><h2>{sectionLabel(section, draft.language)}</h2>
+      {draft.experience.map((item) => <div className="cv-entry" key={item.id}>
+        <div className="cv-entry__top"><strong>{item.role} — {item.company}</strong><span>{item.period}</span></div>
+        <div className="cv-entry__top"><span>{item.location}</span><span /></div>
+        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
+      </div>)}
+    </section>
+  );
+
+  if (section === 'leadership') {
+    if (!draft.leadership.length) return null;
+    return (
+      <section><h2>{sectionLabel(section, draft.language)}</h2>
+        {draft.leadership.map((item) => <div className="cv-entry" key={item.id}>
+          <div className="cv-entry__top"><strong>{item.role}{item.organization ? ` — ${item.organization}` : ''}</strong><span>{item.period}</span></div>
+          <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
+        </div>)}
+      </section>
+    );
+  }
+
+  if (section === 'skills') {
+    if (!draft.skills.trim()) return null;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2>{draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => <p key={index}>{line}</p>)}</section>;
+  }
+
+  if (section === 'languages') {
+    if (!draft.languages.trim()) return null;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{draft.languages}</p></section>;
+  }
+
+  if (!draft.interests.trim()) return null;
+  return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{draft.interests}</p></section>;
 }
 
 function AtsScore({ draft }: { draft: CvDraft }) {
@@ -54,6 +123,18 @@ export function CvStudioPage() {
 
   function patch<K extends keyof CvDraft>(key: K, value: CvDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+    setSaved(false);
+  }
+
+  function moveSection(section: CvSectionKey, direction: -1 | 1) {
+    setDraft((current) => {
+      const index = current.sectionOrder.indexOf(section);
+      const nextIndex = index + direction;
+      if (index < 0 || nextIndex < 0 || nextIndex >= current.sectionOrder.length) return current;
+      const sectionOrder = [...current.sectionOrder];
+      [sectionOrder[index], sectionOrder[nextIndex]] = [sectionOrder[nextIndex], sectionOrder[index]];
+      return { ...current, sectionOrder };
+    });
     setSaved(false);
   }
 
@@ -181,6 +262,21 @@ export function CvStudioPage() {
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
           <AtsScore draft={draft} />
+
+          <section className="cv-editor-section">
+            <div className="cv-editor-section__header">
+              <h2>{draft.language === 'FR' ? 'Ordre des sections' : 'Section order'}</h2>
+            </div>
+            {draft.sectionOrder.map((section, index) => (
+              <div className="cv-interest-row" key={section}>
+                <span>{sectionLabel(section, draft.language)}</span>
+                <div className="cv-inline-actions">
+                  <button className="button button--secondary cv-add-button" type="button" disabled={index === 0} onClick={() => moveSection(section, -1)} aria-label={`Move ${section} up`}>↑</button>
+                  <button className="button button--secondary cv-add-button" type="button" disabled={index === draft.sectionOrder.length - 1} onClick={() => moveSection(section, 1)} aria-label={`Move ${section} down`}>↓</button>
+                </div>
+              </div>
+            ))}
+          </section>
 
           <section className="cv-editor-section">
             <h2>Header</h2>
@@ -370,41 +466,7 @@ export function CvStudioPage() {
 
           <section><h2>{draft.language === 'FR' ? 'Profil' : 'Professional Summary'}</h2><p>{draft.summary}</p></section>
 
-          <section><h2>{draft.language === 'FR' ? 'Formation' : 'Education'}</h2>
-            {draft.education.map((item) => <div className="cv-entry" key={item.id}>
-              <div className="cv-entry__top"><strong>{item.school}</strong><span>{item.period}</span></div>
-              <div className="cv-entry__top"><span>{item.degree}</span><span>{item.location}</span></div>
-              {item.details ? <p>{item.details}</p> : null}
-            </div>)}
-          </section>
-
-          <section><h2>{draft.language === 'FR' ? 'Expérience' : 'Experience'}</h2>
-            {draft.experience.map((item) => <div className="cv-entry" key={item.id}>
-              <div className="cv-entry__top"><strong>{item.role} — {item.company}</strong><span>{item.period}</span></div>
-              <div className="cv-entry__top"><span>{item.location}</span><span /></div>
-              <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
-            </div>)}
-          </section>
-
-          <section><h2>{draft.language === 'FR' ? 'Projets sélectionnés' : 'Selected Projects'}</h2>
-            {draft.projects.map((item) => <div className="cv-entry" key={item.id}>
-              <div className="cv-entry__top"><strong>{item.name}</strong><span>{item.period}</span></div>
-              <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
-            </div>)}
-          </section>
-
-          {draft.leadership.length ? <section><h2>Leadership</h2>
-            {draft.leadership.map((item) => <div className="cv-entry" key={item.id}>
-              <div className="cv-entry__top"><strong>{item.role}{item.organization ? ` — ${item.organization}` : ''}</strong><span>{item.period}</span></div>
-              <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
-            </div>)}
-          </section> : null}
-
-          <section><h2>{draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills'}</h2>
-            {draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => <p key={index}>{line}</p>)}
-          </section>
-          <section><h2>{draft.language === 'FR' ? 'Langues' : 'Languages'}</h2><p>{draft.languages}</p></section>
-          {draft.interests.trim() ? <section><h2>{draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests'}</h2><p>{draft.interests}</p></section> : null}
+          {draft.sectionOrder.map((section) => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>
       </div>
     </section>
