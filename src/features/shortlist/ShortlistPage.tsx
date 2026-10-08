@@ -78,7 +78,10 @@ export function ShortlistPage() {
     const status = offer.applicationStatus;
     if (!status || status === 'À candidater') return null;
     if (status === 'Entretien') return 'interview';
-    if (status === 'Refus' || status === 'Abandonné') return 'archived';
+
+    // Archived is a manual workspace action only.
+    // Backend statuses such as Refus or Abandonné remain visible in Applications
+    // unless the user explicitly archives them.
     return 'application';
   }
 
