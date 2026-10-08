@@ -146,6 +146,8 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   const filtersDialog = page.getByRole('dialog', { name: 'Opportunity filters' });
   await expect(filtersDialog).toBeVisible();
   await filtersDialog.locator('select[name="city"]').selectOption('Nantes');
+  await expect(page.locator('.offer-card')).toHaveCount(7);
+  await expect(page.getByText('Machine Learning Intern').first()).toBeVisible();
   await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toHaveCount(0);
 
