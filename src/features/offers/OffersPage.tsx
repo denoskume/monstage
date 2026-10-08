@@ -5,7 +5,7 @@ import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { SearchBar } from '../../components/SearchBar';
 import { useOffers } from '../../hooks/useOffers';
 import { defaultPreferences, loadPreferences, savePreferences, type SortMode } from '../../storage/preferences';
-import { filterOffers, sortOffers } from './offerSelectors';
+import { selectVisibleOffers } from './offerSelectors';
 import type { OfferFilters as OfferFilterState } from './offerTypes';
 import { OfferDetail } from './OfferDetail';
 import { OfferFilters } from './OfferFilters';
@@ -38,7 +38,7 @@ export function OffersPage() {
 
   const offers = data?.offers ?? [];
   const visibleOffers = useMemo(
-    () => sortOffers(filterOffers(offers.filter((offer) => !actions.isHidden(offer.id)), filters), sort),
+    () => selectVisibleOffers(offers.filter((offer) => !actions.isHidden(offer.id)), filters, sort),
     [offers, filters, sort, actions.hidden],
   );
   const selectedOffer = visibleOffers.find((offer) => selectionKey(offer) === selectedKey) ?? visibleOffers[0] ?? null;
