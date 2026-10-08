@@ -1,5 +1,6 @@
 import type { InternshipOffer } from '../../api/contract';
 import { OfferCard } from './OfferCard';
+import { offerIdentity } from './offerSelectors';
 
 export function OfferList({
   offers,
@@ -18,13 +19,13 @@ export function OfferList({
   onHide: (offer: InternshipOffer) => void;
   onShare: (offer: InternshipOffer) => void;
 }) {
-  const selectionKey = (offer: InternshipOffer) => [offer.id, offer.company, offer.title, offer.applicationUrl ?? ''].join('::');
+  const selectionKey = (offer: InternshipOffer) => offerIdentity(offer);
 
   return (
     <div className="offer-list">
       {offers.map((offer) => (
         <OfferCard
-          key={offer.id || `${offer.company}-${offer.title}`}
+          key={offerIdentity(offer)}
           offer={offer}
           selected={selectionKey(offer) === selectedKey}
           saved={isSaved(offer)}
