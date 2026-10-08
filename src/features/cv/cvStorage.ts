@@ -93,7 +93,7 @@ export const defaultCvEn: CvDraft = {
       'Selected XGBoost with 0.8557 PR-AUC, 0.9763 ROC-AUC and 0.8384 recall on the final test set.',
       'Added validation-based threshold selection and global/local SHAP explanations.',
     ]},
-    { id: 'flag', name: 'Flag Intelligence', period: 'Sep 2026–Present', bullets: [
+    { id: 'flag', name: 'Flag Intelligence', period: 'Sep 2026–Ongoing', bullets: [
       'Developing a MobileNetV3-Small application covering 250 flag classes.',
       'Integrating confidence, decision margin, ranked alternatives and open-set logic.',
       'Evaluating Top-1/Top-5, macro precision/recall/F1, calibration and open-set robustness.',
