@@ -32,8 +32,8 @@ function safeText(value: unknown): string {
     .replace(/[\u2018\u2019]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2013\u2014]/g, '-')
-    .replace(/\u2022/g, '-')
-    .replace(/\u00B7/g, '-')
+    .replace(/\u2022/g, '•')
+    .replace(/\u00B7/g, '•')
     .replace(/\u00B2/g, '2')
     .replace(/\u2026/g, '...')
     .replace(/\u00A0/g, ' ')
@@ -110,7 +110,7 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   const bullet = (value: string) => {
     const wrapped = wrap(value, usable - 12, regular, 9.2);
     ensure(wrapped.length * 12 + 3);
-    page.drawText('-', { x: MX, y, size: 9.2, font: regular, color: text });
+    page.drawCircle({ x: MX + 2.4, y: y + 3.4, size: 1.7, color: text });
     for (const line of wrapped) {
       page.drawText(line, { x: MX + 12, y, size: 9.2, font: regular, color: text });
       y -= 12;
