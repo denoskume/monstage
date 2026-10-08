@@ -142,11 +142,12 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
 
+  const offersBeforeFiltering = await page.locator('.offer-card').count();
   await page.getByRole('button', { name: /Filters/ }).click();
   const filtersDialog = page.getByRole('dialog', { name: 'Opportunity filters' });
   await expect(filtersDialog).toBeVisible();
   await filtersDialog.locator('select[name="city"]').selectOption('Nantes');
-  await expect(page.locator('.offer-card')).toHaveCount(7);
+  await expect(page.locator('.offer-card')).toHaveCount(offersBeforeFiltering);
   await expect(page.getByText('Machine Learning Intern').first()).toBeVisible();
   await page.getByRole('button', { name: 'Apply filters' }).click();
   await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toHaveCount(0);
