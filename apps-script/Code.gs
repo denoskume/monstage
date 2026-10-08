@@ -782,6 +782,83 @@ function submitApplication_(application) {
   };
 }
 
+function addExternalApplication_(application) {
+  application = application || {};
+  var company = normalizeText_(application.company);
+  var title = normalizeText_(application.title);
+  var city = normalizeText_(application.city);
+  var applicationUrl = normalizeText_(application.applicationUrl);
+  var appliedAt = normalizeText_(application.appliedAt);
+  var applicationStatus = normalizeText_(application.applicationStatus) || 'Candidature envoyée';
+  var nextAction = normalizeText_(application.nextAction) || 'Préparer la relance et l’entretien';
+  var domain = normalizeText_(application.domain);
+  var specialization = normalizeText_(application.specialization);
+
+  if (!company || !title || !appliedAt) {
+    return { status: 400, payload: { error: 'INVALID_EXTERNAL_APPLICATION', message: 'Company, job title and application date are required.' } };
+  }
+
+  var spreadsheet = getSpreadsheet_();
+  var sheet = spreadsheet.getSheetByName('Offres');
+  if (!sheet) {
+    return { status: 500, payload: { error: 'OFFERS_SHEET_NOT_FOUND', message: 'Offres sheet not found.' } };
+  }
+
+  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+  var headerMap = buildHeaderMap_(headers);
+  var row = new Array(headers.length).fill('');
+  var offerId = 'EXT-' + new Date().getTime() + '-' + Utilities.getUuid().slice(0, 8);
+
+  function setValue_(header, value) {
+    var index = headerMap[header];
+    if (index !== undefined && value !== null && value !== undefined) row[index] = value;
+  }
+
+  setValue_('ID', offerId);
+  setValue_('Entreprise', company);
+  setValue_("Intitulé de l'offre", title);
+  setValue_('Ville', city || '');
+  setValue_('Domaine', domain || '');
+  setValue_('Famille cible', specialization || '');
+  setValue_("Statut de l'offre", 'Ouverte');
+  setValue_('Statut candidature', applicationStatus);
+  setValue_('Date candidature', appliedAt);
+  setValue_('Prochaine action', nextAction);
+  setValue_('Lien direct', applicationUrl || '');
+  setValue_('Qualité source', 'External');
+  setValue_('Vérifié le', new Date());
+
+  var followUp = parseApplicationDate_(appliedAt);
+  if (followUp) {
+    followUp.setDate(followUp.getDate() + 7);
+    setValue_('Relance prévue', followUp);
+  }
+
+  sheet.appendRow(row);
+
+  var eventSheet = getEventSheet_(spreadsheet);
+  appendApplicationEvent_(eventSheet, {
+    id: 'external:' + offerId,
+    offerId: offerId,
+    company: company,
+    type: 'submitted',
+    confidence: 1,
+    source: 'external',
+    detectedAt: new Date().toISOString(),
+    evidence: 'Application manually added to MonStage after being submitted outside MonStage.'
+  });
+
+  return {
+    status: 201,
+    payload: {
+      created: true,
+      offerId: offerId,
+      message: 'External application added to MonStage.'
+    }
+  };
+}
+
+
 function doGet() {
   return jsonOutput_({
     error: 'NOT_FOUND',
@@ -808,6 +885,13 @@ function doPost(e) {
       var responsePayload = result.payload || {};
       responsePayload.status = result.status;
       return jsonOutput_(responsePayload);
+    }
+
+    if (action === 'addExternalApplication') {
+      var externalResult = addExternalApplication_(body.application || {});
+      var externalPayload = externalResult.payload || {};
+      externalPayload.status = externalResult.status;
+      return jsonOutput_(externalPayload);
     }
 
     return jsonOutput_({
