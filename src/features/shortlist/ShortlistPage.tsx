@@ -8,6 +8,7 @@ import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 import { sortOffers } from '../offers/offerSelectors';
 import { useOfferActions } from '../offers/offerActions';
+import { ExternalApplicationForm } from '../applications/ExternalApplicationForm';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'archived';
 
@@ -63,22 +64,34 @@ export function ShortlistPage() {
   const actions = useOfferActions();
   const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<MyJobsTab>('saved');
+  const [externalFormOpen, setExternalFormOpen] = useState(false);
 
   const allOffers = data?.offers ?? [];
   const savedOffers = useMemo(
     () => sortOffers(allOffers.filter((offer) => !actions.isHidden(offer.id) && actions.isSaved(offer.id, offer.shortlist)), 'best'),
     [data, actions.savedIds, actions.unsavedIds, actions.hidden],
   );
+  function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'archived' | null {
+    const localStage = actions.stages[offer.id];
+    if (localStage) return localStage;
+
+    const status = offer.applicationStatus;
+    if (!status || status === 'À candidater') return null;
+    if (status === 'Entretien') return 'interview';
+    if (status === 'Refus' || status === 'Abandonné') return 'archived';
+    return 'application';
+  }
+
   const applications = useMemo(
-    () => allOffers.filter((offer) => actions.stages[offer.id] === 'application'),
+    () => allOffers.filter((offer) => resolvedStage(offer) === 'application'),
     [data, actions.stages],
   );
   const interviews = useMemo(
-    () => allOffers.filter((offer) => actions.stages[offer.id] === 'interview'),
+    () => allOffers.filter((offer) => resolvedStage(offer) === 'interview'),
     [data, actions.stages],
   );
   const archived = useMemo(
-    () => allOffers.filter((offer) => actions.stages[offer.id] === 'archived'),
+    () => allOffers.filter((offer) => resolvedStage(offer) === 'archived'),
     [data, actions.stages],
   );
 
@@ -117,7 +130,11 @@ export function ShortlistPage() {
 
   return (
     <section className="page my-jobs-page">
-      <div className="page-header"><div><h1>My jobs</h1><p>Your saved opportunities and application progress in one place.</p></div></div>
+      <div className="page-header">
+        <div><h1>My jobs</h1><p>Your saved opportunities and application progress in one place.</p></div>
+        <button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Add external application</button>
+      </div>
+      {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={() => { setExternalFormOpen(false); setNotice('External application added.'); setTab('applications'); retry(); }} /> : null}
 
       <div className="my-jobs-tabs" role="tablist" aria-label="My jobs">
         {tabs.map(([value, label, count]) => (
