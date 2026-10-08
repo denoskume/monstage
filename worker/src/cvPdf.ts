@@ -123,7 +123,7 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   page.drawLine({ start: { x: MX, y }, end: { x: WIDTH - MX, y }, thickness: 1, color: text });
   y -= 12;
 
-  if (draft.summary?.trim()) { section(draft.language === 'FR' ? 'Profil' : 'Professional Summary'); lines(draft.summary); }
+  if (draft.summary?.trim()) { section(draft.language === 'FR' ? 'Objectif' : 'Objective'); lines(draft.summary); }
 
   const sectionOrder = draft.sectionOrder?.length
     ? draft.sectionOrder
