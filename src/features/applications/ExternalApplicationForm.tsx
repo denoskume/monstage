@@ -40,31 +40,89 @@ export function ExternalApplicationForm({
   }
 
   return (
-    <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Add external application" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <form className="filters-sheet filters-sheet--desktop" onSubmit={submit}>
-        <div className="page-header">
-          <div><h2>Add external application</h2><p>Track an application submitted outside MonStage.</p></div>
-          <button type="button" className="application-row__link" onClick={onClose}>Close</button>
+    <div
+      className="external-app-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Add external application"
+      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <form className="external-app-modal" onSubmit={submit}>
+        <header className="external-app-modal__header">
+          <div>
+            <span className="external-app-modal__eyebrow">Application tracking</span>
+            <h2>Add external application</h2>
+            <p>Track an application submitted outside MonStage.</p>
+          </div>
+          <button type="button" className="external-app-modal__close" onClick={onClose} aria-label="Close">×</button>
+        </header>
+
+        <div className="external-app-modal__body">
+          <div className="external-app-grid">
+            <label className="external-app-field">
+              <span>Company <b>*</b></span>
+              <input name="company" required autoFocus placeholder="e.g. Alstom" />
+            </label>
+
+            <label className="external-app-field">
+              <span>Job title <b>*</b></span>
+              <input name="title" required placeholder="e.g. Computer Vision Intern" />
+            </label>
+
+            <label className="external-app-field">
+              <span>City</span>
+              <input name="city" placeholder="e.g. Nantes" />
+            </label>
+
+            <label className="external-app-field">
+              <span>Application date <b>*</b></span>
+              <input name="appliedAt" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+            </label>
+
+            <label className="external-app-field">
+              <span>Status</span>
+              <select name="applicationStatus" defaultValue="Candidature envoyée">
+                <option>Candidature envoyée</option>
+                <option>Réponse recruteur</option>
+                <option>Relance</option>
+                <option>Entretien</option>
+                <option>Test technique</option>
+                <option>Offre reçue</option>
+                <option>Refus</option>
+                <option>Abandonné</option>
+              </select>
+            </label>
+
+            <label className="external-app-field">
+              <span>Domain</span>
+              <input name="domain" placeholder="Machine Learning, Computer Vision..." />
+            </label>
+
+            <label className="external-app-field">
+              <span>Specialization</span>
+              <input name="specialization" placeholder="ML, CV, Image Processing..." />
+            </label>
+
+            <label className="external-app-field">
+              <span>Job link</span>
+              <input name="applicationUrl" type="url" placeholder="https://..." />
+            </label>
+
+            <label className="external-app-field external-app-field--wide">
+              <span>Next action</span>
+              <input name="nextAction" placeholder="Prepare follow-up, interview, technical test..." />
+            </label>
+          </div>
+
+          {formError ? <div className="external-app-modal__error" role="alert">{formError}</div> : null}
         </div>
 
-        <div className="filter-grid">
-          <label><span>Company *</span><input name="company" required autoFocus /></label>
-          <label><span>Job title *</span><input name="title" required /></label>
-          <label><span>City</span><input name="city" /></label>
-          <label><span>Application date *</span><input name="appliedAt" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} /></label>
-          <label><span>Status</span><select name="applicationStatus" defaultValue="Candidature envoyée"><option>Candidature envoyée</option><option>Réponse recruteur</option><option>Relance</option><option>Entretien</option><option>Test technique</option><option>Offre reçue</option><option>Refus</option><option>Abandonné</option></select></label>
-          <label><span>Domain</span><input name="domain" placeholder="Machine Learning, Computer Vision..." /></label>
-          <label><span>Specialization</span><input name="specialization" placeholder="ML, CV, Image Processing..." /></label>
-          <label><span>Job link</span><input name="applicationUrl" type="url" placeholder="https://..." /></label>
-        </div>
-
-        <label><span>Next action</span><input name="nextAction" placeholder="Prepare follow-up, interview, technical test..." /></label>
-        {formError ? <div className="stale-banner" role="alert">{formError}</div> : null}
-
-        <div className="application-row__actions">
-          <button type="button" className="application-row__link" onClick={onClose}>Cancel</button>
-          <button type="submit" className="jobs-filter-button" disabled={submitting}>{submitting ? 'Adding…' : 'Add application'}</button>
-        </div>
+        <footer className="external-app-modal__footer">
+          <button type="button" className="button button--secondary external-app-modal__button" onClick={onClose}>Cancel</button>
+          <button type="submit" className="button button--primary external-app-modal__button" disabled={submitting}>
+            {submitting ? 'Adding…' : 'Add application'}
+          </button>
+        </footer>
       </form>
     </div>
   );
