@@ -72,17 +72,7 @@ export function ShortlistPage() {
     [data, actions.savedIds, actions.unsavedIds, actions.hidden],
   );
   function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'archived' | null {
-    const localStage = actions.stages[offer.id];
-    if (localStage) return localStage;
-
-    const status = offer.applicationStatus;
-    if (!status || status === 'À candidater') return null;
-    if (status === 'Entretien') return 'interview';
-
-    // Archived is a manual workspace action only.
-    // Backend statuses such as Refus or Abandonné remain visible in Applications
-    // unless the user explicitly archives them.
-    return 'application';
+    return actions.stages[offer.id] ?? null;
   }
 
   const applications = useMemo(
@@ -137,7 +127,7 @@ export function ShortlistPage() {
         <div><h1>My jobs</h1><p>Your saved opportunities and application progress in one place.</p></div>
         <button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Add external application</button>
       </div>
-      {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={() => { setExternalFormOpen(false); setNotice('External application added.'); setTab('applications'); retry(); }} /> : null}
+      {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={(offerId) => { actions.setStage(offerId, 'application'); setExternalFormOpen(false); setNotice('External application added.'); setTab('applications'); retry(); }} /> : null}
 
       <div className="my-jobs-tabs" role="tablist" aria-label="My jobs">
         {tabs.map(([value, label, count]) => (
