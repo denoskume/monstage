@@ -15,7 +15,18 @@ import { useOfferActions } from './offerActions';
 
 function initialFilters(): OfferFilterState {
   const prefs = loadPreferences();
-  return { query: prefs.query, specialization: null, city: null, priority: null, minScore: prefs.minScore, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: prefs.onlyForMe };
+  return {
+    query: prefs.query,
+    specialization: prefs.specialization,
+    city: prefs.city,
+    priority: prefs.priority,
+    minScore: prefs.minScore,
+    freshness: prefs.freshness,
+    m2Fit: prefs.m2Fit,
+    sourceQuality: prefs.sourceQuality,
+    applicationStatus: prefs.applicationStatus,
+    onlyForMe: prefs.onlyForMe,
+  };
 }
 
 const resetFilters: OfferFilterState = { query: '', specialization: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
@@ -58,8 +69,20 @@ export function OffersPage() {
   }, [selectedOffer, selectedKey]);
 
   useEffect(() => {
-    savePreferences({ query: filters.query, sort, onlyForMe: filters.onlyForMe, minScore: filters.minScore });
-  }, [filters.query, filters.onlyForMe, filters.minScore, sort]);
+    savePreferences({
+      query: filters.query,
+      sort,
+      onlyForMe: filters.onlyForMe,
+      minScore: filters.minScore,
+      specialization: filters.specialization,
+      city: filters.city,
+      priority: filters.priority,
+      freshness: filters.freshness,
+      m2Fit: filters.m2Fit,
+      sourceQuality: filters.sourceQuality,
+      applicationStatus: filters.applicationStatus,
+    });
+  }, [filters, sort]);
 
   function resetAll() {
     setFilters(resetFilters);
@@ -116,6 +139,17 @@ export function OffersPage() {
   }
 
   const activeFilterCount = [filters.specialization, filters.city, filters.priority, filters.freshness, filters.m2Fit, filters.sourceQuality, filters.applicationStatus].filter(Boolean).length + (filters.minScore > 0 ? 1 : 0) + (filters.onlyForMe ? 1 : 0);
+  const activeFilterSummary = [
+    filters.city ? `City: ${filters.city}` : null,
+    filters.specialization ? `Specialization: ${filters.specialization}` : null,
+    filters.priority ? `Priority: ${filters.priority}` : null,
+    filters.minScore > 0 ? `Score: ${filters.minScore}+` : null,
+    filters.freshness ? `Freshness: ${filters.freshness}` : null,
+    filters.m2Fit ? `M2 fit: ${filters.m2Fit}` : null,
+    filters.sourceQuality ? `Source: ${filters.sourceQuality}` : null,
+    filters.applicationStatus ? `Status: ${filters.applicationStatus}` : null,
+    filters.onlyForMe ? 'Recommended for me' : null,
+  ].filter((value): value is string => Boolean(value));
 
   if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
   if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
@@ -130,7 +164,10 @@ export function OffersPage() {
           </button>
         </div>
         <div className="jobs-quickbar">
-          <button type="button" className={'quick-filter' + (filters.onlyForMe ? ' active' : '')} aria-pressed={filters.onlyForMe} onClick={() => setFilters({ ...filters, onlyForMe: !filters.onlyForMe })}>Recommended for me</button>
+          <div className="jobs-active-filters" aria-label="Active filters">
+            <button type="button" className={'quick-filter' + (filters.onlyForMe ? ' active' : '')} aria-pressed={filters.onlyForMe} onClick={() => setFilters({ ...filters, onlyForMe: !filters.onlyForMe })}>Recommended for me</button>
+            {activeFilterSummary.filter((label) => label !== 'Recommended for me').map((label) => <span className="quick-filter active" key={label}>{label}</span>)}
+          </div>
           <label className="jobs-sort"><span>Sort by</span><select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}><option value="best">Best match</option><option value="recent">Most recent</option><option value="score">Highest score</option><option value="priority">Priority</option><option value="city">City</option></select></label>
         </div>
       </div>
