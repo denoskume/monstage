@@ -58,3 +58,22 @@ export async function submitApplicationToAppsScript(
     : response.status;
   return { status: logicalStatus, payload };
 }
+
+
+export async function addExternalApplicationToAppsScript(
+  env: Env,
+  application: unknown,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ status: number; payload: unknown }> {
+  const response = await postToAppsScript(env, {
+    action: 'addExternalApplication',
+    application,
+  }, fetchImpl);
+
+  let payload: unknown = null;
+  try { payload = await response.json(); } catch { payload = { error: 'INVALID_BACKEND_PAYLOAD' }; }
+  const logicalStatus = payload && typeof payload === 'object' && typeof (payload as { status?: unknown }).status === 'number'
+    ? Number((payload as { status: number }).status)
+    : response.status;
+  return { status: logicalStatus, payload };
+}
