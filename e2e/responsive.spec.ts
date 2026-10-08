@@ -19,6 +19,7 @@ const payload = {
     makeOffer({ id: '4', company: 'Wavestone', title: 'ML Engineer Intern', city: 'Puteaux', specialization: 'Machine Learning / Deep Learning', decisionScore: 94, priority: 'A', applicationStatus: 'Candidature envoyée', appliedAt: '14/09/2026', shortlist: false, applicationUrl: 'https://company.example/jobs/4' }),
     makeOffer({ id: '5', company: 'ALTEN', title: 'Computer Vision Research Intern', city: 'Sèvres', decisionScore: 92, priority: 'A', applicationStatus: 'Entretien', shortlist: false, applicationUrl: 'https://company.example/jobs/5' }),
     makeOffer({ id: '6', company: 'Example', title: 'Deep Learning Intern', city: 'Lyon', specialization: 'Machine Learning / Deep Learning', decisionScore: 88, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/6' }),
+    makeOffer({ id: '7', company: 'Naval Group', title: 'AI Vision Intern', city: 'Nantes', publishedAt: '2026-09-20', verifiedAt: '2026-09-20T10:00:00Z', decisionScore: 90, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/7' }),
   ],
 };
 
@@ -145,12 +146,22 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   const filtersDialog = page.getByRole('dialog', { name: 'Opportunity filters' });
   await expect(filtersDialog).toBeVisible();
   await filtersDialog.locator('select[name="city"]').selectOption('Nantes');
+  await page.getByRole('button', { name: 'Apply filters' }).click();
+  await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toHaveCount(0);
+
+  const visibleCards = page.locator('.offer-card');
+  await expect(visibleCards).toHaveCount(2);
   await expect(page.getByText('Computer Vision Intern').first()).toBeVisible();
+  await expect(page.getByText('AI Vision Intern').first()).toBeVisible();
   await expect(page.getByText('Machine Learning Intern')).toHaveCount(0);
   await expect(page.getByText('Data AI Intern')).toHaveCount(0);
   await expect(page.getByText('Deep Learning Intern')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Apply filters' }).click();
-  await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toHaveCount(0);
+
+  await page.locator('.jobs-sort select').selectOption('recent');
+  await expect(visibleCards.nth(0)).toContainText('AI Vision Intern');
+  await expect(visibleCards.nth(1)).toContainText('Computer Vision Intern');
+  await expect(visibleCards.nth(0)).toContainText('Nantes');
+  await expect(visibleCards.nth(1)).toContainText('Nantes');
   await page.locator('.top-nav').getByRole('link', { name: 'Saved jobs' }).click();
   await expect(page.getByRole('heading', { name: 'My jobs' })).toBeVisible();
   await page.getByRole('tab', { name: /Applications/ }).click();
