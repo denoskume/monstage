@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
-import { filterOffers, isForMe, selectVisibleOffers, sortOffers } from './offerSelectors';
+import { dedupeOffers, filterOffers, isForMe, selectVisibleOffers, sortOffers } from './offerSelectors';
 import type { OfferFilters } from './offerTypes';
 
 const base: InternshipOffer = {
@@ -173,4 +173,20 @@ test('query and structured filters are combined with AND logic', () => {
 
   const result = filterOffers(offers, { ...filters, query: 'opencv', city: 'Nantes' });
   expect(result.map((offer) => offer.id)).toEqual(['nantes-cv']);
+});
+
+
+test('deduplication prevents repeated cards when backend ids collide', () => {
+  const offers = [
+    { ...base, id: '', company: 'Acme', title: 'Computer Vision Intern', city: 'Nantes', applicationUrl: 'https://example.com/a' },
+    { ...base, id: '', company: 'Acme', title: 'Computer Vision Intern', city: 'Nantes', applicationUrl: 'https://example.com/a' },
+    { ...base, id: '', company: 'Acme', title: 'Computer Vision Intern', city: 'Paris', applicationUrl: 'https://example.com/b' },
+  ];
+
+  const unique = dedupeOffers(offers);
+  expect(unique).toHaveLength(2);
+
+  const filtered = filterOffers(unique, { ...filters, city: 'Nantes' });
+  expect(filtered).toHaveLength(1);
+  expect(filtered.every((offer) => offer.city === 'Nantes')).toBe(true);
 });
