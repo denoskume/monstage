@@ -70,7 +70,16 @@ function parseDateValue(value: string | null): number {
 }
 
 function recentValue(offer: InternshipOffer): number {
-  return parseDateValue(offer.verifiedAt) || parseDateValue(offer.publishedAt);
+  return parseDateValue(offer.publishedAt) || parseDateValue(offer.verifiedAt);
+}
+
+export function selectVisibleOffers(
+  offers: InternshipOffer[],
+  filters: OfferFilters,
+  sort: SortMode,
+): InternshipOffer[] {
+  const filteredOffers = filterOffers(offers, filters);
+  return sortOffers(filteredOffers, sort);
 }
 
 function compareBest(a: InternshipOffer, b: InternshipOffer): number {
