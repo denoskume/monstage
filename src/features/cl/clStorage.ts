@@ -16,7 +16,7 @@ export interface CoverLetterDraft {
   signatureDataUrl: string;
 }
 
-const KEY = 'monstage:cl-studio:v11';
+const KEY = 'monstage:cl-studio:v12';
 
 const frParagraphs = [
   "Je suis étudiant en dernière année de MSc Control and Robotics, spécialisation Data Science, Signal & Image Processing à l’École Centrale de Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027 afin de mettre en pratique mes bases en data science, machine learning, computer vision et traitement d’image, tout en continuant à progresser au sein d’une équipe technique expérimentée.",
@@ -46,7 +46,7 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
   paragraphs: [
     "Je suis étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027. Je souhaite mettre mes compétences en analyse de données et intelligence artificielle au service de problématiques industrielles concrètes.",
     "J’ai choisi de postuler chez Airbus Atlantic parce que cette mission relie directement qualité industrielle, données et intelligence artificielle. Le travail de l’équipe Qualité autour du caisson central de voilure A320 me paraît particulièrement concret. La recherche de leviers pour réduire les tâches à faible valeur ajoutée et améliorer les processus correspond exactement au type d’environnement que je veux découvrir.",
-    "Mon parcours m’a appris à analyser, comparer et documenter des résultats avec rigueur. Aujourd’hui, dans le cadre de ma mission freelance chez RWS, j’évalue des sorties d’IA selon des critères précis de qualité et j’en identifie les limites. Auparavant, lors de mon stage de fin d’études de BSc en Computer Science & Electronics à Bengaluru, chez Unified Mentor, j’ai travaillé sur le nettoyage, l’analyse et la restitution de données. En parallèle, avec MonStage, j’ai automatisé des flux avec Google Apps Script. Ainsi, je peux apporter une base Data/IA solide, une approche structurée et une vraie attention à la fiabilité des résultats.",
+    "Mon parcours m’a appris à analyser, comparer et documenter des résultats avec rigueur. Lors de mon stage de fin d’études de Bachelor en Inde, chez Unified Mentor, j’ai travaillé sur le nettoyage, l’analyse et la restitution de données. Aujourd’hui, je poursuis une mission freelance chez RWS, où j’évalue des sorties d’IA selon des critères précis de qualité et j’en identifie les limites. Je développe également MonStage, un projet personnel dans lequel j’automatise des flux avec Google Apps Script. Ainsi, je peux apporter une base Data/IA solide, une approche structurée et une vraie attention à la fiabilité des résultats.",
     "Je serais heureux d’avoir l’occasion d’échanger avec vous sur ma motivation et sur ce que je pourrais apporter à votre équipe."
   ],
   closing: 'Cordialement,',
