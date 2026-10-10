@@ -16,7 +16,7 @@ export interface CoverLetterDraft {
   signatureDataUrl: string;
 }
 
-const KEY = 'monstage:cl-studio:v4';
+const KEY = 'monstage:cl-studio:v5';
 
 const frParagraphs = [
   "Je suis étudiant en dernière année de MSc Control and Robotics, spécialisation Data Science, Signal & Image Processing à l’École Centrale de Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027 afin de mettre en pratique mes bases en data science, machine learning, computer vision et traitement d’image, tout en continuant à progresser au sein d’une équipe technique expérimentée.",
@@ -49,7 +49,7 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
     "Je souhaite mettre cette rigueur et ces compétences Data/IA au service de votre équipe. Je pourrais contribuer à l’analyse des activités, à la conception d’outils d’automatisation et à l’évaluation de leurs résultats. J’accorde une attention particulière à la qualité des données et à la documentation. Je souhaite aussi progresser sur les méthodes de qualité industrielle, la cartographie des processus et le déploiement de solutions durables auprès des équipes terrain.",
     "Je serais heureux d’échanger avec vous sur cette mission. Je pourrais également vous expliquer plus concrètement comment mon profil Data/IA pourrait contribuer aux objectifs du département Qualité d’Airbus Atlantic à Nantes."
   ],
-  closing: 'Merci pour l’attention portée à ma candidature. Je serais heureux d’échanger avec vous prochainement.',
+  closing: 'Je serais heureux d’avoir l’occasion d’échanger avec vous sur ma motivation et sur ce que je pourrais apporter à votre équipe.',
   signer: 'Denos Kume',
   signatureDataUrl: '',
 };
@@ -65,7 +65,7 @@ export const defaultCoverLetterEn: CoverLetterDraft = {
   internshipTitle: '',
   greeting: 'Dear Hiring Manager,',
   paragraphs: enParagraphs,
-  closing: 'Sincerely,',
+  closing: 'I would highly appreciate the opportunity to discuss my skills and motivation with you at your earliest convenience.',
   signer: 'Denos Kume',
   signatureDataUrl: '',
 };
