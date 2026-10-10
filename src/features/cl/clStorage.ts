@@ -16,7 +16,7 @@ export interface CoverLetterDraft {
   signatureDataUrl: string;
 }
 
-const KEY = 'monstage:cl-studio:v7';
+const KEY = 'monstage:cl-studio:v8';
 
 const frParagraphs = [
   "Je suis étudiant en dernière année de MSc Control and Robotics, spécialisation Data Science, Signal & Image Processing à l’École Centrale de Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027 afin de mettre en pratique mes bases en data science, machine learning, computer vision et traitement d’image, tout en continuant à progresser au sein d’une équipe technique expérimentée.",
