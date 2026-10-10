@@ -1238,6 +1238,11 @@ h1, h2, h3 { color: var(--text); }
   font-size: 11px !important;
 }
 .cl-preview--template > p { margin-bottom: 10px; font-size: 10.8px; line-height: 1.42; }
+.cl-preview--template > p:not(.cl-preview__subject):not(.cl-preview__date) {
+  text-align: justify;
+  text-justify: inter-word;
+}
+
 .cl-preview--template .cl-preview__closing { margin-top: 28px; }
 .cl-preview--template .cl-preview__closing p { font-size: 10.8px; margin-bottom: 8px; }
 .cl-preview--template .cl-preview__signature { max-width: 155px; max-height: 62px; margin-top: 2px; }
