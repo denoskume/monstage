@@ -1247,12 +1247,13 @@ h1, h2, h3 { color: var(--text); }
 .cl-preview--template .cl-preview__closing p { font-size: 10.8px; margin-bottom: 8px; }
 .cl-preview--template .cl-preview__signature { max-width: 155px; max-height: 62px; margin-top: 2px; }
 .cl-preview--fr .cl-preview__closing {
-  margin-left: auto;
-  width: 58%;
-  text-align: right;
+  width: 100%;
+  margin-left: 0;
 }
 .cl-preview--fr .cl-preview__closing p {
-  text-align: left;
+  width: 100%;
+  text-align: justify;
+  text-justify: inter-word;
 }
 .cl-preview--fr .cl-preview__signature {
   margin-left: auto;
