@@ -177,7 +177,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   } else {
     drawWrapped(closingText, 10.4, regular, 14.1);
   }
-  y -= 8;
+  y -= 2;
 
   const signerText = normalizeCoverLetterPdfText(draft.signer || 'Denos Kume');
   const signatureRightAligned = draft.language === 'FR';
