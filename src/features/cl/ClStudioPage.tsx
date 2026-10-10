@@ -92,7 +92,7 @@ export function ClStudioPage() {
       <div className="page-header cl-studio-header">
         <div>
           <h1>CL Studio</h1>
-          <p>Keep the structure clear and specific: You → Me → Us → Conclusion. Avoid generic formulas; every paragraph should connect directly to the offer.</p>
+          <p>Use exactly four paragraphs: Who you are + what you want → Why them → Why you → Interview close. Keep each paragraph short, specific and natural.</p>
         </div>
         <div className="cl-studio-actions">
           <div className="cl-language-toggle" aria-label="Cover letter language">
@@ -130,8 +130,8 @@ export function ClStudioPage() {
             <h2>Letter body</h2>
             {draft.paragraphs.map((paragraph, index) => {
               const labels = draft.language === 'FR'
-                ? ['Vous — Pourquoi cette entreprise', 'Moi — Preuves concrètes', 'Nous — Contribution + apprentissage', 'Conclusion — Invitation à échanger']
-                : ['You — Why this company', 'Me — Concrete evidence', 'Us — Contribution + learning', 'Conclusion — Invite a discussion'];
+                ? ['1 — Qui êtes-vous + que recherchez-vous ?', '2 — Pourquoi cette entreprise ?', '3 — Pourquoi vous choisir ?', '4 — Invitation à échanger']
+                : ['1 — Who are you + what do you want?', '2 — Why this company?', '3 — Why should they choose you?', '4 — Interview close'];
               return (
                 <label key={index}>{labels[index] || `Paragraph ${index + 1}`}
                   <textarea rows={index === 3 ? 6 : 5} value={paragraph} onChange={(e) => updateParagraph(index, e.target.value)} />
