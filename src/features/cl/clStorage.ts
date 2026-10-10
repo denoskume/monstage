@@ -16,7 +16,7 @@ export interface CoverLetterDraft {
   signatureDataUrl: string;
 }
 
-const KEY = 'monstage:cl-studio:v6';
+const KEY = 'monstage:cl-studio:v7';
 
 const frParagraphs = [
   "Je suis étudiant en dernière année de MSc Control and Robotics, spécialisation Data Science, Signal & Image Processing à l’École Centrale de Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027 afin de mettre en pratique mes bases en data science, machine learning, computer vision et traitement d’image, tout en continuant à progresser au sein d’une équipe technique expérimentée.",
@@ -27,11 +27,11 @@ const frParagraphs = [
 ];
 
 const enParagraphs = [
-  "What draws me to this internship is the chance to work on real technical problems where data quality, experimentation and model evaluation all matter. I am particularly interested in environments where the goal is not only to build a model, but also to understand its limits, compare approaches and make the results useful in practice.",
-  "My MSc work in Data Science, Signal & Image Processing has given me a solid foundation in machine learning, computer vision and evaluation. Through academic and personal projects, I have worked on segmentation, camera calibration, feature tracking and model comparison using Python, PyTorch and OpenCV. I have also gained practical experience through data analysis work at Unified Mentor and structured AI evaluation at RWS.",
-  "I am looking for a six-month final-year internship from February 2027 where I can bring that combination of technical foundations, curiosity and careful evaluation to an experienced team. I would especially like to contribute to projects involving applied machine learning, anomaly detection, computer vision or image processing, while learning how these methods are used and improved in an industrial setting.",
-  "I would be glad to discuss the internship, your team’s current challenges and how my background could be useful to the role.",
-];
+  "I am a final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes. I am looking for a six-month end-of-studies internship from February 2027 where I can apply my technical foundations to real industrial problems.",
+  "I chose to apply because this opportunity connects directly with the type of environment I want to discover. I am particularly interested in teams where data, experimentation and engineering decisions are linked to concrete operational needs.",
+  "My academic projects and previous experience have trained me to analyse data, compare approaches and evaluate results carefully. I have worked on model evaluation, error analysis, data cleaning and structured reporting using Python and related tools. I can therefore bring a solid technical base, curiosity and a rigorous way of working.",
+  "I would highly appreciate the opportunity to discuss my skills and motivation with you at your earliest convenience."
+]
 
 export const defaultCoverLetterFr: CoverLetterDraft = {
   language: 'FR',
@@ -49,7 +49,7 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
     "Mon parcours m’a appris à analyser, comparer et documenter des résultats avec rigueur. Chez RWS, j’ai évalué des sorties d’IA selon des critères précis de qualité et identifié leurs limites. Chez Unified Mentor, j’ai travaillé sur le nettoyage, l’analyse et la restitution de données. Avec MonStage, j’ai aussi automatisé des flux avec Google Apps Script. Je peux donc apporter une base Data/IA solide, une approche structurée et une vraie attention à la fiabilité des résultats.",
     "Je serais heureux d’avoir l’occasion d’échanger avec vous sur ma motivation et sur ce que je pourrais apporter à votre équipe."
   ],
-  closing: 'Je serais heureux d’avoir l’occasion d’échanger avec vous sur ma motivation et sur ce que je pourrais apporter à votre équipe.',
+  closing: 'Cordialement,',
   signer: 'Denos Kume',
   signatureDataUrl: '',
 };
@@ -65,7 +65,7 @@ export const defaultCoverLetterEn: CoverLetterDraft = {
   internshipTitle: '',
   greeting: 'Dear Hiring Manager,',
   paragraphs: enParagraphs,
-  closing: 'I would highly appreciate the opportunity to discuss my skills and motivation with you at your earliest convenience.',
+  closing: 'Sincerely,'
   signer: 'Denos Kume',
   signatureDataUrl: '',
 };
