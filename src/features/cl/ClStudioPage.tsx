@@ -181,7 +181,10 @@ export function ClStudioPage() {
 
           <div className="cl-preview__closing">
             <p>{draft.closing}</p>
-            {draft.signatureDataUrl ? <img className="cl-preview__signature" src={draft.signatureDataUrl} alt="Signature" /> : null}
+            <div className={`cl-preview__signature-block cl-preview__signature-block--${draft.language === 'FR' ? 'right' : 'left'}`}>
+              {draft.signatureDataUrl ? <img className="cl-preview__signature" src={draft.signatureDataUrl} alt="Signature" /> : null}
+              <strong className="cl-preview__signer">{draft.signer}</strong>
+            </div>
           </div>
         </article>
       </div>
