@@ -54,8 +54,8 @@ export interface CvDraft {
   sectionOrder: CvSectionKey[];
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v11:';
-const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v10:';
+const KEY_PREFIX = 'monstage:cv-studio:v12:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v11:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -221,6 +221,11 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
 
   // Refresh the built-in objective when MonStage ships a recruiter-focused version.
   migrated.summary = defaults.summary;
+  // Keep core contact links present when older saved drafts stored them as blank.
+  migrated.github = saved.github?.trim() ? saved.github : defaults.github;
+  migrated.linkedin = saved.linkedin?.trim() ? saved.linkedin : defaults.linkedin;
+  migrated.phone = saved.phone?.trim() ? saved.phone : defaults.phone;
+
 
   if (language === 'FR') {
     migrated.headline = defaults.headline;
