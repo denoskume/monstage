@@ -155,8 +155,8 @@ export function ClStudioPage() {
           </section>
         </aside>
 
-        <article className="cl-preview cl-preview--template">
-          <header className="cl-preview__sender cl-preview__sender--right">
+        <article className={`cl-preview cl-preview--template ${draft.language === 'FR' ? 'cl-preview--fr' : 'cl-preview--en'}`}>
+          <header className={`cl-preview__sender ${draft.language === 'FR' ? 'cl-preview__sender--left' : 'cl-preview__sender--right'}`}>
             <strong>{draft.signer}</strong>
             <span>Nantes, France</span>
             <span>+33 6 62 91 94 68</span>
