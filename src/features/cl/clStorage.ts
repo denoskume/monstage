@@ -65,7 +65,7 @@ export const defaultCoverLetterEn: CoverLetterDraft = {
   internshipTitle: '',
   greeting: 'Dear Hiring Manager,',
   paragraphs: enParagraphs,
-  closing: 'Sincerely,'
+  closing: 'Sincerely,',
   signer: 'Denos Kume',
   signatureDataUrl: '',
 };
