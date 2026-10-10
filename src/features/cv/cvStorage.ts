@@ -54,8 +54,8 @@ export interface CvDraft {
   sectionOrder: CvSectionKey[];
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v10:';
-const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v9:';
+const KEY_PREFIX = 'monstage:cv-studio:v11:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v10:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -121,19 +121,19 @@ export const defaultCvEn: CvDraft = {
 export const defaultCvFr: CvDraft = {
   language: 'FR',
   name: 'Denos Kume',
-  headline: 'Data Science & IA appliquées | Qualité industrielle | Automatisation de processus',
+  headline: 'Data Science & IA appliquées | Automatisation & optimisation de processus',
   location: 'Nantes, France',
   email: 'denoskume@yahoo.com',
-  phone: '',
+  phone: '+33 6 62 91 94 68',
   linkedin: 'linkedin.com/in/denoskume',
   github: 'github.com/denoskume',
   summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de 6 mois dès février 2027. Je souhaite appliquer l’analyse de données, l’IA et l’automatisation à des problématiques concrètes de qualité et d’amélioration de processus industriels, tout en progressant au contact d’une équipe expérimentée.',
   education: [
-    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur la compréhension et le développement de méthodes de pointe pour l’analyse de données, le machine learning et le traitement du signal et de l’image.' },
+    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur des méthodes avancées en data science, machine learning, optimisation, traitement du signal et de l’image, avec mise en œuvre sur des problèmes concrets.' },
     { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2024', details: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.' },
   ],
   experience: [
-    { id: 'rws', role: 'Spécialiste en évaluation Speech AI · Freelance', company: 'RWS Moravia', location: 'À distance', period: 'Août 2026', bullets: [
+    { id: 'rws', role: 'Spécialiste en évaluation Speech AI · Freelance', company: 'RWS Moravia', location: 'À distance', period: 'Août 2026–En cours', bullets: [
       'Évalué des sorties d’IA selon des critères précis de qualité, cohérence, naturel et utilité.',
       'Identifié les erreurs et limites récurrentes afin de distinguer les résultats conformes des cas problématiques.',
       'Documenté chaque décision avec une justification courte, factuelle et traçable.',
@@ -147,11 +147,11 @@ export const defaultCvFr: CvDraft = {
     ]},
   ],
   projects: [
-    { id: 'background', name: 'Background Subtraction — Traitement d’images fluoroscopiques', period: '2026', bullets: [
-      'Développé une chaîne de traitement combinant normalisation, filtrage et morphologie sur des séquences d’images.',
-      'Comparé seuil fixe, Otsu et EM/GMM afin d’évaluer différentes approches de segmentation.',
-      'Mesuré les performances avec SAD, MSE, PSNR, Dice et IoU pour comparer quantitativement les résultats.',
-      'Analysé les erreurs avec overlays et courbes temporelles afin d’identifier les cas difficiles.',
+    { id: 'fraud', name: 'Credit Card Fraud Detection — Machine Learning', period: 'Oct. 2026', bullets: [
+      'Construit un benchmark anti-fuite sur 284 807 transactions, dont 492 cas de fraude.',
+      'Comparé Logistic Regression, Random Forest, XGBoost et un MLP PyTorch avec PR-AUC comme métrique principale.',
+      'Sélectionné XGBoost avec 0,8557 de PR-AUC, 0,9763 de ROC-AUC et 0,8384 de rappel sur le jeu de test final.',
+      'Ajouté une sélection de seuil sur validation et des explications SHAP globales et locales.',
     ]},
     { id: 'monstage', name: 'MonStage — Automatisation du suivi de candidatures', period: '2026–En cours', bullets: [
       'Développe une application centralisant offres, candidatures, statuts et actions de suivi dans un workflow unique.',
@@ -177,7 +177,7 @@ export const defaultCvFr: CvDraft = {
   skills: 'Data & Analyse : Python, pandas, NumPy, SciPy, Matplotlib, Jupyter\nIA & Évaluation : scikit-learn, PyTorch, classification, évaluation de modèles, analyse d’erreurs\nAutomatisation & Outils : Google Apps Script, Google Sheets, Google Workspace, Git, GitHub, VS Code\nComputer Vision & Traitement d’image : OpenCV, scikit-image, segmentation, traitement d’image',
   languages: 'Français — Langue maternelle | Anglais — C1',
   interests: 'Intelligence artificielle & nouvelles technologies | Cuisine',
-  sectionOrder: ['education', 'experience', 'projects', 'skills', 'languages', 'interests', 'leadership'],
+  sectionOrder: ['education', 'experience', 'projects', 'skills', 'leadership', 'languages', 'interests'],
 };
 
 export function freshCvDraft(language: CvLanguage): CvDraft {
@@ -228,6 +228,8 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
     migrated.projects = defaults.projects;
     migrated.skills = defaults.skills;
     migrated.languages = defaults.languages;
+    migrated.leadership = defaults.leadership;
+    migrated.interests = defaults.interests;
     migrated.sectionOrder = defaults.sectionOrder;
   }
 
