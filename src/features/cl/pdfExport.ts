@@ -75,6 +75,29 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
       y -= leading;
     }
   };
+  const drawJustifiedParagraph = (value: string, size = 10.4, font = regular, leading = 14.1, x = MX, maxWidth = usable) => {
+    const wrapped = wrap(value, maxWidth, font, size);
+    ensure(wrapped.length * leading + 4);
+
+    wrapped.forEach((line, lineIndex) => {
+      const isLastLine = lineIndex === wrapped.length - 1;
+      const words = line.split(/\s+/).filter(Boolean);
+
+      if (isLastLine || words.length < 2) {
+        page.drawText(line, { x, y, size, font, color });
+      } else {
+        const wordsWidth = words.reduce((sum, word) => sum + font.widthOfTextAtSize(word, size), 0);
+        const gap = (maxWidth - wordsWidth) / (words.length - 1);
+        let cursorX = x;
+        for (const word of words) {
+          page.drawText(word, { x: cursorX, y, size, font, color });
+          cursorX += font.widthOfTextAtSize(word, size) + gap;
+        }
+      }
+
+      y -= leading;
+    });
+  };
 
   const drawRight = (value: string, size: number, font: any, right = WIDTH - MX) => {
     const text = normalizeCoverLetterPdfText(value);
@@ -140,7 +163,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   y -= 4;
 
   for (const paragraph of draft.paragraphs.filter((value) => value?.trim())) {
-    drawWrapped(paragraph, 10.4, regular, 14.1);
+    drawJustifiedParagraph(paragraph, 10.4, regular, 14.1);
     y -= 7;
   }
 
