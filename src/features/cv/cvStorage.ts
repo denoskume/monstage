@@ -54,8 +54,8 @@ export interface CvDraft {
   sectionOrder: CvSectionKey[];
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v8:';
-const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v7:';
+const KEY_PREFIX = 'monstage:cv-studio:v9:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v8:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -121,43 +121,43 @@ export const defaultCvEn: CvDraft = {
 export const defaultCvFr: CvDraft = {
   language: 'FR',
   name: 'Denos Kume',
-  headline: 'Data Science | Intelligence Artificielle appliquée | Analyse de données | Processus & Qualité',
+  headline: 'Data Science | IA appliquée | Qualité & amélioration de processus',
   location: 'Nantes, France',
   email: 'denoskume@yahoo.com',
   phone: '',
   linkedin: 'linkedin.com/in/denoskume',
   github: 'github.com/denoskume',
-  summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de 6 mois dès février 2027. Je souhaite appliquer mes bases en analyse de données, IA et évaluation de solutions à l’optimisation de processus industriels, tout en développant mes compétences en qualité, documentation et accompagnement des utilisateurs.',
+  summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de 6 mois dès février 2027. Je souhaite mettre mes bases en analyse de données et IA au service de l’amélioration de processus industriels et progresser au contact d’une équipe Qualité expérimentée.',
   education: [
     { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur la compréhension et le développement de méthodes de pointe pour l’analyse de données, le machine learning et le traitement du signal et de l’image.' },
     { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2024', details: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.' },
   ],
   experience: [
     { id: 'unified', role: 'Stagiaire Data Analyst', company: 'Unified Mentor Pvt. Ltd.', location: 'Bengaluru, Inde', period: 'Sept.–Déc. 2024', bullets: [
-      'Nettoyé et structuré des jeux de données avec Python, pandas et NumPy afin de fiabiliser leur analyse.',
-      'Analysé tendances, distributions et anomalies pour identifier les principaux facteurs observés dans les données.',
-      'Créé des visualisations Matplotlib afin de comparer les résultats et faciliter leur interprétation.',
-      'Synthétisé les analyses dans des restitutions courtes orientées décision et compréhension des résultats.',
+      'Nettoyé et structuré des jeux de données avec Python, pandas et NumPy pour fiabiliser leur analyse.',
+      'Analysé tendances, distributions et anomalies afin d’identifier les principaux écarts dans les données.',
+      'Créé des visualisations Matplotlib pour comparer les résultats et faciliter leur interprétation.',
+      'Synthétisé les analyses dans des restitutions courtes orientées compréhension et décision.',
     ]},
     { id: 'rws', role: 'Spécialiste en évaluation Speech AI · Freelance', company: 'RWS Moravia', location: 'À distance', period: 'Août 2026', bullets: [
       'Évalué des sorties d’IA selon des critères précis de qualité, cohérence, naturel et utilité.',
       'Identifié les erreurs et limites récurrentes afin de distinguer les résultats conformes des cas problématiques.',
-      'Rédigé des justifications factuelles et synthétiques pour documenter chaque décision d’évaluation.',
-      'Appliqué un cadre de contrôle cohérent afin de maintenir des évaluations reproductibles sur l’ensemble des tâches.',
+      'Documenté chaque décision avec une justification courte, factuelle et traçable.',
+      'Appliqué un cadre de contrôle constant afin de maintenir des évaluations reproductibles.',
     ]},
   ],
   projects: [
     { id: 'background', name: 'Background Subtraction — Traitement d’images fluoroscopiques', period: '2026', bullets: [
-      'Développé une chaîne de traitement combinant normalisation, filtrage spatial/fréquentiel et morphologie sur des séquences d’images.',
-      'Comparé seuil fixe, Otsu et EM/GMM afin d’évaluer différentes approches de segmentation et leur robustesse.',
+      'Développé une chaîne de traitement combinant normalisation, filtrage et morphologie sur des séquences d’images.',
+      'Comparé seuil fixe, Otsu et EM/GMM afin d’évaluer différentes approches de segmentation.',
       'Mesuré les performances avec SAD, MSE, PSNR, Dice et IoU pour comparer quantitativement les résultats.',
-      'Produit overlays, courbes temporelles et sorties de validation afin d’identifier les erreurs et analyser les cas difficiles.',
+      'Analysé les erreurs avec overlays et courbes temporelles afin d’identifier les cas difficiles.',
     ]},
     { id: 'monstage', name: 'MonStage — Automatisation du suivi de candidatures', period: '2026–En cours', bullets: [
-      'Développe une application centralisant des offres et candidatures avec synchronisation de données et suivi des statuts.',
-      'Automatise des flux entre interface web, Google Apps Script et données structurées afin de réduire les tâches manuelles.',
-      'Ajoute contrôles, filtres, tests et validations pour fiabiliser les données et maintenir un fonctionnement reproductible.',
-      'Documente et améliore progressivement la solution afin de faciliter son usage, sa maintenance et son évolution.',
+      'Développe une application centralisant offres, candidatures, statuts et actions de suivi dans un même workflow.',
+      'Automatise des flux entre interface web, Google Apps Script et données structurées pour réduire les tâches manuelles.',
+      'Ajoute contrôles, filtres, tests et validations afin de fiabiliser les données et le fonctionnement de l’outil.',
+      'Documente et améliore la solution pour faciliter son usage, sa maintenance et son évolution.',
     ]},
   ],
   leadership: [
@@ -174,7 +174,7 @@ export const defaultCvFr: CvDraft = {
   ],
   skills: 'Data & Analyse : Python, pandas, NumPy, SciPy, Matplotlib, Jupyter\nIntelligence Artificielle : scikit-learn, PyTorch, classification, évaluation de modèles, analyse d’erreurs\nComputer Vision & Traitement d’image : OpenCV, scikit-image, segmentation, traitement d’image\nOutils : Git, GitHub, Linux, VS Code, Google Sheets, Google Workspace',
   languages: 'Français — Langue maternelle | Anglais — C1',
-  interests: 'Intelligence artificielle & technologie | Football',
+  interests: 'Intelligence artificielle & nouvelles technologies | Cuisine',
   sectionOrder: ['education', 'experience', 'projects', 'skills', 'languages', 'leadership', 'interests'],
 };
 
