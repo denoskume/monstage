@@ -1244,19 +1244,31 @@ h1, h2, h3 { color: var(--text); }
 }
 
 .cl-preview--template .cl-preview__closing { margin-top: 28px; }
-.cl-preview--template .cl-preview__closing p { font-size: 10.8px; margin-bottom: 8px; }
-.cl-preview--template .cl-preview__signature { max-width: 155px; max-height: 62px; margin-top: 2px; }
-.cl-preview--fr .cl-preview__closing {
-  width: 100%;
-  margin-left: 0;
+.cl-preview--template .cl-preview__closing p { width: 100%; font-size: 10.8px; margin-bottom: 10px; }
+.cl-preview--template .cl-preview__signature-block {
+  display: grid;
+  width: max-content;
+  max-width: 180px;
+  gap: 5px;
 }
-.cl-preview--fr .cl-preview__closing p {
-  width: 100%;
-  text-align: justify;
-  text-justify: inter-word;
+.cl-preview--template .cl-preview__signature-block--left {
+  justify-items: start;
+  margin-right: auto;
+  text-align: left;
 }
-.cl-preview--fr .cl-preview__signature {
+.cl-preview--template .cl-preview__signature-block--right {
+  justify-items: end;
   margin-left: auto;
+  text-align: right;
+}
+.cl-preview--template .cl-preview__signature {
+  max-width: 155px;
+  max-height: 62px;
+  margin-top: 2px;
+}
+.cl-preview--template .cl-preview__signer {
+  font-size: 10.8px;
+  line-height: 1.3;
 }
 
 
