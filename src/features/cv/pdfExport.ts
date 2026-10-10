@@ -112,7 +112,8 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   drawCentered(draft.name, 18, bold);
   drawCentered(draft.headline, 10.5, bold);
-  drawCentered([draft.location, draft.email, draft.phone, draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
+  drawCentered([draft.location, draft.email, draft.phone].filter(Boolean).join(' | '), 8.5, regular);
+  drawCentered([draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
   y -= 2;
   page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 1, color: textColor });
   y -= 12;
