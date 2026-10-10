@@ -167,8 +167,10 @@ export const defaultCvFr: CvDraft = {
       organization: 'Responsabilité étudiante',
       period: '2 ans',
       bullets: [
-        'Contribué à la coordination et à la communication autour des activités étudiantes et académiques.',
-        'Aidée à organiser les informations, les suivis et la coordination quotidienne entre étudiants et interlocuteurs.',
+        'Coordonné la planification et l’organisation d’activités étudiantes et d’événements culturels.',
+        'Assuré le suivi logistique, la communication et la coordination entre étudiants et interlocuteurs.',
+        'Participé à l’accueil et à l’intégration de plus de 100 nouveaux étudiants.',
+        'Facilité leur prise de repères en centralisant les informations utiles et en accompagnant leur arrivée.',
       ],
     },
   ],
