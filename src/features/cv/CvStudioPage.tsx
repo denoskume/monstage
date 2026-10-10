@@ -112,7 +112,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 }
 
 export function CvStudioPage() {
-  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft('EN'));
+  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft('FR'));
   const [saved, setSaved] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
