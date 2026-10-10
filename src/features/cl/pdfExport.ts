@@ -168,14 +168,15 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   }
 
   y += 2;
-  drawWrapped(
-    draft.closing || (draft.language === 'FR'
-      ? 'Je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.'
-      : 'Sincerely,'),
-    10.4,
-    regular,
-    14.1
-  );
+  const closingText = draft.closing || (draft.language === 'FR'
+    ? 'Je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.'
+    : 'Sincerely,');
+
+  if (draft.language === 'FR') {
+    drawJustifiedParagraph(closingText, 10.4, regular, 14.1);
+  } else {
+    drawWrapped(closingText, 10.4, regular, 14.1);
+  }
   y -= 8;
 
   if (draft.signatureDataUrl) {
