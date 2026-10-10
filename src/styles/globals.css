@@ -1243,7 +1243,7 @@ h1, h2, h3 { color: var(--text); }
   text-justify: inter-word;
 }
 
-.cl-preview--template .cl-preview__closing { margin-top: 28px; }
+.cl-preview--template .cl-preview__closing { margin-top: 18px; }
 .cl-preview--template .cl-preview__closing p { width: 100%; font-size: 10.8px; margin-bottom: 10px; }
 .cl-preview--template .cl-preview__signature-block {
   display: grid;
