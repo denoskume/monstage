@@ -83,30 +83,51 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     y -= size + 3.4;
   };
 
-  drawRight(draft.signer || 'Denos Kume', 17.5, bold);
-  drawRight('Nantes, France', 9.3, regular);
-  drawRight('+33 6 62 91 94 68', 9.3, regular);
-  drawRight('denoskume@yahoo.com', 9.3, regular);
-  drawRight('github.com/denoskume', 9.3, regular);
-  drawRight('linkedin.com/in/denoskume', 9.3, regular);
+  if (draft.language === 'FR') {
+    const senderLines = [
+      { text: draft.signer || 'Denos Kume', size: 17.5, font: bold },
+      { text: 'Nantes, France', size: 9.3, font: regular },
+      { text: '+33 6 62 91 94 68', size: 9.3, font: regular },
+      { text: 'denoskume@yahoo.com', size: 9.3, font: regular },
+      { text: 'github.com/denoskume', size: 9.3, font: regular },
+      { text: 'linkedin.com/in/denoskume', size: 9.3, font: regular },
+    ];
+    for (const line of senderLines) {
+      page.drawText(normalizeCoverLetterPdfText(line.text), { x: MX, y, size: line.size, font: line.font, color });
+      y -= line.size + 3.4;
+    }
 
-  y -= 4;
-  const recipientTop = y;
-  if (draft.recipientName) {
-    drawWrapped(draft.language === 'FR' ? 'À l’attention de ' + draft.recipientName : draft.recipientName, 10.2, bold, 13.6);
+    y -= 2;
+    const recipientX = WIDTH - MX - 225;
+    const recipientWidth = 225;
+    if (draft.recipientName) {
+      drawWrapped('À l’attention de ' + draft.recipientName, 10.2, bold, 13.6, recipientX, recipientWidth);
+    }
+    const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
+    if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6, recipientX, recipientWidth);
+    if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6, recipientX, recipientWidth);
+  } else {
+    drawRight(draft.signer || 'Denos Kume', 17.5, bold);
+    drawRight('Nantes, France', 9.3, regular);
+    drawRight('+33 6 62 91 94 68', 9.3, regular);
+    drawRight('denoskume@yahoo.com', 9.3, regular);
+    drawRight('github.com/denoskume', 9.3, regular);
+    drawRight('linkedin.com/in/denoskume', 9.3, regular);
+
+    y -= 4;
+    if (draft.recipientName) drawWrapped(draft.recipientName, 10.2, bold, 13.6);
+    const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
+    if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6);
+    if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6);
   }
-  const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
-  if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6);
-  if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6);
 
-  const recipientBottom = y;
-  y = recipientTop - 50;
+  y -= 18;
   if (draft.date) {
     const dateText = draft.language === 'FR' ? 'Nantes, le ' + normalizeCoverLetterPdfText(draft.date) : 'Nantes, ' + normalizeCoverLetterPdfText(draft.date);
     const width = regular.widthOfTextAtSize(dateText, 10.2);
     page.drawText(dateText, { x: WIDTH - MX - width, y, size: 10.2, font: regular, color });
   }
-  y = Math.min(recipientBottom - 34, y - 35);
+  y -= 28;
 
   const subject = draft.language === 'FR'
     ? 'Objet : Candidature au stage ' + (draft.internshipTitle || '[INTITULE DU STAGE]')
