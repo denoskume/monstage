@@ -420,7 +420,8 @@ export function CvStudioPage() {
           <header className="cv-preview__header">
             <h1>{draft.name}</h1>
             <p className="cv-preview__headline">{draft.headline}</p>
-            <p className="cv-preview__contact">{[draft.location, draft.email, draft.phone, draft.linkedin, draft.github].filter(Boolean).join(' | ')}</p>
+            <p className="cv-preview__contact">{[draft.location, draft.email, draft.phone].filter(Boolean).join(' | ')}</p>
+            <p className="cv-preview__contact cv-preview__contact--links">{[draft.linkedin, draft.github].filter(Boolean).join(' | ')}</p>
           </header>
 
           <section><h2>{draft.language === 'FR' ? 'Objectif' : 'Objective'}</h2><p>{draft.summary}</p></section>
