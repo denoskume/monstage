@@ -16,7 +16,7 @@ export interface CoverLetterDraft {
   signatureDataUrl: string;
 }
 
-const KEY = 'monstage:cl-studio:v23';
+const KEY = 'monstage:cl-studio:v24';
 
 const frParagraphs = [
   "Je suis étudiant en dernière année de MSc Control and Robotics, spécialisation Data Science, Signal & Image Processing à l’École Centrale de Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027 afin de mettre en pratique mes bases en data science, machine learning, computer vision et traitement d’image, tout en continuant à progresser au sein d’une équipe technique expérimentée.",
@@ -46,7 +46,7 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
   paragraphs: [
     "Je suis étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027. Je souhaite mettre mes compétences en analyse de données et intelligence artificielle au service de problématiques industrielles concrètes.",
     "J’ai choisi de postuler chez Airbus Atlantic parce que cette mission relie directement qualité industrielle, données et intelligence artificielle. Le travail de l’équipe Qualité autour du caisson central de voilure A320 me paraît particulièrement concret. La recherche de leviers pour réduire les tâches à faible valeur ajoutée et améliorer les processus correspond exactement au type d’environnement que je veux découvrir.",
-    "Mon Master à Centrale Nantes me forme à des approches avancées en data science, machine learning, optimisation, signal et image. J’y apprends surtout à choisir une méthode adaptée, la tester sur un problème concret puis en évaluer les résultats et les limites. Je souhaite maintenant mettre ces acquis à l’épreuve dans un environnement industriel. Lors de mon stage de fin d’études de Bachelor en Inde, chez Unified Mentor, j’ai travaillé sur des données réelles, de leur préparation à leur restitution. Aujourd’hui, je poursuis une mission freelance chez RWS, où j’évalue la qualité de sorties d’IA et j’en identifie les limites. Je développe aussi MonStage, un projet personnel d’automatisation avec Google Apps Script.",
+    "Mon Master à Centrale Nantes me forme à des méthodes avancées en data science, machine learning, optimisation, signal et image. La formation combine théorie et mise en pratique dans un cadre académique. Elle m’a permis d’acquérir des bases solides, de mieux comprendre les méthodes et leurs limites, mais aussi d’identifier ce qu’il me reste à approfondir. Je souhaite maintenant confronter ces acquis à des problématiques industrielles réelles, les perfectionner et apprendre à les intégrer dans des processus concrets de qualité, de données et d’IA.",
     "Je serais heureux d’avoir l’occasion d’échanger avec vous sur ma motivation et sur ce que je pourrais apporter à votre équipe."
   ],
   closing: 'Cordialement,',
