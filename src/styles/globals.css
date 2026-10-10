@@ -1210,6 +1210,21 @@ h1, h2, h3 { color: var(--text); }
   text-align: right;
   margin: 0 0 14px auto;
 }
+.cl-preview--template .cl-preview__sender--left {
+  justify-items: start;
+  text-align: left;
+  margin: 0 0 10px 0;
+}
+.cl-preview--fr .cl-preview__recipient {
+  justify-items: start;
+  width: 46%;
+  margin: 12px 0 0 auto;
+  text-align: left;
+}
+.cl-preview--fr .cl-preview__date {
+  margin-top: 10px !important;
+}
+
 .cl-preview--template .cl-preview__sender--right strong { font-size: 18px; line-height: 1.1; margin-bottom: 4px; }
 .cl-preview--template .cl-preview__sender--right span { font-size: 10px; line-height: 1.25; }
 .cl-preview__recipient { display: grid; justify-items: start; margin-top: 10px; font-size: 10.8px; line-height: 1.35; }
