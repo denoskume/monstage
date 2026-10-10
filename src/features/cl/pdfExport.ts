@@ -179,6 +179,9 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   }
   y -= 8;
 
+  const signerText = normalizeCoverLetterPdfText(draft.signer || 'Denos Kume');
+  const signatureRightAligned = draft.language === 'FR';
+
   if (draft.signatureDataUrl) {
     const signatureData = dataUrlBytes(draft.signatureDataUrl);
     if (signatureData) {
@@ -190,11 +193,17 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
       const scale = Math.min(maxWidth / signature.width, maxHeight / signature.height, 1);
       const width = signature.width * scale;
       const height = signature.height * scale;
-      ensure(height + 8);
-      const signatureX = draft.language === 'FR' ? WIDTH - MX - width : MX;
+      ensure(height + 24);
+      const signatureX = signatureRightAligned ? WIDTH - MX - width : MX;
       page.drawImage(signature, { x: signatureX, y: y - height, width, height });
+      y -= height + 6;
     }
   }
+
+  ensure(18);
+  const signerWidth = bold.widthOfTextAtSize(signerText, 10.4);
+  const signerX = signatureRightAligned ? WIDTH - MX - signerWidth : MX;
+  page.drawText(signerText, { x: signerX, y, size: 10.4, font: bold, color });
 
   return pdf.save();
 }
