@@ -16,7 +16,7 @@ export interface CoverLetterDraft {
   signatureDataUrl: string;
 }
 
-const KEY = 'monstage:cl-studio:v1';
+const KEY = 'monstage:cl-studio:v2';
 
 const frParagraphs = [
   "Je suis étudiant en dernière année de MSc Control and Robotics, spécialisation Data Science, Signal & Image Processing à l’École Centrale de Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027 afin de mettre en pratique mes bases en data science, machine learning, computer vision et traitement d’image, tout en continuant à progresser au sein d’une équipe technique expérimentée.",
@@ -35,19 +35,19 @@ const enParagraphs = [
 
 export const defaultCoverLetterFr: CoverLetterDraft = {
   language: 'FR',
-  date: '',
-  company: 'Assystem',
-  team: '',
-  recipientName: 'M. Karl Vallière',
-  recipientRole: "Responsable d’équipe",
-  recipientLocation: 'Nantes / Carquefou, France',
-  internshipTitle: 'Ingénieur Data Science - février 2027',
-  greeting: 'Monsieur Vallière,',
+  date: '10 octobre 2026',
+  company: 'Airbus Atlantic',
+  team: 'Département Qualité — site de Nantes',
+  recipientName: '',
+  recipientRole: 'Équipe Recrutement',
+  recipientLocation: 'Nantes, France',
+  internshipTitle: 'STAGE 2027 - Ingénieur Processus Qualité & IA (H/F)',
+  greeting: 'Madame, Monsieur,',
   paragraphs: [
-    "Votre équipe m’intéresse parce que le travail ne s’arrête pas au modèle. Il commence par les données, passe par l’expérimentation et le benchmark, puis demande de comprendre les limites des résultats. C’est exactement ce que je veux découvrir dans un contexte industriel réel, avec des cas d’usage concrets et une équipe expérimentée.",
-    "Mes projets m’ont appris à comparer des méthodes, à mesurer leurs performances et à regarder ce qui fonctionne moins bien. J’ai notamment travaillé sur plusieurs stratégies de segmentation en imagerie fluoroscopique. Chez RWS, j’ai évalué des sorties d’IA selon des critères précis et identifié leurs faiblesses. Chez Unified Mentor, j’ai travaillé sur le nettoyage, l’analyse, la visualisation et la restitution de données.",
-    "Je souhaite rejoindre Assystem pour un stage de six mois en Data Science à partir de février 2027 afin d’appliquer ces bases à des problèmes industriels plus concrets, notamment autour de la détection et de la prédiction d’anomalies. Je peux apporter ma rigueur, ma curiosité et cette habitude de comparer les résultats avant de tirer des conclusions. De mon côté, je veux apprendre à travailler sur des problèmes plus complexes et progresser au contact de votre équipe.",
-    "Je serais heureux d’échanger avec vous sur cette mission et de vous expliquer plus simplement ce que je pourrais apporter à l’équipe.",
+    "Votre offre m’intéresse par son lien direct entre qualité industrielle, analyse de données et intelligence artificielle. La possibilité de travailler au sein de l’équipe Qualité du caisson central de voilure A320, avec un objectif concret d’identification des tâches à faible valeur ajoutée et d’amélioration des processus, correspond au type de mission industrielle que je souhaite découvrir.",
+    "En dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, j’ai développé des bases solides en analyse de données, évaluation de modèles et expérimentation. Chez RWS, j’ai évalué des sorties d’IA selon des critères précis de qualité et documenté les erreurs observées. Chez Unified Mentor, j’ai travaillé sur le nettoyage, l’analyse, la visualisation et la restitution de données. Mon projet MonStage m’a également amené à automatiser des flux avec Google Apps Script et des données structurées.",
+    "Je souhaite mettre cette rigueur et ces compétences Data/IA au service de votre équipe pour contribuer à l’analyse des activités, à la conception d’outils d’automatisation et à l’évaluation de leurs résultats. Je peux apporter une approche structurée, une attention particulière à la qualité des données et l’habitude de documenter ce qui fonctionne comme ce qui doit être amélioré. De mon côté, je souhaite progresser sur les méthodes de qualité industrielle, la cartographie des processus et le déploiement de solutions durables auprès des équipes terrain.",
+    "Je serais heureux d’échanger avec vous sur cette mission et sur la manière dont mon profil Data/IA pourrait contribuer aux objectifs du département Qualité d’Airbus Atlantic à Nantes."
   ],
   closing: 'Cordialement,',
   signer: 'Denos Kume',
