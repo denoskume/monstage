@@ -121,13 +121,13 @@ export const defaultCvEn: CvDraft = {
 export const defaultCvFr: CvDraft = {
   language: 'FR',
   name: 'Denos Kume',
-  headline: 'Data Science | Intelligence Artificielle appliquée | Analyse de données | Amélioration de processus',
+  headline: 'Data Science | Intelligence Artificielle appliquée | Analyse de données | Processus & Qualité',
   location: 'Nantes, France',
   email: 'denoskume@yahoo.com',
   phone: '',
   linkedin: 'linkedin.com/in/denoskume',
   github: 'github.com/denoskume',
-  summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de 6 mois dès février 2027. Je souhaite appliquer mes bases en analyse de données, IA et évaluation de solutions à l’amélioration de processus industriels, tout en développant mes compétences en qualité et performance opérationnelle.',
+  summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de 6 mois dès février 2027. Je souhaite appliquer mes bases en analyse de données, IA et évaluation de solutions à l’optimisation de processus industriels, tout en développant mes compétences en qualité, documentation et accompagnement des utilisateurs.',
   education: [
     { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur la compréhension et le développement de méthodes de pointe pour l’analyse de données, le machine learning et le traitement du signal et de l’image.' },
     { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2024', details: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.' },
@@ -153,11 +153,11 @@ export const defaultCvFr: CvDraft = {
       'Mesuré les performances avec SAD, MSE, PSNR, Dice et IoU pour comparer quantitativement les résultats.',
       'Produit overlays, courbes temporelles et sorties de validation afin d’identifier les erreurs et analyser les cas difficiles.',
     ]},
-    { id: 'flag', name: 'Flag Intelligence — Application IA', period: 'Sept. 2026–En cours', bullets: [
-      'Développe une application de reconnaissance visuelle basée sur MobileNetV3-Small couvrant 250 classes.',
-      'Intègre score de confiance, marge de décision, alternatives classées et logique open-set pour gérer les prédictions incertaines.',
-      'Évalue Top-1/Top-5, précision, rappel, F1 macro, calibration et analyse des erreurs pour suivre la qualité du système.',
-      'Améliore la robustesse, la fiabilité des résultats et la structuration des sorties avant poursuite de l’industrialisation.',
+    { id: 'monstage', name: 'MonStage — Automatisation du suivi de candidatures', period: '2026–En cours', bullets: [
+      'Développe une application centralisant des offres et candidatures avec synchronisation de données et suivi des statuts.',
+      'Automatise des flux entre interface web, Google Apps Script et données structurées afin de réduire les tâches manuelles.',
+      'Ajoute contrôles, filtres, tests et validations pour fiabiliser les données et maintenir un fonctionnement reproductible.',
+      'Documente et améliore progressivement la solution afin de faciliter son usage, sa maintenance et son évolution.',
     ]},
   ],
   leadership: [
