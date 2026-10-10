@@ -145,8 +145,15 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   }
 
   y += 2;
-  drawWrapped(draft.closing || (draft.language === 'FR' ? 'Cordialement,' : 'Sincerely,'), 10.4, regular, 14.1);
-  y -= 4;
+  drawWrapped(
+    draft.closing || (draft.language === 'FR'
+      ? 'Je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.'
+      : 'Sincerely,'),
+    10.4,
+    regular,
+    14.1
+  );
+  y -= 8;
 
   if (draft.signatureDataUrl) {
     const signatureData = dataUrlBytes(draft.signatureDataUrl);
@@ -160,7 +167,8 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
       const width = signature.width * scale;
       const height = signature.height * scale;
       ensure(height + 8);
-      page.drawImage(signature, { x: MX, y: y - height, width, height });
+      const signatureX = draft.language === 'FR' ? WIDTH - MX - width : MX;
+      page.drawImage(signature, { x: signatureX, y: y - height, width, height });
     }
   }
 
