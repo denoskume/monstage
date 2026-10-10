@@ -16,7 +16,7 @@ export interface CoverLetterDraft {
   signatureDataUrl: string;
 }
 
-const KEY = 'monstage:cl-studio:v19';
+const KEY = 'monstage:cl-studio:v20';
 
 const frParagraphs = [
   "Je suis étudiant en dernière année de MSc Control and Robotics, spécialisation Data Science, Signal & Image Processing à l’École Centrale de Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027 afin de mettre en pratique mes bases en data science, machine learning, computer vision et traitement d’image, tout en continuant à progresser au sein d’une équipe technique expérimentée.",
@@ -46,7 +46,7 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
   paragraphs: [
     "Je suis étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes. Je recherche un stage de fin d’études de six mois à partir de février 2027. Je souhaite mettre mes compétences en analyse de données et intelligence artificielle au service de problématiques industrielles concrètes.",
     "J’ai choisi de postuler chez Airbus Atlantic parce que cette mission relie directement qualité industrielle, données et intelligence artificielle. Le travail de l’équipe Qualité autour du caisson central de voilure A320 me paraît particulièrement concret. La recherche de leviers pour réduire les tâches à faible valeur ajoutée et améliorer les processus correspond exactement au type d’environnement que je veux découvrir.",
-    "Mon Master à Centrale Nantes me forme aujourd’hui à l’analyse de données, au machine learning, à l’optimisation et au traitement du signal et de l’image. J’y apprends surtout à partir d’un problème concret, structurer les données, tester plusieurs approches et vérifier les résultats. C’est cette méthode que je souhaite maintenant appliquer dans un environnement industriel. Mon stage de fin d’études de Bachelor en Inde, chez Unified Mentor, m’a déjà donné une première expérience du travail sur des données réelles. Aujourd’hui, chez RWS, j’évalue en freelance la qualité de sorties d’IA et j’en identifie les limites. Je développe aussi MonStage, un projet personnel dans lequel j’automatise des flux avec Google Apps Script.",
+    "Mon Master à Centrale Nantes me forme aujourd’hui aux méthodes avancées de traitement et de modélisation des données, au machine learning, à l’optimisation ainsi qu’au traitement du signal et de l’image. J’y apprends à comprendre les méthodes, leurs limites et leur mise en œuvre sur des problèmes réels. C’est cette approche que je souhaite maintenant confronter à un environnement industriel. Mon stage de fin d’études de Bachelor en Inde, chez Unified Mentor, m’a donné une première expérience du travail sur des données réelles. Aujourd’hui, chez RWS, j’évalue en freelance la qualité de sorties d’IA et j’en identifie les limites. Je développe aussi MonStage, un projet personnel dans lequel j’automatise des flux avec Google Apps Script.",
     "Je serais heureux d’avoir l’occasion d’échanger avec vous sur ma motivation et sur ce que je pourrais apporter à votre équipe."
   ],
   closing: 'Cordialement,',
