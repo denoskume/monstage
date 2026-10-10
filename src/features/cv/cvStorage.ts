@@ -54,8 +54,8 @@ export interface CvDraft {
   sectionOrder: CvSectionKey[];
 }
 
-const KEY_PREFIX = 'monstage:cv-studio:v7:';
-const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v6:';
+const KEY_PREFIX = 'monstage:cv-studio:v8:';
+const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v7:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
 export const defaultCvEn: CvDraft = {
@@ -121,43 +121,43 @@ export const defaultCvEn: CvDraft = {
 export const defaultCvFr: CvDraft = {
   language: 'FR',
   name: 'Denos Kume',
-  headline: 'Data Science | Machine Learning appliqué | Computer Vision | Traitement d’image',
+  headline: 'Data Science | Intelligence Artificielle appliquée | Analyse de données | Amélioration de processus',
   location: 'Nantes, France',
   email: 'denoskume@yahoo.com',
   phone: '',
   linkedin: 'linkedin.com/in/denoskume',
   github: 'github.com/denoskume',
-  summary: 'Je recherche un stage de fin d’études de 6 mois dès février 2027 en Computer Vision et traitement d’image. Je souhaite contribuer à des projets de vision industrielle axés sur la segmentation, la robustesse et la fiabilité des systèmes.',
+  summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de 6 mois dès février 2027. Je souhaite appliquer mes bases en analyse de données, IA et évaluation de solutions à l’amélioration de processus industriels, tout en développant mes compétences en qualité et performance opérationnelle.',
   education: [
     { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur la compréhension et le développement de méthodes de pointe pour l’analyse de données, le machine learning et le traitement du signal et de l’image.' },
     { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2024', details: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.' },
   ],
   experience: [
     { id: 'unified', role: 'Stagiaire Data Analyst', company: 'Unified Mentor Pvt. Ltd.', location: 'Bengaluru, Inde', period: 'Sept.–Déc. 2024', bullets: [
-      'Nettoyé et préparé des jeux de données structurés avec Python, pandas et NumPy.',
-      'Réalisé des analyses exploratoires pour identifier tendances, distributions et anomalies.',
-      'Créé des visualisations Matplotlib pour rendre les résultats lisibles et comparables.',
-      'Synthétisé les résultats dans des rapports courts centrés sur l’interprétation.',
+      'Nettoyé et structuré des jeux de données avec Python, pandas et NumPy afin de fiabiliser leur analyse.',
+      'Analysé tendances, distributions et anomalies pour identifier les principaux facteurs observés dans les données.',
+      'Créé des visualisations Matplotlib afin de comparer les résultats et faciliter leur interprétation.',
+      'Synthétisé les analyses dans des restitutions courtes orientées décision et compréhension des résultats.',
     ]},
     { id: 'rws', role: 'Spécialiste en évaluation Speech AI · Freelance', company: 'RWS Moravia', location: 'À distance', period: 'Août 2026', bullets: [
-      'Évalué des sorties Speech-to-Speech selon leur qualité, cohérence, naturel et utilité.',
-      'Identifié les erreurs linguistiques, conversationnelles et audio dans les réponses évaluées.',
-      'Rédigé des justifications courtes et factuelles pour chaque décision d’évaluation.',
-      'Appliqué un cadre de notation cohérent afin de maintenir des évaluations reproductibles.',
+      'Évalué des sorties d’IA selon des critères précis de qualité, cohérence, naturel et utilité.',
+      'Identifié les erreurs et limites récurrentes afin de distinguer les résultats conformes des cas problématiques.',
+      'Rédigé des justifications factuelles et synthétiques pour documenter chaque décision d’évaluation.',
+      'Appliqué un cadre de contrôle cohérent afin de maintenir des évaluations reproductibles sur l’ensemble des tâches.',
     ]},
   ],
   projects: [
-    { id: 'fraud', name: 'Détection de fraude par carte bancaire', period: 'Oct. 2026', bullets: [
-      'Construit un benchmark sans fuite de données sur 284 807 transactions, dont 492 cas de fraude.',
-      'Comparé Logistic Regression, Random Forest, XGBoost et un MLP PyTorch compact avec la PR-AUC comme métrique principale.',
-      'Retenu XGBoost avec 0,8557 de PR-AUC, 0,9763 de ROC-AUC et 0,8384 de rappel sur le jeu de test final.',
-      'Ajouté une sélection du seuil sur validation et des explications SHAP globales et locales.',
+    { id: 'background', name: 'Background Subtraction — Traitement d’images fluoroscopiques', period: '2026', bullets: [
+      'Développé une chaîne de traitement combinant normalisation, filtrage spatial/fréquentiel et morphologie sur des séquences d’images.',
+      'Comparé seuil fixe, Otsu et EM/GMM afin d’évaluer différentes approches de segmentation et leur robustesse.',
+      'Mesuré les performances avec SAD, MSE, PSNR, Dice et IoU pour comparer quantitativement les résultats.',
+      'Produit overlays, courbes temporelles et sorties de validation afin d’identifier les erreurs et analyser les cas difficiles.',
     ]},
-    { id: 'flag', name: 'Flag Intelligence', period: 'Sept. 2026–En cours', bullets: [
-      'Développe une application MobileNetV3-Small couvrant 250 classes de drapeaux.',
-      'Intègre confiance, marge de décision, alternatives classées et logique open-set.',
-      'Évalue Top-1/Top-5, précision/rappel/F1 macro, calibration et robustesse open-set.',
-      'Améliore la robustesse du système, l’analyse des erreurs et la génération structurée d’informations pays avec export PDF/JSON.',
+    { id: 'flag', name: 'Flag Intelligence — Application IA', period: 'Sept. 2026–En cours', bullets: [
+      'Développe une application de reconnaissance visuelle basée sur MobileNetV3-Small couvrant 250 classes.',
+      'Intègre score de confiance, marge de décision, alternatives classées et logique open-set pour gérer les prédictions incertaines.',
+      'Évalue Top-1/Top-5, précision, rappel, F1 macro, calibration et analyse des erreurs pour suivre la qualité du système.',
+      'Améliore la robustesse, la fiabilité des résultats et la structuration des sorties avant poursuite de l’industrialisation.',
     ]},
   ],
   leadership: [
@@ -172,10 +172,10 @@ export const defaultCvFr: CvDraft = {
       ],
     },
   ],
-  skills: 'Python & Calcul scientifique : Python, NumPy, SciPy, pandas, Matplotlib, Jupyter\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\nComputer Vision & Traitement d’image : OpenCV, scikit-image, computer vision, traitement d’image\nOutils d’ingénierie : Git, GitHub, Linux, VS Code, Streamlit',
+  skills: 'Data & Analyse : Python, pandas, NumPy, SciPy, Matplotlib, Jupyter\nIntelligence Artificielle : scikit-learn, PyTorch, classification, évaluation de modèles, analyse d’erreurs\nComputer Vision & Traitement d’image : OpenCV, scikit-image, segmentation, traitement d’image\nOutils : Git, GitHub, Linux, VS Code, Google Sheets, Google Workspace',
   languages: 'Français — Langue maternelle | Anglais — C1',
   interests: 'Intelligence artificielle & technologie | Football',
-  sectionOrder: ['education', 'projects', 'experience', 'skills', 'languages', 'leadership', 'interests'],
+  sectionOrder: ['education', 'experience', 'projects', 'skills', 'languages', 'leadership', 'interests'],
 };
 
 export function freshCvDraft(language: CvLanguage): CvDraft {
@@ -219,6 +219,15 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
 
   // Refresh the built-in objective when MonStage ships a recruiter-focused version.
   migrated.summary = defaults.summary;
+
+  if (language === 'FR') {
+    migrated.headline = defaults.headline;
+    migrated.experience = defaults.experience;
+    migrated.projects = defaults.projects;
+    migrated.skills = defaults.skills;
+    migrated.languages = defaults.languages;
+    migrated.sectionOrder = defaults.sectionOrder;
+  }
 
   const validSections: CvSectionKey[] = ['education', 'projects', 'experience', 'leadership', 'skills', 'languages', 'interests'];
   const savedOrder = Array.isArray(saved.sectionOrder) ? saved.sectionOrder.filter((key): key is CvSectionKey => validSections.includes(key as CvSectionKey)) : [];
