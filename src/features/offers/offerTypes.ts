@@ -1,6 +1,7 @@
 export interface OfferFilters {
   query: string;
   specialization: string | null;
+  industry: string | null;
   city: string | null;
   priority: string | null;
   minScore: number;
