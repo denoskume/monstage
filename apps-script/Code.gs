@@ -152,24 +152,56 @@ function latestAutonomyEvents_(spreadsheet) {
   return latest;
 }
 
+function offerSourceSheets_(spreadsheet) {
+  return spreadsheet.getSheets().filter(function (sheet) {
+    var name = sheet.getName();
+    return name === 'Offres' || name.indexOf('Offres - ') === 0;
+  });
+}
+
+function backendOfferIdentity_(offer) {
+  return [
+    normalizeComparable_(offer.company),
+    normalizeComparable_(offer.title),
+    normalizeComparable_(offer.city),
+    normalizeComparable_(offer.applicationUrl)
+  ].join('::');
+}
+
+function dedupeOffersServerSide_(offers) {
+  var seen = {};
+  return offers.filter(function (offer) {
+    var key = backendOfferIdentity_(offer);
+    if (seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+}
+
 function getOffers_() {
   var spreadsheet = getSpreadsheet_();
-  var sheet = spreadsheet.getSheetByName('Offres');
-  if (!sheet) throw new Error('Offres sheet not found');
+  var sheets = offerSourceSheets_(spreadsheet);
+  if (!sheets.length) throw new Error('No offer source sheet found');
 
-  var values = sheet.getDataRange().getDisplayValues();
-  if (values.length < 2) return [];
-
-  var headerMap = buildHeaderMap_(values[0]);
   var autonomyMap = latestAutonomyEvents_(spreadsheet);
-  return values.slice(1)
-    .filter(function (row) {
-      return normalizeText_(valueByHeader_(row, headerMap, 'Entreprise'));
-    })
-    .map(function (row) {
-      var id = normalizeText_(valueByHeader_(row, headerMap, 'ID')) || '';
-      return mapOffer_(row, headerMap, autonomyMap[id] || null);
-    });
+  var offers = [];
+
+  sheets.forEach(function (sheet) {
+    var values = sheet.getDataRange().getDisplayValues();
+    if (values.length < 2) return;
+
+    var headerMap = buildHeaderMap_(values[0]);
+    values.slice(1)
+      .filter(function (row) {
+        return normalizeText_(valueByHeader_(row, headerMap, 'Entreprise'));
+      })
+      .forEach(function (row) {
+        var id = normalizeText_(valueByHeader_(row, headerMap, 'ID')) || '';
+        offers.push(mapOffer_(row, headerMap, autonomyMap[id] || null));
+      });
+  });
+
+  return dedupeOffersServerSide_(offers);
 }
 
 function applicationEventDefinition_(text) {
