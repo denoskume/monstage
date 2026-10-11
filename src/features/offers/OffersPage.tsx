@@ -18,6 +18,7 @@ function initialFilters(): OfferFilterState {
   return {
     query: prefs.query,
     specialization: prefs.specialization,
+    industry: prefs.industry,
     city: prefs.city,
     priority: prefs.priority,
     minScore: prefs.minScore,
@@ -29,7 +30,7 @@ function initialFilters(): OfferFilterState {
   };
 }
 
-const resetFilters: OfferFilterState = { query: '', specialization: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
+const resetFilters: OfferFilterState = { query: '', specialization: null, industry: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
 const sortLabels: Record<SortMode, string> = { best: 'Best match', recent: 'Most recent', score: 'Highest score', priority: 'Priority', city: 'City' };
 
 function selectionKey(offer: InternshipOffer): string {
@@ -75,6 +76,7 @@ export function OffersPage() {
       onlyForMe: filters.onlyForMe,
       minScore: filters.minScore,
       specialization: filters.specialization,
+      industry: filters.industry,
       city: filters.city,
       priority: filters.priority,
       freshness: filters.freshness,
@@ -138,8 +140,9 @@ export function OffersPage() {
     }
   }
 
-  const activeFilterCount = [filters.specialization, filters.city, filters.priority, filters.freshness, filters.m2Fit, filters.sourceQuality, filters.applicationStatus].filter(Boolean).length + (filters.minScore > 0 ? 1 : 0) + (filters.onlyForMe ? 1 : 0);
+  const activeFilterCount = [filters.industry, filters.specialization, filters.city, filters.priority, filters.freshness, filters.m2Fit, filters.sourceQuality, filters.applicationStatus].filter(Boolean).length + (filters.minScore > 0 ? 1 : 0) + (filters.onlyForMe ? 1 : 0);
   const activeFilterSummary = [
+    filters.industry ? `Industry: ${filters.industry}` : null,
     filters.city ? `City: ${filters.city}` : null,
     filters.specialization ? `Specialization: ${filters.specialization}` : null,
     filters.priority ? `Priority: ${filters.priority}` : null,
