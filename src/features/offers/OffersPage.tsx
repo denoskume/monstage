@@ -5,7 +5,7 @@ import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { SearchBar } from '../../components/SearchBar';
 import { useOffers } from '../../hooks/useOffers';
 import { defaultPreferences, loadPreferences, savePreferences, type SortMode } from '../../storage/preferences';
-import { dedupeOffers, filterOffers, offerIdentity, sortOffers } from './offerSelectors';
+import { dedupeOffers, filterOffers, industryOptions, offerIdentity, offerIndustry, sortOffers } from './offerSelectors';
 import type { OfferFilters as OfferFilterState } from './offerTypes';
 import { OfferDetail } from './OfferDetail';
 import { OfferFilters } from './OfferFilters';
@@ -63,6 +63,18 @@ export function OffersPage() {
     [filteredOffers, sort],
   );
   const selectedOffer = visibleOffers.find((offer) => selectionKey(offer) === selectedKey) ?? visibleOffers[0] ?? null;
+  const industryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const offer of availableOffers) {
+      const industry = offerIndustry(offer);
+      counts.set(industry, (counts.get(industry) ?? 0) + 1);
+    }
+    return industryOptions
+      .map((industry) => ({ industry, count: counts.get(industry) ?? 0 }))
+      .filter((item) => item.count > 0)
+      .sort((a, b) => b.count - a.count);
+  }, [availableOffers]);
+
 
   useEffect(() => {
     if (selectedOffer && selectionKey(selectedOffer) !== selectedKey) setSelectedKey(selectionKey(selectedOffer));
@@ -172,6 +184,26 @@ export function OffersPage() {
             {activeFilterSummary.filter((label) => label !== 'Recommended for me').map((label) => <span className="quick-filter active" key={label}>{label}</span>)}
           </div>
           <label className="jobs-sort"><span>Sort by</span><select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}><option value="best">Best match</option><option value="recent">Most recent</option><option value="score">Highest score</option><option value="priority">Priority</option><option value="city">City</option></select></label>
+        </div>
+      </div>
+
+      <div className="industry-explorer" aria-label="Explore opportunities by industry">
+        <div className="industry-explorer__heading">
+          <strong>Explore by industry</strong>
+          <span>{availableOffers.length} opportunities indexed</span>
+        </div>
+        <div className="industry-explorer__chips">
+          {industryCounts.map(({ industry, count }) => (
+            <button
+              key={industry}
+              type="button"
+              className={'industry-chip' + (filters.industry === industry ? ' is-active' : '')}
+              aria-pressed={filters.industry === industry}
+              onClick={() => setFilters({ ...filters, industry: filters.industry === industry ? null : industry })}
+            >
+              <span>{industry}</span><strong>{count}</strong>
+            </button>
+          ))}
         </div>
       </div>
 
