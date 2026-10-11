@@ -1,5 +1,6 @@
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
+import { offerIndustry } from './offerSelectors';
 
 function Icon({ name }: { name: 'save' | 'hide' | 'share' }) {
   if (name === 'save') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.55L6 21V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>;
@@ -25,6 +26,7 @@ export function OfferCard({
   onShare: () => void;
 }) {
   const meta = [offer.city, offer.region].filter(Boolean).join(', ');
+  const industry = offerIndustry(offer);
 
   return (
     <article className={'offer-card' + (selected ? ' offer-card--selected' : '')}>
@@ -35,6 +37,7 @@ export function OfferCard({
         <h2 className="offer-card__title">{offer.title}</h2>
         <p className="offer-card__location">{meta || 'Location not specified'}</p>
         <div className="offer-card__facts">
+          <span>{industry}</span>
           {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
           {offer.compensation ? <span>{offer.compensation}</span> : null}
           {offer.m2Fit ? <span>{displayValue(offer.m2Fit)}</span> : null}
