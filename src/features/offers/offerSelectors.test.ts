@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
-import { dedupeOffers, filterOffers, isForMe, selectVisibleOffers, sortOffers } from './offerSelectors';
+import { dedupeOffers, filterOffers, isForMe, offerIndustry, selectVisibleOffers, sortOffers } from './offerSelectors';
 import type { OfferFilters } from './offerTypes';
 
 const base: InternshipOffer = {
@@ -12,7 +12,7 @@ const base: InternshipOffer = {
   calendarFit: '✅ Aligné', confidence: 'Haute', relevance: null, gaps: null,
 };
 
-const filters: OfferFilters = { query: '', specialization: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
+const filters: OfferFilters = { query: '', specialization: null, industry: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
 
 test('searches company title city specialization and skills', () => {
   expect(filterOffers([base], { ...filters, query: 'opencv' })).toHaveLength(1);
@@ -189,4 +189,14 @@ test('deduplication prevents repeated cards when backend ids collide', () => {
   const filtered = filterOffers(unique, { ...filters, city: 'Nantes' });
   expect(filtered).toHaveLength(1);
   expect(filtered.every((offer) => offer.city === 'Nantes')).toBe(true);
+});
+
+
+test('classifies and filters offers by industry', () => {
+  const aerospace = { ...base, id: 'airbus', company: 'Airbus Atlantic', title: 'Data & AI Intern', domain: 'Quality' };
+  const medtech = { ...base, id: 'medtech', company: 'MedTech Lab', title: 'Medical Imaging Intern', domain: 'Biomedical imaging' };
+
+  expect(offerIndustry(aerospace)).toBe('Aerospace & Space');
+  expect(offerIndustry(medtech)).toBe('MedTech & Healthcare');
+  expect(filterOffers([aerospace, medtech], { ...filters, industry: 'Aerospace & Space' }).map((offer) => offer.id)).toEqual(['airbus']);
 });
