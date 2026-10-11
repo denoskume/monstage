@@ -27,20 +27,34 @@ export function OfferCard({
 }) {
   const meta = [offer.city, offer.region].filter(Boolean).join(', ');
   const industry = offerIndustry(offer);
+  const companyMark = offer.company
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+  const topSkills = offer.skills.slice(0, 3);
 
   return (
     <article className={'offer-card' + (selected ? ' offer-card--selected' : '')}>
       <button className="offer-card__button" type="button" onClick={onSelect} aria-pressed={selected}>
-        <div className="offer-card__topline">
-          <span className="offer-card__company">{offer.company}</span>
+        <div className="offer-card__identity">
+          <span className="offer-card__company-mark" aria-hidden="true">{companyMark || '•'}</span>
+          <div className="offer-card__identity-copy">
+            <div className="offer-card__topline">
+              <span className="offer-card__company">{offer.company}</span>
+              <span className="offer-card__industry">{industry}</span>
+            </div>
+            <h2 className="offer-card__title">{offer.title}</h2>
+            <p className="offer-card__location">{meta || 'Location not specified'}</p>
+          </div>
         </div>
-        <h2 className="offer-card__title">{offer.title}</h2>
-        <p className="offer-card__location">{meta || 'Location not specified'}</p>
+        {topSkills.length ? <div className="offer-card__skills">{topSkills.map((skill) => <span key={skill}>{skill}</span>)}</div> : null}
         <div className="offer-card__facts">
-          <span>{industry}</span>
           {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
           {offer.compensation ? <span>{offer.compensation}</span> : null}
           {offer.m2Fit ? <span>{displayValue(offer.m2Fit)}</span> : null}
+          {offer.sourceQuality ? <span>{displayValue(offer.sourceQuality)}</span> : null}
         </div>
         <div className="offer-card__signals">
           {offer.decisionScore !== null ? <span className="signal signal--match">{offer.decisionScore}% match</span> : null}
