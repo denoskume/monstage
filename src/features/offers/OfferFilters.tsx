@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react';
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
-import { uniqueValues } from './offerSelectors';
+import { industryOptions, uniqueValues } from './offerSelectors';
 import type { OfferFilters } from './offerTypes';
 
 function SelectField({ name, label, value, onChange, options }: { name: string; label: string; value: string | null; onChange: (value: string | null) => void; options: string[] }) {
@@ -24,6 +24,7 @@ export function OfferFilters({ offers, filters, onChange, onReset, onClose, onAp
     onApply({
       ...filters,
       specialization: valueOrNull('specialization'),
+      industry: valueOrNull('industry'),
       city: valueOrNull('city'),
       priority: valueOrNull('priority'),
       minScore: Number(form.get('minScore') ?? 0),
@@ -38,6 +39,7 @@ export function OfferFilters({ offers, filters, onChange, onReset, onClose, onAp
     <form className={`filters-panel${mobile ? ' filters-panel--mobile' : ''}`} onSubmit={submitFilters}>
       <div className="filters-panel__header"><div><strong>Filters</strong><span>Refine your results</span></div>{onClose ? <button type="button" aria-label="Close filters" onClick={onClose}>×</button> : null}</div>
       <div className="filters-grid">
+        <SelectField name="industry" label="Industry" value={filters.industry} onChange={(value) => onChange({ ...filters, industry: value })} options={industryOptions} />
         <SelectField name="specialization" label="Specialization" value={filters.specialization} onChange={(value) => onChange({ ...filters, specialization: value })} options={uniqueValues(offers, 'specialization')} />
         <SelectField name="city" label="City" value={filters.city} onChange={(value) => onChange({ ...filters, city: value })} options={uniqueValues(offers, 'city')} />
         <SelectField name="priority" label="Priority" value={filters.priority} onChange={(value) => onChange({ ...filters, priority: value })} options={['A+','A','B+','B']} />
