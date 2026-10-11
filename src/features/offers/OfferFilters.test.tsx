@@ -49,6 +49,7 @@ const offers: InternshipOffer[] = [
 const emptyFilters: OfferFilterState = {
   query: '',
   specialization: null,
+  industry: null,
   city: null,
   priority: null,
   minScore: 0,
