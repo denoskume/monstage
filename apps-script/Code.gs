@@ -152,6 +152,218 @@ function latestAutonomyEvents_(spreadsheet) {
   return latest;
 }
 
+
+var EXTERNAL_SOURCE_HEADERS_ = [
+  'ID', 'Entreprise', "Intitulé de l'offre", 'Domaine', 'Ville', 'Région',
+  'M2 2027', 'Début', 'Durée', 'Rémunération', 'Compétences clés', 'Publication',
+  "Statut de l'offre", 'Statut candidature', 'Prochaine action', 'Lien direct',
+  '⭐ Shortlist', 'Date candidature', 'Relance prévue', 'Famille cible',
+  'Fit technique /100', 'Score décision /100', 'Priorité', 'Fraîcheur',
+  'Vérifié le', 'Qualité source', 'Niveau action', 'Fit calendrier', 'Confiance'
+];
+
+var LEVER_SOURCES_ = [
+  { site: 'ekimetrics', company: 'Ekimetrics' },
+  { site: 'malt', company: 'Malt' },
+  { site: 'foresea-technologies', company: 'OVRSEA' },
+  { site: 'equativ', company: 'Equativ' },
+  { site: 'dilitrust', company: 'DiliTrust' }
+];
+
+function isFranceLocation_(value) {
+  var text = normalizeComparable_(value);
+  if (!text) return false;
+  var franceTerms = [
+    'france', 'paris', 'nantes', 'lyon', 'toulouse', 'grenoble', 'bordeaux',
+    'lille', 'rennes', 'marseille', 'nice', 'sophia antipolis', 'montpellier',
+    'strasbourg', 'saclay', 'velizy', 'courbevoie', 'puteaux', 'la defense'
+  ];
+  return franceTerms.some(function (term) { return text.indexOf(term) !== -1; });
+}
+
+function isInternshipPosting_(posting) {
+  var text = normalizeComparable_([
+    posting.text,
+    posting.categories && posting.categories.commitment,
+    posting.categories && posting.categories.team,
+    posting.descriptionPlain
+  ].filter(Boolean).join(' '));
+  return ['internship', 'intern', 'stage', 'stagiaire'].some(function (term) {
+    return text.indexOf(term) !== -1;
+  });
+}
+
+function targetSignalScore_(posting) {
+  var text = normalizeComparable_([
+    posting.text,
+    posting.categories && posting.categories.team,
+    posting.categories && posting.categories.department,
+    posting.descriptionPlain
+  ].filter(Boolean).join(' '));
+
+  var weighted = [
+    ['computer vision', 5], ['image processing', 5], ['machine learning', 5],
+    ['deep learning', 5], ['data science', 5], ['artificial intelligence', 5],
+    ['generative ai', 5], ['ai engineer', 5], ['data engineer', 4],
+    ['signal processing', 5], ['robotics', 4], ['optimisation', 4],
+    ['optimization', 4], ['industrial', 3], ['quality', 3],
+    ['automation', 3], ['python', 2], ['pytorch', 3], ['opencv', 4],
+    ['research', 2], ['r&d', 2], ['analytics engineer', 3], ['data analyst', 2]
+  ];
+
+  return weighted.reduce(function (score, entry) {
+    return score + (text.indexOf(entry[0]) !== -1 ? entry[1] : 0);
+  }, 0);
+}
+
+function specializationForPosting_(posting) {
+  var text = normalizeComparable_([
+    posting.text,
+    posting.categories && posting.categories.team,
+    posting.descriptionPlain
+  ].filter(Boolean).join(' '));
+
+  if (text.indexOf('computer vision') !== -1 || text.indexOf('image processing') !== -1 || text.indexOf('opencv') !== -1) return 'Computer Vision / Image Processing';
+  if (text.indexOf('machine learning') !== -1 || text.indexOf('deep learning') !== -1 || text.indexOf('generative ai') !== -1 || text.indexOf('ai engineer') !== -1) return 'Machine Learning / AI';
+  if (text.indexOf('data science') !== -1 || text.indexOf('data scientist') !== -1) return 'Data Science';
+  if (text.indexOf('data engineer') !== -1 || text.indexOf('analytics engineer') !== -1) return 'Data Engineering / Analytics';
+  if (text.indexOf('signal') !== -1 || text.indexOf('audio') !== -1 || text.indexOf('speech') !== -1) return 'Signal / Audio';
+  if (text.indexOf('industrial') !== -1 || text.indexOf('quality') !== -1 || text.indexOf('automation') !== -1) return 'Industrial AI / Process';
+  return 'Data / AI';
+}
+
+function skillsForPosting_(posting) {
+  var text = normalizeComparable_([posting.text, posting.descriptionPlain].filter(Boolean).join(' '));
+  var known = [
+    ['Python', 'python'], ['PyTorch', 'pytorch'], ['TensorFlow', 'tensorflow'],
+    ['scikit-learn', 'scikit learn'], ['OpenCV', 'opencv'], ['SQL', 'sql'],
+    ['Computer Vision', 'computer vision'], ['Machine Learning', 'machine learning'],
+    ['Deep Learning', 'deep learning'], ['Data Science', 'data science'],
+    ['Git', 'git'], ['Docker', 'docker'], ['Azure', 'azure'], ['AWS', 'aws']
+  ];
+  return known.filter(function (entry) { return text.indexOf(entry[1]) !== -1; })
+    .map(function (entry) { return entry[0]; })
+    .slice(0, 8)
+    .join(', ');
+}
+
+function leverPostingToRow_(source, posting) {
+  var location = posting.categories && posting.categories.location ? posting.categories.location : '';
+  var team = posting.categories && (posting.categories.team || posting.categories.department)
+    ? (posting.categories.team || posting.categories.department)
+    : 'Data / AI';
+  var signalScore = targetSignalScore_(posting);
+  var technicalFit = Math.min(96, 65 + Math.min(signalScore, 31));
+  var decisionScore = Math.min(94, 63 + Math.min(signalScore, 31));
+  var priority = decisionScore >= 88 ? 'A' : decisionScore >= 80 ? 'B+' : 'B';
+  var published = posting.createdAt ? new Date(posting.createdAt) : new Date();
+  var verified = new Date();
+
+  return [
+    'lever:' + source.site + ':' + posting.id,
+    source.company,
+    posting.text || '',
+    team,
+    location,
+    null,
+    'Oui probable',
+    null,
+    '6 mois probable',
+    null,
+    skillsForPosting_(posting),
+    Utilities.formatDate(published, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    'Active',
+    'À candidater',
+    'Vérifier les conditions puis candidater',
+    posting.hostedUrl || posting.applyUrl || '',
+    false,
+    null,
+    null,
+    specializationForPosting_(posting),
+    technicalFit,
+    decisionScore,
+    priority,
+    'Vérifié <24h',
+    verified.toISOString(),
+    'Officiel / direct',
+    priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
+    'À confirmer',
+    signalScore >= 14 ? 'Haute' : 'Moyenne'
+  ];
+}
+
+function fetchLeverPostings_(source) {
+  var urls = [
+    'https://api.lever.co/v0/postings/' + encodeURIComponent(source.site) + '?mode=json',
+    'https://api.eu.lever.co/v0/postings/' + encodeURIComponent(source.site) + '?mode=json'
+  ];
+
+  for (var i = 0; i < urls.length; i += 1) {
+    try {
+      var response = UrlFetchApp.fetch(urls[i], {
+        method: 'get',
+        muteHttpExceptions: true,
+        headers: { Accept: 'application/json' }
+      });
+      if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) continue;
+      var payload = JSON.parse(response.getContentText());
+      if (Array.isArray(payload)) return payload;
+    } catch (error) {
+      console.warn('Lever source failed: ' + source.site + ' ' + error);
+    }
+  }
+  return [];
+}
+
+function syncLeverSources_() {
+  var spreadsheet = getSpreadsheet_();
+  var sheetName = 'Offres - Lever';
+  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+  var rows = [];
+
+  LEVER_SOURCES_.forEach(function (source) {
+    fetchLeverPostings_(source).forEach(function (posting) {
+      var location = posting.categories && posting.categories.location ? posting.categories.location : '';
+      if (!isFranceLocation_(location)) return;
+      if (!isInternshipPosting_(posting)) return;
+      if (targetSignalScore_(posting) < 5) return;
+      rows.push(leverPostingToRow_(source, posting));
+    });
+  });
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
+  sheet.setFrozenRows(1);
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
+  }
+
+  PropertiesService.getScriptProperties().setProperty('LEVER_LAST_SYNC', new Date().toISOString());
+  PropertiesService.getScriptProperties().setProperty('LEVER_LAST_COUNT', String(rows.length));
+  return rows.length;
+}
+
+function refreshExternalSourcesIfDue_() {
+  var properties = PropertiesService.getScriptProperties();
+  var lastSync = properties.getProperty('LEVER_LAST_SYNC');
+  var lastMs = lastSync ? Date.parse(lastSync) : 0;
+  var sixHours = 6 * 60 * 60 * 1000;
+  if (!lastMs || (Date.now() - lastMs) >= sixHours) {
+    try {
+      syncLeverSources_();
+    } catch (error) {
+      console.warn('External offer refresh failed: ' + error);
+    }
+  }
+}
+
+function syncExternalOfferSources() {
+  return {
+    lever: syncLeverSources_(),
+    syncedAt: new Date().toISOString()
+  };
+}
+
 function offerSourceSheets_(spreadsheet) {
   return spreadsheet.getSheets().filter(function (sheet) {
     var name = sheet.getName();
@@ -179,6 +391,7 @@ function dedupeOffersServerSide_(offers) {
 }
 
 function getOffers_() {
+  refreshExternalSourcesIfDue_();
   var spreadsheet = getSpreadsheet_();
   var sheets = offerSourceSheets_(spreadsheet);
   if (!sheets.length) throw new Error('No offer source sheet found');
