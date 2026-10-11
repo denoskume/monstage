@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 import { getCvMatch } from '../workspace/intelligence';
-import { ApplyCenter } from './ApplyCenter';
 
 function DetailItem({ label, value }: { label: string; value: string | number | null }) {
   if (value === null || value === '') return null;
@@ -33,10 +31,7 @@ export function OfferDetail({
   onShare: () => void;
 }) {
   const match = getCvMatch(offer);
-  const [applyOpen, setApplyOpen] = useState(false);
-
   return (
-    <>
     <article className="offer-detail card">
       {onBack ? <button className="mobile-back" type="button" onClick={onBack}>← Back to jobs</button> : null}
 
@@ -54,7 +49,7 @@ export function OfferDetail({
 
       <div className="offer-detail__actions offer-detail__actions--indeed">
         {offer.applicationUrl ? (
-          <button className="button button--primary button--large" type="button" onClick={() => setApplyOpen(true)}>Apply in MonStage</button>
+          <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a>
         ) : (
           <button className="button button--primary button--large" disabled>Application link unavailable</button>
         )}
@@ -120,7 +115,5 @@ export function OfferDetail({
         </section>
       ) : null}
     </article>
-      {applyOpen ? <ApplyCenter offer={offer} onClose={() => setApplyOpen(false)} /> : null}
-    </>
   );
 }
