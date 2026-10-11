@@ -6,6 +6,7 @@ export interface MonStagePreferences {
   onlyForMe: boolean;
   minScore: number;
   specialization: string | null;
+  industry: string | null;
   city: string | null;
   priority: string | null;
   freshness: string | null;
@@ -20,6 +21,7 @@ export const defaultPreferences: MonStagePreferences = {
   onlyForMe: true,
   minScore: 0,
   specialization: null,
+  industry: null,
   city: null,
   priority: null,
   freshness: null,
@@ -47,6 +49,7 @@ export function loadPreferences(): MonStagePreferences {
       onlyForMe: typeof parsed.onlyForMe === 'boolean' ? parsed.onlyForMe : defaultPreferences.onlyForMe,
       minScore: typeof parsed.minScore === 'number' && Number.isFinite(parsed.minScore) ? parsed.minScore : defaultPreferences.minScore,
       specialization: typeof parsed.specialization === 'string' ? parsed.specialization : null,
+      industry: typeof parsed.industry === 'string' ? parsed.industry : null,
       city: typeof parsed.city === 'string' ? parsed.city : null,
       priority: typeof parsed.priority === 'string' ? parsed.priority : null,
       freshness: typeof parsed.freshness === 'string' ? parsed.freshness : null,
