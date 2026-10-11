@@ -1,12 +1,37 @@
 import type { FormEvent } from 'react';
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
-import { industryOptions, uniqueValues } from './offerSelectors';
+import { industryOptions, offerIndustry, uniqueValues } from './offerSelectors';
 import type { OfferFilters } from './offerTypes';
 
 function SelectField({ name, label, value, onChange, options }: { name: string; label: string; value: string | null; onChange: (value: string | null) => void; options: string[] }) {
   return (
     <label className="filter-field"><span>{label}</span><select name={name} value={value ?? ''} onChange={(event: { target: { value: string } }) => onChange(event.target.value || null)}><option value="">All</option>{options.map((option) => <option key={option} value={option}>{displayValue(option)}</option>)}</select></label>
+  );
+}
+
+function IndustryField({ offers, value, onChange }: { offers: InternshipOffer[]; value: string | null; onChange: (value: string | null) => void }) {
+  const counts = new Map<string, number>();
+  offers.forEach((offer) => {
+    const industry = offerIndustry(offer);
+    counts.set(industry, (counts.get(industry) ?? 0) + 1);
+  });
+
+  const options = industryOptions
+    .map((industry) => ({ industry, count: counts.get(industry) ?? 0 }))
+    .filter((item) => item.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  return (
+    <label className="filter-field filter-field--industry">
+      <span>Industry</span>
+      <select name="industry" value={value ?? ''} onChange={(event: { target: { value: string } }) => onChange(event.target.value || null)}>
+        <option value="">All industries ({offers.length})</option>
+        {options.map(({ industry, count }) => (
+          <option key={industry} value={industry}>{industry} ({count})</option>
+        ))}
+      </select>
+    </label>
   );
 }
 
@@ -39,7 +64,7 @@ export function OfferFilters({ offers, filters, onChange, onReset, onClose, onAp
     <form className={`filters-panel${mobile ? ' filters-panel--mobile' : ''}`} onSubmit={submitFilters}>
       <div className="filters-panel__header"><div><strong>Filters</strong><span>Refine your results</span></div>{onClose ? <button type="button" aria-label="Close filters" onClick={onClose}>×</button> : null}</div>
       <div className="filters-grid">
-        <SelectField name="industry" label="Industry" value={filters.industry} onChange={(value) => onChange({ ...filters, industry: value })} options={industryOptions} />
+        <IndustryField offers={offers} value={filters.industry} onChange={(value) => onChange({ ...filters, industry: value })} />
         <SelectField name="specialization" label="Specialization" value={filters.specialization} onChange={(value) => onChange({ ...filters, specialization: value })} options={uniqueValues(offers, 'specialization')} />
         <SelectField name="city" label="City" value={filters.city} onChange={(value) => onChange({ ...filters, city: value })} options={uniqueValues(offers, 'city')} />
         <SelectField name="priority" label="Priority" value={filters.priority} onChange={(value) => onChange({ ...filters, priority: value })} options={['A+','A','B+','B']} />
