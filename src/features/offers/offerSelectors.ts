@@ -33,6 +33,51 @@ function normalize(value: string | null | undefined): string {
     .trim();
 }
 
+export type OfferIndustry =
+  | 'Aerospace & Space'
+  | 'Manufacturing & Industry 4.0'
+  | 'Automotive & Mobility'
+  | 'MedTech & Healthcare'
+  | 'Energy & Environment'
+  | 'IT, Data & AI'
+  | 'Telecom, Signal & Audio'
+  | 'Research & R&D'
+  | 'Other';
+
+export const industryOptions: OfferIndustry[] = [
+  'Aerospace & Space',
+  'Manufacturing & Industry 4.0',
+  'Automotive & Mobility',
+  'MedTech & Healthcare',
+  'Energy & Environment',
+  'IT, Data & AI',
+  'Telecom, Signal & Audio',
+  'Research & R&D',
+  'Other',
+];
+
+export function offerIndustry(offer: InternshipOffer): OfferIndustry {
+  const text = normalize([
+    offer.company,
+    offer.title,
+    offer.domain,
+    offer.specialization,
+    ...offer.skills,
+  ].filter(Boolean).join(' '));
+
+  const hasAny = (terms: string[]) => terms.some((term) => text.includes(normalize(term)));
+
+  if (hasAny(['airbus', 'safran', 'aeronaut', 'aerospace', 'spatial', 'space', 'satellite', 'avion', 'flight'])) return 'Aerospace & Space';
+  if (hasAny(['industrie', 'industrial', 'manufactur', 'production', 'usine', 'factory', 'qualite', 'quality', 'process', 'lean', 'maintenance', 'industrie 4.0'])) return 'Manufacturing & Industry 4.0';
+  if (hasAny(['automobile', 'automotive', 'vehicle', 'vehicule', 'adas', 'mobility', 'mobilite', 'rail', 'transport'])) return 'Automotive & Mobility';
+  if (hasAny(['medical', 'medtech', 'health', 'sante', 'biomedical', 'biomed', 'clinique', 'radiolog', 'imagerie medicale'])) return 'MedTech & Healthcare';
+  if (hasAny(['energy', 'energie', 'renewable', 'renouvelable', 'electric', 'grid', 'environment', 'environnement', 'climate'])) return 'Energy & Environment';
+  if (hasAny(['telecom', 'signal', 'audio', 'speech', 'acoustic', 'acoustique', 'communication'])) return 'Telecom, Signal & Audio';
+  if (hasAny(['research', 'recherche', 'r&d', 'innovation', 'laboratoire', 'laboratory', 'phd'])) return 'Research & R&D';
+  if (hasAny(['data', 'machine learning', 'deep learning', 'computer vision', 'vision', 'ia', 'ai', 'software', 'logiciel', 'python', 'pytorch'])) return 'IT, Data & AI';
+  return 'Other';
+}
+
 function textMatches(offer: InternshipOffer, query: string): boolean {
   const tokens = normalize(query).split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return true;
@@ -67,6 +112,7 @@ export function filterOffers(offers: InternshipOffer[], filters: OfferFilters): 
   return offers.filter((offer) => {
     if (!textMatches(offer, filters.query)) return false;
     if (!equalsNullable(offer.specialization, filters.specialization)) return false;
+    if (filters.industry !== null && offerIndustry(offer) !== filters.industry) return false;
     if (!equalsNullable(offer.city, filters.city)) return false;
     if (filters.priority !== null && normalize(offer.priority) !== normalize(filters.priority)) return false;
     if (filters.minScore > 0 && (offer.decisionScore === null || offer.decisionScore < filters.minScore)) return false;
