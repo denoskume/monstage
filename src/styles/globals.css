@@ -2045,3 +2045,76 @@ h1, h2, h3 { color: var(--text); }
     gap: 3px;
   }
 }
+
+
+/* Premium offer discovery cards */
+.offer-card__identity {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.offer-card__company-mark {
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, var(--surface), var(--surface-muted));
+  color: var(--text);
+  font-size: .78rem;
+  font-weight: 850;
+  letter-spacing: .02em;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+}
+.offer-card__identity-copy { min-width: 0; }
+.offer-card__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.offer-card__industry {
+  flex: 0 0 auto;
+  max-width: 52%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--text-subtle);
+  font-size: .67rem;
+  font-weight: 750;
+}
+.offer-card__skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.offer-card__skills span {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: .69rem;
+  line-height: 1;
+  font-weight: 650;
+}
+.offer-card--selected .offer-card__company-mark {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.offer-card--selected .offer-card__industry {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+@media (max-width: 560px) {
+  .offer-card__identity { grid-template-columns: 40px minmax(0, 1fr); gap: 10px; }
+  .offer-card__company-mark { width: 40px; height: 40px; border-radius: 10px; }
+  .offer-card__industry { display: none; }
+}
