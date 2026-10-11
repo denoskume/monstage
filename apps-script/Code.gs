@@ -343,16 +343,145 @@ function syncLeverSources_() {
   return rows.length;
 }
 
+
+var GREENHOUSE_SOURCES_ = [
+  { board: 'shifttechnology', company: 'Shift Technology' },
+  { board: 'artefactjobs', company: 'Artefact' },
+  { board: 'mirakllabs', company: 'Mirakl Labs' },
+  { board: 'mirakl', company: 'Mirakl' }
+];
+
+function stripHtml_(value) {
+  return String(value || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function fetchGreenhouseJobs_(source) {
+  var url = 'https://boards-api.greenhouse.io/v1/boards/' + encodeURIComponent(source.board) + '/jobs?content=true';
+  try {
+    var response = UrlFetchApp.fetch(url, {
+      method: 'get',
+      muteHttpExceptions: true,
+      headers: { Accept: 'application/json' }
+    });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) return [];
+    var payload = JSON.parse(response.getContentText());
+    return payload && Array.isArray(payload.jobs) ? payload.jobs : [];
+  } catch (error) {
+    console.warn('Greenhouse source failed: ' + source.board + ' ' + error);
+    return [];
+  }
+}
+
+function greenhouseAsTargetPosting_(job) {
+  return {
+    text: job.title || '',
+    descriptionPlain: stripHtml_(job.content || ''),
+    categories: {
+      location: job.location && job.location.name ? job.location.name : '',
+      team: ''
+    }
+  };
+}
+
+function greenhouseJobToRow_(source, job) {
+  var posting = greenhouseAsTargetPosting_(job);
+  var location = posting.categories.location || '';
+  var signalScore = targetSignalScore_(posting);
+  var technicalFit = Math.min(96, 65 + Math.min(signalScore, 31));
+  var decisionScore = Math.min(94, 63 + Math.min(signalScore, 31));
+  var priority = decisionScore >= 88 ? 'A' : decisionScore >= 80 ? 'B+' : 'B';
+  var updated = job.updated_at ? new Date(job.updated_at) : new Date();
+  var verified = new Date();
+
+  return [
+    'greenhouse:' + source.board + ':' + job.id,
+    source.company,
+    job.title || '',
+    specializationForPosting_(posting),
+    location,
+    null,
+    'Oui probable',
+    null,
+    '6 mois probable',
+    null,
+    skillsForPosting_(posting),
+    Utilities.formatDate(updated, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    'Active',
+    'À candidater',
+    'Vérifier les conditions puis candidater',
+    job.absolute_url || '',
+    false,
+    null,
+    null,
+    specializationForPosting_(posting),
+    technicalFit,
+    decisionScore,
+    priority,
+    'Vérifié <24h',
+    verified.toISOString(),
+    'Officiel / direct',
+    priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
+    'À confirmer',
+    signalScore >= 14 ? 'Haute' : 'Moyenne'
+  ];
+}
+
+function syncGreenhouseSources_() {
+  var spreadsheet = getSpreadsheet_();
+  var sheetName = 'Offres - Greenhouse';
+  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+  var rows = [];
+
+  GREENHOUSE_SOURCES_.forEach(function (source) {
+    fetchGreenhouseJobs_(source).forEach(function (job) {
+      var posting = greenhouseAsTargetPosting_(job);
+      var location = posting.categories.location || '';
+      if (!isFranceLocation_(location)) return;
+      if (!isInternshipPosting_(posting)) return;
+      if (targetSignalScore_(posting) < 5) return;
+      rows.push(greenhouseJobToRow_(source, job));
+    });
+  });
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
+  sheet.setFrozenRows(1);
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
+  }
+
+  PropertiesService.getScriptProperties().setProperty('GREENHOUSE_LAST_SYNC', new Date().toISOString());
+  PropertiesService.getScriptProperties().setProperty('GREENHOUSE_LAST_COUNT', String(rows.length));
+  return rows.length;
+}
+
 function refreshExternalSourcesIfDue_() {
   var properties = PropertiesService.getScriptProperties();
-  var lastSync = properties.getProperty('LEVER_LAST_SYNC');
-  var lastMs = lastSync ? Date.parse(lastSync) : 0;
   var sixHours = 6 * 60 * 60 * 1000;
-  if (!lastMs || (Date.now() - lastMs) >= sixHours) {
+  var leverLast = properties.getProperty('LEVER_LAST_SYNC');
+  var leverMs = leverLast ? Date.parse(leverLast) : 0;
+  var greenhouseLast = properties.getProperty('GREENHOUSE_LAST_SYNC');
+  var greenhouseMs = greenhouseLast ? Date.parse(greenhouseLast) : 0;
+
+  if (!leverMs || (Date.now() - leverMs) >= sixHours) {
     try {
       syncLeverSources_();
     } catch (error) {
-      console.warn('External offer refresh failed: ' + error);
+      console.warn('Lever refresh failed: ' + error);
+    }
+  }
+  if (!greenhouseMs || (Date.now() - greenhouseMs) >= sixHours) {
+    try {
+      syncGreenhouseSources_();
+    } catch (error) {
+      console.warn('Greenhouse refresh failed: ' + error);
     }
   }
 }
@@ -360,6 +489,7 @@ function refreshExternalSourcesIfDue_() {
 function syncExternalOfferSources() {
   return {
     lever: syncLeverSources_(),
+    greenhouse: syncGreenhouseSources_(),
     syncedAt: new Date().toISOString()
   };
 }
