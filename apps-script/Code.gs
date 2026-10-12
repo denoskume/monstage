@@ -685,7 +685,15 @@ function syncAshbySources_() {
 
 var SMARTRECRUITERS_SOURCES_ = [
   { companyId: 'SopraSteria1', company: 'Sopra Steria' },
-  { companyId: 'BoschGroup', company: 'Bosch Group' }
+  { companyId: 'BoschGroup', company: 'Bosch Group' },
+  { companyId: 'Eurofins', company: 'Eurofins' },
+  { companyId: 'veoliaenvironnementsa', company: 'Veolia' },
+  { companyId: 'alten', company: 'ALTEN' },
+  { companyId: 'GTT', company: 'GTT' },
+  { companyId: 'Sia', company: 'Sia' },
+  { companyId: 'ASSYSTEM', company: 'Assystem' },
+  { companyId: 'octotechnology', company: 'OCTO Technology' },
+  { companyId: 'Iliad-Free', company: 'Iliad-Free' }
 ];
 
 function smartRecruitersList_(source) {
