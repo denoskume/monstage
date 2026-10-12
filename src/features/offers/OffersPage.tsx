@@ -64,6 +64,8 @@ export function OffersPage() {
   const [mobileDetail, setMobileDetail] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [rankingInfoOpen, setRankingInfoOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [actionNotice, setActionNotice] = useState<{ text: string; offerId?: string } | null>(null);
   const actions = useOfferActions();
 
@@ -218,6 +220,23 @@ export function OffersPage() {
 
       {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) closeFilters(); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={offers} filters={draftFilters} onChange={setDraftFilters} onReset={() => setDraftFilters(resetFilters)} onClose={closeFilters} onApply={applyFilters} /></div></div> : null}
 
+      {rankingInfoOpen ? (
+        <div className="jobs-ranking-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRankingInfoOpen(false); }}>
+          <section className="jobs-ranking-dialog" role="dialog" aria-modal="true" aria-labelledby="jobs-ranking-title">
+            <button type="button" className="jobs-ranking-dialog__close" aria-label="Close" onClick={() => setRankingInfoOpen(false)}>×</button>
+            <h2 id="jobs-ranking-title">How ranking works</h2>
+            <p>
+              Job order is based on your active search and filters, then refined by MonStage relevance signals such as profile match,
+              priority, freshness and source quality.
+            </p>
+            <p>
+              Changing the sort option lets you prioritize the best match, newest opportunities, score, priority or city without changing
+              the underlying filtered results.
+            </p>
+          </section>
+        </div>
+      ) : null}
+
       {visibleOffers.length === 0 ? <EmptyState actionLabel="Reset filters" onAction={resetAll} /> : (
         <>
           <div className="jobs-results-header">
@@ -225,17 +244,51 @@ export function OffersPage() {
               <strong>{visibleOffers.length}</strong>
               <span>opportunities</span>
               <small>{pageStart}–{pageEnd}</small>
+              <button
+                type="button"
+                className="jobs-ranking-info"
+                aria-label="How job ranking works"
+                title="How job ranking works"
+                onClick={() => setRankingInfoOpen(true)}
+              >
+                i
+              </button>
             </div>
-            <label className="jobs-results-sort">
-              <span>Sort by</span>
-              <select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}>
-                <option value="best">Best match</option>
-                <option value="recent">Most recent</option>
-                <option value="score">Highest score</option>
-                <option value="priority">Priority</option>
-                <option value="city">City</option>
-              </select>
-            </label>
+
+            <div className="jobs-sort-menu">
+              <button
+                type="button"
+                className="jobs-sort-trigger"
+                aria-haspopup="menu"
+                aria-expanded={sortOpen}
+                onClick={() => setSortOpen((open) => !open)}
+              >
+                <span className="jobs-sort-trigger__icon" aria-hidden="true">⇅</span>
+                <span>{sortLabels[sort]}</span>
+                <span className="jobs-sort-trigger__chevron" aria-hidden="true">⌄</span>
+              </button>
+
+              {sortOpen ? (
+                <div className="jobs-sort-popover" role="menu" aria-label="Sort jobs">
+                  <strong>Sort by</strong>
+                  {(Object.entries(sortLabels) as Array<[SortMode, string]>).map(([value, label]) => (
+                    <label key={value} className="jobs-sort-option">
+                      <input
+                        type="radio"
+                        name="jobs-sort"
+                        value={value}
+                        checked={sort === value}
+                        onChange={() => {
+                          setSort(value);
+                          setSortOpen(false);
+                        }}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
             <div className="offers-list-pane"><OfferList offers={paginatedOffers} selectedKey={selectedOffer ? selectionKey(selectedOffer) : null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
