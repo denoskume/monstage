@@ -1,10 +1,23 @@
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 
-function relativePublishedDate(value: string | null): string | null {
-  if (!value) return null;
-  const published = new Date(value);
-  if (Number.isNaN(published.getTime())) return null;
+function parsePublishedDate(value: string): Date | null {
+  const trimmed = value.trim();
+  const frenchDate = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+.*)?$/);
+  if (frenchDate) {
+    const [, day, month, year] = frenchDate;
+    const parsed = new Date(Number(year), Number(month) - 1, Number(day));
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  const isoDate = new Date(trimmed);
+  return Number.isNaN(isoDate.getTime()) ? null : isoDate;
+}
+
+function relativePublishedDate(value: string | null): string {
+  if (!value) return 'Publication date unavailable';
+  const published = parsePublishedDate(value);
+  if (!published) return 'Publication date unavailable';
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -68,7 +81,7 @@ export function OfferCard({
             <div className="offer-card__facts">
               {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
               {offer.compensation ? <span>{offer.compensation}</span> : null}
-              {publishedLabel ? <span className="offer-card__published">{publishedLabel}</span> : null}
+              <span className="offer-card__published">{publishedLabel}</span>
             </div>
           </div>
         </div>
