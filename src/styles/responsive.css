@@ -851,3 +851,37 @@
     font-size: 1.54rem;
   }
 }
+
+
+/* Accent underline for offers count */
+.jobs-results-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-bottom: 7px;
+}
+.jobs-results-primary::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: #f59e0b;
+}
+.jobs-results-primary strong,
+.jobs-results-primary > span {
+  font-size: 1.8rem;
+  font-weight: 820;
+  line-height: 1;
+  letter-spacing: -.025em;
+  color: var(--text);
+}
+@media (max-width: 767px) {
+  .jobs-results-primary strong,
+  .jobs-results-primary > span {
+    font-size: 1.54rem;
+  }
+}
