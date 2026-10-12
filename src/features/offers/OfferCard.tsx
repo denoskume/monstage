@@ -1,41 +1,52 @@
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 
-function parsePublishedDate(value: string): Date | null {
-  const trimmed = value.trim();
-  const frenchDate = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+.*)?$/);
-  if (frenchDate) {
-    const [, day, month, year] = frenchDate;
-    const parsed = new Date(Number(year), Number(month) - 1, Number(day));
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
+type Publication = { date: Date; hasTime: boolean; dateLabel: string };
 
-  const isoDate = new Date(trimmed);
-  return Number.isNaN(isoDate.getTime()) ? null : isoDate;
+function parsePublishedDate(value: string | null): Publication | null {
+  if (!value) return null;
+  const valueText = value.trim();
+  const fr = valueText.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const iso = valueText.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/);
+  if (!fr && !iso) return null;
+  const year = Number(fr ? fr[3] : iso![1]);
+  const month = Number(fr ? fr[2] : iso![2]);
+  const day = Number(fr ? fr[1] : iso![3]);
+  const dateOnly = new Date(year, month - 1, day);
+  if (dateOnly.getFullYear() !== year || dateOnly.getMonth() !== month - 1 || dateOnly.getDate() !== day) return null;
+  const hasTime = Boolean(iso?.[4]);
+  const timestamp = hasTime ? new Date(valueText.replace(' ', 'T') + (iso?.[7] ? '' : 'Z')) : dateOnly;
+  if (Number.isNaN(timestamp.getTime()) || timestamp.getTime() > Date.now() + 86_400_000) return null;
+  return {
+    date: timestamp,
+    hasTime,
+    dateLabel: dateOnly.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
+  };
 }
 
-function relativePublishedDate(value: string | null): string {
-  if (!value) return 'Publication date unavailable';
-  const published = parsePublishedDate(value);
-  if (!published) return 'Publication date unavailable';
-
+function relativePublishedDate(publication: Publication | null): string {
+  if (!publication) return 'Date non communiquée';
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfPublished = new Date(published.getFullYear(), published.getMonth(), published.getDate());
-  const diffDays = Math.max(0, Math.floor((startOfToday.getTime() - startOfPublished.getTime()) / 86400000));
-
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-
-  const weeks = Math.floor(diffDays / 7);
-  if (diffDays < 30) return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
-
-  const months = Math.floor(diffDays / 30);
-  if (diffDays < 365) return months === 1 ? '1 month ago' : `${months} months ago`;
-
-  const years = Math.floor(diffDays / 365);
-  return years === 1 ? '1 year ago' : `${years} years ago`;
+  const { date, hasTime } = publication;
+  if (hasTime) {
+    const minutes = Math.max(0, Math.floor((now.getTime() - date.getTime()) / 60_000));
+    if (minutes < 1) return 'À l’instant';
+    if (minutes < 60) return 'Il y a ' + minutes + ' min';
+    if (minutes < 24 * 60) {
+      const hours = Math.floor(minutes / 60);
+      return 'Il y a ' + hours + ' heure' + (hours > 1 ? 's' : '');
+    }
+  }
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const publishedDay = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const days = Math.max(0, Math.round((today - publishedDay) / 86_400_000));
+  if (days === 0) return 'Aujourd’hui';
+  if (days === 1) return 'Hier';
+  if (days < 7) return 'Il y a ' + days + ' jours';
+  if (days < 30) return 'Il y a ' + Math.floor(days / 7) + ' semaine' + (days >= 14 ? 's' : '');
+  if (days < 365) return 'Il y a ' + Math.floor(days / 30) + ' mois';
+  const years = Math.floor(days / 365);
+  return 'Il y a ' + years + ' an' + (years > 1 ? 's' : '');
 }
 
 function Icon({ name }: { name: 'save' | 'hide' | 'share' }) {
@@ -62,11 +73,9 @@ export function OfferCard({
   onShare: () => void;
 }) {
   const meta = [offer.city, offer.region].filter(Boolean).join(', ');
-  const publishedLabel = relativePublishedDate(offer.publishedAt);
-  const publicationDate = offer.publishedAt ? parsePublishedDate(offer.publishedAt) : null;
-  const exactPublicationLabel = publicationDate
-    ? publicationDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    : null;
+  const publication = parsePublishedDate(offer.publishedAt);
+  const publishedLabel = relativePublishedDate(publication);
+  const exactPublicationLabel = publication?.dateLabel ?? null;
   const companyMark = offer.company
     .split(/\s+/)
     .filter(Boolean)
