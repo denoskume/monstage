@@ -105,6 +105,45 @@ jobs:
             echo "::error::Cloudflare backend bindings are incomplete. Required: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, APPS_SCRIPT_URL, APPS_SCRIPT_GATEWAY_SECRET."
             exit 1
           fi
+      - name: Probe public ATS feeds
+        if: steps.cloudflare.outputs.configured == 'true'
+        run: |
+          python - <<'PY'
+          import json, urllib.request, urllib.error
+
+          def get(name, url):
+              req=urllib.request.Request(url,headers={"Accept":"application/json","User-Agent":"Mozilla/5.0"})
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      body=json.loads(r.read().decode())
+                  print(name, "HTTP", r.status)
+                  print(name, json.dumps(body, ensure_ascii=False)[:1200])
+              except Exception as e:
+                  print(name, "ERROR", repr(e))
+
+          def post(name,url,payload):
+              req=urllib.request.Request(
+                  url,
+                  data=json.dumps(payload).encode(),
+                  headers={"Accept":"application/json","Content-Type":"application/json","User-Agent":"Mozilla/5.0"},
+                  method="POST",
+              )
+              try:
+                  with urllib.request.urlopen(req,timeout=30) as r:
+                      body=json.loads(r.read().decode())
+                  print(name, "HTTP", r.status, "total=", body.get("total"), "batch=", len(body.get("jobPostings") or []))
+                  print(name, json.dumps((body.get("jobPostings") or [])[:3], ensure_ascii=False)[:1800])
+              except Exception as e:
+                  print(name, "ERROR", repr(e))
+
+          post("WORKDAY_AIRBUS","https://ag.wd3.myworkdayjobs.com/wday/cxs/ag/Airbus/jobs",{
+              "appliedFacets":{},"limit":20,"offset":0,"searchText":"stage"
+          })
+          get("ASHBY_MISTRAL","https://api.ashbyhq.com/posting-api/job-board/mistral.ai?includeCompensation=true")
+          get("GREENHOUSE_SHIFT","https://boards-api.greenhouse.io/v1/boards/shifttechnology/jobs?content=true")
+          get("SMART_SOPRA","https://api.smartrecruiters.com/v1/companies/SopraSteria1/postings?limit=10&offset=0&country=fr")
+          PY
+
       - name: Install Worker dependencies
         if: steps.cloudflare.outputs.configured == 'true'
         run: npm --prefix worker install --no-audit --no-fund
