@@ -911,3 +911,17 @@
   line-height: 1;
   font-size: .6rem;
 }
+
+
+/* Reduce ranking info icon by 40% */
+.jobs-ranking-info {
+  box-sizing: border-box;
+  width: 11px;
+  min-width: 11px;
+  height: 11px;
+  min-height: 11px;
+  padding: 0;
+  margin-left: 6px;
+  line-height: 1;
+  font-size: .38rem;
+}
