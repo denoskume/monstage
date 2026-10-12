@@ -28,14 +28,15 @@ export function LoginPage({ denied }: { denied: boolean }) {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="auth-title">
-        <div className="auth-brand" aria-hidden="true">MS</div>
+        <h1 id="auth-title" className="auth-brand-wordmark" aria-label="MonStage">
+          MonSt<span className="brand__at" aria-hidden="true">@</span>ge
+        </h1>
         <p className="eyebrow">Private workspace</p>
-        <h1 id="auth-title">MonStage</h1>
         <p className="auth-subtitle">Private internship intelligence workspace</p>
 
         {denied ? (
           <div className="auth-message auth-message--denied" role="alert">
-            Access denied — This MonStage workspace is private.
+            Access denied — This MonSt@ge workspace is private.
           </div>
         ) : null}
 
@@ -43,7 +44,7 @@ export function LoginPage({ denied }: { denied: boolean }) {
 
         <div className="auth-google-button" ref={buttonRef} aria-busy={status === 'checking'} />
         {status === 'checking' ? <p className="auth-status">Verifying your Google account…</p> : null}
-        <p className="auth-footnote">Access is restricted to the authorized MonStage owner account.</p>
+        <p className="auth-footnote">Access is restricted to the authorized MonSt@ge owner account.</p>
       </section>
     </main>
   );
