@@ -132,6 +132,27 @@ function isRelevant(title: string): boolean {
   return TARGET_TERMS.some((term) => text.includes(normalize(term)));
 }
 
+function workdayPublishedAt(value: unknown): string | null {
+  const text = normalize(value);
+  if (!text) return null;
+
+  let daysAgo: number | null = null;
+  if (text === 'posted today' || text === 'today') daysAgo = 0;
+  else if (text === 'posted yesterday' || text === 'yesterday') daysAgo = 1;
+  else {
+    const match = text.match(/(?:posted\s+)?(\d+)\+?\s+days?\s+ago/);
+    if (match) daysAgo = Number(match[1]);
+  }
+
+  if (daysAgo === null || Number.isNaN(daysAgo)) return null;
+
+  const date = new Date();
+  date.setUTCHours(12, 0, 0, 0);
+  date.setUTCDate(date.getUTCDate() - daysAgo);
+  return date.toISOString().slice(0, 10);
+}
+
+
 function specialization(title: string): string {
   const t = normalize(title);
   if (t.includes('vision') || t.includes('image')) return 'Computer Vision / Image Processing';
@@ -239,6 +260,7 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
           title,
           city: String(job?.locationsText ?? '') || null,
           url: `${base}/en-US/${source.site}${path}`,
+          publishedAt: workdayPublishedAt(job?.postedOn),
         }));
       }
 
