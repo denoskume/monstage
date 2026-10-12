@@ -193,6 +193,11 @@ export function OffersPage() {
 
   return (
     <section className="page offers-page">
+      <header className="jobs-page-heading">
+        <h1>Explore internships</h1>
+        <p>Find the most relevant opportunities for your profile and February 2027 start.</p>
+      </header>
+
       <div className="jobs-search-shell">
         <div className="jobs-search-shell__controls">
           <SearchBar value={filters.query} onChange={(query) => setFilters({ ...filters, query })} placeholder="Job title, skill or company" />
@@ -217,8 +222,21 @@ export function OffersPage() {
       {visibleOffers.length === 0 ? <EmptyState actionLabel="Reset filters" onAction={resetAll} /> : (
         <>
           <div className="jobs-results-header">
-            <div><strong>{visibleOffers.length}</strong> opportunities <span className="jobs-results-range">· {pageStart}–{pageEnd}</span></div>
-            <span>{sortLabels[sort]}</span>
+            <div className="jobs-results-count">
+              <strong>{visibleOffers.length}</strong>
+              <span>opportunities</span>
+              <small>{pageStart}–{pageEnd}</small>
+            </div>
+            <label className="jobs-results-sort">
+              <span>Sort by</span>
+              <select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}>
+                <option value="best">Best match</option>
+                <option value="recent">Most recent</option>
+                <option value="score">Highest score</option>
+                <option value="priority">Priority</option>
+                <option value="city">City</option>
+              </select>
+            </label>
           </div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
             <div className="offers-list-pane"><OfferList offers={paginatedOffers} selectedKey={selectedOffer ? selectionKey(selectedOffer) : null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
