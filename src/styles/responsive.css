@@ -976,3 +976,9 @@
 .jobs-results-primary::before {
   content: none;
 }
+
+
+/* MonStage brand accent */
+.brand__at {
+  color: #dc2626;
+}
