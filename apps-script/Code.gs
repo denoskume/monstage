@@ -905,14 +905,35 @@ function fetchWorkdayJobs_(source) {
   return jobs;
 }
 
-function workdayAsTargetPosting_(job) {
+function fetchWorkdayDetails_(source, job) {
+  var path = normalizeText_(job && job.externalPath);
+  if (!path) return null;
+  var url = workdayBaseUrl_(source) + '/wday/cxs/' +
+    encodeURIComponent(source.tenant) + '/' + encodeURIComponent(source.site) + path;
+  try {
+    var response = UrlFetchApp.fetch(url, {
+      method: 'get',
+      muteHttpExceptions: true,
+      headers: { Accept: 'application/json' }
+    });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) return null;
+    var payload = JSON.parse(response.getContentText());
+    return payload && payload.jobPostingInfo ? payload.jobPostingInfo : null;
+  } catch (error) {
+    console.warn('Workday detail failed: ' + source.company + ' ' + path + ' ' + error);
+    return null;
+  }
+}
+
+function workdayAsTargetPosting_(job, details) {
+  details = details || {};
   return {
-    text: job.title || '',
-    descriptionPlain: '',
+    text: details.title || job.title || '',
+    descriptionPlain: stripHtml_(details.jobDescription || ''),
     categories: {
-      location: job.locationsText || '',
-      team: '',
-      department: ''
+      location: details.location || details.locationText || job.locationsText || '',
+      team: details.jobFamily || '',
+      department: details.jobFamilyGroup || ''
     }
   };
 }
@@ -934,8 +955,8 @@ function workdayPublishedDate_(job) {
   return new Date();
 }
 
-function workdayJobToRow_(source, job) {
-  var posting = workdayAsTargetPosting_(job);
+function workdayJobToRow_(source, job, details) {
+  var posting = workdayAsTargetPosting_(job, details);
   var fit = externalFitScores_(posting);
   var verified = new Date();
   var path = job.externalPath || '';
@@ -945,9 +966,9 @@ function workdayJobToRow_(source, job) {
   return [
     'workday:' + source.tenant + ':' + normalizeComparable_(path || job.title),
     source.company,
-    job.title || '',
+    posting.text || job.title || '',
     specializationForPosting_(posting),
-    job.locationsText || '',
+    posting.categories.location || job.locationsText || '',
     null,
     'Oui probable',
     fit.start,
@@ -983,11 +1004,15 @@ function syncWorkdaySources_() {
 
   WORKDAY_SOURCES_.forEach(function (source) {
     fetchWorkdayJobs_(source).forEach(function (job) {
-      var posting = workdayAsTargetPosting_(job);
-      if (!isFranceLocation_(posting.categories.location)) return;
+      var listPosting = workdayAsTargetPosting_(job, null);
+      if (!isFranceLocation_(listPosting.categories.location)) return;
       if (!isWorkdayInternship_(job)) return;
+
+      var details = fetchWorkdayDetails_(source, job);
+      var posting = workdayAsTargetPosting_(job, details);
+      if (!isFranceLocation_(posting.categories.location)) return;
       if (targetSignalScore_(posting) < 5) return;
-      rows.push(workdayJobToRow_(source, job));
+      rows.push(workdayJobToRow_(source, job, details));
     });
   });
 
@@ -1003,9 +1028,24 @@ function syncWorkdaySources_() {
   return rows.length;
 }
 
+
+function externalSourceConfigSignature_() {
+  return [
+    LEVER_SOURCES_.map(function (source) { return source.site; }).join(','),
+    GREENHOUSE_SOURCES_.map(function (source) { return source.board; }).join(','),
+    ASHBY_SOURCES_.map(function (source) { return source.board; }).join(','),
+    SMARTRECRUITERS_SOURCES_.map(function (source) { return source.companyId; }).join(','),
+    WORKDAY_SOURCES_.map(function (source) {
+      return source.tenant + ':' + source.host + ':' + source.site;
+    }).join(',')
+  ].join('|');
+}
+
 function refreshExternalSourcesIfDue_() {
   var properties = PropertiesService.getScriptProperties();
   var sixHours = 6 * 60 * 60 * 1000;
+  var sourceConfigSignature = externalSourceConfigSignature_();
+  var sourceConfigChanged = properties.getProperty('EXTERNAL_SOURCE_CONFIG_SIGNATURE') !== sourceConfigSignature;
   var leverLast = properties.getProperty('LEVER_LAST_SYNC');
   var leverMs = leverLast ? Date.parse(leverLast) : 0;
   var greenhouseLast = properties.getProperty('GREENHOUSE_LAST_SYNC');
@@ -1017,40 +1057,44 @@ function refreshExternalSourcesIfDue_() {
   var workdayLast = properties.getProperty('WORKDAY_LAST_SYNC');
   var workdayMs = workdayLast ? Date.parse(workdayLast) : 0;
 
-  if (!leverMs || (Date.now() - leverMs) >= sixHours) {
+  if (sourceConfigChanged || !leverMs || (Date.now() - leverMs) >= sixHours) {
     try {
       syncLeverSources_();
     } catch (error) {
       console.warn('Lever refresh failed: ' + error);
     }
   }
-  if (!greenhouseMs || (Date.now() - greenhouseMs) >= sixHours) {
+  if (sourceConfigChanged || !greenhouseMs || (Date.now() - greenhouseMs) >= sixHours) {
     try {
       syncGreenhouseSources_();
     } catch (error) {
       console.warn('Greenhouse refresh failed: ' + error);
     }
   }
-  if (!ashbyMs || (Date.now() - ashbyMs) >= sixHours) {
+  if (sourceConfigChanged || !ashbyMs || (Date.now() - ashbyMs) >= sixHours) {
     try {
       syncAshbySources_();
     } catch (error) {
       console.warn('Ashby refresh failed: ' + error);
     }
   }
-  if (!smartRecruitersMs || (Date.now() - smartRecruitersMs) >= sixHours) {
+  if (sourceConfigChanged || !smartRecruitersMs || (Date.now() - smartRecruitersMs) >= sixHours) {
     try {
       syncSmartRecruitersSources_();
     } catch (error) {
       console.warn('SmartRecruiters refresh failed: ' + error);
     }
   }
-  if (!workdayMs || (Date.now() - workdayMs) >= sixHours) {
+  if (sourceConfigChanged || !workdayMs || (Date.now() - workdayMs) >= sixHours) {
     try {
       syncWorkdaySources_();
     } catch (error) {
       console.warn('Workday refresh failed: ' + error);
     }
+  }
+
+  if (sourceConfigChanged) {
+    properties.setProperty('EXTERNAL_SOURCE_CONFIG_SIGNATURE', sourceConfigSignature);
   }
 }
 
