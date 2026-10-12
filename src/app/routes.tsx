@@ -10,6 +10,7 @@ import { StudioPage } from '../features/studio/StudioPage';
 import { MessagesPage } from '../features/messages/MessagesPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { AppShell } from './AppShell';
+import { InfoPage } from '../features/info/InfoPage';
 
 export function AppRoutes() {
   return (
@@ -26,6 +27,10 @@ export function AppRoutes() {
         <Route path="/cv" element={<CvStudioPage />} />
         <Route path="/cl" element={<ClStudioPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/sitemap" element={<InfoPage kind="sitemap" />} />
+        <Route path="/accessibility" element={<InfoPage kind="accessibility" />} />
+        <Route path="/privacy" element={<InfoPage kind="privacy" />} />
+        <Route path="/legal" element={<InfoPage kind="legal" />} />
         <Route path="*" element={<Navigate to="/offers" replace />} />
       </Route>
     </Routes>
