@@ -86,9 +86,22 @@ const SMART_SOURCES: SmartSource[] = [
 const WORKDAY_SEARCHES = ['stage'];
 
 const WORKDAY_FOCUSED_SEARCHES: Record<string, string[]> = {
-  Airbus: ['stage data', 'stage machine learning'],
+  Airbus: ['stage data', 'stage machine learning', 'stage vision'],
   Thales: ['stage data', 'stage intelligence artificielle'],
   'SNCF Connect & Tech': ['stage data'],
+  'Renault Group': ['stage data'],
+  'Air Liquide': ['stage data'],
+};
+
+const WORKDAY_GENERIC_PAGES: Record<string, number> = {
+  Airbus: 5,
+  Thales: 2,
+  'SNCF Connect & Tech': 2,
+  'Renault Group': 2,
+  'Air Liquide': 2,
+  'Pernod Ricard': 1,
+  Pfizer: 1,
+  'Integral Ad Science': 1,
 };
 
 const TARGET_TERMS = [
@@ -235,7 +248,7 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
   }
 
   for (const searchText of WORKDAY_SEARCHES) {
-    await collect(searchText, source.company === 'Airbus' ? 5 : 2);
+    await collect(searchText, WORKDAY_GENERIC_PAGES[source.company] ?? 1);
   }
 
   for (const searchText of WORKDAY_FOCUSED_SEARCHES[source.company] ?? []) {
