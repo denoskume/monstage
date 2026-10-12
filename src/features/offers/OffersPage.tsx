@@ -210,7 +210,7 @@ export function OffersPage() {
             <button type="button" className={'quick-filter' + (filters.onlyForMe ? ' active' : '')} aria-pressed={filters.onlyForMe} onClick={() => setFilters({ ...filters, onlyForMe: !filters.onlyForMe })}>Recommended for me</button>
             {activeFilterSummary.filter((label) => label !== 'Recommended for me').map((label) => <span className="quick-filter active" key={label}>{label}</span>)}
           </div>
-
+          <label className="jobs-sort"><span>Sort by</span><select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}><option value="best">Best match</option><option value="recent">Most recent</option><option value="score">Highest score</option><option value="priority">Priority</option><option value="city">City</option></select></label>
         </div>
       </div>
 
@@ -227,16 +227,6 @@ export function OffersPage() {
               <span>opportunities</span>
               <small>{pageStart}–{pageEnd}</small>
             </div>
-            <label className="jobs-results-sort">
-              <span>Sort by</span>
-              <select value={sort} onChange={(event: { target: { value: string } }) => setSort(event.target.value as SortMode)}>
-                <option value="best">Best match</option>
-                <option value="recent">Most recent</option>
-                <option value="score">Highest score</option>
-                <option value="priority">Priority</option>
-                <option value="city">City</option>
-              </select>
-            </label>
           </div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
             <div className="offers-list-pane"><OfferList offers={paginatedOffers} selectedKey={selectedOffer ? selectionKey(selectedOffer) : null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
