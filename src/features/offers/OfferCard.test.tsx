@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, vi } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
 import { OfferCard } from './OfferCard';
 
@@ -6,6 +7,15 @@ const offer: InternshipOffer = {
   id: '1', company: 'Assystem', title: 'Ingénieur Data Science - Vision par ordinateur - Stage H/F', domain: 'Computer Vision', city: 'Courbevoie', region: 'Île-de-France',
   m2Fit: 'Oui probable', start: 'PFE / à confirmer', duration: '6 mois', compensation: '1 300 €/mois', skills: ['Python','Computer Vision'], publishedAt: '2026-09-15', offerStatus: 'Active', applicationStatus: 'À candidater', nextAction: 'Candidater', applicationUrl: 'https://example.com', shortlist: true, appliedAt: null, followUpAt: null, specialization: 'Computer Vision / 3D', technicalFit: 98, decisionScore: 100, priority: 'A+', freshness: 'Vérifié <24h', verifiedAt: '15/09/2026 05:16:28', sourceQuality: 'Officiel / direct', actionLevel: 'CANDIDATER 24H', calendarFit: '✅ Probable', confidence: 'Haute', relevance: null, gaps: null,
 };
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-10-12T12:00:00Z'));
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 test('renders a concise job-card summary and actions', () => {
   render(
@@ -25,6 +35,7 @@ test('renders a concise job-card summary and actions', () => {
   expect(screen.getByText('1 300 €/mois')).toBeInTheDocument();
   expect(screen.getByText('100% match')).toBeInTheDocument();
   expect(screen.getByText('Verified <24h')).toBeInTheDocument();
+  expect(screen.getByText('3 weeks ago')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Remove from saved jobs' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Not interested' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Share job' })).toBeInTheDocument();
