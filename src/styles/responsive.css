@@ -897,3 +897,17 @@
   margin-left: 6px;
   font-size: .62rem;
 }
+
+
+/* Force actual outer size for ranking info icon */
+.jobs-ranking-info {
+  box-sizing: border-box;
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  margin-left: 6px;
+  line-height: 1;
+  font-size: .6rem;
+}
