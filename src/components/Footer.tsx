@@ -52,7 +52,7 @@ export function Footer() {
       </div>
 
       <div className="site-footer__bottom">
-        <span>© {year} MonSt<span className="brand__at">@</span>ge</span>
+        <span>© {year} <span className="site-footer__copyright-brand">MonSt<span className="brand__at">@</span>ge</span></span>
         <span>Private candidate workspace</span>
         <button type="button" onClick={scrollToTop} aria-label="Back to top" title="Back to top">↑</button>
       </div>
