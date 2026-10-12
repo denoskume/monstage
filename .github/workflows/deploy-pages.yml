@@ -84,7 +84,7 @@ jobs:
   deploy-worker:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, deploy-apps-script]
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -149,7 +149,16 @@ jobs:
                   if not isinstance(body.get("generatedAt"), str):
                       raise RuntimeError("Apps Script backend did not return generatedAt")
 
+                  diagnostics = body.get("sourceDiagnostics") or {}
                   print(f"Apps Script offers backend is healthy on attempt {attempt}")
+                  print(f"Offers total: {len(body['offers'])}")
+                  print("Source counts: " + json.dumps({
+                      "lever": diagnostics.get("lever", 0),
+                      "greenhouse": diagnostics.get("greenhouse", 0),
+                      "ashby": diagnostics.get("ashby", 0),
+                      "smartRecruiters": diagnostics.get("smartRecruiters", 0),
+                      "workday": diagnostics.get("workday", 0),
+                  }, sort_keys=True))
                   break
               except (TimeoutError, urllib.error.URLError, urllib.error.HTTPError, RuntimeError, json.JSONDecodeError) as error:
                   last_error = error
