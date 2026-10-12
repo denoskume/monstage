@@ -32,7 +32,7 @@ function initialFilters(): OfferFilterState {
 
 const resetFilters: OfferFilterState = { query: '', specialization: null, industry: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
 const sortLabels: Record<SortMode, string> = { best: 'Best match', recent: 'Most recent', score: 'Highest score', priority: 'Priority', city: 'City' };
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 function paginationItems(currentPage: number, totalPages: number): Array<number | 'ellipsis'> {
   if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
