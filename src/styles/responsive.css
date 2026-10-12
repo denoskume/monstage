@@ -5,7 +5,7 @@
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.03em; font-size: 1.18rem; white-space: nowrap; }
 .brand__mark { width: 34px; height: 34px; border-radius: 11px; background: var(--accent); color: white; display: grid; place-items: center; font-size: .88rem; box-shadow: 0 7px 18px color-mix(in srgb, var(--accent) 22%, transparent); }
 .top-nav__links { display: flex; align-items: center; gap: 4px; }
-.nav-link { padding: 10px 12px; color: var(--text-muted); font-weight: 650; border-radius: 10px; transition: .16s ease; }
+.nav-link { padding: 10px 12px; color: var(--text-muted); font-size: 1.4rem; font-weight: 650; border-radius: 10px; transition: .16s ease; }
 .nav-link:hover { color: var(--text); background: var(--surface-muted); }
 .nav-link.active { color: var(--accent); background: var(--accent-soft); }
 .top-nav__meta { margin-left: auto; color: var(--text-muted); font-size: .86rem; }
