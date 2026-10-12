@@ -74,7 +74,7 @@ button:disabled { cursor: not-allowed; opacity: .6; }
 .offer-card__company { color: var(--text-muted); font-size: .83rem; font-weight: 720; }
 .offer-card__company-row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px; }
 .offer-card__company-row .offer-card__company { margin:0; }
-.offer-card__published { flex:0 0 auto; padding:3px 7px; border-radius:999px; background:var(--surface-muted); color:var(--text-muted); font-size:.72rem; font-weight:750; line-height:1.2; white-space:nowrap; }
+.offer-card__published { flex:0 0 auto; padding:5px 8px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-size:.78rem; font-weight:800; line-height:1.2; white-space:nowrap; }
 .offer-card__star { color: #e5a300; font-size: 1.1rem; }
 .offer-card__title { font-size: 1.02rem; line-height: 1.34; letter-spacing: -.018em; margin-bottom: 8px; }
 .offer-card__meta { min-width: 0; display: flex; flex-wrap: wrap; gap: 5px; color: var(--text-muted); font-size: .83rem; margin-bottom: 12px; }
