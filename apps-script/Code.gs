@@ -836,7 +836,12 @@ function syncSmartRecruitersSources_() {
 var WORKDAY_SOURCES_ = [
   { tenant: 'ag', host: 'wd3', site: 'Airbus', company: 'Airbus' },
   { tenant: 'thales', host: 'wd3', site: 'Careers', company: 'Thales' },
-  { tenant: 'evoyageurs', host: 'wd3', site: 'jobs', company: 'SNCF Connect & Tech' }
+  { tenant: 'evoyageurs', host: 'wd3', site: 'jobs', company: 'SNCF Connect & Tech' },
+  { tenant: 'pernodricard', host: 'wd3', site: 'pernod-ricard', company: 'Pernod Ricard' },
+  { tenant: 'pfizer', host: 'wd1', site: 'PfizerCareers', company: 'Pfizer' },
+  { tenant: 'airliquidehr', host: 'wd3', site: 'AirLiquideExternalCareer', company: 'Air Liquide' },
+  { tenant: 'alliancewd', host: 'wd3', site: 'renault-group-careers', company: 'Renault Group' },
+  { tenant: 'integralads', host: 'wd1', site: 'IAScareers', company: 'Integral Ad Science' }
 ];
 
 function workdayBaseUrl_(source) {
