@@ -970,3 +970,9 @@
   margin-left: 2px;
   transform: translateY(0);
 }
+
+
+/* Remove offers count accent */
+.jobs-results-primary::before {
+  content: none;
+}
