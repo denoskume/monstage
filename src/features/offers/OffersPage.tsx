@@ -32,6 +32,23 @@ function initialFilters(): OfferFilterState {
 
 const resetFilters: OfferFilterState = { query: '', specialization: null, industry: null, city: null, priority: null, minScore: 0, freshness: null, m2Fit: null, sourceQuality: null, applicationStatus: null, onlyForMe: false };
 const sortLabels: Record<SortMode, string> = { best: 'Best match', recent: 'Most recent', score: 'Highest score', priority: 'Priority', city: 'City' };
+const PAGE_SIZE = 20;
+
+function paginationItems(currentPage: number, totalPages: number): Array<number | 'ellipsis'> {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+  const normalized = [...pages].filter((page) => page >= 1 && page <= totalPages).sort((a, b) => a - b);
+  const items: Array<number | 'ellipsis'> = [];
+
+  normalized.forEach((page, index) => {
+    const previous = normalized[index - 1];
+    if (previous && page - previous > 1) items.push('ellipsis');
+    items.push(page);
+  });
+
+  return items;
+}
 
 function selectionKey(offer: InternshipOffer): string {
   return offerIdentity(offer);
@@ -46,6 +63,7 @@ export function OffersPage() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [actionNotice, setActionNotice] = useState<{ text: string; offerId?: string } | null>(null);
   const actions = useOfferActions();
 
@@ -62,7 +80,23 @@ export function OffersPage() {
     () => sortOffers(filteredOffers, sort),
     [filteredOffers, sort],
   );
-  const selectedOffer = visibleOffers.find((offer) => selectionKey(offer) === selectedKey) ?? visibleOffers[0] ?? null;
+  const totalPages = Math.max(1, Math.ceil(visibleOffers.length / PAGE_SIZE));
+  const paginatedOffers = useMemo(
+    () => visibleOffers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [visibleOffers, currentPage],
+  );
+  const selectedOffer = paginatedOffers.find((offer) => selectionKey(offer) === selectedKey) ?? paginatedOffers[0] ?? null;
+  const pageStart = visibleOffers.length ? ((currentPage - 1) * PAGE_SIZE) + 1 : 0;
+  const pageEnd = Math.min(currentPage * PAGE_SIZE, visibleOffers.length);
+
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setMobileDetail(false);
+  }, [filters, sort]);
 
   useEffect(() => {
     if (selectedOffer && selectionKey(selectedOffer) !== selectedKey) setSelectedKey(selectionKey(selectedOffer));
@@ -182,11 +216,49 @@ export function OffersPage() {
 
       {visibleOffers.length === 0 ? <EmptyState actionLabel="Reset filters" onAction={resetAll} /> : (
         <>
-          <div className="jobs-results-header"><div><strong>{visibleOffers.length}</strong> opportunities</div><span>{sortLabels[sort]}</span></div>
+          <div className="jobs-results-header">
+            <div><strong>{visibleOffers.length}</strong> opportunities <span className="jobs-results-range">· {pageStart}–{pageEnd}</span></div>
+            <span>{sortLabels[sort]}</span>
+          </div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
-            <div className="offers-list-pane"><OfferList offers={visibleOffers} selectedKey={selectedOffer ? selectionKey(selectedOffer) : null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
+            <div className="offers-list-pane"><OfferList offers={paginatedOffers} selectedKey={selectedOffer ? selectionKey(selectedOffer) : null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
             <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} onBack={() => setMobileDetail(false)} saved={actions.isSaved(selectedOffer.id, selectedOffer.shortlist)} onToggleSave={() => toggleSaved(selectedOffer)} onHide={() => hideOffer(selectedOffer)} onShare={() => void shareOffer(selectedOffer)} /> : null}</div>
           </div>
+          {totalPages > 1 ? (
+            <nav className="jobs-pagination" aria-label="Jobs pagination">
+              <button
+                type="button"
+                className="jobs-pagination__nav"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              >
+                Previous
+              </button>
+              <div className="jobs-pagination__pages">
+                {paginationItems(currentPage, totalPages).map((item, index) => item === 'ellipsis' ? (
+                  <span key={'ellipsis-' + index} className="jobs-pagination__ellipsis" aria-hidden="true">…</span>
+                ) : (
+                  <button
+                    key={item}
+                    type="button"
+                    className={'jobs-pagination__page' + (item === currentPage ? ' is-active' : '')}
+                    aria-current={item === currentPage ? 'page' : undefined}
+                    onClick={() => setCurrentPage(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="jobs-pagination__nav"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              >
+                Next
+              </button>
+            </nav>
+          ) : null}
         </>
       )}
     </section>
