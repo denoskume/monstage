@@ -70,7 +70,7 @@ function scoreSkills(offer: InternshipOffer): { score: number; matched: string[]
   const missing = required.filter((skill) => !skillMatch(skill));
 
   if (!required.length) {
-    return { score: 50, matched: [], missing: [] };
+    return { score: 35, matched: [], missing: [] };
   }
 
   return {
@@ -91,7 +91,7 @@ function scoreProjects(offer: InternshipOffer): { score: number; alignedProjects
     .sort((a, b) => b.hits - a.hits);
 
   const alignedProjects = ranked.slice(0, 2).map((project) => project.name);
-  if (!ranked.length) return { score: 20, alignedProjects: [] };
+  if (!ranked.length) return { score: 10, alignedProjects: [] };
 
   const best = ranked[0].hits;
   const second = ranked[1]?.hits ?? 0;
@@ -125,15 +125,15 @@ function scoreExperience(offer: InternshipOffer): number {
 function scoreDomain(offer: InternshipOffer): number {
   const corpus = offerCorpus(offer);
   const hits = builtInCvProfile.target.domains.filter((domain) => corpus.includes(normalize(domain))).length;
-  if (hits >= 2) return 100;
-  if (hits === 1) return 90;
+  if (hits >= 2) return 96;
+  if (hits === 1) return 84;
 
   const technical = offer.technicalFit;
-  return technical === null ? 45 : clampScore(technical);
+  return technical === null ? 35 : clampScore(Math.min(82, technical));
 }
 
 function scoreConstraints(offer: InternshipOffer): number {
-  let score = 50;
+  let score = 35;
 
   const duration = normalize(offer.duration ?? '');
   if (duration.includes('6 mois') || duration.includes('6 months') || duration.includes('6 month')) score += 30;
@@ -164,11 +164,11 @@ export function getBuiltInCvMatch(offer: InternshipOffer): CvMatch {
   };
 
   const score = clampScore(
-    (breakdown.skills * 0.35) +
-    (breakdown.projects * 0.25) +
-    (breakdown.education * 0.15) +
-    (breakdown.experience * 0.10) +
-    (breakdown.domain * 0.10) +
+    (breakdown.skills * 0.38) +
+    (breakdown.projects * 0.24) +
+    (breakdown.education * 0.12) +
+    (breakdown.experience * 0.09) +
+    (breakdown.domain * 0.12) +
     (breakdown.constraints * 0.05),
   );
 
