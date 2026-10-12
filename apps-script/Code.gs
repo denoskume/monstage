@@ -167,7 +167,10 @@ var LEVER_SOURCES_ = [
   { site: 'malt', company: 'Malt' },
   { site: 'foresea-technologies', company: 'OVRSEA' },
   { site: 'equativ', company: 'Equativ' },
-  { site: 'dilitrust', company: 'DiliTrust' }
+  { site: 'dilitrust', company: 'DiliTrust' },
+  { site: 'scaleway', company: 'Scaleway' },
+  { site: 'veepee', company: 'Veepee' },
+  { site: 'scality', company: 'Scality' }
 ];
 
 function isFranceLocation_(value) {
@@ -194,6 +197,7 @@ function isInternshipPosting_(posting) {
 }
 
 function targetSignalScore_(posting) {
+  var title = normalizeComparable_(posting.text);
   var text = normalizeComparable_([
     posting.text,
     posting.categories && posting.categories.team,
@@ -202,18 +206,82 @@ function targetSignalScore_(posting) {
   ].filter(Boolean).join(' '));
 
   var weighted = [
-    ['computer vision', 5], ['image processing', 5], ['machine learning', 5],
-    ['deep learning', 5], ['data science', 5], ['artificial intelligence', 5],
-    ['generative ai', 5], ['ai engineer', 5], ['data engineer', 4],
-    ['signal processing', 5], ['robotics', 4], ['optimisation', 4],
-    ['optimization', 4], ['industrial', 3], ['quality', 3],
-    ['automation', 3], ['python', 2], ['pytorch', 3], ['opencv', 4],
-    ['research', 2], ['r&d', 2], ['analytics engineer', 3], ['data analyst', 2]
+    ['computer vision', 12], ['image processing', 11], ['signal processing', 11],
+    ['machine learning', 10], ['deep learning', 10], ['data science', 9],
+    ['artificial intelligence', 8], ['generative ai', 8], ['ai engineer', 9],
+    ['robotics', 8], ['optimisation', 7], ['optimization', 7],
+    ['industrial ai', 8], ['quality', 4], ['automation', 4],
+    ['data engineer', 5], ['analytics engineer', 4], ['data analyst', 2],
+    ['python', 2], ['pytorch', 4], ['opencv', 6], ['scikit learn', 3],
+    ['research', 3], ['r&d', 4]
   ];
 
-  return weighted.reduce(function (score, entry) {
-    return score + (text.indexOf(entry[0]) !== -1 ? entry[1] : 0);
+  var score = weighted.reduce(function (total, entry) {
+    return total + (text.indexOf(entry[0]) !== -1 ? entry[1] : 0);
   }, 0);
+
+  var titleBoosts = [
+    ['computer vision', 8], ['image', 5], ['machine learning', 7],
+    ['data scientist', 6], ['ai engineer', 7], ['signal', 7],
+    ['robotics', 6], ['r&d', 4]
+  ];
+  score += titleBoosts.reduce(function (total, entry) {
+    return total + (title.indexOf(entry[0]) !== -1 ? entry[1] : 0);
+  }, 0);
+
+  return score;
+}
+
+function extractStartFromPosting_(posting) {
+  var text = normalizeComparable_([posting.text, posting.descriptionPlain].filter(Boolean).join(' '));
+  if (text.indexOf('february 2027') !== -1 || text.indexOf('fevrier 2027') !== -1) return 'Février 2027';
+  if (text.indexOf('january 2027') !== -1 || text.indexOf('janvier 2027') !== -1) return 'Janvier 2027';
+  if (text.indexOf('march 2027') !== -1 || text.indexOf('mars 2027') !== -1) return 'Mars 2027';
+  if (text.indexOf('2027') !== -1) return '2027';
+  return null;
+}
+
+function extractDurationFromPosting_(posting) {
+  var text = normalizeComparable_([posting.text, posting.descriptionPlain].filter(Boolean).join(' '));
+  if (text.indexOf('6 months') !== -1 || text.indexOf('6 month') !== -1 || text.indexOf('6 mois') !== -1) return '6 mois';
+  if (text.indexOf('5 months') !== -1 || text.indexOf('5 mois') !== -1) return '5 mois';
+  if (text.indexOf('4 months') !== -1 || text.indexOf('4 mois') !== -1) return '4 mois';
+  return null;
+}
+
+function externalFitScores_(posting) {
+  var signal = targetSignalScore_(posting);
+  var specialization = specializationForPosting_(posting);
+  var start = extractStartFromPosting_(posting);
+  var duration = extractDurationFromPosting_(posting);
+
+  var specializationBonus = {
+    'Computer Vision / Image Processing': 18,
+    'Signal / Audio': 17,
+    'Machine Learning / AI': 15,
+    'Data Science': 13,
+    'Industrial AI / Process': 11,
+    'Data Engineering / Analytics': 6,
+    'Data / AI': 2
+  }[specialization] || 0;
+
+  var calendarBonus = 0;
+  if (start === 'Février 2027') calendarBonus += 8;
+  else if (start && start.indexOf('2027') !== -1) calendarBonus += 4;
+  if (duration === '6 mois') calendarBonus += 6;
+
+  var technicalFit = Math.max(50, Math.min(96, 48 + Math.min(signal, 30) + specializationBonus));
+  var decisionScore = Math.max(45, Math.min(94, 42 + Math.min(signal, 28) + specializationBonus + calendarBonus));
+
+  return {
+    signal: signal,
+    specialization: specialization,
+    start: start,
+    duration: duration,
+    technicalFit: technicalFit,
+    decisionScore: decisionScore,
+    priority: decisionScore >= 88 ? 'A' : decisionScore >= 80 ? 'B+' : decisionScore >= 70 ? 'B' : 'C'
+  };
 }
 
 function specializationForPosting_(posting) {
@@ -252,10 +320,11 @@ function leverPostingToRow_(source, posting) {
   var team = posting.categories && (posting.categories.team || posting.categories.department)
     ? (posting.categories.team || posting.categories.department)
     : 'Data / AI';
-  var signalScore = targetSignalScore_(posting);
-  var technicalFit = Math.min(96, 65 + Math.min(signalScore, 31));
-  var decisionScore = Math.min(94, 63 + Math.min(signalScore, 31));
-  var priority = decisionScore >= 88 ? 'A' : decisionScore >= 80 ? 'B+' : 'B';
+  var fit = externalFitScores_(posting);
+  var signalScore = fit.signal;
+  var technicalFit = fit.technicalFit;
+  var decisionScore = fit.decisionScore;
+  var priority = fit.priority;
   var published = posting.createdAt ? new Date(posting.createdAt) : new Date();
   var verified = new Date();
 
@@ -267,8 +336,8 @@ function leverPostingToRow_(source, posting) {
     location,
     null,
     'Oui probable',
-    null,
-    '6 mois probable',
+    fit.start,
+    fit.duration,
     null,
     skillsForPosting_(posting),
     Utilities.formatDate(published, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
@@ -393,10 +462,11 @@ function greenhouseAsTargetPosting_(job) {
 function greenhouseJobToRow_(source, job) {
   var posting = greenhouseAsTargetPosting_(job);
   var location = posting.categories.location || '';
-  var signalScore = targetSignalScore_(posting);
-  var technicalFit = Math.min(96, 65 + Math.min(signalScore, 31));
-  var decisionScore = Math.min(94, 63 + Math.min(signalScore, 31));
-  var priority = decisionScore >= 88 ? 'A' : decisionScore >= 80 ? 'B+' : 'B';
+  var fit = externalFitScores_(posting);
+  var signalScore = fit.signal;
+  var technicalFit = fit.technicalFit;
+  var decisionScore = fit.decisionScore;
+  var priority = fit.priority;
   var updated = job.updated_at ? new Date(job.updated_at) : new Date();
   var verified = new Date();
 
@@ -408,8 +478,8 @@ function greenhouseJobToRow_(source, job) {
     location,
     null,
     'Oui probable',
-    null,
-    '6 mois probable',
+    fit.start,
+    fit.duration,
     null,
     skillsForPosting_(posting),
     Utilities.formatDate(updated, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
