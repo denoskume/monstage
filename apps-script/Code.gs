@@ -153,7 +153,7 @@ function latestAutonomyEvents_(spreadsheet) {
 }
 
 
-var EXTERNAL_SYNC_VERSION_ = '2026-10-12-v2';
+var EXTERNAL_SYNC_VERSION_ = '2026-10-12-v3';
 
 var EXTERNAL_SOURCE_HEADERS_ = [
   'ID', 'Entreprise', "Intitulé de l'offre", 'Domaine', 'Ville', 'Région',
@@ -232,7 +232,9 @@ function targetSignalScore_(posting) {
     ['robotics', 8], ['optimisation', 7], ['optimization', 7],
     ['industrial ai', 8], ['quality', 4], ['automation', 4],
     ['data engineer', 6], ['data engineering', 6], ['analytics engineer', 5],
-    ['data analyst', 5], ['data analytics', 5], ['business intelligence', 4],
+    ['data analyst', 5], ['data analytics', 5], ['analytics', 4], ['data collection', 4],
+    ['data processing', 5], ['data analysis', 5], ['business intelligence', 4],
+    ['digitalization', 3], ['digitalisation', 3], ['digital transformation', 3],
     ['statistical', 3], ['statistics', 3], ['predictive', 4], ['forecasting', 4],
     ['python', 2], ['pytorch', 4], ['opencv', 6], ['scikit learn', 3],
     ['sql', 2], ['power bi', 2], ['tableau', 2], ['spark', 3],
@@ -246,7 +248,7 @@ function targetSignalScore_(posting) {
   var titleBoosts = [
     ['computer vision', 8], ['vision par ordinateur', 8], ['image', 5],
     ['machine learning', 7], ['apprentissage automatique', 7],
-    ['data scientist', 6], ['ai engineer', 7], ['ingenieur ia', 7],
+    ['data scientist', 6], ['analytics', 4], ['data', 2], ['ai engineer', 7], ['ingenieur ia', 7],
     ['intelligence artificielle', 6], ['signal', 7],
     ['robotics', 6], ['r&d', 4]
   ];
@@ -714,29 +716,38 @@ var SMARTRECRUITERS_SOURCES_ = [
 
 function smartRecruitersList_(source) {
   var jobs = [];
-  var offset = 0;
+  var seen = {};
   var limit = 100;
+  var queries = ['stage', 'internship', 'stagiaire'];
 
-  for (var page = 0; page < 6; page += 1) {
-    var url = 'https://api.smartrecruiters.com/v1/companies/' + encodeURIComponent(source.companyId) +
-      '/postings?limit=' + limit + '&offset=' + offset + '&country=fr';
-    try {
-      var response = UrlFetchApp.fetch(url, {
-        method: 'get',
-        muteHttpExceptions: true,
-        headers: { Accept: 'application/json' }
-      });
-      if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) break;
-      var payload = JSON.parse(response.getContentText());
-      var batch = payload && Array.isArray(payload.content) ? payload.content : [];
-      jobs = jobs.concat(batch);
-      if (batch.length < limit || jobs.length >= Number(payload.totalFound || 0)) break;
-      offset += limit;
-    } catch (error) {
-      console.warn('SmartRecruiters source failed: ' + source.companyId + ' ' + error);
-      break;
+  queries.forEach(function (query) {
+    var offset = 0;
+    for (var page = 0; page < 8; page += 1) {
+      var url = 'https://api.smartrecruiters.com/v1/companies/' + encodeURIComponent(source.companyId) +
+        '/postings?limit=' + limit + '&offset=' + offset + '&country=fr&q=' + encodeURIComponent(query);
+      try {
+        var response = UrlFetchApp.fetch(url, {
+          method: 'get',
+          muteHttpExceptions: true,
+          headers: { Accept: 'application/json' }
+        });
+        if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) break;
+        var payload = JSON.parse(response.getContentText());
+        var batch = payload && Array.isArray(payload.content) ? payload.content : [];
+        batch.forEach(function (job) {
+          if (!job || !job.id || seen[job.id]) return;
+          seen[job.id] = true;
+          jobs.push(job);
+        });
+        if (batch.length < limit || offset + batch.length >= Number(payload.totalFound || 0)) break;
+        offset += limit;
+      } catch (error) {
+        console.warn('SmartRecruiters source failed: ' + source.companyId + ' ' + query + ' ' + error);
+        break;
+      }
     }
-  }
+  });
+
   return jobs;
 }
 
@@ -897,7 +908,13 @@ function fetchWorkdayPage_(source, searchText, offset) {
 }
 
 function fetchWorkdayJobs_(source) {
-  var searches = ['stage', 'internship'];
+  var searches = [
+    'stage', 'internship',
+    'stage data', 'stage analytics', 'stage intelligence artificielle',
+    'stage ai', 'stage machine learning', 'stage deep learning',
+    'stage vision', 'stage image', 'stage signal', 'stage digital',
+    'intern data', 'intern machine learning', 'intern ai'
+  ];
   var seen = {};
   var jobs = [];
 
