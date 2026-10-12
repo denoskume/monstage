@@ -5,6 +5,7 @@ import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
 import { buildCvPdfResponse } from './cvPdf';
 import { buildCoverLetterPdfResponse } from './clPdf';
+import { fetchExternalOffers, mergeOffersPayload } from './externalOffers';
 
 const OFFERS_CACHE_FRESHNESS_MS = 5 * 60 * 1000;
 const OFFERS_CACHE_MAX_STALE_MS = 15 * 60 * 1000;
@@ -20,9 +21,17 @@ export interface WorkerDependencies {
   putCachedOffers: (payload: unknown, ttlSeconds: number) => Promise<void>;
 }
 
+async function fetchMergedOffers(env: Env): Promise<unknown> {
+  const [basePayload, externalOffers] = await Promise.all([
+    fetchOffersFromAppsScript(env),
+    fetchExternalOffers(),
+  ]);
+  return mergeOffersPayload(basePayload, externalOffers);
+}
+
 const defaultDependencies: WorkerDependencies = {
   verifyUser: verifyAuthorizedUser,
-  fetchOffers: fetchOffersFromAppsScript,
+  fetchOffers: fetchMergedOffers,
   submitApplication: submitApplicationToAppsScript,
   addExternalApplication: addExternalApplicationToAppsScript,
   getCachedOffers,
