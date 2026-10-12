@@ -153,6 +153,8 @@ function latestAutonomyEvents_(spreadsheet) {
 }
 
 
+var EXTERNAL_SYNC_VERSION_ = '2026-10-12-v2';
+
 var EXTERNAL_SOURCE_HEADERS_ = [
   'ID', 'Entreprise', "Intitulé de l'offre", 'Domaine', 'Ville', 'Région',
   'M2 2027', 'Début', 'Durée', 'Rémunération', 'Compétences clés', 'Publication',
@@ -1045,6 +1047,7 @@ function syncWorkdaySources_() {
 
 function externalSourceConfigSignature_() {
   return [
+    EXTERNAL_SYNC_VERSION_,
     LEVER_SOURCES_.map(function (source) { return source.site; }).join(','),
     GREENHOUSE_SOURCES_.map(function (source) { return source.board; }).join(','),
     ASHBY_SOURCES_.map(function (source) { return source.board; }).join(','),
