@@ -209,9 +209,13 @@ function targetSignalScore_(posting) {
   ].filter(Boolean).join(' '));
 
   var weighted = [
-    ['computer vision', 12], ['image processing', 11], ['signal processing', 11],
-    ['machine learning', 10], ['deep learning', 10], ['data science', 9],
-    ['artificial intelligence', 8], ['generative ai', 8], ['ai engineer', 9],
+    ['computer vision', 12], ['vision par ordinateur', 12],
+    ['image processing', 11], ['traitement d image', 11],
+    ['signal processing', 11], ['traitement du signal', 11],
+    ['machine learning', 10], ['apprentissage automatique', 10],
+    ['deep learning', 10], ['apprentissage profond', 10], ['data science', 9],
+    ['artificial intelligence', 8], ['intelligence artificielle', 8],
+    ['generative ai', 8], ['ia generative', 8], ['ai engineer', 9], ['ingenieur ia', 9],
     ['robotics', 8], ['optimisation', 7], ['optimization', 7],
     ['industrial ai', 8], ['quality', 4], ['automation', 4],
     ['data engineer', 5], ['analytics engineer', 4], ['data analyst', 2],
@@ -224,8 +228,10 @@ function targetSignalScore_(posting) {
   }, 0);
 
   var titleBoosts = [
-    ['computer vision', 8], ['image', 5], ['machine learning', 7],
-    ['data scientist', 6], ['ai engineer', 7], ['signal', 7],
+    ['computer vision', 8], ['vision par ordinateur', 8], ['image', 5],
+    ['machine learning', 7], ['apprentissage automatique', 7],
+    ['data scientist', 6], ['ai engineer', 7], ['ingenieur ia', 7],
+    ['intelligence artificielle', 6], ['signal', 7],
     ['robotics', 6], ['r&d', 4]
   ];
   score += titleBoosts.reduce(function (total, entry) {
@@ -826,6 +832,164 @@ function syncSmartRecruitersSources_() {
   return rows.length;
 }
 
+
+var WORKDAY_SOURCES_ = [
+  { tenant: 'ag', host: 'wd3', site: 'Airbus', company: 'Airbus' },
+  { tenant: 'thales', host: 'wd3', site: 'Careers', company: 'Thales' },
+  { tenant: 'evoyageurs', host: 'wd3', site: 'jobs', company: 'SNCF Connect & Tech' }
+];
+
+function workdayBaseUrl_(source) {
+  return 'https://' + source.tenant + '.' + source.host + '.myworkdayjobs.com';
+}
+
+function fetchWorkdayPage_(source, searchText, offset) {
+  var url = workdayBaseUrl_(source) + '/wday/cxs/' +
+    encodeURIComponent(source.tenant) + '/' + encodeURIComponent(source.site) + '/jobs';
+  try {
+    var response = UrlFetchApp.fetch(url, {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify({
+        appliedFacets: {},
+        limit: 20,
+        offset: offset || 0,
+        searchText: searchText || ''
+      }),
+      muteHttpExceptions: true,
+      headers: { Accept: 'application/json' }
+    });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) return null;
+    return JSON.parse(response.getContentText());
+  } catch (error) {
+    console.warn('Workday list failed: ' + source.company + ' ' + error);
+    return null;
+  }
+}
+
+function fetchWorkdayJobs_(source) {
+  var searches = ['stage', 'internship'];
+  var seen = {};
+  var jobs = [];
+
+  searches.forEach(function (searchText) {
+    var offset = 0;
+    for (var page = 0; page < 8; page += 1) {
+      var payload = fetchWorkdayPage_(source, searchText, offset);
+      if (!payload) break;
+      var batch = Array.isArray(payload.jobPostings) ? payload.jobPostings : [];
+      batch.forEach(function (job) {
+        var key = job.externalPath || job.title || JSON.stringify(job);
+        if (seen[key]) return;
+        seen[key] = true;
+        jobs.push(job);
+      });
+      if (batch.length < 20 || offset + batch.length >= Number(payload.total || 0)) break;
+      offset += 20;
+    }
+  });
+
+  return jobs;
+}
+
+function workdayAsTargetPosting_(job) {
+  return {
+    text: job.title || '',
+    descriptionPlain: '',
+    categories: {
+      location: job.locationsText || '',
+      team: '',
+      department: ''
+    }
+  };
+}
+
+function isWorkdayInternship_(job) {
+  var text = normalizeComparable_([job.title, job.jobSchedule, job.timeType].filter(Boolean).join(' '));
+  return ['stage', 'stagiaire', 'internship', 'intern'].some(function (term) {
+    return text.indexOf(term) !== -1;
+  });
+}
+
+function workdayPublishedDate_(job) {
+  var posted = normalizeText_(job.postedOn);
+  if (!posted) return new Date();
+  var daysMatch = posted.match(/(\d+)\s+day/i);
+  if (daysMatch) return new Date(Date.now() - Number(daysMatch[1]) * 24 * 60 * 60 * 1000);
+  if (/today/i.test(posted)) return new Date();
+  if (/yesterday/i.test(posted)) return new Date(Date.now() - 24 * 60 * 60 * 1000);
+  return new Date();
+}
+
+function workdayJobToRow_(source, job) {
+  var posting = workdayAsTargetPosting_(job);
+  var fit = externalFitScores_(posting);
+  var verified = new Date();
+  var path = job.externalPath || '';
+  var url = path ? workdayBaseUrl_(source) + '/en-US/' + source.site + path : workdayBaseUrl_(source) + '/' + source.site;
+  var published = workdayPublishedDate_(job);
+
+  return [
+    'workday:' + source.tenant + ':' + normalizeComparable_(path || job.title),
+    source.company,
+    job.title || '',
+    specializationForPosting_(posting),
+    job.locationsText || '',
+    null,
+    'Oui probable',
+    fit.start,
+    fit.duration,
+    null,
+    skillsForPosting_(posting),
+    Utilities.formatDate(published, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    'Active',
+    'À candidater',
+    'Vérifier les conditions puis candidater',
+    url,
+    false,
+    null,
+    null,
+    specializationForPosting_(posting),
+    fit.technicalFit,
+    fit.decisionScore,
+    fit.priority,
+    'Vérifié <24h',
+    verified.toISOString(),
+    'Officiel / direct',
+    fit.priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
+    'À confirmer',
+    fit.signal >= 14 ? 'Haute' : 'Moyenne'
+  ];
+}
+
+function syncWorkdaySources_() {
+  var spreadsheet = getSpreadsheet_();
+  var sheetName = 'Offres - Workday';
+  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+  var rows = [];
+
+  WORKDAY_SOURCES_.forEach(function (source) {
+    fetchWorkdayJobs_(source).forEach(function (job) {
+      var posting = workdayAsTargetPosting_(job);
+      if (!isFranceLocation_(posting.categories.location)) return;
+      if (!isWorkdayInternship_(job)) return;
+      if (targetSignalScore_(posting) < 5) return;
+      rows.push(workdayJobToRow_(source, job));
+    });
+  });
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
+  sheet.setFrozenRows(1);
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
+  }
+
+  PropertiesService.getScriptProperties().setProperty('WORKDAY_LAST_SYNC', new Date().toISOString());
+  PropertiesService.getScriptProperties().setProperty('WORKDAY_LAST_COUNT', String(rows.length));
+  return rows.length;
+}
+
 function refreshExternalSourcesIfDue_() {
   var properties = PropertiesService.getScriptProperties();
   var sixHours = 6 * 60 * 60 * 1000;
@@ -837,6 +1001,8 @@ function refreshExternalSourcesIfDue_() {
   var ashbyMs = ashbyLast ? Date.parse(ashbyLast) : 0;
   var smartRecruitersLast = properties.getProperty('SMARTRECRUITERS_LAST_SYNC');
   var smartRecruitersMs = smartRecruitersLast ? Date.parse(smartRecruitersLast) : 0;
+  var workdayLast = properties.getProperty('WORKDAY_LAST_SYNC');
+  var workdayMs = workdayLast ? Date.parse(workdayLast) : 0;
 
   if (!leverMs || (Date.now() - leverMs) >= sixHours) {
     try {
@@ -866,6 +1032,13 @@ function refreshExternalSourcesIfDue_() {
       console.warn('SmartRecruiters refresh failed: ' + error);
     }
   }
+  if (!workdayMs || (Date.now() - workdayMs) >= sixHours) {
+    try {
+      syncWorkdaySources_();
+    } catch (error) {
+      console.warn('Workday refresh failed: ' + error);
+    }
+  }
 }
 
 function syncExternalOfferSources() {
@@ -874,6 +1047,7 @@ function syncExternalOfferSources() {
     greenhouse: syncGreenhouseSources_(),
     ashby: syncAshbySources_(),
     smartRecruiters: syncSmartRecruitersSources_(),
+    workday: syncWorkdaySources_(),
     syncedAt: new Date().toISOString()
   };
 }
