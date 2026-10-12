@@ -532,6 +532,294 @@ function syncGreenhouseSources_() {
   return rows.length;
 }
 
+
+var ASHBY_SOURCES_ = [
+  { board: 'mistral.ai', company: 'Mistral AI' },
+  { board: 'owkin', company: 'Owkin' },
+  { board: 'hcompany', company: 'H Company' },
+  { board: 'maki', company: 'MakiPeople' },
+  { board: 'cohere', company: 'Cohere' },
+  { board: 'voodoo', company: 'Voodoo' },
+  { board: 'nabla', company: 'Nabla' },
+  { board: 'alpic', company: 'Alpic' }
+];
+
+function fetchAshbyJobs_(source) {
+  var url = 'https://api.ashbyhq.com/posting-api/job-board/' + encodeURIComponent(source.board) + '?includeCompensation=true';
+  try {
+    var response = UrlFetchApp.fetch(url, {
+      method: 'get',
+      muteHttpExceptions: true,
+      headers: { Accept: 'application/json' }
+    });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) return [];
+    var payload = JSON.parse(response.getContentText());
+    return payload && Array.isArray(payload.jobs) ? payload.jobs : [];
+  } catch (error) {
+    console.warn('Ashby source failed: ' + source.board + ' ' + error);
+    return [];
+  }
+}
+
+function ashbyLocation_(job) {
+  var locations = [];
+  if (job.location) locations.push(job.location);
+  if (Array.isArray(job.secondaryLocations)) {
+    job.secondaryLocations.forEach(function (entry) {
+      if (entry && entry.location) locations.push(entry.location);
+    });
+  }
+  return locations.join(' · ');
+}
+
+function ashbyAsTargetPosting_(job) {
+  return {
+    text: job.title || '',
+    descriptionPlain: job.descriptionPlain || '',
+    categories: {
+      location: ashbyLocation_(job),
+      team: job.team || job.department || '',
+      department: job.department || ''
+    }
+  };
+}
+
+function isAshbyInternship_(job, posting) {
+  return normalizeComparable_(job.employmentType) === 'intern' || isInternshipPosting_(posting);
+}
+
+function ashbyJobIdentity_(source, job) {
+  var url = String(job.jobUrl || job.applyUrl || '');
+  var parts = url.split('/').filter(Boolean);
+  var id = parts.length ? parts[parts.length - 1].split('?')[0] : normalizeComparable_(job.title);
+  return 'ashby:' + source.board + ':' + id;
+}
+
+function ashbyCompensation_(job) {
+  if (!job.compensation) return null;
+  return job.compensation.compensationTierSummary ||
+    job.compensation.scrapeableCompensationSalarySummary ||
+    null;
+}
+
+function ashbyJobToRow_(source, job) {
+  var posting = ashbyAsTargetPosting_(job);
+  var fit = externalFitScores_(posting);
+  var signalScore = fit.signal;
+  var published = job.publishedAt ? new Date(job.publishedAt) : new Date();
+  var verified = new Date();
+
+  return [
+    ashbyJobIdentity_(source, job),
+    source.company,
+    job.title || '',
+    job.department || job.team || specializationForPosting_(posting),
+    ashbyLocation_(job),
+    null,
+    'Oui probable',
+    fit.start,
+    fit.duration,
+    ashbyCompensation_(job),
+    skillsForPosting_(posting),
+    Utilities.formatDate(published, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    'Active',
+    'À candidater',
+    'Vérifier les conditions puis candidater',
+    job.jobUrl || job.applyUrl || '',
+    false,
+    null,
+    null,
+    specializationForPosting_(posting),
+    fit.technicalFit,
+    fit.decisionScore,
+    fit.priority,
+    'Vérifié <24h',
+    verified.toISOString(),
+    'Officiel / direct',
+    fit.priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
+    'À confirmer',
+    signalScore >= 14 ? 'Haute' : 'Moyenne'
+  ];
+}
+
+function syncAshbySources_() {
+  var spreadsheet = getSpreadsheet_();
+  var sheetName = 'Offres - Ashby';
+  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+  var rows = [];
+
+  ASHBY_SOURCES_.forEach(function (source) {
+    fetchAshbyJobs_(source).forEach(function (job) {
+      if (job.isListed === false) return;
+      var posting = ashbyAsTargetPosting_(job);
+      if (!isFranceLocation_(posting.categories.location)) return;
+      if (!isAshbyInternship_(job, posting)) return;
+      if (targetSignalScore_(posting) < 5) return;
+      rows.push(ashbyJobToRow_(source, job));
+    });
+  });
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
+  sheet.setFrozenRows(1);
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
+  }
+
+  PropertiesService.getScriptProperties().setProperty('ASHBY_LAST_SYNC', new Date().toISOString());
+  PropertiesService.getScriptProperties().setProperty('ASHBY_LAST_COUNT', String(rows.length));
+  return rows.length;
+}
+
+var SMARTRECRUITERS_SOURCES_ = [
+  { companyId: 'SopraSteria1', company: 'Sopra Steria' },
+  { companyId: 'BoschGroup', company: 'Bosch Group' }
+];
+
+function smartRecruitersList_(source) {
+  var jobs = [];
+  var offset = 0;
+  var limit = 100;
+
+  for (var page = 0; page < 6; page += 1) {
+    var url = 'https://api.smartrecruiters.com/v1/companies/' + encodeURIComponent(source.companyId) +
+      '/postings?limit=' + limit + '&offset=' + offset + '&country=fr';
+    try {
+      var response = UrlFetchApp.fetch(url, {
+        method: 'get',
+        muteHttpExceptions: true,
+        headers: { Accept: 'application/json' }
+      });
+      if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) break;
+      var payload = JSON.parse(response.getContentText());
+      var batch = payload && Array.isArray(payload.content) ? payload.content : [];
+      jobs = jobs.concat(batch);
+      if (batch.length < limit || jobs.length >= Number(payload.totalFound || 0)) break;
+      offset += limit;
+    } catch (error) {
+      console.warn('SmartRecruiters source failed: ' + source.companyId + ' ' + error);
+      break;
+    }
+  }
+  return jobs;
+}
+
+function smartRecruitersDetails_(source, postingId) {
+  var url = 'https://api.smartrecruiters.com/v1/companies/' + encodeURIComponent(source.companyId) +
+    '/postings/' + encodeURIComponent(postingId);
+  try {
+    var response = UrlFetchApp.fetch(url, {
+      method: 'get',
+      muteHttpExceptions: true,
+      headers: { Accept: 'application/json' }
+    });
+    if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) return null;
+    return JSON.parse(response.getContentText());
+  } catch (error) {
+    console.warn('SmartRecruiters detail failed: ' + source.companyId + ':' + postingId + ' ' + error);
+    return null;
+  }
+}
+
+function smartRecruitersIsInternship_(job) {
+  var label = normalizeComparable_(job.typeOfEmployment && job.typeOfEmployment.label);
+  var title = normalizeComparable_(job.name);
+  return label.indexOf('intern') !== -1 ||
+    label.indexOf('stage') !== -1 ||
+    title.indexOf('stage') !== -1 ||
+    title.indexOf('intern') !== -1 ||
+    title.indexOf('stagiaire') !== -1;
+}
+
+function smartRecruitersText_(details) {
+  var sections = details && details.jobAd && details.jobAd.sections ? details.jobAd.sections : {};
+  return Object.keys(sections).map(function (key) {
+    return stripHtml_(sections[key] && sections[key].text);
+  }).filter(Boolean).join(' ');
+}
+
+function smartRecruitersAsTargetPosting_(job, details) {
+  var location = job.location || {};
+  return {
+    text: job.name || '',
+    descriptionPlain: smartRecruitersText_(details),
+    categories: {
+      location: [location.city, location.region, location.country].filter(Boolean).join(', '),
+      team: job.department && job.department.label ? job.department.label : '',
+      department: job.function && job.function.label ? job.function.label : ''
+    }
+  };
+}
+
+function smartRecruitersJobToRow_(source, job, details) {
+  var posting = smartRecruitersAsTargetPosting_(job, details);
+  var fit = externalFitScores_(posting);
+  var released = job.releasedDate ? new Date(job.releasedDate) : new Date();
+  var verified = new Date();
+
+  return [
+    'smartrecruiters:' + source.companyId + ':' + job.id,
+    source.company,
+    job.name || '',
+    (job.department && job.department.label) || specializationForPosting_(posting),
+    posting.categories.location,
+    job.location && job.location.region ? job.location.region : null,
+    'Oui probable',
+    fit.start,
+    fit.duration,
+    null,
+    skillsForPosting_(posting),
+    Utilities.formatDate(released, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    'Active',
+    'À candidater',
+    'Vérifier les conditions puis candidater',
+    (details && details.applyUrl) || job.ref || '',
+    false,
+    null,
+    null,
+    specializationForPosting_(posting),
+    fit.technicalFit,
+    fit.decisionScore,
+    fit.priority,
+    'Vérifié <24h',
+    verified.toISOString(),
+    'Officiel / direct',
+    fit.priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
+    'À confirmer',
+    fit.signal >= 14 ? 'Haute' : 'Moyenne'
+  ];
+}
+
+function syncSmartRecruitersSources_() {
+  var spreadsheet = getSpreadsheet_();
+  var sheetName = 'Offres - SmartRecruiters';
+  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+  var rows = [];
+
+  SMARTRECRUITERS_SOURCES_.forEach(function (source) {
+    smartRecruitersList_(source).forEach(function (job) {
+      if (!smartRecruitersIsInternship_(job)) return;
+      var details = smartRecruitersDetails_(source, job.id);
+      if (!details || details.active === false) return;
+      var posting = smartRecruitersAsTargetPosting_(job, details);
+      if (!isFranceLocation_(posting.categories.location)) return;
+      if (targetSignalScore_(posting) < 5) return;
+      rows.push(smartRecruitersJobToRow_(source, job, details));
+    });
+  });
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
+  sheet.setFrozenRows(1);
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
+  }
+
+  PropertiesService.getScriptProperties().setProperty('SMARTRECRUITERS_LAST_SYNC', new Date().toISOString());
+  PropertiesService.getScriptProperties().setProperty('SMARTRECRUITERS_LAST_COUNT', String(rows.length));
+  return rows.length;
+}
+
 function refreshExternalSourcesIfDue_() {
   var properties = PropertiesService.getScriptProperties();
   var sixHours = 6 * 60 * 60 * 1000;
@@ -539,6 +827,10 @@ function refreshExternalSourcesIfDue_() {
   var leverMs = leverLast ? Date.parse(leverLast) : 0;
   var greenhouseLast = properties.getProperty('GREENHOUSE_LAST_SYNC');
   var greenhouseMs = greenhouseLast ? Date.parse(greenhouseLast) : 0;
+  var ashbyLast = properties.getProperty('ASHBY_LAST_SYNC');
+  var ashbyMs = ashbyLast ? Date.parse(ashbyLast) : 0;
+  var smartRecruitersLast = properties.getProperty('SMARTRECRUITERS_LAST_SYNC');
+  var smartRecruitersMs = smartRecruitersLast ? Date.parse(smartRecruitersLast) : 0;
 
   if (!leverMs || (Date.now() - leverMs) >= sixHours) {
     try {
@@ -554,12 +846,28 @@ function refreshExternalSourcesIfDue_() {
       console.warn('Greenhouse refresh failed: ' + error);
     }
   }
+  if (!ashbyMs || (Date.now() - ashbyMs) >= sixHours) {
+    try {
+      syncAshbySources_();
+    } catch (error) {
+      console.warn('Ashby refresh failed: ' + error);
+    }
+  }
+  if (!smartRecruitersMs || (Date.now() - smartRecruitersMs) >= sixHours) {
+    try {
+      syncSmartRecruitersSources_();
+    } catch (error) {
+      console.warn('SmartRecruiters refresh failed: ' + error);
+    }
+  }
 }
 
 function syncExternalOfferSources() {
   return {
     lever: syncLeverSources_(),
     greenhouse: syncGreenhouseSources_(),
+    ashby: syncAshbySources_(),
+    smartRecruiters: syncSmartRecruitersSources_(),
     syncedAt: new Date().toISOString()
   };
 }
