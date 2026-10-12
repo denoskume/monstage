@@ -1,6 +1,5 @@
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
-import { offerIndustry } from './offerSelectors';
 
 function Icon({ name }: { name: 'save' | 'hide' | 'share' }) {
   if (name === 'save') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.55L6 21V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>;
@@ -26,39 +25,29 @@ export function OfferCard({
   onShare: () => void;
 }) {
   const meta = [offer.city, offer.region].filter(Boolean).join(', ');
-  const industry = offerIndustry(offer);
   const companyMark = offer.company
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('');
-  const topSkills = offer.skills.slice(0, 3);
-
   return (
     <article className={'offer-card' + (selected ? ' offer-card--selected' : '')}>
       <button className="offer-card__button" type="button" onClick={onSelect} aria-pressed={selected}>
         <div className="offer-card__identity">
           <span className="offer-card__company-mark" aria-hidden="true">{companyMark || '•'}</span>
           <div className="offer-card__identity-copy">
-            <div className="offer-card__topline">
-              <span className="offer-card__company">{offer.company}</span>
-              <span className="offer-card__industry">{industry}</span>
-            </div>
+            <span className="offer-card__company">{offer.company}</span>
             <h2 className="offer-card__title">{offer.title}</h2>
             <p className="offer-card__location">{meta || 'Location not specified'}</p>
+            <div className="offer-card__facts">
+              {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
+              {offer.compensation ? <span>{offer.compensation}</span> : null}
+            </div>
           </div>
-        </div>
-        {topSkills.length ? <div className="offer-card__skills">{topSkills.map((skill) => <span key={skill}>{skill}</span>)}</div> : null}
-        <div className="offer-card__facts">
-          {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
-          {offer.compensation ? <span>{offer.compensation}</span> : null}
-          {offer.m2Fit ? <span>{displayValue(offer.m2Fit)}</span> : null}
-          {offer.sourceQuality ? <span>{displayValue(offer.sourceQuality)}</span> : null}
         </div>
         <div className="offer-card__signals">
           {offer.decisionScore !== null ? <span className="signal signal--match">{offer.decisionScore}% match</span> : null}
-          {offer.priority ? <span className="signal">{offer.priority} priority</span> : null}
           {offer.freshness ? <span className="signal">{displayValue(offer.freshness)}</span> : null}
         </div>
       </button>
