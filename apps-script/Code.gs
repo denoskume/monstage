@@ -170,7 +170,10 @@ var LEVER_SOURCES_ = [
   { site: 'dilitrust', company: 'DiliTrust' },
   { site: 'scaleway', company: 'Scaleway' },
   { site: 'veepee', company: 'Veepee' },
-  { site: 'scality', company: 'Scality' }
+  { site: 'scality', company: 'Scality' },
+  { site: 'bigblue', company: 'Bigblue' },
+  { site: 'Beamy', company: 'Beamy' },
+  { site: 'margo-group', company: 'MARGO' }
 ];
 
 function isFranceLocation_(value) {
@@ -541,7 +544,10 @@ var ASHBY_SOURCES_ = [
   { board: 'cohere', company: 'Cohere' },
   { board: 'voodoo', company: 'Voodoo' },
   { board: 'nabla', company: 'Nabla' },
-  { board: 'alpic', company: 'Alpic' }
+  { board: 'alpic', company: 'Alpic' },
+  { board: 'meetdavis', company: 'Davis AI' },
+  { board: 'illuin', company: 'ILLUIN Technology' },
+  { board: 'scoreplay', company: 'ScorePlay' }
 ];
 
 function fetchAshbyJobs_(source) {
