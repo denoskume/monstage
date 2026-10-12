@@ -159,7 +159,8 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   await expect(page.getByText('Data AI Intern')).toHaveCount(0);
   await expect(page.getByText('Deep Learning Intern')).toHaveCount(0);
 
-  await page.locator('.jobs-sort select').selectOption('recent');
+  await page.getByRole('button', { name: /Best match|Most recent|Highest score|Priority|City/ }).click();
+  await page.getByRole('menu', { name: 'Sort jobs' }).getByLabel('Most recent').check();
   await expect(visibleCards.nth(0)).toContainText('AI Vision Intern');
   await expect(visibleCards.nth(1)).toContainText('Computer Vision Intern');
   await expect(visibleCards.nth(0)).toContainText('Nantes');
