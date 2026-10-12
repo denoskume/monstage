@@ -35,11 +35,39 @@ export interface ExternalOffer {
 
 type WorkdaySource = { tenant: string; host: string; site: string; company: string };
 type SmartSource = { companyId: string; company: string };
+type AshbySource = { board: string; company: string };
+type GreenhouseSource = { board: string; company: string };
 
 const WORKDAY_SOURCES: WorkdaySource[] = [
   { tenant: 'ag', host: 'wd3', site: 'Airbus', company: 'Airbus' },
   { tenant: 'thales', host: 'wd3', site: 'Careers', company: 'Thales' },
   { tenant: 'evoyageurs', host: 'wd3', site: 'jobs', company: 'SNCF Connect & Tech' },
+  { tenant: 'pernodricard', host: 'wd3', site: 'pernod-ricard', company: 'Pernod Ricard' },
+  { tenant: 'pfizer', host: 'wd1', site: 'PfizerCareers', company: 'Pfizer' },
+  { tenant: 'airliquidehr', host: 'wd3', site: 'AirLiquideExternalCareer', company: 'Air Liquide' },
+  { tenant: 'alliancewd', host: 'wd3', site: 'renault-group-careers', company: 'Renault Group' },
+  { tenant: 'integralads', host: 'wd1', site: 'IAScareers', company: 'Integral Ad Science' },
+];
+
+const ASHBY_SOURCES: AshbySource[] = [
+  { board: 'mistral.ai', company: 'Mistral AI' },
+  { board: 'owkin', company: 'Owkin' },
+  { board: 'hcompany', company: 'H Company' },
+  { board: 'maki', company: 'MakiPeople' },
+  { board: 'cohere', company: 'Cohere' },
+  { board: 'voodoo', company: 'Voodoo' },
+  { board: 'nabla', company: 'Nabla' },
+  { board: 'alpic', company: 'Alpic' },
+  { board: 'meetdavis', company: 'Davis AI' },
+  { board: 'illuin', company: 'ILLUIN Technology' },
+  { board: 'scoreplay', company: 'ScorePlay' },
+];
+
+const GREENHOUSE_SOURCES: GreenhouseSource[] = [
+  { board: 'shifttechnology', company: 'Shift Technology' },
+  { board: 'artefactjobs', company: 'Artefact' },
+  { board: 'mirakllabs', company: 'Mirakl Labs' },
+  { board: 'mirakl', company: 'Mirakl' },
 ];
 
 const SMART_SOURCES: SmartSource[] = [
@@ -56,6 +84,7 @@ const SMART_SOURCES: SmartSource[] = [
 ];
 
 const WORKDAY_SEARCHES = [
+  'stage',
   'stage data', 'stage analytics', 'stage machine learning',
   'stage intelligence artificielle', 'stage ai', 'stage vision',
   'stage image', 'stage signal', 'stage digital',
@@ -175,24 +204,33 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
   const offers: ExternalOffer[] = [];
 
   for (const searchText of WORKDAY_SEARCHES) {
-    const payload = await fetchJson(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appliedFacets: {}, limit: 20, offset: 0, searchText }),
-    });
-    const jobs = Array.isArray(payload?.jobPostings) ? payload.jobPostings : [];
-    for (const job of jobs) {
-      const title = String(job?.title ?? '');
-      const path = String(job?.externalPath ?? '');
-      if (!title || !path || seen.has(path) || !isInternship(title)) continue;
-      seen.add(path);
-      offers.push(toOffer({
-        id: `workday:${source.tenant}:${path}`,
-        company: source.company,
-        title,
-        city: String(job?.locationsText ?? '') || null,
-        url: `${base}/en-US/${source.site}${path}`,
-      }));
+    let offset = 0;
+    const maxPages = searchText === 'stage' ? 8 : 2;
+
+    for (let page = 0; page < maxPages; page += 1) {
+      const payload = await fetchJson(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appliedFacets: {}, limit: 20, offset, searchText }),
+      });
+      const jobs = Array.isArray(payload?.jobPostings) ? payload.jobPostings : [];
+
+      for (const job of jobs) {
+        const title = String(job?.title ?? '');
+        const path = String(job?.externalPath ?? '');
+        if (!title || !path || seen.has(path) || !isInternship(title) || !isRelevant(title)) continue;
+        seen.add(path);
+        offers.push(toOffer({
+          id: `workday:${source.tenant}:${path}`,
+          company: source.company,
+          title,
+          city: String(job?.locationsText ?? '') || null,
+          url: `${base}/en-US/${source.site}${path}`,
+        }));
+      }
+
+      if (jobs.length < 20 || offset + jobs.length >= Number(payload?.total ?? 0)) break;
+      offset += 20;
     }
   }
 
@@ -200,27 +238,102 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
 }
 
 async function fetchSmart(source: SmartSource): Promise<ExternalOffer[]> {
-  const url =
-    `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(source.companyId)}/postings?limit=100&offset=0&country=fr&q=stage`;
-  const payload = await fetchJson(url);
-  const jobs = Array.isArray(payload?.content) ? payload.content : [];
+  const queries = ['stage', 'internship', 'stagiaire'];
+  const seen = new Set<string>();
+  const offers: ExternalOffer[] = [];
+
+  for (const query of queries) {
+    let offset = 0;
+    for (let page = 0; page < 4; page += 1) {
+      const url =
+        `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(source.companyId)}/postings?limit=100&offset=${offset}&country=fr&q=${encodeURIComponent(query)}`;
+      const payload = await fetchJson(url);
+      const jobs = Array.isArray(payload?.content) ? payload.content : [];
+
+      for (const job of jobs) {
+        const title = String(job?.name ?? '');
+        const id = String(job?.id ?? job?.uuid ?? title);
+        if (!title || seen.has(id) || !isInternship(title) || !isRelevant(title)) continue;
+        seen.add(id);
+        const location = job?.location ?? {};
+        offers.push(toOffer({
+          id: `smartrecruiters:${source.companyId}:${id}`,
+          company: source.company,
+          title,
+          city: [location.city, location.region, location.country].filter(Boolean).join(', ') || null,
+          region: location.region ? String(location.region) : null,
+          url: String(job?.ref ?? '') || null,
+          publishedAt: job?.releasedDate ? String(job.releasedDate).slice(0, 10) : null,
+        }));
+      }
+
+      if (jobs.length < 100 || offset + jobs.length >= Number(payload?.totalFound ?? 0)) break;
+      offset += 100;
+    }
+  }
+
+  return offers;
+}
+
+
+async function fetchAshby(source: AshbySource): Promise<ExternalOffer[]> {
+  const payload = await fetchJson(
+    `https://api.ashbyhq.com/posting-api/job-board/${encodeURIComponent(source.board)}?includeCompensation=true`,
+  );
+  const jobs = Array.isArray(payload?.jobs) ? payload.jobs : [];
   return jobs
     .filter((job: any) => {
-      const title = String(job?.name ?? '');
-      return title && isInternship(title) && isRelevant(title);
+      const title = String(job?.title ?? '');
+      const locations = [
+        job?.location,
+        ...(Array.isArray(job?.secondaryLocations)
+          ? job.secondaryLocations.map((entry: any) => entry?.location)
+          : []),
+      ].filter(Boolean).join(' · ');
+      return job?.isListed !== false &&
+        title &&
+        isInternship(title) &&
+        isRelevant(title) &&
+        normalize(locations).includes('france');
     })
-    .map((job: any) => {
-      const location = job?.location ?? {};
-      return toOffer({
-        id: `smartrecruiters:${source.companyId}:${String(job?.id ?? job?.uuid ?? job?.name)}`,
-        company: source.company,
-        title: String(job?.name ?? ''),
-        city: [location.city, location.region, location.country].filter(Boolean).join(', ') || null,
-        region: location.region ? String(location.region) : null,
-        url: String(job?.ref ?? '') || null,
-        publishedAt: job?.releasedDate ? String(job.releasedDate).slice(0, 10) : null,
-      });
-    });
+    .map((job: any) => toOffer({
+      id: `ashby:${source.board}:${String(job?.id ?? job?.title)}`,
+      company: source.company,
+      title: String(job?.title ?? ''),
+      city: [
+        job?.location,
+        ...(Array.isArray(job?.secondaryLocations)
+          ? job.secondaryLocations.map((entry: any) => entry?.location)
+          : []),
+      ].filter(Boolean).join(' · ') || null,
+      url: String(job?.jobUrl ?? job?.applyUrl ?? '') || null,
+      publishedAt: job?.publishedAt ? String(job.publishedAt).slice(0, 10) : null,
+    }));
+}
+
+async function fetchGreenhouse(source: GreenhouseSource): Promise<ExternalOffer[]> {
+  const payload = await fetchJson(
+    `https://boards-api.greenhouse.io/v1/boards/${encodeURIComponent(source.board)}/jobs?content=true`,
+  );
+  const jobs = Array.isArray(payload?.jobs) ? payload.jobs : [];
+  return jobs
+    .filter((job: any) => {
+      const title = String(job?.title ?? '');
+      const location = String(job?.location?.name ?? '');
+      const content = String(job?.content ?? '');
+      return title &&
+        isInternship(`${title} ${content}`) &&
+        isRelevant(`${title} ${content}`) &&
+        normalize(location).includes('france');
+    })
+    .map((job: any) => toOffer({
+      id: `greenhouse:${source.board}:${String(job?.id ?? job?.title)}`,
+      company: source.company,
+      title: String(job?.title ?? ''),
+      city: String(job?.location?.name ?? '') || null,
+      url: String(job?.absolute_url ?? '') || null,
+      publishedAt: job?.updated_at ? String(job.updated_at).slice(0, 10) : null,
+    }));
 }
 
 function dedupe(offers: ExternalOffer[]): ExternalOffer[] {
@@ -239,11 +352,18 @@ function dedupe(offers: ExternalOffer[]): ExternalOffer[] {
 }
 
 export async function fetchExternalOffers(): Promise<ExternalOffer[]> {
-  const [workday, smart] = await Promise.all([
+  const [workday, smart, ashby, greenhouse] = await Promise.all([
     Promise.all(WORKDAY_SOURCES.map(fetchWorkday)),
     Promise.all(SMART_SOURCES.map(fetchSmart)),
+    Promise.all(ASHBY_SOURCES.map(fetchAshby)),
+    Promise.all(GREENHOUSE_SOURCES.map(fetchGreenhouse)),
   ]);
-  return dedupe([...workday.flat(), ...smart.flat()]);
+  return dedupe([
+    ...workday.flat(),
+    ...smart.flat(),
+    ...ashby.flat(),
+    ...greenhouse.flat(),
+  ]);
 }
 
 export function mergeOffersPayload(basePayload: unknown, external: ExternalOffer[]): unknown {
