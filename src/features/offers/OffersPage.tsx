@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
@@ -66,6 +66,7 @@ export function OffersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rankingInfoOpen, setRankingInfoOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  const sortMenuRef = useRef<HTMLDivElement | null>(null);
   const [actionNotice, setActionNotice] = useState<{ text: string; offerId?: string } | null>(null);
   const actions = useOfferActions();
 
@@ -104,6 +105,26 @@ export function OffersPage() {
     if (selectedOffer && selectionKey(selectedOffer) !== selectedKey) setSelectedKey(selectionKey(selectedOffer));
     if (!selectedOffer) setSelectedKey(null);
   }, [selectedOffer, selectedKey]);
+
+  useEffect(() => {
+    if (!sortOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node | null;
+      if (target && !sortMenuRef.current?.contains(target)) setSortOpen(false);
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setSortOpen(false);
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [sortOpen]);
 
   useEffect(() => {
     savePreferences({
@@ -242,7 +263,7 @@ export function OffersPage() {
           <div className="jobs-results-header">
             <div className="jobs-results-count">
               <strong>{visibleOffers.length}</strong>
-              <span>opportunities</span>
+              <span>offers</span>
               <small>{pageStart}–{pageEnd}</small>
               <button
                 type="button"
@@ -255,7 +276,7 @@ export function OffersPage() {
               </button>
             </div>
 
-            <div className="jobs-sort-menu">
+            <div className="jobs-sort-menu" ref={sortMenuRef}>
               <button
                 type="button"
                 className="jobs-sort-trigger"
