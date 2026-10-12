@@ -9,6 +9,21 @@ function normalizeNumber_(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function verifiedPublicationDate_(value) {
+  if (!value) return null;
+  // Accept only explicit ISO calendar dates or ISO date-time stamps, not vague relative ages.
+  var text = String(value).trim();
+  if (!/^\\d{4}-\\d{2}-\\d{2}(?:T|$)/.test(text)) return null;
+  var date = new Date(text);
+  if (!Number.isFinite(date.getTime())) return null;
+  if (date.getTime() > Date.now() + 86400000) return null;
+  return date;
+}
+
+function formatPublicationDate_(date) {
+  return date ? Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
+}
+
 function normalizeBool_(value) {
   return value === true || String(value).toLowerCase() === 'true';
 }
@@ -352,7 +367,7 @@ function leverPostingToRow_(source, posting) {
   var technicalFit = fit.technicalFit;
   var decisionScore = fit.decisionScore;
   var priority = fit.priority;
-  var published = posting.createdAt ? new Date(posting.createdAt) : new Date();
+  var published = verifiedPublicationDate_(posting.createdAt);
   var verified = new Date();
 
   return [
@@ -367,7 +382,7 @@ function leverPostingToRow_(source, posting) {
     fit.duration,
     null,
     skillsForPosting_(posting),
-    Utilities.formatDate(published, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    formatPublicationDate_(published),
     'Active',
     'À candidater',
     'Vérifier les conditions puis candidater',
@@ -494,7 +509,7 @@ function greenhouseJobToRow_(source, job) {
   var technicalFit = fit.technicalFit;
   var decisionScore = fit.decisionScore;
   var priority = fit.priority;
-  var updated = job.updated_at ? new Date(job.updated_at) : new Date();
+  var published = verifiedPublicationDate_(job.first_published_at || job.published_at); // updated_at is not a publication timestamp
   var verified = new Date();
 
   return [
@@ -509,7 +524,7 @@ function greenhouseJobToRow_(source, job) {
     fit.duration,
     null,
     skillsForPosting_(posting),
-    Utilities.formatDate(updated, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    formatPublicationDate_(published),
     'Active',
     'À candidater',
     'Vérifier les conditions puis candidater',
@@ -636,7 +651,7 @@ function ashbyJobToRow_(source, job) {
   var posting = ashbyAsTargetPosting_(job);
   var fit = externalFitScores_(posting);
   var signalScore = fit.signal;
-  var published = job.publishedAt ? new Date(job.publishedAt) : new Date();
+  var published = verifiedPublicationDate_(job.publishedAt);
   var verified = new Date();
 
   return [
@@ -651,7 +666,7 @@ function ashbyJobToRow_(source, job) {
     fit.duration,
     ashbyCompensation_(job),
     skillsForPosting_(posting),
-    Utilities.formatDate(published, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    formatPublicationDate_(published),
     'Active',
     'À candidater',
     'Vérifier les conditions puis candidater',
@@ -801,7 +816,7 @@ function smartRecruitersAsTargetPosting_(job, details) {
 function smartRecruitersJobToRow_(source, job, details) {
   var posting = smartRecruitersAsTargetPosting_(job, details);
   var fit = externalFitScores_(posting);
-  var released = job.releasedDate ? new Date(job.releasedDate) : new Date();
+  var released = verifiedPublicationDate_(job.releasedDate || (details && details.releasedDate));
   var verified = new Date();
 
   return [
@@ -816,7 +831,7 @@ function smartRecruitersJobToRow_(source, job, details) {
     fit.duration,
     null,
     skillsForPosting_(posting),
-    Utilities.formatDate(released, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    formatPublicationDate_(released),
     'Active',
     'À candidater',
     'Vérifier les conditions puis candidater',
@@ -978,14 +993,23 @@ function isWorkdayInternship_(job) {
   });
 }
 
-function workdayPublishedDate_(job) {
-  var posted = normalizeText_(job.postedOn);
-  if (!posted) return new Date();
-  var daysMatch = posted.match(/(\d+)\s+day/i);
-  if (daysMatch) return new Date(Date.now() - Number(daysMatch[1]) * 24 * 60 * 60 * 1000);
-  if (/today/i.test(posted)) return new Date();
-  if (/yesterday/i.test(posted)) return new Date(Date.now() - 24 * 60 * 60 * 1000);
-  return new Date();
+function workdayPublishedDate_(job, details) {
+  // The list API's "postedOn" is often relative (e.g. "Posted 3 Days Ago").
+  // Relative strings are not exact publication dates and must not be fabricated.
+  var candidates = [
+    details && details.postedDate,
+    details && details.publicationDate,
+    details && details.datePosted,
+    job.postedDate,
+    job.publicationDate,
+    job.datePosted,
+    job.postedOn
+  ];
+  for (var i = 0; i < candidates.length; i += 1) {
+    var exactDate = verifiedPublicationDate_(candidates[i]);
+    if (exactDate) return exactDate;
+  }
+  return null;
 }
 
 function workdayJobToRow_(source, job, details) {
@@ -994,7 +1018,7 @@ function workdayJobToRow_(source, job, details) {
   var verified = new Date();
   var path = job.externalPath || '';
   var url = path ? workdayBaseUrl_(source) + '/en-US/' + source.site + path : workdayBaseUrl_(source) + '/' + source.site;
-  var published = workdayPublishedDate_(job);
+  var published = workdayPublishedDate_(job, details);
 
   return [
     'workday:' + source.tenant + ':' + normalizeComparable_(path || job.title),
@@ -1008,7 +1032,7 @@ function workdayJobToRow_(source, job, details) {
     fit.duration,
     null,
     skillsForPosting_(posting),
-    Utilities.formatDate(published, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
+    formatPublicationDate_(published),
     'Active',
     'À candidater',
     'Vérifier les conditions puis candidater',
