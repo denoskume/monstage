@@ -575,3 +575,80 @@
     width: 100%;
   }
 }
+
+
+/* Jobs page assembly — title + results only; search frame untouched */
+.jobs-page-heading {
+  max-width: 1180px;
+  margin: 10px auto 26px;
+}
+.jobs-page-heading h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(2rem, 4vw, 2.85rem);
+  font-weight: 820;
+  letter-spacing: -.045em;
+  line-height: 1.05;
+}
+
+.jobs-results-header {
+  min-height: 46px;
+  margin-top: 22px;
+  margin-bottom: 12px;
+}
+.jobs-results-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--text);
+}
+.jobs-results-count strong {
+  font-size: 1.28rem;
+  font-weight: 820;
+  letter-spacing: -.025em;
+}
+.jobs-results-count span {
+  font-size: .9rem;
+  font-weight: 650;
+}
+.jobs-results-count small {
+  margin-left: 3px;
+  color: var(--text-subtle);
+  font-size: .76rem;
+  font-weight: 500;
+}
+.jobs-results-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-subtle);
+  font-size: .76rem;
+}
+.jobs-results-sort select {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: .82rem;
+  font-weight: 700;
+  outline: 0;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .jobs-page-heading {
+    margin: 6px 0 18px;
+  }
+  .jobs-page-heading h1 {
+    font-size: 1.9rem;
+  }
+  .jobs-results-header {
+    margin-top: 16px;
+    min-height: 40px;
+  }
+  .jobs-results-count strong {
+    font-size: 1.12rem;
+  }
+  .jobs-results-sort span {
+    display: none;
+  }
+}
