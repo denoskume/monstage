@@ -652,3 +652,153 @@
     display: none;
   }
 }
+
+
+/* Jobs ranking info + sort menu — search frame untouched */
+.jobs-results-count {
+  position: relative;
+}
+.jobs-ranking-info {
+  width: 22px;
+  height: 22px;
+  margin-left: 4px;
+  border: 1px solid var(--text);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  display: inline-grid;
+  place-items: center;
+  font-size: .7rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.jobs-ranking-info:hover {
+  background: var(--surface-muted);
+}
+.jobs-sort-menu {
+  position: relative;
+}
+.jobs-sort-trigger {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .82rem;
+  font-weight: 700;
+}
+.jobs-sort-trigger:hover,
+.jobs-sort-trigger[aria-expanded="true"] {
+  background: var(--surface-muted);
+}
+.jobs-sort-trigger__icon {
+  font-size: .95rem;
+  line-height: 1;
+}
+.jobs-sort-trigger__chevron {
+  margin-left: 2px;
+  color: var(--text-muted);
+  font-size: .8rem;
+}
+.jobs-sort-popover {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 80;
+  min-width: 190px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+.jobs-sort-popover > strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: .78rem;
+}
+.jobs-sort-option {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-size: .82rem;
+  cursor: pointer;
+}
+.jobs-sort-option input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.jobs-ranking-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(15 23 42 / .48);
+}
+.jobs-ranking-dialog {
+  position: relative;
+  width: min(100%, 560px);
+  padding: 30px 32px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+}
+.jobs-ranking-dialog h2 {
+  margin: 0 42px 20px 0;
+  font-size: 1.45rem;
+  letter-spacing: -.03em;
+}
+.jobs-ranking-dialog p {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: .92rem;
+  line-height: 1.55;
+}
+.jobs-ranking-dialog p:last-child {
+  margin-bottom: 0;
+}
+.jobs-ranking-dialog__close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.jobs-ranking-dialog__close:hover {
+  background: var(--surface-muted);
+}
+
+@media (max-width: 600px) {
+  .jobs-ranking-overlay {
+    align-items: end;
+    padding: 0;
+  }
+  .jobs-ranking-dialog {
+    width: 100%;
+    border-radius: 18px 18px 0 0;
+    padding: 24px 20px 26px;
+  }
+  .jobs-sort-trigger {
+    padding-inline: 8px;
+  }
+  .jobs-sort-trigger__chevron {
+    display: none;
+  }
+}
