@@ -63,6 +63,10 @@ export function OfferCard({
 }) {
   const meta = [offer.city, offer.region].filter(Boolean).join(', ');
   const publishedLabel = relativePublishedDate(offer.publishedAt);
+  const publicationDate = offer.publishedAt ? parsePublishedDate(offer.publishedAt) : null;
+  const exactPublicationLabel = publicationDate
+    ? publicationDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
   const companyMark = offer.company
     .split(/\s+/)
     .filter(Boolean)
@@ -87,7 +91,7 @@ export function OfferCard({
           </div>
         </div>
         <div className="offer-card__signals">
-          <span className="offer-card__published">{publishedLabel}</span>
+          <span className="offer-card__published" title={exactPublicationLabel ?? publishedLabel}>{publishedLabel}{exactPublicationLabel ? ` · ${exactPublicationLabel}` : null}</span>
           {offer.decisionScore !== null ? <span className="signal signal--match">{offer.decisionScore}% match</span> : null}
           {offer.freshness ? <span className="signal">{displayValue(offer.freshness)}</span> : null}
         </div>
