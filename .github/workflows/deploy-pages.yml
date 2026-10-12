@@ -208,6 +208,7 @@ jobs:
     needs: build
     env:
       APPS_SCRIPT_SCRIPT_ID: ${{ secrets.APPS_SCRIPT_SCRIPT_ID }}
+      APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
       CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
     steps:
       - uses: actions/checkout@v4
@@ -229,7 +230,13 @@ jobs:
         run: |
           printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
           printf '{"scriptId":"%s","rootDir":"."}\n' "$APPS_SCRIPT_SCRIPT_ID" > .clasp.json
+
           npx --yes @google/clasp@latest push --force
+
+          deployment_id="$(printf '%s' "$APPS_SCRIPT_URL" | sed -n 's#.*\/s\/\([^/]*\)\/exec.*#\1#p')"
+          test -n "$deployment_id" || { echo "::error::Unable to extract Apps Script deployment ID from APPS_SCRIPT_URL"; exit 1; }
+
+          npx --yes @google/clasp@latest create-deployment             --deploymentId "$deployment_id"             --description "GitHub Actions $GITHUB_SHA"
 
   deploy:
     if: github.ref == 'refs/heads/main'
