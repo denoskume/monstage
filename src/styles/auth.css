@@ -109,3 +109,23 @@
   .auth-card { padding: 28px 18px; border-radius: 18px; }
   .auth-card h1 { font-size: 1.8rem; }
 }
+
+
+.auth-brand-wordmark {
+  margin: 0 0 16px;
+  color: var(--accent);
+  font-size: 2.15rem;
+  font-weight: 860;
+  letter-spacing: -.06em;
+  line-height: 1;
+}
+
+.auth-brand-wordmark .brand__at {
+  color: #dc2626;
+}
+
+@media (max-width: 420px) {
+  .auth-brand-wordmark {
+    font-size: 1.95rem;
+  }
+}
