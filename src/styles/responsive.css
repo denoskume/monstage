@@ -888,3 +888,12 @@
     font-size: 1.54rem;
   }
 }
+
+
+/* Compact ranking info icon */
+.jobs-ranking-info {
+  width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  font-size: .62rem;
+}
