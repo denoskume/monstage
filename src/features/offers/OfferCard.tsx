@@ -1,31 +1,48 @@
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 
-type Publication = { date: Date; hasTime: boolean; dateLabel: string };
+type Publication = { date: Date | null; hasTime: boolean; dateLabel: string; exact: boolean };
+
+const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
 function parsePublishedDate(value: string | null): Publication | null {
   if (!value) return null;
-  const valueText = value.trim();
-  const fr = valueText.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  const iso = valueText.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/);
-  if (!fr && !iso) return null;
-  const year = Number(fr ? fr[3] : iso![1]);
-  const month = Number(fr ? fr[2] : iso![2]);
-  const day = Number(fr ? fr[1] : iso![3]);
-  const dateOnly = new Date(year, month - 1, day);
-  if (dateOnly.getFullYear() !== year || dateOnly.getMonth() !== month - 1 || dateOnly.getDate() !== day) return null;
-  const hasTime = Boolean(iso?.[4]);
-  const timestamp = hasTime ? new Date(valueText.replace(' ', 'T') + (iso?.[7] ? '' : 'Z')) : dateOnly;
-  if (Number.isNaN(timestamp.getTime()) || timestamp.getTime() > Date.now() + 86_400_000) return null;
-  return {
-    date: timestamp,
-    hasTime,
-    dateLabel: dateOnly.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }),
-  };
+  const text = value.trim();
+  const fr = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?=$|[\s—–;,])/);
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?(?=$|[\s—–;,])/);
+  if (fr || iso) {
+    const year = Number(fr ? fr[3] : iso![1]);
+    const month = Number(fr ? fr[2] : iso![2]);
+    const day = Number(fr ? fr[1] : iso![3]);
+    const localDay = new Date(year, month - 1, day);
+    if (localDay.getFullYear() !== year || localDay.getMonth() !== month - 1 || localDay.getDate() !== day) return null;
+    const hasTime = Boolean(iso?.[4]);
+    const timeText = iso?.[0] || '';
+    const timeStamp = hasTime ? new Date(timeText.replace(' ', 'T') + (iso?.[7] ? '' : 'Z')) : localDay;
+    if (Number.isNaN(timeStamp.getTime()) || timeStamp.getTime() > Date.now() + 86_400_000) return null;
+    return { date: timeStamp, hasTime, exact: true, dateLabel: localDay.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) };
+  }
+
+  // Month-only and year-only references are not precise posting dates.
+  const normalized = text.toLocaleLowerCase('fr-FR');
+  const longMonth = normalized.match(/^(janvier|février|fevrier|mars|avril|mai|juin|juillet|août|aout|septembre|octobre|novembre|décembre|decembre)\s+(\d{4})(?=$|[\s—–;,])/);
+  if (longMonth) {
+    const name = longMonth[1].normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const index = MONTHS.findIndex((month) => month.normalize('NFD').replace(/[\u0300-\u036f]/g, '') === name);
+    if (index >= 0) return { date: null, hasTime: false, exact: false, dateLabel: MONTHS[index] + ' ' + longMonth[2] };
+  }
+  const numericMonth = text.match(/^(\d{1,2})\/(\d{4})(?=$|[\s—–;,])/);
+  if (numericMonth && Number(numericMonth[1]) >= 1 && Number(numericMonth[1]) <= 12) {
+    return { date: null, hasTime: false, exact: false, dateLabel: MONTHS[Number(numericMonth[1]) - 1] + ' ' + numericMonth[2] };
+  }
+  const yearOnly = text.match(/^(\d{4})$/);
+  if (yearOnly) return { date: null, hasTime: false, exact: false, dateLabel: yearOnly[1] };
+  return null;
 }
 
 function relativePublishedDate(publication: Publication | null): string {
   if (!publication) return 'Date non communiquée';
+  if (!publication.exact || !publication.date) return 'Publié en ' + publication.dateLabel;
   const now = new Date();
   const { date, hasTime } = publication;
   if (hasTime) {
@@ -38,8 +55,8 @@ function relativePublishedDate(publication: Publication | null): string {
     }
   }
   const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const publishedDay = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-  const days = Math.max(0, Math.round((today - publishedDay) / 86_400_000));
+  const day = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const days = Math.max(0, Math.round((today - day) / 86_400_000));
   if (days === 0) return 'Aujourd’hui';
   if (days === 1) return 'Hier';
   if (days < 7) return 'Il y a ' + days + ' jours';
@@ -75,7 +92,7 @@ export function OfferCard({
   const meta = [offer.city, offer.region].filter(Boolean).join(', ');
   const publication = parsePublishedDate(offer.publishedAt);
   const publishedLabel = relativePublishedDate(publication);
-  const exactPublicationLabel = publication?.dateLabel ?? null;
+  const exactPublicationLabel = publication?.exact ? publication.dateLabel : null;
   const companyMark = offer.company
     .split(/\s+/)
     .filter(Boolean)
