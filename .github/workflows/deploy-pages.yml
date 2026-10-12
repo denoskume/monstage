@@ -119,6 +119,38 @@ jobs:
           printf '%s' "$APPS_SCRIPT_GATEWAY_SECRET" | npx wrangler secret put APPS_SCRIPT_GATEWAY_SECRET
           npx wrangler secret list | grep -q '"APPS_SCRIPT_URL"'
           npx wrangler secret list | grep -q '"APPS_SCRIPT_GATEWAY_SECRET"'
+      - name: Force and diagnose external source sync
+        if: steps.cloudflare.outputs.configured == 'true'
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+
+          payload = json.dumps({
+              "gatewaySecret": os.environ["APPS_SCRIPT_GATEWAY_SECRET"],
+              "action": "syncExternalSources",
+          }).encode()
+
+          request = urllib.request.Request(
+              os.environ["APPS_SCRIPT_URL"],
+              data=payload,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(request, timeout=300) as response:
+              body = json.loads(response.read().decode())
+
+          print("External sync diagnostics:")
+          print(json.dumps(body.get("sync", {}), sort_keys=True))
+
+          failures = {
+              name: details.get("error")
+              for name, details in (body.get("sync") or {}).items()
+              if isinstance(details, dict) and details.get("error")
+          }
+          if failures:
+              raise SystemExit("External source sync failures: " + json.dumps(failures, sort_keys=True))
+          PY
+
       - name: Smoke test Apps Script offers backend
         if: steps.cloudflare.outputs.configured == 'true'
         run: |
