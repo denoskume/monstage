@@ -15,9 +15,9 @@ function parsePublishedDate(value: string): Date | null {
 }
 
 function relativePublishedDate(value: string | null): string {
-  if (!value) return 'Date unavailable';
+  if (!value) return 'Publication date unavailable';
   const published = parsePublishedDate(value);
-  if (!published) return 'Date unavailable';
+  if (!published) return 'Publication date unavailable';
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -77,7 +77,6 @@ export function OfferCard({
           <div className="offer-card__identity-copy">
             <div className="offer-card__company-row">
               <span className="offer-card__company">{offer.company}</span>
-              <span className="offer-card__published">{publishedLabel}</span>
             </div>
             <h2 className="offer-card__title">{offer.title}</h2>
             <p className="offer-card__location">{meta || 'Location not specified'}</p>
@@ -88,6 +87,7 @@ export function OfferCard({
           </div>
         </div>
         <div className="offer-card__signals">
+          <span className="offer-card__published">{publishedLabel}</span>
           {offer.decisionScore !== null ? <span className="signal signal--match">{offer.decisionScore}% match</span> : null}
           {offer.freshness ? <span className="signal">{displayValue(offer.freshness)}</span> : null}
         </div>
