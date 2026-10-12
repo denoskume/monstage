@@ -15,9 +15,9 @@ function parsePublishedDate(value: string): Date | null {
 }
 
 function relativePublishedDate(value: string | null): string {
-  if (!value) return 'Publication date unavailable';
+  if (!value) return 'Date unavailable';
   const published = parsePublishedDate(value);
-  if (!published) return 'Publication date unavailable';
+  if (!published) return 'Date unavailable';
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
