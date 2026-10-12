@@ -1218,14 +1218,36 @@ function backendOfferIdentity_(offer) {
   ].join('::');
 }
 
+function publicationDateScore_(offer) {
+  var value = normalizeText_(offer.publishedAt);
+  if (!value) return 0;
+  var parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) {
+    var french = value.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);
+    if (french) parsed = Date.parse(french[3] + '-' + french[2].padStart(2, '0') + '-' + french[1].padStart(2, '0'));
+  }
+  if (!Number.isFinite(parsed) || parsed > Date.now() + 86400000) return 0;
+  return parsed;
+}
+
 function dedupeOffersServerSide_(offers) {
-  var seen = {};
-  return offers.filter(function (offer) {
+  var selected = {};
+  var order = [];
+  offers.forEach(function (offer) {
     var key = backendOfferIdentity_(offer);
-    if (seen[key]) return false;
-    seen[key] = true;
-    return true;
+    if (!Object.prototype.hasOwnProperty.call(selected, key)) {
+      selected[key] = offer;
+      order.push(key);
+      return;
+    }
+    var current = selected[key];
+    var currentScore = publicationDateScore_(current);
+    var candidateScore = publicationDateScore_(offer);
+    // Prefer verified publication data, and newer official postings over stale duplicates.
+    // Do not use import/verification timestamps as a substitute for publication.
+    if (candidateScore > currentScore) selected[key] = offer;
   });
+  return order.map(function (key) { return selected[key]; });
 }
 
 function getOffers_() {
