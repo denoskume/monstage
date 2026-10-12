@@ -75,13 +75,15 @@ export function OfferCard({
         <div className="offer-card__identity">
           <span className="offer-card__company-mark" aria-hidden="true">{companyMark || '•'}</span>
           <div className="offer-card__identity-copy">
-            <span className="offer-card__company">{offer.company}</span>
+            <div className="offer-card__company-row">
+              <span className="offer-card__company">{offer.company}</span>
+              <span className="offer-card__published">{publishedLabel}</span>
+            </div>
             <h2 className="offer-card__title">{offer.title}</h2>
             <p className="offer-card__location">{meta || 'Location not specified'}</p>
             <div className="offer-card__facts">
               {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
               {offer.compensation ? <span>{offer.compensation}</span> : null}
-              <span className="offer-card__published">{publishedLabel}</span>
             </div>
           </div>
         </div>
