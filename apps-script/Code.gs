@@ -179,10 +179,21 @@ var LEVER_SOURCES_ = [
 function isFranceLocation_(value) {
   var text = normalizeComparable_(value);
   if (!text) return false;
+  if (text === 'fr' || /(^| )fr( |$)/.test(text)) return true;
+
   var franceTerms = [
     'france', 'paris', 'nantes', 'lyon', 'toulouse', 'grenoble', 'bordeaux',
     'lille', 'rennes', 'marseille', 'nice', 'sophia antipolis', 'montpellier',
-    'strasbourg', 'saclay', 'velizy', 'courbevoie', 'puteaux', 'la defense'
+    'strasbourg', 'saclay', 'velizy', 'courbevoie', 'puteaux', 'la defense',
+    'boulogne billancourt', 'issy les moulineaux', 'levallois perret',
+    'neuilly sur seine', 'saint denis', 'saint ouen', 'nanterre', 'rueil malmaison',
+    'meudon', 'versailles', 'guyancourt', 'massy', 'palaiseau', 'evry',
+    'cergy', 'aix en provence', 'vitrolles', 'cannes', 'antibes',
+    'clermont ferrand', 'limoges', 'poitiers', 'tours', 'orleans',
+    'angers', 'le mans', 'caen', 'rouen', 'reims', 'metz', 'nancy',
+    'dijon', 'besancon', 'mulhouse', 'annecy', 'chambery', 'valence',
+    'avignon', 'pau', 'bayonne', 'la rochelle', 'niort', 'brest',
+    'lorient', 'vannes', 'saint nazaire'
   ];
   return franceTerms.some(function (term) { return text.indexOf(term) !== -1; });
 }
@@ -218,8 +229,11 @@ function targetSignalScore_(posting) {
     ['generative ai', 8], ['ia generative', 8], ['ai engineer', 9], ['ingenieur ia', 9],
     ['robotics', 8], ['optimisation', 7], ['optimization', 7],
     ['industrial ai', 8], ['quality', 4], ['automation', 4],
-    ['data engineer', 5], ['analytics engineer', 4], ['data analyst', 2],
+    ['data engineer', 6], ['data engineering', 6], ['analytics engineer', 5],
+    ['data analyst', 5], ['data analytics', 5], ['business intelligence', 4],
+    ['statistical', 3], ['statistics', 3], ['predictive', 4], ['forecasting', 4],
     ['python', 2], ['pytorch', 4], ['opencv', 6], ['scikit learn', 3],
+    ['sql', 2], ['power bi', 2], ['tableau', 2], ['spark', 3],
     ['research', 3], ['r&d', 4]
   ];
 
@@ -404,7 +418,7 @@ function syncLeverSources_() {
       var location = posting.categories && posting.categories.location ? posting.categories.location : '';
       if (!isFranceLocation_(location)) return;
       if (!isInternshipPosting_(posting)) return;
-      if (targetSignalScore_(posting) < 5) return;
+      if (targetSignalScore_(posting) < 3) return;
       rows.push(leverPostingToRow_(source, posting));
     });
   });
@@ -524,7 +538,7 @@ function syncGreenhouseSources_() {
       var location = posting.categories.location || '';
       if (!isFranceLocation_(location)) return;
       if (!isInternshipPosting_(posting)) return;
-      if (targetSignalScore_(posting) < 5) return;
+      if (targetSignalScore_(posting) < 3) return;
       rows.push(greenhouseJobToRow_(source, job));
     });
   });
@@ -666,7 +680,7 @@ function syncAshbySources_() {
       var posting = ashbyAsTargetPosting_(job);
       if (!isFranceLocation_(posting.categories.location)) return;
       if (!isAshbyInternship_(job, posting)) return;
-      if (targetSignalScore_(posting) < 5) return;
+      if (targetSignalScore_(posting) < 3) return;
       rows.push(ashbyJobToRow_(source, job));
     });
   });
@@ -823,7 +837,7 @@ function syncSmartRecruitersSources_() {
       if (!details || details.active === false) return;
       var posting = smartRecruitersAsTargetPosting_(job, details);
       if (!isFranceLocation_(posting.categories.location)) return;
-      if (targetSignalScore_(posting) < 5) return;
+      if (targetSignalScore_(posting) < 3) return;
       rows.push(smartRecruitersJobToRow_(source, job, details));
     });
   });
@@ -1011,7 +1025,7 @@ function syncWorkdaySources_() {
       var details = fetchWorkdayDetails_(source, job);
       var posting = workdayAsTargetPosting_(job, details);
       if (!isFranceLocation_(posting.categories.location)) return;
-      if (targetSignalScore_(posting) < 5) return;
+      if (targetSignalScore_(posting) < 3) return;
       rows.push(workdayJobToRow_(source, job, details));
     });
   });
