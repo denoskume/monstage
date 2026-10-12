@@ -802,3 +802,34 @@
     display: none;
   }
 }
+
+
+/* Refine offers count and sort readability */
+.jobs-results-count strong {
+  font-size: 1.45rem;
+}
+.jobs-results-count span {
+  font-size: .96rem;
+}
+.jobs-results-count small {
+  font-size: .8rem;
+}
+.jobs-sort-trigger {
+  min-height: 44px;
+  font-size: .92rem;
+}
+.jobs-sort-trigger__icon {
+  font-size: 1rem;
+}
+@media (max-width: 767px) {
+  .jobs-results-count strong {
+    font-size: 1.24rem;
+  }
+  .jobs-results-count span {
+    font-size: .88rem;
+  }
+  .jobs-sort-trigger {
+    min-height: 40px;
+    font-size: .86rem;
+  }
+}
