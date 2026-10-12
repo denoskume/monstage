@@ -262,8 +262,10 @@ export function OffersPage() {
         <>
           <div className="jobs-results-header">
             <div className="jobs-results-count">
-              <strong>{visibleOffers.length}</strong>
-              <span>offers</span>
+              <span className="jobs-results-primary">
+                <strong>{visibleOffers.length}</strong>
+                <span>offers</span>
+              </span>
               <small>{pageStart}–{pageEnd}</small>
               <button
                 type="button"
