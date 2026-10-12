@@ -6,8 +6,9 @@ function AuthLoadingScreen() {
   return (
     <main className="auth-page" aria-busy="true">
       <section className="auth-card">
-        <div className="auth-brand" aria-hidden="true">MS</div>
-        <h1>MonStage</h1>
+        <h1 className="auth-brand-wordmark" aria-label="MonStage">
+          MonSt<span className="brand__at" aria-hidden="true">@</span>ge
+        </h1>
         <p className="auth-subtitle">Verifying your session…</p>
       </section>
     </main>
