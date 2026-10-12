@@ -2056,3 +2056,15 @@ h1, h2, h3 { color: var(--text); }
   .offer-card__company-mark { width: 40px; height: 40px; border-radius: 10px; }
   .offer-card__industry { display: none; }
 }
+
+/* Publication recency is a first-class card attribute, never clipped. */
+.offer-card__company-row { flex-wrap: wrap; align-items: center; }
+.offer-card__company-row .offer-card__published {
+  display: inline-flex;
+  flex: 0 1 auto;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: .82rem;
+  line-height: 1.4;
+}
