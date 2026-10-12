@@ -149,7 +149,12 @@ jobs:
         run: npm --prefix worker install --no-audit --no-fund
       - name: Deploy Cloudflare Worker
         if: steps.cloudflare.outputs.configured == 'true'
-        run: npm --prefix worker run deploy
+        run: |
+          for attempt in 1 2 3; do
+            npm --prefix worker run deploy && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep $((attempt * 5))
+          done
       - name: Restore Worker backend secrets
         if: steps.cloudflare.outputs.configured == 'true'
         working-directory: worker
