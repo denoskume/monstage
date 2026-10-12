@@ -11,17 +11,22 @@ function normalizeNumber_(value) {
 
 function verifiedPublicationDate_(value) {
   if (!value) return null;
-  // Accept only explicit ISO calendar dates or ISO date-time stamps, not vague relative ages.
+  // Accept official calendar dates and ISO timestamps only, not relative ages.
   var text = String(value).trim();
-  if (!/^\\d{4}-\\d{2}-\\d{2}(?:T|$)/.test(text)) return null;
-  var date = new Date(text);
-  if (!Number.isFinite(date.getTime())) return null;
-  if (date.getTime() > Date.now() + 86400000) return null;
-  return date;
+  var match = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:(T|\s)(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/);
+  if (!match) return null;
+  var year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+  var calendar = new Date(Date.UTC(year, month - 1, day));
+  if (calendar.getUTCFullYear() !== year || calendar.getUTCMonth() !== month - 1 || calendar.getUTCDate() !== day) return null;
+  var normalized = text.replace(' ', 'T');
+  if (match[4] && !match[8]) normalized += 'Z';
+  var parsed = new Date(normalized);
+  if (!Number.isFinite(parsed.getTime()) || parsed.getTime() > Date.now() + 86400000) return null;
+  return text;
 }
 
 function formatPublicationDate_(date) {
-  return date ? Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
+  return date || '';
 }
 
 function normalizeBool_(value) {
