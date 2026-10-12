@@ -119,7 +119,7 @@ test('wrong Google account is denied and protected data stays hidden', async ({ 
 
   await page.getByRole('button', { name: 'Sign in with Google' }).click();
 
-  await expect(page.getByText('Access denied — This MonStage workspace is private.')).toBeVisible();
+  await expect(page.getByText('Access denied — This MonSt@ge workspace is private.')).toBeVisible();
   await expect(page.getByText('Computer Vision Intern')).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Jobs' })).toHaveCount(0);
 });
