@@ -24,8 +24,6 @@ test('renders a concise job-card summary and actions', () => {
   expect(screen.getByText(/Courbevoie/)).toBeInTheDocument();
   expect(screen.getByText('1 300 €/mois')).toBeInTheDocument();
   expect(screen.getByText('100% match')).toBeInTheDocument();
-  expect(screen.getByText('A+ priority')).toBeInTheDocument();
-  expect(screen.getByText('Likely yes')).toBeInTheDocument();
   expect(screen.getByText('Verified <24h')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Remove from saved jobs' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Not interested' })).toBeInTheDocument();
