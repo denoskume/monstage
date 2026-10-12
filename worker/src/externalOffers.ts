@@ -83,12 +83,7 @@ const SMART_SOURCES: SmartSource[] = [
   { companyId: 'Iliad-Free', company: 'Iliad-Free' },
 ];
 
-const WORKDAY_SEARCHES = [
-  'stage',
-  'stage data', 'stage analytics', 'stage machine learning',
-  'stage intelligence artificielle', 'stage ai', 'stage vision',
-  'stage image', 'stage signal', 'stage digital',
-];
+const WORKDAY_SEARCHES = ['stage'];
 
 const TARGET_TERMS = [
   'data', 'analytics', 'machine learning', 'deep learning',
@@ -205,7 +200,7 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
 
   for (const searchText of WORKDAY_SEARCHES) {
     let offset = 0;
-    const maxPages = searchText === 'stage' ? 8 : 2;
+    const maxPages = source.company === 'Airbus' ? 5 : 2;
 
     for (let page = 0; page < maxPages; page += 1) {
       const payload = await fetchJson(endpoint, {
@@ -238,13 +233,13 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
 }
 
 async function fetchSmart(source: SmartSource): Promise<ExternalOffer[]> {
-  const queries = ['stage', 'internship', 'stagiaire'];
+  const queries = ['stage'];
   const seen = new Set<string>();
   const offers: ExternalOffer[] = [];
 
   for (const query of queries) {
     let offset = 0;
-    for (let page = 0; page < 4; page += 1) {
+    for (let page = 0; page < 1; page += 1) {
       const url =
         `https://api.smartrecruiters.com/v1/companies/${encodeURIComponent(source.companyId)}/postings?limit=100&offset=${offset}&country=fr&q=${encodeURIComponent(query)}`;
       const payload = await fetchJson(url);
