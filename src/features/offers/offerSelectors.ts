@@ -137,7 +137,8 @@ function parseDateValue(value: string | null): number {
 }
 
 function recentValue(offer: InternshipOffer): number {
-  return parseDateValue(offer.publishedAt) || parseDateValue(offer.verifiedAt);
+  // A verification/sync timestamp is not an offer publication date.
+  return parseDateValue(offer.publishedAt);
 }
 
 export function selectVisibleOffers(
