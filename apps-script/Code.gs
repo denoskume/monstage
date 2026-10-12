@@ -1115,13 +1115,34 @@ function refreshExternalSourcesIfDue_() {
   }
 }
 
+function runExternalSyncSafely_(name, syncFn) {
+  try {
+    return { count: syncFn(), error: null };
+  } catch (error) {
+    var message = String(error && error.stack ? error.stack : error);
+    console.error(name + ' sync failed: ' + message);
+    return { count: 0, error: message.slice(0, 1000) };
+  }
+}
+
 function syncExternalOfferSources() {
+  var lever = runExternalSyncSafely_('Lever', syncLeverSources_);
+  var greenhouse = runExternalSyncSafely_('Greenhouse', syncGreenhouseSources_);
+  var ashby = runExternalSyncSafely_('Ashby', syncAshbySources_);
+  var smartRecruiters = runExternalSyncSafely_('SmartRecruiters', syncSmartRecruitersSources_);
+  var workday = runExternalSyncSafely_('Workday', syncWorkdaySources_);
+
+  PropertiesService.getScriptProperties().setProperty(
+    'EXTERNAL_SOURCE_CONFIG_SIGNATURE',
+    externalSourceConfigSignature_()
+  );
+
   return {
-    lever: syncLeverSources_(),
-    greenhouse: syncGreenhouseSources_(),
-    ashby: syncAshbySources_(),
-    smartRecruiters: syncSmartRecruitersSources_(),
-    workday: syncWorkdaySources_(),
+    lever: lever,
+    greenhouse: greenhouse,
+    ashby: ashby,
+    smartRecruiters: smartRecruiters,
+    workday: workday,
     syncedAt: new Date().toISOString()
   };
 }
@@ -1916,6 +1937,13 @@ function doPost(e) {
       var externalPayload = externalResult.payload || {};
       externalPayload.status = externalResult.status;
       return jsonOutput_(externalPayload);
+    }
+
+    if (action === 'syncExternalSources') {
+      return jsonOutput_({
+        source: 'Stage Intelligence France',
+        sync: syncExternalOfferSources()
+      });
     }
 
     var offers = getOffers_();
