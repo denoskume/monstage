@@ -31,7 +31,7 @@ export function Footer() {
     <footer className="site-footer">
       <div className="site-footer__inner">
         <div className="site-footer__brand-column">
-          <Link to="/offers" className="site-footer__brand" aria-label="MonStage — Jobs home">MonStage</Link>
+          <Link to="/offers" className="site-footer__brand" aria-label="MonStage — Jobs home">MonSt<span className="brand__at">@</span>ge</Link>
           <p>Your internship search, application preparation and follow-up workspace.</p>
         </div>
 
@@ -52,7 +52,7 @@ export function Footer() {
       </div>
 
       <div className="site-footer__bottom">
-        <span>© {year} MonStage</span>
+        <span>© {year} MonSt<span className="brand__at">@</span>ge</span>
         <span>Private candidate workspace</span>
         <button type="button" onClick={scrollToTop} aria-label="Back to top" title="Back to top">↑</button>
       </div>
