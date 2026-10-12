@@ -40,3 +40,33 @@ test('renders a concise job-card summary and actions', () => {
   expect(screen.getByRole('button', { name: 'Not interested' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Share job' })).toBeInTheDocument();
 });
+
+
+test('supports French publication dates and shows a fallback when missing', () => {
+  const frenchDateOffer = { ...offer, publishedAt: '11/10/2026' };
+  const { rerender } = render(
+    <OfferCard
+      offer={frenchDateOffer}
+      selected={false}
+      saved={false}
+      onSelect={() => undefined}
+      onToggleSave={() => undefined}
+      onHide={() => undefined}
+      onShare={() => undefined}
+    />,
+  );
+  expect(screen.getByText('Yesterday')).toBeInTheDocument();
+
+  rerender(
+    <OfferCard
+      offer={{ ...offer, publishedAt: null }}
+      selected={false}
+      saved={false}
+      onSelect={() => undefined}
+      onToggleSave={() => undefined}
+      onHide={() => undefined}
+      onShare={() => undefined}
+    />,
+  );
+  expect(screen.getByText('Publication date unavailable')).toBeInTheDocument();
+});
