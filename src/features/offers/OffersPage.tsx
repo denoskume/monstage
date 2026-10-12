@@ -266,7 +266,6 @@ export function OffersPage() {
                 <strong>{visibleOffers.length}</strong>
                 <span>offers</span>
               </span>
-              <small>{pageStart}–{pageEnd}</small>
               <button
                 type="button"
                 className="jobs-ranking-info"
