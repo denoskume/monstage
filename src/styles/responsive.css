@@ -833,3 +833,21 @@
     font-size: .86rem;
   }
 }
+
+
+/* Match reference: offer count and label share the same visual weight */
+.jobs-results-count strong,
+.jobs-results-count > span {
+  font-size: 1.5rem;
+  font-weight: 820;
+  line-height: 1;
+  letter-spacing: -.025em;
+  color: var(--text);
+}
+
+@media (max-width: 767px) {
+  .jobs-results-count strong,
+  .jobs-results-count > span {
+    font-size: 1.28rem;
+  }
+}
