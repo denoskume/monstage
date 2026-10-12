@@ -154,8 +154,16 @@ jobs:
         if: steps.cloudflare.outputs.configured == 'true'
         working-directory: worker
         run: |
-          printf '%s' "$APPS_SCRIPT_URL" | npx wrangler secret put APPS_SCRIPT_URL
-          printf '%s' "$APPS_SCRIPT_GATEWAY_SECRET" | npx wrangler secret put APPS_SCRIPT_GATEWAY_SECRET
+          for attempt in 1 2 3; do
+            printf '%s' "$APPS_SCRIPT_URL" | npx wrangler secret put APPS_SCRIPT_URL && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep $((attempt * 3))
+          done
+          for attempt in 1 2 3; do
+            printf '%s' "$APPS_SCRIPT_GATEWAY_SECRET" | npx wrangler secret put APPS_SCRIPT_GATEWAY_SECRET && break
+            [ "$attempt" = 3 ] && exit 1
+            sleep $((attempt * 3))
+          done
           npx wrangler secret list | grep -q '"APPS_SCRIPT_URL"'
           npx wrangler secret list | grep -q '"APPS_SCRIPT_GATEWAY_SECRET"'
       - name: Force and diagnose external source sync
