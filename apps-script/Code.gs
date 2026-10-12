@@ -1866,6 +1866,23 @@ function addExternalApplication_(application) {
 }
 
 
+
+function externalSourceDiagnostics_() {
+  var properties = PropertiesService.getScriptProperties();
+  return {
+    lever: Number(properties.getProperty('LEVER_LAST_COUNT') || 0),
+    greenhouse: Number(properties.getProperty('GREENHOUSE_LAST_COUNT') || 0),
+    ashby: Number(properties.getProperty('ASHBY_LAST_COUNT') || 0),
+    smartRecruiters: Number(properties.getProperty('SMARTRECRUITERS_LAST_COUNT') || 0),
+    workday: Number(properties.getProperty('WORKDAY_LAST_COUNT') || 0),
+    leverLastSync: properties.getProperty('LEVER_LAST_SYNC'),
+    greenhouseLastSync: properties.getProperty('GREENHOUSE_LAST_SYNC'),
+    ashbyLastSync: properties.getProperty('ASHBY_LAST_SYNC'),
+    smartRecruitersLastSync: properties.getProperty('SMARTRECRUITERS_LAST_SYNC'),
+    workdayLastSync: properties.getProperty('WORKDAY_LAST_SYNC')
+  };
+}
+
 function doGet() {
   return jsonOutput_({
     error: 'NOT_FOUND',
@@ -1901,11 +1918,13 @@ function doPost(e) {
       return jsonOutput_(externalPayload);
     }
 
+    var offers = getOffers_();
     return jsonOutput_({
       generatedAt: new Date().toISOString(),
       source: 'Stage Intelligence France',
       autonomyLastSync: PropertiesService.getScriptProperties().getProperty('AUTONOMY_LAST_SYNC'),
-      offers: getOffers_()
+      sourceDiagnostics: externalSourceDiagnostics_(),
+      offers: offers
     });
   } catch (error) {
     console.error('MonStage backend error');
