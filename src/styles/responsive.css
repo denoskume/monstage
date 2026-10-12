@@ -982,3 +982,30 @@
 .brand__at {
   color: #dc2626;
 }
+
+
+/* Unified MonSt@ge brand palette */
+.brand,
+.brand:visited,
+.brand:hover,
+.brand:focus,
+.brand__name,
+.site-footer__brand,
+.site-footer__brand:hover,
+.site-footer__brand:focus,
+.site-footer__copyright-brand {
+  color: var(--accent);
+}
+
+.brand__at,
+.auth-brand-wordmark .brand__at,
+.site-footer__brand .brand__at,
+.site-footer__copyright-brand .brand__at {
+  color: #dc2626;
+}
+
+.site-footer__bottom button,
+.site-footer__bottom button:hover,
+.site-footer__bottom button:focus {
+  background: var(--accent);
+}
