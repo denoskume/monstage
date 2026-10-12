@@ -11,6 +11,15 @@ function normalizeNumber_(value) {
 
 function verifiedPublicationDate_(value) {
   if (!value) return null;
+  // Lever createdAt is an authoritative Unix millisecond timestamp.
+  if (typeof value === 'number' || /^\\d{10,13}$/.test(String(value).trim())) {
+    var numberValue = Number(value);
+    var milliseconds = numberValue < 100000000000 ? numberValue * 1000 : numberValue;
+    var numericDate = new Date(milliseconds);
+    return Number.isFinite(numericDate.getTime()) &&
+      numericDate.getTime() <= Date.now() + 86400000 &&
+      numericDate.getUTCFullYear() >= 2000 ? numericDate.toISOString() : null;
+  }
   // Accept official calendar dates and ISO timestamps only, not relative ages.
   var text = String(value).trim();
   var match = text.match(/^(\d{4})-(\d{2})-(\d{2})(?:(T|\s)(\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/);
