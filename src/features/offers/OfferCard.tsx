@@ -42,7 +42,7 @@ function parsePublishedDate(value: string | null): Publication | null {
 
 function relativePublishedDate(publication: Publication | null): string {
   if (!publication) return 'Date non communiquée';
-  if (!publication.exact || !publication.date) return 'Publié en ' + publication.dateLabel;
+  if (!publication.exact || !publication.date) return 'Date exacte inconnue · ' + publication.dateLabel;
   const now = new Date();
   const { date, hasTime } = publication;
   if (hasTime) {
