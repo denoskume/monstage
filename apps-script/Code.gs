@@ -1192,12 +1192,17 @@ function syncExternalOfferSources() {
     externalSourceConfigSignature_()
   );
 
+  var publicationAudit = null;
+  try { publicationAudit = syncHistoricalPublicationDates(); }
+  catch (error) { publicationAudit = { error: String(error).slice(0, 250) }; }
+
   return {
     lever: lever,
     greenhouse: greenhouse,
     ashby: ashby,
     smartRecruiters: smartRecruiters,
     workday: workday,
+    publicationAudit: publicationAudit,
     syncedAt: new Date().toISOString()
   };
 }
