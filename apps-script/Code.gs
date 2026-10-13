@@ -12,7 +12,7 @@ function normalizeNumber_(value) {
 function verifiedPublicationDate_(value) {
   if (!value) return null;
   // Lever createdAt is an authoritative Unix millisecond timestamp.
-  if (typeof value === 'number' || /^\\d{10,13}$/.test(String(value).trim())) {
+  if (typeof value === 'number' || /^\d{10,13}$/.test(String(value).trim())) {
     var numberValue = Number(value);
     var milliseconds = numberValue < 100000000000 ? numberValue * 1000 : numberValue;
     var numericDate = new Date(milliseconds);
@@ -830,7 +830,7 @@ function smartRecruitersAsTargetPosting_(job, details) {
 function smartRecruitersJobToRow_(source, job, details) {
   var posting = smartRecruitersAsTargetPosting_(job, details);
   var fit = externalFitScores_(posting);
-  var released = verifiedPublicationDate_(job.releasedDate || (details && details.releasedDate));
+  var released = verifiedPublicationDate_((details && (details.releasedDate || details.postingDate || details.datePosted)) || job.releasedDate);
   var verified = new Date();
 
   return [
@@ -1221,13 +1221,21 @@ function backendOfferIdentity_(offer) {
 function publicationDateScore_(offer) {
   var value = normalizeText_(offer.publishedAt);
   if (!value) return 0;
-  var parsed = Date.parse(value);
-  if (!Number.isFinite(parsed)) {
-    var french = value.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);
-    if (french) parsed = Date.parse(french[3] + '-' + french[2].padStart(2, '0') + '-' + french[1].padStart(2, '0'));
-  }
-  if (!Number.isFinite(parsed) || parsed > Date.now() + 86400000) return 0;
-  return parsed;
+  var iso = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:T|\s|$)/);
+  var fr = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?=$|[\s—–;,])/);
+  var candidate = iso ? iso[1] + '-' + iso[2] + '-' + iso[3] :
+    fr ? fr[3] + '-' + fr[2].padStart(2, '0') + '-' + fr[1].padStart(2, '0') : null;
+  if (!candidate) return 0;
+  var timestamp = Date.parse(candidate);
+  return Number.isFinite(timestamp) && timestamp <= Date.now() + 86400000 ? timestamp : 0;
+}
+
+function publicationPrecision_(offer) {
+  var value = normalizeText_(offer.publishedAt) || '';
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return 3;
+  if (publicationDateScore_(offer)) return 2;
+  if (/^(?:\d{4}|(?:\d{1,2}\/)?\d{4})/.test(value) || value) return 1;
+  return 0;
 }
 
 function dedupeOffersServerSide_(offers) {
@@ -1245,7 +1253,8 @@ function dedupeOffersServerSide_(offers) {
     var candidateScore = publicationDateScore_(offer);
     // Prefer verified publication data, and newer official postings over stale duplicates.
     // Do not use import/verification timestamps as a substitute for publication.
-    if (candidateScore > currentScore) selected[key] = offer;
+    if (publicationPrecision_(offer) > publicationPrecision_(current) ||
+        (publicationPrecision_(offer) === publicationPrecision_(current) && candidateScore > currentScore)) selected[key] = offer;
   });
   return order.map(function (key) { return selected[key]; });
 }
