@@ -185,6 +185,10 @@ jobs:
           }
           if failures:
               raise SystemExit("External source sync failures: " + json.dumps(failures, sort_keys=True))
+          expected = ["lever", "greenhouse", "ashby", "smartRecruiters", "workday"]
+          counts = {key: (body.get("sync") or {}).get(key, {}).get("count", 0) for key in expected}
+          if not any(counts.values()):
+              raise SystemExit("All five ATS sources returned zero postings; sync is not operational")
           PY
 
       - name: Smoke test Apps Script offers backend
@@ -258,7 +262,8 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Apps Script deployment secrets are not configured; clasp deployment skipped."
+            echo "::error::Apps Script deployment credentials missing; refusing to publish an un-updated backend."
+            exit 1
           fi
       - name: Deploy Apps Script
         if: steps.clasp.outputs.configured == 'true'
@@ -272,7 +277,9 @@ jobs:
           deployment_id="$(printf '%s' "$APPS_SCRIPT_URL" | sed -n 's#.*\/s\/\([^/]*\)\/exec.*#\1#p')"
           test -n "$deployment_id" || { echo "::error::Unable to extract Apps Script deployment ID from APPS_SCRIPT_URL"; exit 1; }
 
-          npx --yes @google/clasp@latest create-deployment             --deploymentId "$deployment_id"             --description "GitHub Actions $GITHUB_SHA"
+          npx --yes @google/clasp@latest create-deployment \
+            --deploymentId "$deployment_id" \
+            --description "GitHub Actions $GITHUB_SHA"
 
   deploy:
     if: github.ref == 'refs/heads/main'
@@ -280,7 +287,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, deploy-apps-script, deploy-worker]
     steps:
       - name: Deploy
         id: deployment
