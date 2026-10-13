@@ -182,7 +182,7 @@ function latestAutonomyEvents_(spreadsheet) {
 }
 
 
-var EXTERNAL_SYNC_VERSION_ = '2026-10-12-v3';
+var EXTERNAL_SYNC_VERSION_ = '2026-10-13-publication-v4';
 
 var EXTERNAL_SOURCE_HEADERS_ = [
   'ID', 'Entreprise', "Intitulé de l'offre", 'Domaine', 'Ville', 'Région',
@@ -1257,6 +1257,110 @@ function dedupeOffersServerSide_(offers) {
         (publicationPrecision_(offer) === publicationPrecision_(current) && candidateScore > currentScore)) selected[key] = offer;
   });
   return order.map(function (key) { return selected[key]; });
+}
+
+
+/**
+ * Reconcile legacy offers against employer pages in bounded batches.
+ * Trust only a matching JobPosting JSON-LD datePosted or explicit publication metadata.
+ * Never use dateModified, page HTTP dates, crawl dates, verification dates or inferred ages.
+ */
+function extractOfficialJobPostingDate_(html, title) {
+  var wanted = normalizeComparable_(title);
+  if (!wanted) return null;
+  var blocks = String(html || '').match(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi) || [];
+  for (var i = 0; i < blocks.length; i += 1) {
+    var json = blocks[i].replace(/^<script[^>]*>/i, '').replace(/<\/script>\s*$/i, '');
+    try {
+      var document = JSON.parse(json);
+      var pending = Array.isArray(document) ? document.slice() : [document];
+      while (pending.length) {
+        var entry = pending.shift();
+        if (!entry || typeof entry !== 'object') continue;
+        if (Array.isArray(entry['@graph'])) pending = pending.concat(entry['@graph']);
+        var kind = entry['@type'];
+        var isJob = kind === 'JobPosting' || (Array.isArray(kind) && kind.indexOf('JobPosting') >= 0);
+        if (!isJob || !entry.title) continue;
+        var sourceTitle = normalizeComparable_(entry.title);
+        var left = wanted.split(' ').filter(Boolean);
+        var right = sourceTitle.split(' ').filter(Boolean);
+        var overlap = left.filter(function (word) { return word.length > 2 && right.indexOf(word) >= 0; }).length;
+        if (overlap < 2 || overlap < Math.ceil(Math.min(left.length, right.length) * 0.6)) continue;
+        var date = verifiedPublicationDate_(entry.datePosted || entry.datePublished);
+        if (date) return date;
+      }
+    } catch (error) { /* Ignore invalid publisher metadata. */ }
+  }
+  return null;
+}
+
+function isOfficialPublicationUrl_(url) {
+  try {
+    var parsed = new URL(url);
+    if (parsed.protocol !== 'https:') return false;
+    var host = parsed.hostname.toLowerCase();
+    if (host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal')) return false;
+    if (host === '127.0.0.1' || host === '0.0.0.0') return false;
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+    return true;
+  } catch (error) { return false; }
+}
+
+function syncHistoricalPublicationDates() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(1000)) return { skipped: 'busy' };
+  try {
+    var sheet = getSpreadsheet_().getSheetByName('Offres');
+    if (!sheet || sheet.getLastRow() < 2) return { checked: 0, corrected: 0 };
+    var rows = sheet.getDataRange().getDisplayValues();
+    var headers = buildHeaderMap_(rows[0]);
+    var dateIndex = headers['Publication'];
+    var linkIndex = headers['Lien direct'];
+    var titleIndex = headers["Intitulé de l'offre"];
+    if ([dateIndex,linkIndex,titleIndex].some(function (value) { return value === undefined; })) throw new Error('Missing publication columns');
+
+    var props = PropertiesService.getScriptProperties();
+    var start = Number(props.getProperty('PUBLICATION_SCAN_CURSOR') || '1');
+    if (start >= rows.length) start = 1;
+    var end = Math.min(start + 16, rows.length);
+    var checked = 0, corrected = 0, unavailable = 0;
+    for (var i = start; i < end; i += 1) {
+      var row = rows[i];
+      var url = normalizeText_(row[linkIndex]);
+      var title = normalizeText_(row[titleIndex]);
+      if (!url || !title || !isOfficialPublicationUrl_(url)) { unavailable++; continue; }
+      try {
+        var response = UrlFetchApp.fetch(url, {
+          muteHttpExceptions: true,
+          followRedirects: true,
+          headers: { 'User-Agent': 'Mozilla/5.0 (compatible; MonStagePublicationAudit/1.0)' }
+        });
+        checked++;
+        if (response.getResponseCode() !== 200) continue;
+        var date = extractOfficialJobPostingDate_(response.getContentText().slice(0, 800000), title);
+        if (!date) continue;
+        var current = normalizeText_(row[dateIndex]) || '';
+        var currentDate = publicationDateScore_({publishedAt: current});
+        var newDate = publicationDateScore_({publishedAt: date});
+        if (!newDate) continue;
+        // Source-backed explicit date always overrides stale or vague spreadsheet metadata.
+        if (currentDate !== newDate || publicationPrecision_({publishedAt: current}) < publicationPrecision_({publishedAt: date})) {
+          sheet.getRange(i + 1, dateIndex + 1).setValue(date);
+          corrected++;
+        }
+      } catch (error) { console.warn('Publication metadata unavailable row ' + (i + 1)); }
+    }
+    props.setProperty('PUBLICATION_SCAN_CURSOR', String(end >= rows.length ? 1 : end));
+    props.setProperty('PUBLICATION_SCAN_LAST', new Date().toISOString());
+    return { checked: checked, corrected: corrected, skipped: unavailable, nextRow: end + 1 };
+  } finally { lock.releaseLock(); }
+}
+
+function installPublicationAuditTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === 'syncHistoricalPublicationDates') ScriptApp.deleteTrigger(trigger);
+  });
+  ScriptApp.newTrigger('syncHistoricalPublicationDates').timeBased().everyHours(1).create();
 }
 
 function getOffers_() {
