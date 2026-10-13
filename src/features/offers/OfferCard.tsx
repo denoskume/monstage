@@ -35,7 +35,7 @@ function parsePublishedDate(value: string | null): Publication | null {
   if (numericMonth && Number(numericMonth[1]) >= 1 && Number(numericMonth[1]) <= 12) {
     return { date: null, hasTime: false, exact: false, dateLabel: MONTHS[Number(numericMonth[1]) - 1] + ' ' + numericMonth[2] };
   }
-  const yearOnly = text.match(/^(\d{4})$/);
+  const yearOnly = text.match(/^(\d{4})(?=$|[\s—–;,])/);
   if (yearOnly) return { date: null, hasTime: false, exact: false, dateLabel: yearOnly[1] };
   return null;
 }
