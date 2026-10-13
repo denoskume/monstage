@@ -1310,25 +1310,46 @@ function syncHistoricalPublicationDates() {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(1000)) return { skipped: 'busy' };
   try {
-    var sheet = getSpreadsheet_().getSheetByName('Offres');
-    if (!sheet || sheet.getLastRow() < 2) return { checked: 0, corrected: 0 };
-    var rows = sheet.getDataRange().getDisplayValues();
-    var headers = buildHeaderMap_(rows[0]);
-    var dateIndex = headers['Publication'];
-    var linkIndex = headers['Lien direct'];
-    var titleIndex = headers["Intitulé de l'offre"];
-    if ([dateIndex,linkIndex,titleIndex].some(function (value) { return value === undefined; })) throw new Error('Missing publication columns');
+    var spreadsheet = getSpreadsheet_();
+    var tabs = offerSourceSheets_(spreadsheet);
+    var sources = tabs.map(function (sheet) {
+      var count = sheet.getLastRow();
+      return count < 2 ? null : {
+        sheet: sheet,
+        values: sheet.getDataRange().getDisplayValues()
+      };
+    }).filter(Boolean);
+    var rowCount = sources.reduce(function (sum, source) { return sum + source.values.length - 1; }, 0);
+    if (!rowCount) return { checked: 0, corrected: 0 };
 
     var props = PropertiesService.getScriptProperties();
-    var start = Number(props.getProperty('PUBLICATION_SCAN_CURSOR') || '1');
-    if (start >= rows.length) start = 1;
-    var end = Math.min(start + 16, rows.length);
-    var checked = 0, corrected = 0, unavailable = 0;
-    for (var i = start; i < end; i += 1) {
-      var row = rows[i];
+    var cursor = Number(props.getProperty('PUBLICATION_SCAN_CURSOR') || '0') % rowCount;
+    var inspected = 0, checked = 0, corrected = 0, skipped = 0;
+    var limit = Math.min(16, rowCount);
+    while (inspected < limit) {
+      var index = (cursor + inspected) % rowCount;
+      inspected++;
+      var offset = index, source = null, rowNumber = 0;
+      for (var j = 0; j < sources.length; j += 1) {
+        var available = sources[j].values.length - 1;
+        if (offset < available) {
+          source = sources[j];
+          rowNumber = offset + 2;
+          break;
+        }
+        offset -= available;
+      }
+      if (!source) continue;
+      var headers = buildHeaderMap_(source.values[0]);
+      var dateIndex = headers['Publication'];
+      var linkIndex = headers['Lien direct'];
+      var titleIndex = headers["Intitulé de l'offre"];
+      if ([dateIndex, linkIndex, titleIndex].some(function (value) { return value === undefined; })) { skipped++; continue; }
+      var row = source.values[rowNumber - 1];
       var url = normalizeText_(row[linkIndex]);
       var title = normalizeText_(row[titleIndex]);
-      if (!url || !title || !isOfficialPublicationUrl_(url)) { unavailable++; continue; }
+      if (!url || !title || !isOfficialPublicationUrl_(url)) { skipped++; continue; }
+
       try {
         var response = UrlFetchApp.fetch(url, {
           muteHttpExceptions: true,
@@ -1340,19 +1361,21 @@ function syncHistoricalPublicationDates() {
         var date = extractOfficialJobPostingDate_(response.getContentText().slice(0, 800000), title);
         if (!date) continue;
         var current = normalizeText_(row[dateIndex]) || '';
-        var currentDate = publicationDateScore_({publishedAt: current});
-        var newDate = publicationDateScore_({publishedAt: date});
-        if (!newDate) continue;
-        // Source-backed explicit date always overrides stale or vague spreadsheet metadata.
-        if (currentDate !== newDate || publicationPrecision_({publishedAt: current}) < publicationPrecision_({publishedAt: date})) {
-          sheet.getRange(i + 1, dateIndex + 1).setValue(date);
+        var oldScore = publicationDateScore_({ publishedAt: current });
+        var newScore = publicationDateScore_({ publishedAt: date });
+        if (!newScore) continue;
+        if (oldScore !== newScore ||
+            publicationPrecision_({ publishedAt: current }) < publicationPrecision_({ publishedAt: date })) {
+          source.sheet.getRange(rowNumber, dateIndex + 1).setValue(date);
           corrected++;
         }
-      } catch (error) { console.warn('Publication metadata unavailable row ' + (i + 1)); }
+      } catch (error) {
+        console.warn('Publication audit unavailable: ' + source.sheet.getName() + ' row ' + rowNumber);
+      }
     }
-    props.setProperty('PUBLICATION_SCAN_CURSOR', String(end >= rows.length ? 1 : end));
+    props.setProperty('PUBLICATION_SCAN_CURSOR', String((cursor + inspected) % rowCount));
     props.setProperty('PUBLICATION_SCAN_LAST', new Date().toISOString());
-    return { checked: checked, corrected: corrected, skipped: unavailable, nextRow: end + 1 };
+    return { checked: checked, corrected: corrected, skipped: skipped, inspected: inspected, total: rowCount };
   } finally { lock.releaseLock(); }
 }
 
