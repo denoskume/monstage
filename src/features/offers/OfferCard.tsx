@@ -5,7 +5,7 @@ type Publication = { date: Date | null; hasTime: boolean; dateLabel: string; exa
 
 const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 
-function parsePublishedDate(value: string | null): Publication | null {
+export function parsePublishedDate(value: string | null): Publication | null {
   if (!value) return null;
   const text = value.trim();
   const fr = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?=$|[\s—–;,])/);
@@ -40,7 +40,7 @@ function parsePublishedDate(value: string | null): Publication | null {
   return null;
 }
 
-function relativePublishedDate(publication: Publication | null): string {
+export function relativePublishedDate(publication: Publication | null): string {
   if (!publication) return 'Date non communiquée';
   if (!publication.exact || !publication.date) return 'Date exacte inconnue · ' + publication.dateLabel;
   const now = new Date();
