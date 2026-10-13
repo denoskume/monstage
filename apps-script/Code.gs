@@ -440,6 +440,28 @@ function fetchLeverPostings_(source) {
   return [];
 }
 
+function writeExternalOfferRows_(sheet, rows) {
+  // Official dates found by historical reconciliation must survive the next ATS sync.
+  var known = {};
+  if (sheet.getLastRow() > 1) {
+    var prior = sheet.getDataRange().getDisplayValues();
+    var headers = buildHeaderMap_(prior[0]);
+    prior.slice(1).forEach(function (row) {
+      var id = normalizeText_(valueByHeader_(row, headers, 'ID'));
+      var date = normalizeText_(valueByHeader_(row, headers, 'Publication'));
+      if (id && date && publicationDateScore_({ publishedAt: date })) known[id] = date;
+    });
+  }
+  rows.forEach(function (row) {
+    var id = normalizeText_(row[0]);
+    var date = normalizeText_(row[11]);
+    if (id && !publicationDateScore_({ publishedAt: date }) && known[id]) {
+      row[11] = known[id];
+    }
+  });
+  writeExternalOfferRows_(sheet, rows);
+}
+
 function syncLeverSources_() {
   var spreadsheet = getSpreadsheet_();
   var sheetName = 'Offres - Lever';
@@ -456,12 +478,7 @@ function syncLeverSources_() {
     });
   });
 
-  sheet.clearContents();
-  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
-  sheet.setFrozenRows(1);
-  if (rows.length) {
-    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
-  }
+  writeExternalOfferRows_(sheet, rows);
 
   PropertiesService.getScriptProperties().setProperty('LEVER_LAST_SYNC', new Date().toISOString());
   PropertiesService.getScriptProperties().setProperty('LEVER_LAST_COUNT', String(rows.length));
@@ -576,12 +593,7 @@ function syncGreenhouseSources_() {
     });
   });
 
-  sheet.clearContents();
-  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
-  sheet.setFrozenRows(1);
-  if (rows.length) {
-    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
-  }
+  writeExternalOfferRows_(sheet, rows);
 
   PropertiesService.getScriptProperties().setProperty('GREENHOUSE_LAST_SYNC', new Date().toISOString());
   PropertiesService.getScriptProperties().setProperty('GREENHOUSE_LAST_COUNT', String(rows.length));
@@ -718,12 +730,7 @@ function syncAshbySources_() {
     });
   });
 
-  sheet.clearContents();
-  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
-  sheet.setFrozenRows(1);
-  if (rows.length) {
-    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
-  }
+  writeExternalOfferRows_(sheet, rows);
 
   PropertiesService.getScriptProperties().setProperty('ASHBY_LAST_SYNC', new Date().toISOString());
   PropertiesService.getScriptProperties().setProperty('ASHBY_LAST_COUNT', String(rows.length));
@@ -884,12 +891,7 @@ function syncSmartRecruitersSources_() {
     });
   });
 
-  sheet.clearContents();
-  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
-  sheet.setFrozenRows(1);
-  if (rows.length) {
-    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
-  }
+  writeExternalOfferRows_(sheet, rows);
 
   PropertiesService.getScriptProperties().setProperty('SMARTRECRUITERS_LAST_SYNC', new Date().toISOString());
   PropertiesService.getScriptProperties().setProperty('SMARTRECRUITERS_LAST_COUNT', String(rows.length));
@@ -1087,12 +1089,7 @@ function syncWorkdaySources_() {
     });
   });
 
-  sheet.clearContents();
-  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
-  sheet.setFrozenRows(1);
-  if (rows.length) {
-    sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
-  }
+  writeExternalOfferRows_(sheet, rows);
 
   PropertiesService.getScriptProperties().setProperty('WORKDAY_LAST_SYNC', new Date().toISOString());
   PropertiesService.getScriptProperties().setProperty('WORKDAY_LAST_COUNT', String(rows.length));
