@@ -441,7 +441,12 @@ function fetchLeverPostings_(source) {
 }
 
 function writeExternalOfferRows_(sheet, rows) {
-  // Official dates found by historical reconciliation must survive the next ATS sync.
+  // Preserve the last good snapshot if a provider returns no postings.
+  if (!rows.length && sheet.getLastRow() > 1) {
+    console.warn('Provider returned zero jobs; preserving previous snapshot: ' + sheet.getName());
+    return sheet.getLastRow() - 1;
+  }
+  // Dates reconciled from official pages must survive subsequent provider syncs.
   var known = {};
   if (sheet.getLastRow() > 1) {
     var prior = sheet.getDataRange().getDisplayValues();
@@ -449,17 +454,18 @@ function writeExternalOfferRows_(sheet, rows) {
     prior.slice(1).forEach(function (row) {
       var id = normalizeText_(valueByHeader_(row, headers, 'ID'));
       var date = normalizeText_(valueByHeader_(row, headers, 'Publication'));
-      if (id && date && publicationDateScore_({ publishedAt: date })) known[id] = date;
+      if (id && date && publicationDateScore_({publishedAt: date})) known[id] = date;
     });
   }
   rows.forEach(function (row) {
     var id = normalizeText_(row[0]);
-    var date = normalizeText_(row[11]);
-    if (id && !publicationDateScore_({ publishedAt: date }) && known[id]) {
-      row[11] = known[id];
-    }
+    if (id && !publicationDateScore_({publishedAt: row[11]}) && known[id]) row[11] = known[id];
   });
-  writeExternalOfferRows_(sheet, rows);
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
+  sheet.setFrozenRows(1);
+  if (rows.length) sheet.getRange(2, 1, rows.length, EXTERNAL_SOURCE_HEADERS_.length).setValues(rows);
+  return rows.length;
 }
 
 function syncLeverSources_() {
