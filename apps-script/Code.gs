@@ -1296,9 +1296,9 @@ function extractOfficialJobPostingDate_(html, title) {
 
 function isOfficialPublicationUrl_(url) {
   try {
-    var parsed = new URL(url);
-    if (parsed.protocol !== 'https:') return false;
-    var host = parsed.hostname.toLowerCase();
+    var match = String(url || '').match(/^https:\/\/([^\/?#]+)(?:[\/?#]|$)/i);
+    if (!match) return false;
+    var host = match[1].split(':')[0].toLowerCase();
     if (host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal')) return false;
     if (host === '127.0.0.1' || host === '0.0.0.0') return false;
     if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
@@ -1731,6 +1731,15 @@ function syncApplicationEvents() {
 
   scanGmailSignals_(spreadsheet, offers, eventSheet);
   scanCalendarSignals_(spreadsheet, offers, eventSheet);
+
+  // Reconcile legacy publication metadata at most once per hour, in a bounded batch.
+  // This never infers dates from the crawl date and never blocks application monitoring.
+  var auditProperties = PropertiesService.getScriptProperties();
+  var lastAudit = Date.parse(auditProperties.getProperty('PUBLICATION_SCAN_LAST') || '') || 0;
+  if (Date.now() - lastAudit >= 60 * 60 * 1000) {
+    try { syncHistoricalPublicationDates(); }
+    catch (error) { console.warn('Historical publication audit failed: ' + error); }
+  }
 
   PropertiesService.getScriptProperties().setProperty('AUTONOMY_LAST_SYNC', new Date().toISOString());
 }
