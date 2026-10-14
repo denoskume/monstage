@@ -40,13 +40,13 @@ test('best sort ranks decision score then priority then technical fit', () => {
   expect(sortOffers(offers, 'best').map((offer) => offer.id)).toEqual(['b', 'c', 'a']);
 });
 
-test('recent sort prefers publication date and uses verification date only as fallback', () => {
+test('recent sort uses publication dates only and never substitutes verification timestamps', () => {
   const offers = [
     { ...base, id: 'older-published', publishedAt: '2026-09-01', verifiedAt: '2026-10-01T08:00:00Z' },
     { ...base, id: 'newer-published', publishedAt: '2026-09-20', verifiedAt: '2026-09-21T08:00:00Z' },
     { ...base, id: 'fallback-verified', publishedAt: '', verifiedAt: '2026-09-25T08:00:00Z' },
   ];
-  expect(sortOffers(offers, 'recent').map((offer) => offer.id)).toEqual(['fallback-verified', 'newer-published', 'older-published']);
+  expect(sortOffers(offers, 'recent').map((offer) => offer.id)).toEqual(['newer-published', 'older-published', 'fallback-verified']);
 });
 
 test('filtering is applied before sorting and sorting never reintroduces excluded cities', () => {
