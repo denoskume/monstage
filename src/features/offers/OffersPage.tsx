@@ -178,7 +178,8 @@ export function OffersPage() {
 
   function hideOffer(offer: InternshipOffer) {
     actions.hideOffer(offer.id);
-    setActionNotice({ text: 'Job hidden.', offerId: offer.id });
+    // Hiding an offer should be silent: never show the "Job hidden." banner.
+    setActionNotice(null);
     if (selectionKey(offer) === selectedKey) setMobileDetail(false);
   }
 
