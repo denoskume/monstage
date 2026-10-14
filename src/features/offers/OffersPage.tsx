@@ -238,7 +238,7 @@ export function OffersPage() {
       </div>
 
       {error && data ? <div className="stale-banner" role="status">Showing cached data. <button onClick={retry}>Refresh</button></div> : null}
-      {actionNotice ? <div className="offer-action-notice" role="status"><span>{actionNotice.text}</span>{actionNotice.offerId ? <button type="button" onClick={() => { actions.unhideOffer(actionNotice.offerId!); setActionNotice(null); }}>Undo</button> : <button type="button" onClick={() => setActionNotice(null)}>×</button>}</div> : null}
+      {actionNotice && !actionNotice.offerId && actionNotice.text !== 'Job hidden.' ? <div className="offer-action-notice" role="status"><span>{actionNotice.text}</span><button type="button" onClick={() => setActionNotice(null)}>×</button></div> : null}
 
       {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) closeFilters(); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={offers} filters={draftFilters} onChange={setDraftFilters} onReset={() => setDraftFilters(resetFilters)} onClose={closeFilters} onApply={applyFilters} /></div></div> : null}
 
