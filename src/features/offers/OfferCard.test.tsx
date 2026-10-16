@@ -35,7 +35,7 @@ test('renders a concise job-card summary and actions', () => {
   expect(screen.getByText('1 300 €/mois')).toBeInTheDocument();
   expect(screen.getByText('100% match')).toBeInTheDocument();
   expect(screen.getByText('Verified <24h')).toBeInTheDocument();
-  expect(screen.getByText('3 weeks ago')).toBeInTheDocument();
+  expect(screen.getByText(/Il y a 3 semaines · 15 sept. 2026/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Remove from saved jobs' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Not interested' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Share job' })).toBeInTheDocument();
@@ -55,7 +55,7 @@ test('supports French publication dates and shows a fallback when missing', () =
       onShare={() => undefined}
     />,
   );
-  expect(screen.getByText('Yesterday')).toBeInTheDocument();
+  expect(screen.getByText(/Hier · 11 oct. 2026/)).toBeInTheDocument();
 
   rerender(
     <OfferCard
@@ -68,5 +68,5 @@ test('supports French publication dates and shows a fallback when missing', () =
       onShare={() => undefined}
     />,
   );
-  expect(screen.getByText('Publication date unavailable')).toBeInTheDocument();
+  expect(screen.getByText('Date non communiquée')).toBeInTheDocument();
 });
