@@ -145,7 +145,6 @@ export function ClStudioPage() {
     }
   }
 
-  const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
 
   return (
     <section className="page cl-studio-page">
@@ -228,7 +227,8 @@ export function ClStudioPage() {
 
           <div className="cl-preview__recipient">
             {draft.recipientName ? <strong>{draft.language === 'FR' ? `À l’attention de ${draft.recipientName}` : draft.recipientName}</strong> : null}
-            {recipientCompany ? <strong>{recipientCompany}</strong> : null}
+            {draft.company ? <strong>{draft.company}</strong> : null}
+            {draft.recipientRole ? <span>{draft.recipientRole}</span> : null}
             {draft.recipientLocation ? <span>{draft.recipientLocation}</span> : null}
           </div>
 
