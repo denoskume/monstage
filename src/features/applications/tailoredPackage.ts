@@ -19,7 +19,7 @@ export function projectSelectionForOffer(offer: InternshipOffer, language: CvLan
   const verifiedIds = new Set(publicProjectCatalog.map(entry => entry.id));
   const profiles = [
     ...publicProjectCatalog.map(entry => ({ project: entry.cv[language], tags: entry.tags, url: entry.url })),
-    ...current.filter(project => !verifiedIds.has(project.id)).map(project => ({
+    ...current.filter(project => !verifiedIds.has(project.id) && project.bullets.filter(Boolean).length >= 4).map(project => ({
       project, tags: normalized([project.name, ...project.bullets].join(' ')).split(/[^a-z0-9]+/).filter(x => x.length > 3),
       url: '',
     })),
@@ -50,14 +50,14 @@ export function projectSelectionForOffer(offer: InternshipOffer, language: CvLan
     if (unique.has(name)) return false;
     unique.add(name);
     return true;
-  }).slice(0, 3);
+  }).slice(0, 2);
 }
 
 export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): CvDraft {
   const base = structuredClone(loadCvDraft(language));
   // Use evidence across the CV master and the verified portfolio, not only two fixed projects.
   const selection = projectSelectionForOffer(offer, language);
-  base.projects = selection.map(item => ({ ...item.project, bullets: [...item.project.bullets] }));
+  base.projects = selection.map(item => ({ ...item.project, bullets: item.project.bullets.filter(Boolean).slice(0, 4) }));
   const relevant = normalized([offer.title, offer.specialization, offer.domain, ...offer.skills].filter(Boolean).join(' '));
   const keywords = ['computer vision', 'image', 'segmentation', 'deep learning', 'machine learning', 'python', 'signal', 'data', 'quality', 'automatisation', 'reconstruction', 'calibration'];
   const focusTerms = keywords.filter(word => relevant.includes(word)).slice(0, 3);
