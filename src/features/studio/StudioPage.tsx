@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useOffers } from '../../hooks/useOffers';
-import { tailorCvForOffer, tailorLetterForOffer } from '../applications/tailoredPackage';
-import { saveCvDraft, type CvLanguage } from '../cv/cvStorage';
-import { loadCoverLetter, saveCoverLetter } from '../cl/clStorage';
+import { loadApplicationDossier, prepareApplicationDossier } from '../applications/applicationDossiers';
+import type { CvLanguage } from '../cv/cvStorage';
 
 export function StudioPage() {
   const [params] = useSearchParams();
@@ -15,37 +14,20 @@ export function StudioPage() {
   const offer = (offerId || chosenOfferId) ? data?.offers.find(item => item.id === (offerId || chosenOfferId)) : undefined;
   const selectedOfferId = offerId || chosenOfferId;
 
-  // Opening a job-specific Studio URL must load both documents for that same offer.
-  // Preserve drafts already prepared for this exact offer and language.
+  // Each offer and language has its own saved, reviewable dossier.
   useEffect(() => {
     if (!offer) return;
-    const identity = offer.id + ':' + language;
-    try {
-      const prior = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
-      if (prior?.offerId === offer.id && prior?.company === offer.company && prior?.title === offer.title && prior?.language === language && prior?.state === 'awaiting_review' && prior?.documentsVersion === 4 && loadCoverLetter().company === offer.company && loadCoverLetter().internshipTitle === offer.title && loadCoverLetter().language === language) {
-        setPreparedId(identity);
-        return;
-      }
-    } catch { /* Rebuild broken metadata, never reuse mismatched drafts. */ }
-    saveCvDraft(tailorCvForOffer(offer, language));
-    saveCoverLetter(tailorLetterForOffer(offer, language));
-    localStorage.setItem('monstage:application-review:v1', JSON.stringify({
-      offerId: offer.id, company: offer.company, title: offer.title, language,
-      state: 'awaiting_review', documentsVersion: 4, preparedAt: new Date().toISOString(),
-    }));
-    setPreparedId(identity);
+    prepareApplicationDossier(offer, language);
+    setPreparedId(offer.id + ':' + language);
   }, [offer?.id, language]);
 
   function prepare() {
     if (!offer) return;
-    saveCvDraft(tailorCvForOffer(offer, language));
-    saveCoverLetter(tailorLetterForOffer(offer, language));
-    localStorage.setItem('monstage:application-review:v1', JSON.stringify({
-      offerId: offer.id, company: offer.company, title: offer.title, language,
-      state: 'awaiting_review', documentsVersion: 2, preparedAt: new Date().toISOString(),
-    }));
+    prepareApplicationDossier(offer, language);
     setPreparedId(offer.id + ':' + language);
   }
+
+  const dossier = offer ? loadApplicationDossier(offer.id, language) : null;
 
   return (
     <section className="page studio-page">
@@ -69,7 +51,8 @@ export function StudioPage() {
               </div>
               {preparedId === offer.id + ':' + language ? (
                 <div role="status" style={{ marginTop: 18 }}>
-                  <p><strong>Brouillons prêts à relire.</strong> Vérifie les dates, chaque compétence, l’en-tête centré et les quatre paragraphes. Aucun envoi sans ton accord explicite.</p>
+                  <p><strong>Brouillons propres à cette offre.</strong> Vérifie le CV, la lettre et les projets retenus. Les modifications seront conservées pour cette candidature uniquement. Aucun envoi avant ton accord explicite.</p>
+                  {dossier?.selectionReasons?.length ? <p><strong>Projets sélectionnés :</strong> {dossier.selectionReasons.join(' · ')}</p> : null}
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <Link className="button button--secondary" to={`/cv?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner le CV →</Link>
                     <Link className="button button--secondary" to={`/cl?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner la lettre →</Link>
