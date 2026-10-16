@@ -77,7 +77,7 @@ export function StudioPage() {
       ) : null}
       <details className="card" style={{ padding: 18, marginBottom: 20 }}>
         <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Catalogue GitHub vérifié — {publicProjectCatalog.length} projets publics et laboratoires</summary>
-        <p style={{ marginTop: 12 }}>Ces réalisations constituent la réserve de projets du CV. Chaque candidature en retient trois au maximum, selon ses missions.</p>
+        <p style={{ marginTop: 12 }}>Ces réalisations constituent la réserve de projets du CV. Chaque candidature sélectionne les deux projets les plus pertinents, avec quatre réalisations précises par projet.</p>
         <ul style={{ paddingLeft: 20 }}>
           {publicProjectCatalog.map(entry => <li key={entry.id} style={{ marginBottom: 9 }}>
             <a href={entry.url} target="_blank" rel="noopener noreferrer">{entry.cv[language].name} ↗</a>
