@@ -283,6 +283,18 @@ export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
 }
 
 export function saveCvDraft(draft: CvDraft): void {
+  try {
+    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    const offerId = params.get('offer');
+    if (window.location.hash.startsWith('#/cv?') && offerId) {
+      const key = 'monstage:application-dossiers:v1:' + encodeURIComponent(offerId) + ':' + draft.language;
+      const dossier = JSON.parse(localStorage.getItem(key) || 'null');
+      if (dossier?.offerId === offerId) {
+        localStorage.setItem(key, JSON.stringify({ ...dossier, cv: draft, updatedAt: new Date().toISOString() }));
+        return;
+      }
+    }
+  } catch { /* fall back to master save */ }
   localStorage.setItem(KEY_PREFIX + draft.language, JSON.stringify(draft));
 }
 
