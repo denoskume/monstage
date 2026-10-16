@@ -15,6 +15,15 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
   const base = structuredClone(loadCvDraft(language));
   const terms = focus(offer);
   const rank = (value: string) => terms.reduce((score, term) => score + (normalized(value).includes(term) ? 1 : 0), 0);
+  const isUncertaintySegmentation = /incertitude/i.test(offer.title) && /segmentation/i.test(offer.title);
+  if (isUncertaintySegmentation) {
+    const precision = (value: string) => /segment|calibrat|traitement d.image|image processing|computer vision|deep learning|pytorch|opencv/i.test(value) ? 10 : 0;
+    base.projects = [...base.projects].sort((a, b) => precision(b.name + b.bullets.join(' ')) - precision(a.name + a.bullets.join(' ')));
+    base.summary = language === 'FR'
+      ? 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite contribuer à la segmentation d’images et à l’évaluation de la fiabilité des modèles, en approfondissant la quantification de l’incertitude.'
+      : 'Final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027. My interests include image segmentation and model evaluation, and I want to develop my understanding of uncertainty quantification.';
+    return base;
+  }
   base.projects = [...base.projects].sort((a, b) => rank(b.name + ' ' + b.bullets.join(' ')) - rank(a.name + ' ' + a.bullets.join(' ')));
   const lines = base.skills.split('\n').filter(Boolean);
   base.skills = [...lines].sort((a, b) => rank(b) - rank(a)).join('\n');
@@ -43,6 +52,20 @@ export function tailorLetterForOffer(offer: InternshipOffer, language: CvLanguag
     closing: language === 'FR' ? 'Cordialement,' : 'Sincerely,',
     paragraphs: [],
   };
+  if (/incertitude/i.test(subject) && /segmentation/i.test(subject)) {
+    draft.paragraphs = language === 'FR' ? [
+      'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je souhaite candidater au stage d’ingénieur recherche IA consacré à l’incertitude en segmentation médicale (réf. 549574). Je recherche un stage de fin d’études de six mois à partir de février 2027.',
+      'Les travaux de Dassault Systèmes sur les jumeaux virtuels et la santé numérique m’intéressent, en particulier la question de la fiabilité des segmentations. Votre projet associe revue de littérature, conception d’un modèle et évaluation des indicateurs de qualité. Cette articulation entre recherche et expérimentation correspond à la démarche que je souhaite développer.',
+      'Mon MSc me forme au machine learning, au traitement du signal et de l’image et à l’optimisation. Dans mes projets de segmentation et de calibration caméra, j’ai appris à construire une chaîne de traitement et à examiner les résultats à l’aide de métriques adaptées. J’utilise Python et des outils comme PyTorch et OpenCV. Je n’ai pas encore travaillé sur les méthodes bayésiennes appliquées à l’imagerie médicale, mais je souhaite les étudier avec rigueur.',
+      'Je serais heureux d’échanger avec votre équipe sur le sujet et sur la façon dont mes bases techniques, ma curiosité et mon attention à l’évaluation pourraient contribuer au projet.',
+    ] : [
+      'I am a final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, applying for your AI research internship on uncertainty in medical image segmentation (reference 549574). I am seeking a six-month internship starting February 2027.',
+      'Your work on virtual twins and digital healthcare interests me, especially the reliability of image segmentation. I appreciate the combination of literature review, model design and evaluation in this research project.',
+      'My MSc covers machine learning, signal and image processing, and optimization. Through segmentation and camera calibration projects, I have learned to build image-processing workflows and critically assess their results. I use Python and tools including PyTorch and OpenCV. Bayesian uncertainty methods for medical imaging are an area I would like to learn rather than claim as existing expertise.',
+      'I would appreciate the opportunity to discuss how my technical foundations and interest in careful model evaluation could contribute to your team.',
+    ];
+    return draft;
+  }
   if (language === 'FR') {
     draft.paragraphs = [
       'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je souhaite vous proposer ma candidature au poste de « ' + subject + ' ». Je recherche un stage de fin d’études de six mois à partir de février 2027.',
