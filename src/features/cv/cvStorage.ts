@@ -247,6 +247,7 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
 }
 
 export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
+  // Keep application drafts separate from the generic CV.
   try {
     const raw = localStorage.getItem(KEY_PREFIX + language);
     if (raw) return { ...freshCvDraft(language), ...JSON.parse(raw), language };
