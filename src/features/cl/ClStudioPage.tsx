@@ -64,8 +64,16 @@ export function ClStudioPage() {
   }
 
   function switchLanguage(language: CoverLetterLanguage) {
-    const next = freshCoverLetter(language);
+    const next = job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
     setDraft(next);
+    if (job) {
+      saveCoverLetter(next);
+      hydratedKey.current = job.id + ':' + language;
+      localStorage.setItem('monstage:application-review:v1', JSON.stringify({
+        offerId: job.id, company: job.company, title: job.title, language,
+        documentsVersion: 4, state: 'awaiting_review', preparedAt: new Date().toISOString(),
+      }));
+    }
     setSaved(false);
   }
 
@@ -75,7 +83,13 @@ export function ClStudioPage() {
   }
 
   function reset() {
-    setDraft(resetCoverLetter(draft.language));
+    if (job) {
+      const next = tailorLetterForOffer(job, draft.language);
+      saveCoverLetter(next);
+      setDraft(next);
+    } else {
+      setDraft(resetCoverLetter(draft.language));
+    }
     setSaved(false);
   }
 
