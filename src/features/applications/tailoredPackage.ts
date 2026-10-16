@@ -120,6 +120,7 @@ export function tailorLetterForOffer(offer: InternshipOffer, language: CvLanguag
     ];
     return draft;
   }
+  const proofProjects = projectSelectionForOffer(offer, language).slice(0, 2).map(item => item.project.name).join(' et ');
   if (language === 'FR') {
     draft.paragraphs = [
       'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je souhaite vous proposer ma candidature au poste de « ' + subject + ' ». Je recherche un stage de fin d’études de six mois à partir de février 2027.',
