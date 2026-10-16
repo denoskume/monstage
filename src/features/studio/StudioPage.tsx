@@ -9,10 +9,10 @@ export function StudioPage() {
   const [params] = useSearchParams();
   const offerId = params.get('offer');
   const { data, loading } = useOffers();
-  const offer = (offerId || chosenOfferId) ? data?.offers.find(item => item.id === (offerId || chosenOfferId)) : undefined;
   const [language, setLanguage] = useState<CvLanguage>('FR');
   const [preparedId, setPreparedId] = useState<string | null>(null);
   const [chosenOfferId, setChosenOfferId] = useState('');
+  const offer = (offerId || chosenOfferId) ? data?.offers.find(item => item.id === (offerId || chosenOfferId)) : undefined;
   const selectedOfferId = offerId || chosenOfferId;
 
   // Opening a job-specific Studio URL must load both documents for that same offer.
