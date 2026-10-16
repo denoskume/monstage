@@ -100,7 +100,8 @@ export function ClStudioPage() {
   }
 
   function save() {
-    saveCoverLetter(draft);
+    if (job) updateApplicationLetter(job.id, draft.language, draft);
+    else saveCoverLetter(draft);
     setSaved(true);
   }
 
