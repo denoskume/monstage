@@ -121,14 +121,23 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     }
 
     y -= 2;
-    const recipientX = WIDTH - MX - 225;
-    const recipientWidth = 225;
-    if (draft.recipientName) {
-      drawWrapped('À l’attention de ' + draft.recipientName, 10.2, bold, 13.6, recipientX, recipientWidth);
-    }
-    const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
-    if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6, recipientX, recipientWidth);
-    if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6, recipientX, recipientWidth);
+    // Recipient lines share the same right margin as the French date.
+    const drawRecipientRight = (value: string, font = regular) => {
+      const lines = wrap(value, 225, font, 10.2);
+      ensure(lines.length * 13.6 + 4);
+      for (const line of lines) {
+        const text = normalizeCoverLetterPdfText(line);
+        page.drawText(text, {
+          x: WIDTH - MX - font.widthOfTextAtSize(text, 10.2),
+          y, size: 10.2, font, color,
+        });
+        y -= 13.6;
+      }
+    };
+    if (draft.recipientName) drawRecipientRight('À l’attention de ' + draft.recipientName, bold);
+    if (draft.company) drawRecipientRight(draft.company, bold);
+    if (draft.recipientRole) drawRecipientRight(draft.recipientRole);
+    if (draft.recipientLocation) drawRecipientRight(draft.recipientLocation);
   } else {
     drawRight(draft.signer || 'Denos Kume', 17.5, bold);
     drawRight('Nantes, France', 9.3, regular);
@@ -153,7 +162,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   y -= 28;
 
   const subject = draft.language === 'FR'
-    ? 'Objet : Candidature au stage ' + (draft.internshipTitle || '[INTITULE DU STAGE]')
+    ? 'Objet : Candidature — ' + (draft.internshipTitle || '[INTITULE DU STAGE]')
     : 'Re: Application for ' + (draft.internshipTitle || '[INTERNSHIP TITLE]');
   drawWrapped(subject, 10.8, bold, 14.5);
   page.drawLine({ start: { x: MX, y: y + 6 }, end: { x: WIDTH - MX, y: y + 6 }, thickness: 0.55, color: lineColor });
