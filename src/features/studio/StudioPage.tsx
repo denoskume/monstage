@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier } from '../applications/applicationDossiers';
+import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import type { CvLanguage } from '../cv/cvStorage';
 
 export function StudioPage() {
@@ -73,6 +74,16 @@ export function StudioPage() {
           ) : <p>Cette offre n’est pas disponible dans la liste actuelle. Aucune donnée existante n’a été modifiée.</p>}
         </section>
       ) : null}
+      <details className="card" style={{ padding: 18, marginBottom: 20 }}>
+        <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Catalogue GitHub vérifié — {publicProjectCatalog.length} projets publics et laboratoires</summary>
+        <p style={{ marginTop: 12 }}>Ces réalisations constituent la réserve de projets du CV. Chaque candidature en retient trois au maximum, selon ses missions.</p>
+        <ul style={{ paddingLeft: 20 }}>
+          {publicProjectCatalog.map(entry => <li key={entry.id} style={{ marginBottom: 9 }}>
+            <a href={entry.url} target="_blank" rel="noopener noreferrer">{entry.cv[language].name} ↗</a>
+            <span style={{ marginLeft: 8, opacity: .75, fontSize: 12 }}>{entry.tags.slice(0, 4).join(' · ')}</span>
+          </li>)}
+        </ul>
+      </details>
       <div className="studio-grid">
         <Link to={offer ? `/cv?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cv'} className="card studio-card" aria-label="Open CV Studio">
           <div className="studio-card__icon" aria-hidden="true">CV</div>
