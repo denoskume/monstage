@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { ApplicationPackageActions } from '../applications/ApplicationPackageActions';
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 import { getCvMatch } from '../workspace/intelligence';
@@ -58,6 +59,8 @@ export function OfferDetail({
         <button className="offer-action-icon offer-action-icon--large" type="button" onClick={onShare} aria-label="Share job" title="Share"><ActionIcon name="share" /></button>
         <Link className="button button--secondary button--large" to={'/workspace?offer=' + encodeURIComponent(offer.id)}>Prepare application</Link>
       </div>
+
+      <ApplicationPackageActions offer={offer} />
 
       <section className="detail-section detail-section--summary">
         <h2>Job details</h2>
