@@ -1,4 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useOffers } from '../../hooks/useOffers';
+import { tailorLetterForOffer } from '../applications/tailoredPackage';
 import { useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import {
@@ -19,27 +21,42 @@ function subjectLine(draft: CoverLetterDraft): string {
 export function ClStudioPage() {
   const [params] = useSearchParams();
   const offerParam = params.get('offer');
-  const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
+  const languageParam: CoverLetterLanguage = params.get('language') === 'EN' ? 'EN' : 'FR';
+  const { data, loading: offersLoading } = useOffers();
+  const job = offerParam ? data?.offers.find(item => item.id === offerParam) : undefined;
   const [draft, setDraft] = useState<CoverLetterDraft>(() => loadCoverLetter());
-  useEffect(() => {
-    const latest = loadCoverLetter();
-    setDraft(latest);
-    if (offerParam) {
-      try {
-        const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
-        if (review?.offerId !== offerParam || review?.language !== languageParam ||
-            review?.company !== latest.company || review?.title !== latest.internshipTitle) {
-          setDownloadError('Les documents ne correspondent pas à cette offre. Retourne dans Studio et clique sur « Préparer CV + lettre dans Studio ».');
-        } else {
-          setDownloadError('');
-        }
-      } catch {
-        setDownloadError('Impossible de vérifier le dossier : prépare les deux documents depuis Studio.');
-      }
-    }
-  }, [offerParam, languageParam]);
   const [saved, setSaved] = useState(false);
   const [downloadError, setDownloadError] = useState('');
+  const hydratedKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!offerParam) return;
+    if (!job) {
+      if (!offersLoading) setDownloadError('Offre introuvable : la lettre existante ne peut pas être présentée comme adaptée.');
+      return;
+    }
+    const key = job.id + ':' + languageParam;
+    if (hydratedKey.current === key) return;
+    hydratedKey.current = key;
+    let review: { offerId?: string; company?: string; title?: string; language?: string; documentsVersion?: number } | null = null;
+    try { review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null'); } catch { /* ignore stale metadata */ }
+    const stored = loadCoverLetter();
+    const sameJob = review?.offerId === job.id && review?.company === job.company &&
+      review?.title === job.title && review?.language === languageParam &&
+      review?.documentsVersion === 4 && stored.company === job.company &&
+      stored.internshipTitle === job.title && stored.language === languageParam;
+    const prepared = sameJob ? stored : tailorLetterForOffer(job, languageParam);
+    if (!sameJob) {
+      saveCoverLetter(prepared);
+      localStorage.setItem('monstage:application-review:v1', JSON.stringify({
+        offerId: job.id, company: job.company, title: job.title, language: languageParam,
+        documentsVersion: 4, state: 'awaiting_review', preparedAt: new Date().toISOString(),
+      }));
+    }
+    setDraft(prepared);
+    setDownloadError('');
+    setSaved(false);
+  }, [job?.id, offerParam, languageParam, offersLoading]);
 
   function patch<K extends keyof CoverLetterDraft>(key: K, value: CoverLetterDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
