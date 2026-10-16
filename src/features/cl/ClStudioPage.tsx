@@ -20,8 +20,15 @@ function subjectLine(draft: CoverLetterDraft): string {
 
 export function ClStudioPage() {
   const [params] = useSearchParams();
-  const offerParam = params.get('offer');
-  const languageParam: CoverLetterLanguage = params.get('language') === 'EN' ? 'EN' : 'FR';
+  const activeReview = (() => {
+    try {
+      const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
+      return review?.state === 'awaiting_review' ? review : null;
+    } catch { return null; }
+  })();
+  const offerParam = params.get('offer') || activeReview?.offerId || null;
+  const languageParam: CoverLetterLanguage = params.get('language') === 'EN' ? 'EN' :
+    params.get('language') === 'FR' ? 'FR' : activeReview?.language === 'EN' ? 'EN' : 'FR';
   const { data, loading: offersLoading } = useOffers();
   const job = offerParam ? data?.offers.find(item => item.id === offerParam) : undefined;
   const [draft, setDraft] = useState<CoverLetterDraft>(() => loadCoverLetter());
