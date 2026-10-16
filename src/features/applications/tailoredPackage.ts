@@ -46,7 +46,7 @@ export function tailorLetterForOffer(offer: InternshipOffer, language: CvLanguag
   const skills = offer.skills.slice(0, 4).join(', ');
   const draft: CoverLetterDraft = {
     ...structuredClone(stored), language, company, internshipTitle: subject,
-    team: '', recipientName: '', recipientRole: '', recipientLocation: city,
+    team: '', recipientName: '', recipientRole: language === 'FR' ? 'À l’attention de l’équipe de recrutement' : 'Recruitment Team', recipientLocation: city,
     date: new Date().toLocaleDateString(language === 'FR' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     greeting: language === 'FR' ? 'Madame, Monsieur,' : 'Dear Hiring Manager,',
     closing: language === 'FR' ? 'Cordialement,' : 'Sincerely,',
