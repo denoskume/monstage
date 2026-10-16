@@ -76,6 +76,14 @@ export function freshCoverLetter(language: CoverLetterLanguage): CoverLetterDraf
 
 export function loadCoverLetter(): CoverLetterDraft {
   try {
+    const fragment = window.location.hash;
+    const offerId = fragment.startsWith('#/cl?') ? new URLSearchParams(fragment.split('?')[1] || '').get('offer') : null;
+    if (offerId) {
+      const language = new URLSearchParams(fragment.split('?')[1] || '').get('language') === 'EN' ? 'EN' : 'FR';
+      const key = 'monstage:application-dossiers:v1:' + encodeURIComponent(offerId) + ':' + language;
+      const dossier = JSON.parse(localStorage.getItem(key) || 'null');
+      if (dossier?.offerId === offerId && dossier?.letter) return dossier.letter as CoverLetterDraft;
+    }
     const raw = localStorage.getItem(KEY);
     if (!raw) return freshCoverLetter('FR');
 
