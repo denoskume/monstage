@@ -11,6 +11,7 @@ import { MessagesPage } from '../features/messages/MessagesPage';
 import { NotificationsPage } from '../features/notifications/NotificationsPage';
 import { AppShell } from './AppShell';
 import { InfoPage } from '../features/info/InfoPage';
+import { StrategyPage } from '../features/strategy/StrategyPage';
 
 export function AppRoutes() {
   return (
@@ -24,6 +25,7 @@ export function AppRoutes() {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/workspace" element={<WorkspacePage />} />
         <Route path="/studio" element={<StudioPage />} />
+        <Route path="/strategy" element={<StrategyPage />} />
         <Route path="/cv" element={<CvStudioPage />} />
         <Route path="/cl" element={<ClStudioPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
