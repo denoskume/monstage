@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useOffers } from '../../hooks/useOffers';
 import { tailorCvForOffer, tailorLetterForOffer } from '../applications/tailoredPackage';
 import { saveCvDraft, type CvLanguage } from '../cv/cvStorage';
-import { saveCoverLetter } from '../cl/clStorage';
+import { loadCoverLetter, saveCoverLetter } from '../cl/clStorage';
 
 export function StudioPage() {
   const [params] = useSearchParams();
@@ -22,7 +22,7 @@ export function StudioPage() {
     const identity = offer.id + ':' + language;
     try {
       const prior = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
-      if (prior?.offerId === offer.id && prior?.language === language && prior?.state === 'awaiting_review' && prior?.documentsVersion === 3) {
+      if (prior?.offerId === offer.id && prior?.company === offer.company && prior?.title === offer.title && prior?.language === language && prior?.state === 'awaiting_review' && prior?.documentsVersion === 4 && loadCoverLetter().company === offer.company && loadCoverLetter().internshipTitle === offer.title && loadCoverLetter().language === language) {
         setPreparedId(identity);
         return;
       }
@@ -31,7 +31,7 @@ export function StudioPage() {
     saveCoverLetter(tailorLetterForOffer(offer, language));
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title, language,
-      state: 'awaiting_review', documentsVersion: 3, preparedAt: new Date().toISOString(),
+      state: 'awaiting_review', documentsVersion: 4, preparedAt: new Date().toISOString(),
     }));
     setPreparedId(identity);
   }, [offer?.id, language]);
