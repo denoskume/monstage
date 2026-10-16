@@ -53,7 +53,21 @@ export function ClStudioPage() {
       review?.documentsVersion === 4 && stored.company === job.company &&
       stored.internshipTitle === job.title && stored.language === languageParam;
     const prepared = sameJob ? stored : tailorLetterForOffer(job, languageParam);
-    if (!sameJob) {
+    // Upgrade only the addressee of already prepared letters. Never overwrite
+    // user-edited paragraphs, company, signature, or verified named contacts.
+    const genericRecipient = !prepared.recipientName.trim() &&
+      (!prepared.recipientRole.trim() ||
+        /^(?:À l’attention de l’équipe de recrutement|À l’attention du service recrutement|Recruitment Team|Talent Acquisition Team)$/i.test(prepared.recipientRole.trim()));
+    const tailoredRecipient = recipientForOffer(job, languageParam);
+    const shouldRefreshAddressee = sameJob && genericRecipient &&
+      (prepared.recipientRole !== tailoredRecipient.recipientRole ||
+       prepared.team !== tailoredRecipient.team);
+    if (shouldRefreshAddressee) {
+      prepared.recipientRole = tailoredRecipient.recipientRole;
+      prepared.team = tailoredRecipient.team;
+      prepared.recipientLocation = tailoredRecipient.recipientLocation;
+    }
+    if (!sameJob || shouldRefreshAddressee) {
       saveCoverLetter(prepared);
       localStorage.setItem('monstage:application-review:v1', JSON.stringify({
         offerId: job.id, company: job.company, title: job.title, language: languageParam,
