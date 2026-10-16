@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import {
   freshCoverLetter,
@@ -15,7 +17,27 @@ function subjectLine(draft: CoverLetterDraft): string {
 }
 
 export function ClStudioPage() {
+  const [params] = useSearchParams();
+  const offerParam = params.get('offer');
+  const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
   const [draft, setDraft] = useState<CoverLetterDraft>(() => loadCoverLetter());
+  useEffect(() => {
+    const latest = loadCoverLetter();
+    setDraft(latest);
+    if (offerParam) {
+      try {
+        const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
+        if (review?.offerId !== offerParam || review?.language !== languageParam ||
+            review?.company !== latest.company || review?.title !== latest.internshipTitle) {
+          setDownloadError('Les documents ne correspondent pas à cette offre. Retourne dans Studio et clique sur « Préparer CV + lettre dans Studio ».');
+        } else {
+          setDownloadError('');
+        }
+      } catch {
+        setDownloadError('Impossible de vérifier le dossier : prépare les deux documents depuis Studio.');
+      }
+    }
+  }, [offerParam, languageParam]);
   const [saved, setSaved] = useState(false);
   const [downloadError, setDownloadError] = useState('');
 
