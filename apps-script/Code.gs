@@ -2159,6 +2159,68 @@ function doGet() {
   });
 }
 
+
+/**
+ * Authenticated ingestion of public ATS feeds fetched by GitHub Actions.
+ * The runner is used when Google's outbound UrlFetch returns empty results.
+ * Re-run all relevance filters on the Apps Script side before persisting.
+ */
+function ingestRunnerAtsPostings_(request) {
+  var provider = normalizeText_(request.provider);
+  var sourceId = normalizeText_(request.sourceId);
+  var source = null;
+  var sources = provider === 'greenhouse' ? GREENHOUSE_SOURCES_ :
+    provider === 'smartRecruiters' ? SMARTRECRUITERS_SOURCES_ : [];
+  sources.forEach(function (candidate) {
+    if (String(provider === 'greenhouse' ? candidate.board : candidate.companyId) === sourceId) source = candidate;
+  });
+  if (!source) throw new Error('Unknown authorized ATS source');
+  var jobs = request.jobs;
+  if (!Array.isArray(jobs) || jobs.length > 200) throw new Error('Invalid ATS batch');
+  var sheetName = provider === 'greenhouse' ? 'Offres - Greenhouse' : 'Offres - SmartRecruiters';
+  var spreadsheet = getSpreadsheet_();
+  var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
+  var rows = [];
+  var counters = { received: jobs.length, internship: 0, france: 0, relevant: 0 };
+  jobs.forEach(function (job) {
+    if (!job || typeof job !== 'object' || !job.id) return;
+    var posting;
+    var row;
+    if (provider === 'greenhouse') {
+      if (!job.absolute_url || !/^https:\/\/(?:boards\.greenhouse\.io|job-boards\.greenhouse\.io)\//i.test(job.absolute_url)) return;
+      posting = greenhouseAsTargetPosting_(job);
+      if (!isInternshipPosting_(posting)) return;
+      counters.internship++;
+      if (!isFranceLocation_(posting.categories.location)) return;
+      counters.france++;
+      if (targetSignalScore_(posting) < 3) return;
+      counters.relevant++;
+      row = greenhouseJobToRow_(source, job);
+    } else {
+      if (!smartRecruitersIsInternship_(job)) return;
+      counters.internship++;
+      posting = smartRecruitersAsTargetPosting_(job, null);
+      if (!isFranceLocation_(posting.categories.location)) return;
+      counters.france++;
+      if (targetSignalScore_(posting) < 3) return;
+      counters.relevant++;
+      row = smartRecruitersJobToRow_(source, job, null);
+    }
+    rows.push(row);
+  });
+  // The runner may send one source at a time: merge by stable ID, never replace other employers.
+  if (rows.length) {
+    var old = sheet.getDataRange().getDisplayValues();
+    var base = old.length > 1 ? old.slice(1).filter(function (row) {
+      var prefix = provider === 'greenhouse' ? 'greenhouse:' + sourceId + ':' : 'smartrecruiters:' + sourceId + ':';
+      return String(row[0] || '').indexOf(prefix) !== 0;
+    }) : [];
+    var combined = base.concat(rows);
+    writeExternalOfferRows_(sheet, combined);
+  }
+  return { provider: provider, sourceId: sourceId, accepted: rows.length, counters: counters };
+}
+
 function doPost(e) {
   try {
     var expectedSecret = PropertiesService
@@ -2185,6 +2247,10 @@ function doPost(e) {
       var externalPayload = externalResult.payload || {};
       externalPayload.status = externalResult.status;
       return jsonOutput_(externalPayload);
+    }
+
+    if (action === 'ingestExternalPostings') {
+      return jsonOutput_({ ingestion: ingestRunnerAtsPostings_(body) });
     }
 
     if (action === 'syncExternalSources') {
