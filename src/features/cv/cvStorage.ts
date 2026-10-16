@@ -1,3 +1,4 @@
+// Application-specific drafts are kept separately from CV master.
 export type CvLanguage = 'FR' | 'EN';
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'languages' | 'interests';
 
