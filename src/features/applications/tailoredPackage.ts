@@ -36,17 +36,38 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
   return base;
 }
 
+export function recipientForOffer(offer: InternshipOffer, language: CvLanguage) {
+  const company = normalized(offer.company);
+  const title = normalized(offer.title);
+  const location = offer.city || '';
+  // Only use a named person if independently verified for the specific vacancy.
+  // A role or team is a contextual addressee, not a claim that a named manager was found.
+  if (company.includes('alten') && (title.includes('innovation') || title.includes('computer vision'))) {
+    return language === 'FR'
+      ? { recipientName: '', recipientRole: 'À l’attention du service recrutement des ALTEN Labs', team: 'Direction de l’Innovation — ALTEN Labs', recipientLocation: location }
+      : { recipientName: '', recipientRole: 'ALTEN Labs Recruitment', team: 'Innovation Division — ALTEN Labs', recipientLocation: location };
+  }
+  if (title.includes('recherche') || title.includes('r&d') || title.includes('research')) {
+    return language === 'FR'
+      ? { recipientName: '', recipientRole: 'À l’attention du recrutement R&D', team: 'Équipe de recherche et développement', recipientLocation: location }
+      : { recipientName: '', recipientRole: 'R&D Recruitment', team: 'Research & Development', recipientLocation: location };
+  }
+  return language === 'FR'
+    ? { recipientName: '', recipientRole: 'À l’attention du service recrutement', team: '', recipientLocation: location }
+    : { recipientName: '', recipientRole: 'Talent Acquisition Team', team: '', recipientLocation: location };
+}
+
 export function tailorLetterForOffer(offer: InternshipOffer, language: CvLanguage): CoverLetterDraft {
   const stored = loadCoverLetter();
   const terms = focus(offer);
   const f = terms.slice(0, 3);
   const subject = offer.title;
   const company = offer.company;
-  const city = offer.city || '';
+  const recipient = recipientForOffer(offer, language);
   const skills = offer.skills.slice(0, 4).join(', ');
   const draft: CoverLetterDraft = {
     ...structuredClone(stored), language, company, internshipTitle: subject,
-    team: '', recipientName: '', recipientRole: language === 'FR' ? 'À l’attention de l’équipe de recrutement' : 'Recruitment Team', recipientLocation: city,
+    ...recipient,
     date: new Date().toLocaleDateString(language === 'FR' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
     greeting: language === 'FR' ? 'Madame, Monsieur,' : 'Dear Hiring Manager,',
     closing: language === 'FR' ? 'Cordialement,' : 'Sincerely,',
