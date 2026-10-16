@@ -4,7 +4,6 @@ const links = [
   ['/offers', '⌕', 'Jobs'],
   ['/shortlist', '☆', 'Saved'],
   ['/studio', '▣', 'Studio'],
-  ['/strategy', '◎', 'Strategy'],
   ['/dashboard', '▦', 'Insights'],
 ] as const;
 
