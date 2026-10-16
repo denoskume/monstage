@@ -136,6 +136,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     };
     if (draft.recipientName) drawRecipientRight('À l’attention de ' + draft.recipientName, bold);
     if (draft.company) drawRecipientRight(draft.company, bold);
+    if (draft.team) drawRecipientRight(draft.team);
     if (draft.recipientRole) drawRecipientRight(draft.recipientRole);
     if (draft.recipientLocation) drawRecipientRight(draft.recipientLocation);
   } else {
@@ -150,6 +151,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     if (draft.recipientName) drawWrapped(draft.recipientName, 10.2, bold, 13.6);
     const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
     if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6);
+    if (draft.team) drawWrapped(draft.team, 10.2, regular, 13.6);
     if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6);
   }
 
