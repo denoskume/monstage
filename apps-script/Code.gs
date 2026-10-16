@@ -2189,7 +2189,9 @@ function ingestRunnerAtsPostings_(request) {
     if (provider === 'greenhouse') {
       if (!job.absolute_url || !/^https:\/\/(?:boards\.greenhouse\.io|job-boards\.greenhouse\.io)\//i.test(job.absolute_url)) return;
       posting = greenhouseAsTargetPosting_(job);
-      if (!isInternshipPosting_(posting)) return;
+      // Description footers can mention internships on unrelated permanent positions.
+      // Only an explicit internship signal in the official job title qualifies.
+      if (!/(?:^|[^a-z])(?:intern(?:ship)?|stage|stagiaire|pfe)(?:$|[^a-z])/i.test(normalizeComparable_(job.title))) return;
       counters.internship++;
       if (!isFranceLocation_(posting.categories.location)) return;
       counters.france++;
@@ -2209,7 +2211,7 @@ function ingestRunnerAtsPostings_(request) {
     rows.push(row);
   });
   // The runner may send one source at a time: merge by stable ID, never replace other employers.
-  if (rows.length) {
+  if (jobs.length) {
     var old = sheet.getDataRange().getDisplayValues();
     var base = old.length > 1 ? old.slice(1).filter(function (row) {
       var prefix = provider === 'greenhouse' ? 'greenhouse:' + sourceId + ':' : 'smartrecruiters:' + sourceId + ':';
