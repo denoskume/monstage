@@ -20,8 +20,8 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
     const precision = (value: string) => /segment|calibrat|traitement d.image|image processing|computer vision|deep learning|pytorch|opencv/i.test(value) ? 10 : 0;
     base.projects = [...base.projects].sort((a, b) => precision(b.name + b.bullets.join(' ')) - precision(a.name + a.bullets.join(' ')));
     base.summary = language === 'FR'
-      ? 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite contribuer à la segmentation d’images et à l’évaluation de la fiabilité des modèles, en approfondissant la quantification de l’incertitude.'
-      : 'Final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027. My interests include image segmentation and model evaluation, and I want to develop my understanding of uncertainty quantification.';
+      ? 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite contribuer chez Dassault Systèmes à la segmentation d’images et à l’évaluation de la fiabilité des modèles, en approfondissant la quantification de l’incertitude.'
+      : 'Final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027. I want to contribute to image segmentation and model evaluation at Dassault Systèmes while developing my understanding of uncertainty quantification.';
     return base;
   }
   base.projects = [...base.projects].sort((a, b) => rank(b.name + ' ' + b.bullets.join(' ')) - rank(a.name + ' ' + a.bullets.join(' ')));
