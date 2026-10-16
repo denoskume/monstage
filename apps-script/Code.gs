@@ -476,10 +476,12 @@ function syncLeverSources_() {
 
   LEVER_SOURCES_.forEach(function (source) {
     fetchLeverPostings_(source).forEach(function (posting) {
+      recordAtsMetric_('Lever', 'fetched');
       var location = posting.categories && posting.categories.location ? posting.categories.location : '';
-      if (!isFranceLocation_(location)) return;
-      if (!isInternshipPosting_(posting)) return;
-      if (targetSignalScore_(posting) < 3) return;
+      if (!isFranceLocation_(location)) { recordAtsMetric_('Lever', 'notFrance'); return; }
+      if (!isInternshipPosting_(posting)) { recordAtsMetric_('Lever', 'notInternship'); return; }
+      if (targetSignalScore_(posting) < 3) { recordAtsMetric_('Lever', 'lowSignal'); return; }
+      recordAtsMetric_('Lever', 'accepted');
       rows.push(leverPostingToRow_(source, posting));
     });
   });
@@ -590,11 +592,13 @@ function syncGreenhouseSources_() {
 
   GREENHOUSE_SOURCES_.forEach(function (source) {
     fetchGreenhouseJobs_(source).forEach(function (job) {
+      recordAtsMetric_('Greenhouse', 'fetched');
       var posting = greenhouseAsTargetPosting_(job);
       var location = posting.categories.location || '';
-      if (!isFranceLocation_(location)) return;
-      if (!isInternshipPosting_(posting)) return;
-      if (targetSignalScore_(posting) < 3) return;
+      if (!isFranceLocation_(location)) { recordAtsMetric_('Greenhouse', 'notFrance'); return; }
+      if (!isInternshipPosting_(posting)) { recordAtsMetric_('Greenhouse', 'notInternship'); return; }
+      if (targetSignalScore_(posting) < 3) { recordAtsMetric_('Greenhouse', 'lowSignal'); return; }
+      recordAtsMetric_('Greenhouse', 'accepted');
       rows.push(greenhouseJobToRow_(source, job));
     });
   });
@@ -727,11 +731,13 @@ function syncAshbySources_() {
 
   ASHBY_SOURCES_.forEach(function (source) {
     fetchAshbyJobs_(source).forEach(function (job) {
+      recordAtsMetric_('Ashby', 'fetched');
       if (job.isListed === false) return;
       var posting = ashbyAsTargetPosting_(job);
       if (!isFranceLocation_(posting.categories.location)) return;
       if (!isAshbyInternship_(job, posting)) return;
-      if (targetSignalScore_(posting) < 3) return;
+      if (targetSignalScore_(posting) < 3) { recordAtsMetric_('Ashby', 'lowSignal'); return; }
+      recordAtsMetric_('Ashby', 'accepted');
       rows.push(ashbyJobToRow_(source, job));
     });
   });
@@ -887,12 +893,14 @@ function syncSmartRecruitersSources_() {
 
   SMARTRECRUITERS_SOURCES_.forEach(function (source) {
     smartRecruitersList_(source).forEach(function (job) {
-      if (!smartRecruitersIsInternship_(job)) return;
+      recordAtsMetric_('SmartRecruiters', 'fetched');
+      if (!smartRecruitersIsInternship_(job)) { recordAtsMetric_('SmartRecruiters', 'notInternship'); return; }
       var details = smartRecruitersDetails_(source, job.id);
-      if (!details || details.active === false) return;
+      if (!details || details.active === false) { recordAtsMetric_('SmartRecruiters', 'missingDetail'); return; }
       var posting = smartRecruitersAsTargetPosting_(job, details);
       if (!isFranceLocation_(posting.categories.location)) return;
-      if (targetSignalScore_(posting) < 3) return;
+      if (targetSignalScore_(posting) < 3) { recordAtsMetric_('SmartRecruiters', 'lowSignal'); return; }
+      recordAtsMetric_('SmartRecruiters', 'accepted');
       rows.push(smartRecruitersJobToRow_(source, job, details));
     });
   });
@@ -1083,14 +1091,16 @@ function syncWorkdaySources_() {
 
   WORKDAY_SOURCES_.forEach(function (source) {
     fetchWorkdayJobs_(source).forEach(function (job) {
+      recordAtsMetric_('Workday', 'fetched');
       var listPosting = workdayAsTargetPosting_(job, null);
       if (!isFranceLocation_(listPosting.categories.location)) return;
-      if (!isWorkdayInternship_(job)) return;
+      if (!isWorkdayInternship_(job)) { recordAtsMetric_('Workday', 'notInternship'); return; }
 
       var details = fetchWorkdayDetails_(source, job);
       var posting = workdayAsTargetPosting_(job, details);
       if (!isFranceLocation_(posting.categories.location)) return;
-      if (targetSignalScore_(posting) < 3) return;
+      if (targetSignalScore_(posting) < 3) { recordAtsMetric_('Workday', 'lowSignal'); return; }
+      recordAtsMetric_('Workday', 'accepted');
       rows.push(workdayJobToRow_(source, job, details));
     });
   });
@@ -1175,12 +1185,20 @@ function refreshExternalSourcesIfDue_() {
 
 function runExternalSyncSafely_(name, syncFn) {
   try {
-    return { count: syncFn(), error: null };
+    var count = syncFn();
+    var metrics = (typeof ATS_SYNC_METRICS_ !== 'undefined' && ATS_SYNC_METRICS_[name]) || {};
+    return { count: count, metrics: metrics, error: null };
   } catch (error) {
     var message = String(error && error.stack ? error.stack : error);
     console.error(name + ' sync failed: ' + message);
     return { count: 0, error: message.slice(0, 1000) };
   }
+}
+
+var ATS_SYNC_METRICS_ = {};
+function recordAtsMetric_(provider, stage) {
+  if (!ATS_SYNC_METRICS_[provider]) ATS_SYNC_METRICS_[provider] = {};
+  ATS_SYNC_METRICS_[provider][stage] = (ATS_SYNC_METRICS_[provider][stage] || 0) + 1;
 }
 
 function syncExternalOfferSources() {
