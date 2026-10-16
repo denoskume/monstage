@@ -9,9 +9,11 @@ export function StudioPage() {
   const [params] = useSearchParams();
   const offerId = params.get('offer');
   const { data, loading } = useOffers();
-  const offer = offerId ? data?.offers.find(item => item.id === offerId) : undefined;
+  const offer = (offerId || chosenOfferId) ? data?.offers.find(item => item.id === (offerId || chosenOfferId)) : undefined;
   const [language, setLanguage] = useState<CvLanguage>('FR');
   const [preparedId, setPreparedId] = useState<string | null>(null);
+  const [chosenOfferId, setChosenOfferId] = useState('');
+  const selectedOfferId = offerId || chosenOfferId;
 
   // Opening a job-specific Studio URL must load both documents for that same offer.
   // Preserve drafts already prepared for this exact offer and language.
@@ -20,7 +22,7 @@ export function StudioPage() {
     const identity = offer.id + ':' + language;
     try {
       const prior = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
-      if (prior?.offerId === offer.id && prior?.language === language && prior?.state === 'awaiting_review' && prior?.documentsVersion === 2) {
+      if (prior?.offerId === offer.id && prior?.language === language && prior?.state === 'awaiting_review' && prior?.documentsVersion === 3) {
         setPreparedId(identity);
         return;
       }
@@ -29,7 +31,7 @@ export function StudioPage() {
     saveCoverLetter(tailorLetterForOffer(offer, language));
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title, language,
-      state: 'awaiting_review', documentsVersion: 2, preparedAt: new Date().toISOString(),
+      state: 'awaiting_review', documentsVersion: 3, preparedAt: new Date().toISOString(),
     }));
     setPreparedId(identity);
   }, [offer?.id, language]);
@@ -53,7 +55,8 @@ export function StudioPage() {
           <p>Prépare et relis tes documents dans les éditeurs officiels de MonStage, avant tout envoi.</p>
         </div>
       </div>
-      {offerId ? (
+      {!offerId && data?.offers?.length ? <div className="card" style={{ padding: 20, marginBottom: 20 }}><label>Choisir une offre à préparer <select aria-label="Choisir une offre à préparer" value={chosenOfferId} onChange={event => setChosenOfferId(event.target.value)}><option value="">Sélectionner une offre</option>{data.offers.filter(item => item.applicationStatus === 'À candidater').slice(0, 150).map(item => <option key={item.id} value={item.id}>{item.company} — {item.title}</option>)}</select></label></div> : null}
+      {selectedOfferId ? (
         <section className="card" aria-label="Préparation de candidature" style={{ padding: 24, marginBottom: 24 }}>
           {loading && !data ? <p>Chargement de l’offre…</p> : offer ? (
             <>
@@ -68,8 +71,8 @@ export function StudioPage() {
                 <div role="status" style={{ marginTop: 18 }}>
                   <p><strong>Brouillons prêts à relire.</strong> Vérifie les dates, chaque compétence, l’en-tête centré et les quatre paragraphes. Aucun envoi sans ton accord explicite.</p>
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <Link className="button button--secondary" to="/cv">Examiner le CV →</Link>
-                    <Link className="button button--secondary" to="/cl">Examiner la lettre →</Link>
+                    <Link className="button button--secondary" to={`/cv?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner le CV →</Link>
+                    <Link className="button button--secondary" to={`/cl?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner la lettre →</Link>
                   </div>
                 </div>
               ) : null}
@@ -78,12 +81,12 @@ export function StudioPage() {
         </section>
       ) : null}
       <div className="studio-grid">
-        <Link to="/cv" className="card studio-card" aria-label="Open CV Studio">
+        <Link to={offer ? `/cv?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cv'} className="card studio-card" aria-label="Open CV Studio">
           <div className="studio-card__icon" aria-hidden="true">CV</div>
           <div><h2>CV</h2><p>Prepare independent French and English CV versions, tailor the content and export a clean ATS-friendly PDF.</p></div>
           <span className="studio-card__arrow" aria-hidden="true">→</span>
         </Link>
-        <Link to="/cl" className="card studio-card" aria-label="Open Cover Letter Studio">
+        <Link to={offer ? `/cl?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cl'} className="card studio-card" aria-label="Open Cover Letter Studio">
           <div className="studio-card__icon" aria-hidden="true">CL</div>
           <div><h2>Cover Letter</h2><p>Write and adapt native French and English cover letters with independent templates and direct PDF export.</p></div>
           <span className="studio-card__arrow" aria-hidden="true">→</span>
