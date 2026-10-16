@@ -216,7 +216,7 @@ export function CvStudioPage() {
         </div>
       </div>
 
-      {localStorage.getItem('monstage:application-review:v1') ? <p role="status" className="workspace-note">Dossier de candidature en préparation : vérifie le contenu et le PDF ici. Aucun envoi avant ton accord explicite.</p> : null}
+      {(() => { try { const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null'); return review?.state === 'awaiting_review' && review?.language === draft.language ? <p role="status" className="workspace-note"><strong>CV pour {review.company} — {review.title}.</strong> Vérifie le contenu et l’en-tête centré avant toute validation. Aucun envoi sans ton OK.</p> : null; } catch { return null; } })()}
       {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
 
       <div className="cv-studio-layout">
