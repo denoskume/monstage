@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useOffers } from '../../hooks/useOffers';
 import { tailorCvForOffer, tailorLetterForOffer } from '../applications/tailoredPackage';
@@ -13,13 +13,34 @@ export function StudioPage() {
   const [language, setLanguage] = useState<CvLanguage>('FR');
   const [preparedId, setPreparedId] = useState<string | null>(null);
 
+  // Opening a job-specific Studio URL must load both documents for that same offer.
+  // Preserve drafts already prepared for this exact offer and language.
+  useEffect(() => {
+    if (!offer) return;
+    const identity = offer.id + ':' + language;
+    try {
+      const prior = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
+      if (prior?.offerId === offer.id && prior?.language === language && prior?.state === 'awaiting_review' && prior?.documentsVersion === 2) {
+        setPreparedId(identity);
+        return;
+      }
+    } catch { /* Rebuild broken metadata, never reuse mismatched drafts. */ }
+    saveCvDraft(tailorCvForOffer(offer, language));
+    saveCoverLetter(tailorLetterForOffer(offer, language));
+    localStorage.setItem('monstage:application-review:v1', JSON.stringify({
+      offerId: offer.id, company: offer.company, title: offer.title, language,
+      state: 'awaiting_review', documentsVersion: 2, preparedAt: new Date().toISOString(),
+    }));
+    setPreparedId(identity);
+  }, [offer?.id, language]);
+
   function prepare() {
     if (!offer) return;
     saveCvDraft(tailorCvForOffer(offer, language));
     saveCoverLetter(tailorLetterForOffer(offer, language));
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title, language,
-      state: 'awaiting_review', preparedAt: new Date().toISOString(),
+      state: 'awaiting_review', documentsVersion: 2, preparedAt: new Date().toISOString(),
     }));
     setPreparedId(offer.id + ':' + language);
   }
