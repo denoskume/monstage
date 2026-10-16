@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useOffers } from '../../hooks/useOffers';
-import { tailorLetterForOffer } from '../applications/tailoredPackage';
+import { recipientForOffer, tailorLetterForOffer } from '../applications/tailoredPackage';
 import { useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import {
@@ -100,6 +100,13 @@ export function ClStudioPage() {
     setSaved(false);
   }
 
+  function personalizeRecipient() {
+    if (!job) return;
+    const recipient = recipientForOffer(job, draft.language);
+    setDraft(current => ({ ...current, ...recipient }));
+    setSaved(false);
+  }
+
   function updateParagraph(index: number, value: string) {
     patch('paragraphs', draft.paragraphs.map((paragraph, current) => current === index ? value : paragraph));
   }
@@ -171,11 +178,13 @@ export function ClStudioPage() {
         <aside className="cl-editor card">
           <section className="cv-editor-section">
             <h2>Application details</h2>
+            {job ? <button type="button" className="button button--secondary" onClick={personalizeRecipient}>Adapter le destinataire à cette offre</button> : null}
             <div className="cv-editor-grid">
               <label>Date<input value={draft.date} onChange={(e) => patch('date', e.target.value)} placeholder={draft.language === 'FR' ? '7 octobre 2026' : '7 October 2026'} /></label>
               <label>Company<input value={draft.company} onChange={(e) => patch('company', e.target.value)} /></label>
               <label>Recipient<input value={draft.recipientName} onChange={(e) => patch('recipientName', e.target.value)} placeholder="M. / Mme Nom" /></label>
-              <label>Recipient role<input value={draft.recipientRole} onChange={(e) => patch('recipientRole', e.target.value)} /></label>
+              <label>Service ou fonction destinataire<input value={draft.recipientRole} onChange={(e) => patch('recipientRole', e.target.value)} /></label>
+              <label>Équipe ou département<input value={draft.team} onChange={(e) => patch('team', e.target.value)} /></label>
               <label>Recipient location<input value={draft.recipientLocation} onChange={(e) => patch('recipientLocation', e.target.value)} /></label>
               <label>Internship title<input value={draft.internshipTitle} onChange={(e) => patch('internshipTitle', e.target.value)} /></label>
             </div>
@@ -228,6 +237,7 @@ export function ClStudioPage() {
           <div className="cl-preview__recipient">
             {draft.recipientName ? <strong>{draft.language === 'FR' ? `À l’attention de ${draft.recipientName}` : draft.recipientName}</strong> : null}
             {draft.company ? <strong>{draft.company}</strong> : null}
+            {draft.team ? <span>{draft.team}</span> : null}
             {draft.recipientRole ? <span>{draft.recipientRole}</span> : null}
             {draft.recipientLocation ? <span>{draft.recipientLocation}</span> : null}
           </div>
