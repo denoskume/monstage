@@ -18,12 +18,22 @@ export function StudioPage() {
   useEffect(() => {
     if (!offer) return;
     prepareApplicationDossier(offer, language);
+    localStorage.setItem('monstage:application-review:v1', JSON.stringify({
+      offerId: offer.id, company: offer.company, title: offer.title,
+      language, state: 'awaiting_review', documentsVersion: 5,
+      preparedAt: new Date().toISOString(),
+    }));
     setPreparedId(offer.id + ':' + language);
   }, [offer?.id, language]);
 
   function prepare() {
     if (!offer) return;
     prepareApplicationDossier(offer, language);
+    localStorage.setItem('monstage:application-review:v1', JSON.stringify({
+      offerId: offer.id, company: offer.company, title: offer.title,
+      language, state: 'awaiting_review', documentsVersion: 5,
+      preparedAt: new Date().toISOString(),
+    }));
     setPreparedId(offer.id + ':' + language);
   }
 
