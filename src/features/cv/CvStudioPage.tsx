@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
@@ -112,7 +113,13 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 }
 
 export function CvStudioPage() {
-  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft('FR'));
+  const [params] = useSearchParams();
+  const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
+  const offerParam = params.get('offer');
+  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft(languageParam));
+  useEffect(() => {
+    setDraft(loadCvDraft(languageParam));
+  }, [offerParam, languageParam]);
   const [saved, setSaved] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
