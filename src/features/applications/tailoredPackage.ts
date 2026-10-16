@@ -11,28 +11,61 @@ function focus(offer: InternshipOffer): string[] {
   return relevantTerms.filter((term) => text.includes(term)).slice(0, 5);
 }
 
+// Evidence-backed project catalogue supplements the editable CV master; no fictional scores.
+// Entries already present in the saved CV take precedence.
+const additionalProjects = {
+  FR: [
+    { id: 'clap', name: 'CLAP — Classification audio zero-shot', period: '2026', bullets: ['Évalué 2 000 extraits audio sur 50 classes et comparé 10 stratégies de prompts.', 'Amélioré la précision Top-1 de 83,05 % à 91,15 % sans fine-tuning.'] },
+    { id: 'calibration', name: 'Calibration de caméra', period: '2026', bullets: ['Implémenté la calibration multi-vues avec DLT normalisé et méthode de Zhang.', 'Évalué les erreurs de reprojection et contrôlé la validité des paramètres de caméra.'] },
+    { id: 'segmentation', name: 'Traitement d’images et segmentation', period: '2026', bullets: ['Expérimenté des méthodes de segmentation et de filtrage dans des travaux académiques.', 'Comparé les résultats à l’aide de métriques adaptées aux images.'] },
+    { id: 'monstage', name: 'MonStage — Plateforme de veille de stages', period: '2026 — En cours', bullets: ['Développé une plateforme de centralisation et de filtrage d’offres de stage.', 'Intégré des collectes de données et des contrôles de qualité et de pertinence des offres.'] },
+  ],
+  EN: [
+    { id: 'clap', name: 'CLAP — Zero-Shot Audio Classification', period: '2026', bullets: ['Evaluated 2,000 audio clips across 50 classes and compared 10 text prompt strategies.', 'Improved Top-1 accuracy from 83.05% to 91.15% without fine-tuning.'] },
+    { id: 'calibration', name: 'Camera Calibration', period: '2026', bullets: ['Implemented multi-view camera calibration using normalized DLT and Zhang’s method.', 'Measured reprojection error and checked the validity of camera parameters.'] },
+    { id: 'segmentation', name: 'Image Processing and Segmentation', period: '2026', bullets: ['Explored segmentation and image filtering methods in academic coursework.', 'Compared image-processing outcomes using relevant evaluation metrics.'] },
+    { id: 'monstage', name: 'MonStage — Internship Intelligence Platform', period: '2026 — Ongoing', bullets: ['Built a platform to aggregate and filter internship opportunities.', 'Integrated data collection, relevance checks and offer-quality validation.'] },
+  ],
+};
+
+const topicWords: Record<string, string[]> = {
+  calibration: ['camera', 'calibrat', 'geometri', 'geometry', '3d', 'reconstruction', 'stereo', 'pose'],
+  segmentation: ['segment', 'medical', 'imagerie', 'image', 'vision', 'opencv', 'pixel', 'detection'],
+  clap: ['audio', 'speech', 'sound', 'signal', 'classification', 'evaluation', 'benchmark', 'prompt'],
+  monstage: ['automati', 'pipeline', 'process', 'data engineering', 'workflow', 'quality', 'qualite', 'web', 'digital'],
+  fraud: ['fraud', 'anomal', 'tabular', 'predict', 'data scien', 'classification', 'statistic', 'risk'],
+  flag: ['vision', 'image', 'deep learning', 'pytorch', 'classification', 'robust', 'evaluation'],
+};
+export function projectSelectionForOffer(offer: InternshipOffer, language: CvLanguage) {
+  const base = loadCvDraft(language);
+  const combined = [...base.projects, ...additionalProjects[language].filter(p => !base.projects.some(existing => existing.id === p.id))];
+  const job = normalized([offer.title, offer.domain, offer.specialization, offer.relevance, ...offer.skills].filter(Boolean).join(' '));
+  const ranked = combined.map(project => {
+    const evidence = normalized([project.name, ...project.bullets].join(' '));
+    const topics = topicWords[project.id] || [];
+    const matches = topics.filter(word => job.includes(word));
+    const overlaps = ['python', 'pytorch', 'opencv', 'machine learning', 'deep learning', 'segmentation', 'data', 'image', 'signal', 'camera', 'classification', 'evaluation'].filter(word => job.includes(word) && evidence.includes(word));
+    const score = matches.length * 5 + overlaps.length * 2;
+    return { project, score, reason: project.name + ' : ' + (matches.concat(overlaps).slice(0, 3).join(', ') || 'compétences transversales') };
+  }).sort((a, b) => b.score - a.score || a.project.name.localeCompare(b.project.name));
+  return ranked.slice(0, 3);
+}
+
 export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): CvDraft {
   const base = structuredClone(loadCvDraft(language));
-  const terms = focus(offer);
-  const rank = (value: string) => terms.reduce((score, term) => score + (normalized(value).includes(term) ? 1 : 0), 0);
-  const isUncertaintySegmentation = /incertitude/i.test(offer.title) && /segmentation/i.test(offer.title);
-  if (isUncertaintySegmentation) {
-    const precision = (value: string) => /segment|calibrat|traitement d.image|image processing|computer vision|deep learning|pytorch|opencv/i.test(value) ? 10 : 0;
-    base.projects = [...base.projects].sort((a, b) => precision(b.name + b.bullets.join(' ')) - precision(a.name + a.bullets.join(' ')));
-    base.summary = language === 'FR'
-      ? 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite contribuer chez Dassault Systèmes à la segmentation d’images et à l’évaluation de la fiabilité des modèles, en approfondissant la quantification de l’incertitude.'
-      : 'Final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027. I want to contribute to image segmentation and model evaluation at Dassault Systèmes while developing my understanding of uncertainty quantification.';
-    return base;
-  }
-  base.projects = [...base.projects].sort((a, b) => rank(b.name + ' ' + b.bullets.join(' ')) - rank(a.name + ' ' + a.bullets.join(' ')));
+  // Use evidence across the CV master and the verified portfolio, not only two fixed projects.
+  const selection = projectSelectionForOffer(offer, language);
+  base.projects = selection.map(item => ({ ...item.project, bullets: [...item.project.bullets] }));
+  const relevant = normalized([offer.title, offer.specialization, offer.domain, ...offer.skills].filter(Boolean).join(' '));
+  const keywords = ['computer vision', 'image', 'segmentation', 'deep learning', 'machine learning', 'python', 'signal', 'data', 'quality', 'automatisation', 'reconstruction', 'calibration'];
+  const focusTerms = keywords.filter(word => relevant.includes(word)).slice(0, 3);
   const lines = base.skills.split('\n').filter(Boolean);
-  base.skills = [...lines].sort((a, b) => rank(b) - rank(a)).join('\n');
-  const direction = terms.slice(0, 3).join(', ');
-  if (language === 'FR') {
-    base.summary = 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois à partir de février 2027. Je souhaite contribuer à des missions de ' + (direction || 'data science et intelligence artificielle') + ' chez ' + offer.company + ', en m’appuyant sur mes projets académiques et mon envie de progresser.';
-  } else {
-    base.summary = 'Final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship starting February 2027. I would like to contribute to ' + (direction || 'applied data science and machine learning') + ' projects at ' + offer.company + ', building on my academic experience and willingness to learn.';
-  }
+  const score = (line: string) => focusTerms.filter(term => normalized(line).includes(term)).length;
+  base.skills = [...lines].sort((a, b) => score(b) - score(a)).join('\n');
+  const theme = focusTerms.length ? focusTerms.join(', ') : 'data science et intelligence artificielle';
+  base.summary = language === 'FR'
+    ? 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite contribuer chez ' + offer.company + ' aux missions de ' + theme + ' en m’appuyant sur mes projets et ma rigueur.'
+    : 'Final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027. I would like to contribute to ' + theme + ' projects at ' + offer.company + ', drawing on my academic projects and careful approach to evaluation.';
   return base;
 }
 
