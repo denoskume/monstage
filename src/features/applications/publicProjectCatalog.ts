@@ -1,7 +1,7 @@
 import type { CvLanguage, CvProject } from '../cv/cvStorage';
 export interface VerifiedPublicProject { id: string; url: string; tags: string[]; cv: Record<CvLanguage, CvProject>; }
 // Source of truth: public GitHub READMEs, checked 16 October 2026. No metrics without README evidence.
-export const publicProjectCatalog: VerifiedPublicProject[] = [
+const basePublicProjectCatalog: VerifiedPublicProject[] = [
   {"id":"background","url":"https://github.com/denoskume/Background-Subtraction-Fluoroscopy","tags":["medical","imaging","segmentation","fluoroscopy","morphology","image","processing","computer","vision","statistical","evaluation","opencv","filtering","segmentation","dice","iou","python"],"cv":{"FR":{"id":"background","name":"Soustraction de fond — Fluoroscopie","period":"2026","bullets":["Construit une chaîne de traitement fluoroscopique : soustraction du fond, filtrage spatial/fréquentiel et morphologie.","Comparé des segmentations par seuillage fixe, Otsu et EM/GMM avec Dice, IoU, PSNR et validation temporelle."]},"EN":{"id":"background","name":"Background Subtraction — Fluoroscopy","period":"2026","bullets":["Built a fluoroscopy processing pipeline with static background subtraction, spatial/frequency filtering and morphological refinement.","Compared fixed-threshold, Otsu and EM/GMM segmentation with Dice, IoU, PSNR and temporal validation."]}}},
   {"id":"clap","url":"https://github.com/denoskume/CLAP-Zero-Shot-Audio-Classification","tags":["audio","sound","speech","signal","machine","learning","foundation","models","zero","shot","classification","embedding","prompts","evaluation","benchmarking","python"],"cv":{"FR":{"id":"clap","name":"CLAP — Classification audio zero-shot","period":"2026","bullets":["Évalué LAION-CLAP sur 2 000 extraits ESC-50, 50 classes et 10 stratégies de prompts.","Amélioré la précision Top-1 de 83,05 % à 91,15 % sans fine-tuning."]},"EN":{"id":"clap","name":"CLAP — Zero-Shot Audio Classification","period":"2026","bullets":["Evaluated LAION-CLAP on 2,000 ESC-50 audio clips, 50 classes and 10 text-prompt strategies.","Improved Top-1 accuracy from 83.05% to 91.15% without fine-tuning."]}}},
   {"id":"flag","url":"https://github.com/denoskume/country-flag-recognition","tags":["computer","vision","image","recognition","classification","deep","learning","pytorch","robustness","confidence","model","evaluation","open","set","information","extraction","report","pdf"],"cv":{"FR":{"id":"flag","name":"Flag Intelligence — Reconnaissance de drapeaux","period":"2026","bullets":["Développé une chaîne de reconnaissance d’images avec confiance, marge de décision et gestion des ambiguïtés.","Relié la reconnaissance de pays à des rapports structurés exportables en PDF et JSON."]},"EN":{"id":"flag","name":"Flag Intelligence — Flag Recognition & Reports","period":"2026","bullets":["Built an image-recognition workflow with confidence, prediction margins, alternatives and ambiguous-result handling.","Connected country recognition to structured country reports with PDF and JSON export."]}}},
@@ -19,4 +19,173 @@ export const publicProjectCatalog: VerifiedPublicProject[] = [
   {"id":"fundamentals","url":"https://github.com/denoskume/msc-coro-dassip-portfolio/tree/main/labs/image-processing/image-processing-fundamentals","tags":["image","processing","histogram","pixels","image","statistics","python","numpy","segmentation","filtering","computer","vision"],"cv":{"FR":{"id":"fundamentals","name":"Fondamentaux du traitement d’images","period":"2026","bullets":["Étudié représentation des images, opérations pixel par pixel et caractérisation quantitative.","Documenté des expériences reproductibles avec vérifications numériques et visuelles."]},"EN":{"id":"fundamentals","name":"Image Processing Fundamentals","period":"2026","bullets":["Explored image representation, pixel-level operations and quantitative image characterization.","Documented reproducible image-processing experiments with numerical and visual checks."]}}},
   {"id":"optimization","url":"https://github.com/denoskume/msc-coro-dassip-portfolio/tree/main/labs/numerical-optimization/rosenbrock-signal-nmr","tags":["optimization","numerical","optimization","gradient","newton","bfgs","gauss","newton","levenberg","marquardt","rosenbrock","signal","enhancement","denoising","nmr","inverse","problems","matlab"],"cv":{"FR":{"id":"optimization","name":"Optimisation numérique — Signal et RMN","period":"2026","bullets":["Implémenté sous MATLAB gradient, Newton, BFGS, Gauss–Newton et Levenberg–Marquardt.","Étudié Rosenbrock, débruitage du signal et problème inverse RMN avec analyse des limites."]},"EN":{"id":"optimization","name":"Numerical Optimization — Signal & NMR","period":"2026","bullets":["Implemented Gradient, Newton, BFGS, Gauss–Newton and Levenberg–Marquardt methods in MATLAB.","Studied Rosenbrock optimization, signal denoising and constrained NMR inverse problems, including failure analysis."]}}},
 ];
+const supportingEvidence: Record<string, Record<CvLanguage, string[]>> = {
+  "background": {
+    "FR": [
+      "Développé des masques à partir du seuillage et du modèle de mélange gaussien sur les séquences fluoroscopiques.",
+      "Produit des tableaux de métriques temporelles et des figures de validation du pipeline retenu."
+    ],
+    "EN": [
+      "Generated segmentation masks using thresholding and Gaussian-mixture approaches on fluoroscopy sequences.",
+      "Exported frame-level metrics, strategy summaries and figures to validate the selected pipeline."
+    ]
+  },
+  "clap": {
+    "FR": [
+      "Calculé les embeddings audio et texte avec LAION-CLAP, puis classé les classes par similarité cosinus.",
+      "Analysé les erreurs par classe et les performances Top-k pour comparer les stratégies de prompts."
+    ],
+    "EN": [
+      "Computed LAION-CLAP audio and text embeddings and ranked classes using cosine similarity.",
+      "Examined class-wise errors and Top-k metrics to compare prompt strategies."
+    ]
+  },
+  "flag": {
+    "FR": [
+      "Conçu deux parcours d’entrée : image de drapeau ou nom/code ISO de pays.",
+      "Ajouté des alternatives classées et un contrôle déterministe de qualité avant l’export des rapports."
+    ],
+    "EN": [
+      "Designed image-upload and country-name/ISO-code inputs feeding one reporting workflow.",
+      "Added ranked alternatives and deterministic quality checks before exporting reports."
+    ]
+  },
+  "fraud": {
+    "FR": [
+      "Utilisé une séparation entraînement/validation/test sans fuite et une sélection du seuil sur la validation.",
+      "Comparé PR-AUC, rappel et précision ; produit des explications SHAP globales et locales."
+    ],
+    "EN": [
+      "Used leakage-safe train/validation/test splits and selected decision thresholds on validation data.",
+      "Compared PR-AUC, recall and precision and produced global and local SHAP explanations."
+    ]
+  },
+  "insurance": {
+    "FR": [
+      "Préparé les données hospitalières et médicales avec séparation par identifiant client entre entraînement et test.",
+      "Évalué les modèles avec MAE/RMSE/R² pour les coûts et précision/rappel/PR-AUC pour le risque élevé."
+    ],
+    "EN": [
+      "Cleaned hospitalisation and examination data using customer-grouped train/test partitions.",
+      "Evaluated cost prediction with MAE/RMSE/R² and high-cost detection with precision/recall/PR-AUC."
+    ]
+  },
+  "monstage": {
+    "FR": [
+      "Développé la recherche, les filtres multicritères et la priorisation des offres dans l’interface.",
+      "Mis en place le suivi des candidatures et la préparation de documents distincts par offre."
+    ],
+    "EN": [
+      "Implemented offer search, multi-criteria filters and relevance-based prioritization in the interface.",
+      "Built application tracking and offer-specific document preparation workflows."
+    ]
+  },
+  "cardgame": {
+    "FR": [
+      "Implémenté une animation non bloquante et des interactions souris, clavier et tactile.",
+      "Vérifié les règles de manche, la gestion des délais et la conservation de l’état pendant la pause."
+    ],
+    "EN": [
+      "Implemented non-blocking animation with mouse, keyboard and touch interaction.",
+      "Validated round rules, deadline handling and consistent state across pause/resume."
+    ]
+  },
+  "calibration": {
+    "FR": [
+      "Détecté les coins d’échiquier et estimé les homographies de plusieurs vues.",
+      "Visualisé les poses estimées et les distributions d’erreur de reprojection par vue."
+    ],
+    "EN": [
+      "Detected chessboard corners and estimated homographies from multiple camera views.",
+      "Visualized camera poses and per-view reprojection-error distributions."
+    ]
+  },
+  "tracking": {
+    "FR": [
+      "Associé les descripteurs ORB avec distance de Hamming et appariement BFMatcher.",
+      "Estimé les homographies RANSAC et projeté la boîte englobante de l’objet dans les images suivantes."
+    ],
+    "EN": [
+      "Matched ORB descriptors using Hamming distance and BFMatcher.",
+      "Estimated RANSAC homographies and transformed the object's initial bounding box across frames."
+    ]
+  },
+  "deep-learning": {
+    "FR": [
+      "Comparé trois dimensions de couche cachée : 128, 256 et 512 neurones, à protocole contrôlé.",
+      "Analysé la perte d’entraînement et les niveaux de confiance des prédictions sur MNIST."
+    ],
+    "EN": [
+      "Compared hidden-layer widths of 128, 256 and 512 units under controlled settings.",
+      "Analyzed training loss and prediction confidence on MNIST."
+    ]
+  },
+  "segmentation": {
+    "FR": [
+      "Testé seuillage manuel, Otsu, adaptatif, segmentation couleur et méthodes basées sur les contours.",
+      "Combiné composantes connexes, morphologie et watershed dans une chaîne complète de masques."
+    ],
+    "EN": [
+      "Tested manual, Otsu and adaptive thresholds alongside color- and edge-based segmentation.",
+      "Combined connected components, morphology and watershed in an end-to-end mask pipeline."
+    ]
+  },
+  "frequency": {
+    "FR": [
+      "Comparé filtres passe-bas/passe-haut idéaux, gaussiens et Butterworth sur des images.",
+      "Étudié l’effet des fréquences de coupure et contrôlé les résultats par diagnostics spectraux."
+    ],
+    "EN": [
+      "Compared ideal, Gaussian and Butterworth low-/high-pass image filters.",
+      "Analyzed cut-off sensitivity and verified results with spectral diagnostics."
+    ]
+  },
+  "spatial": {
+    "FR": [
+      "Comparé lissage gaussien, médian et bilatéral sous plusieurs paramètres.",
+      "Étudié Sobel, Laplacien et rehaussement des contours avec validations quantitatives."
+    ],
+    "EN": [
+      "Compared Gaussian, median and bilateral smoothing under varied parameters.",
+      "Evaluated Sobel, Laplacian and sharpening operators with quantitative checks."
+    ]
+  },
+  "transformation": {
+    "FR": [
+      "Implémenté translations, rotations, changements d’échelle et déformations affines.",
+      "Étudié l’impact de l’interpolation et de l’ordre de composition des transformations."
+    ],
+    "EN": [
+      "Implemented translation, rotation, scaling and affine image warping.",
+      "Examined interpolation choices and the effect of transformation-composition order."
+    ]
+  },
+  "fundamentals": {
+    "FR": [
+      "Expérimenté échantillonnage, quantification, histogrammes et modèles de bruit.",
+      "Comparé canaux RGB, niveaux de gris et normalisation avec des contrôles numériques."
+    ],
+    "EN": [
+      "Explored image sampling, quantization, histograms and noise models.",
+      "Compared RGB channels, grayscale conversion and normalization with numerical checks."
+    ]
+  },
+  "optimization": {
+    "FR": [
+      "Comparé gradient, Newton, Gauss–Newton et BFGS sur des problèmes d’optimisation numérique.",
+      "Évalué l’ajustement du signal RMN et les violations de contrainte, en documentant les limites de reconstruction."
+    ],
+    "EN": [
+      "Compared gradient, Newton, Gauss–Newton and BFGS on numerical optimization problems.",
+      "Measured NMR signal fit and constraint violations while documenting reconstruction limitations."
+    ]
+  }
+};
+export const publicProjectCatalog: VerifiedPublicProject[] = basePublicProjectCatalog.map(entry => ({
+  ...entry,
+  cv: {
+    FR: { ...entry.cv.FR, bullets: [...entry.cv.FR.bullets, ...supportingEvidence[entry.id].FR] },
+    EN: { ...entry.cv.EN, bullets: [...entry.cv.EN.bullets, ...supportingEvidence[entry.id].EN] },
+  },
+}));
 export function getPublicProjects(language: CvLanguage): CvProject[] { return publicProjectCatalog.map(entry => ({...entry.cv[language], bullets:[...entry.cv[language].bullets]})); }
