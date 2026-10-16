@@ -14,7 +14,7 @@ import {
 import { buildCoverLetterPdfBytes, coverLetterPdfFileName } from './pdfExport';
 
 function subjectLine(draft: CoverLetterDraft): string {
-  if (draft.language === 'FR') return `Objet : Candidature au stage ${draft.internshipTitle || '[INTITULÉ DU STAGE]'}`;
+  if (draft.language === 'FR') return `Objet : Candidature — ${draft.internshipTitle || '[INTITULÉ DU STAGE]'}`;
   return `Re: Application for ${draft.internshipTitle || '[INTERNSHIP TITLE]'}`;
 }
 
