@@ -1235,10 +1235,10 @@ h1, h2, h3 { color: var(--text); }
   margin: 0 0 10px 0;
 }
 .cl-preview--fr .cl-preview__recipient {
-  justify-items: start;
-  width: 46%;
+  justify-items: end;
+  width: 48%;
   margin: 12px 0 0 auto;
-  text-align: left;
+  text-align: right;
 }
 .cl-preview--fr .cl-preview__date {
   margin-top: 10px !important;
