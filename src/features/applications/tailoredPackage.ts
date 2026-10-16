@@ -1,6 +1,7 @@
 import type { InternshipOffer } from '../../api/contract';
 import { loadCvDraft, type CvDraft, type CvLanguage } from '../cv/cvStorage';
 import { loadCoverLetter, type CoverLetterDraft } from '../cl/clStorage';
+import { publicProjectCatalog } from './publicProjectCatalog';
 
 const normalized = (value: string) => value.toLocaleLowerCase('fr-FR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -11,44 +12,45 @@ function focus(offer: InternshipOffer): string[] {
   return relevantTerms.filter((term) => text.includes(term)).slice(0, 5);
 }
 
-// Evidence-backed project catalogue supplements the editable CV master; no fictional scores.
-// Entries already present in the saved CV take precedence.
-const additionalProjects = {
-  FR: [
-    { id: 'clap', name: 'CLAP — Classification audio zero-shot', period: '2026', bullets: ['Évalué 2 000 extraits audio sur 50 classes et comparé 10 stratégies de prompts.', 'Amélioré la précision Top-1 de 83,05 % à 91,15 % sans fine-tuning.'] },
-    { id: 'calibration', name: 'Calibration de caméra', period: '2026', bullets: ['Implémenté la calibration multi-vues avec DLT normalisé et méthode de Zhang.', 'Évalué les erreurs de reprojection et contrôlé la validité des paramètres de caméra.'] },
-    { id: 'segmentation', name: 'Traitement d’images et segmentation', period: '2026', bullets: ['Expérimenté des méthodes de segmentation et de filtrage dans des travaux académiques.', 'Comparé les résultats à l’aide de métriques adaptées aux images.'] },
-    { id: 'monstage', name: 'MonStage — Plateforme de veille de stages', period: '2026 — En cours', bullets: ['Développé une plateforme de centralisation et de filtrage d’offres de stage.', 'Intégré des collectes de données et des contrôles de qualité et de pertinence des offres.'] },
-  ],
-  EN: [
-    { id: 'clap', name: 'CLAP — Zero-Shot Audio Classification', period: '2026', bullets: ['Evaluated 2,000 audio clips across 50 classes and compared 10 text prompt strategies.', 'Improved Top-1 accuracy from 83.05% to 91.15% without fine-tuning.'] },
-    { id: 'calibration', name: 'Camera Calibration', period: '2026', bullets: ['Implemented multi-view camera calibration using normalized DLT and Zhang’s method.', 'Measured reprojection error and checked the validity of camera parameters.'] },
-    { id: 'segmentation', name: 'Image Processing and Segmentation', period: '2026', bullets: ['Explored segmentation and image filtering methods in academic coursework.', 'Compared image-processing outcomes using relevant evaluation metrics.'] },
-    { id: 'monstage', name: 'MonStage — Internship Intelligence Platform', period: '2026 — Ongoing', bullets: ['Built a platform to aggregate and filter internship opportunities.', 'Integrated data collection, relevance checks and offer-quality validation.'] },
-  ],
-};
-
-const topicWords: Record<string, string[]> = {
-  calibration: ['camera', 'calibrat', 'geometri', 'geometry', '3d', 'reconstruction', 'stereo', 'pose'],
-  segmentation: ['segment', 'medical', 'imagerie', 'image', 'vision', 'opencv', 'pixel', 'detection'],
-  clap: ['audio', 'speech', 'sound', 'signal', 'classification', 'evaluation', 'benchmark', 'prompt'],
-  monstage: ['automati', 'pipeline', 'process', 'data engineering', 'workflow', 'quality', 'qualite', 'web', 'digital'],
-  fraud: ['fraud', 'anomal', 'tabular', 'predict', 'data scien', 'classification', 'statistic', 'risk'],
-  flag: ['vision', 'image', 'deep learning', 'pytorch', 'classification', 'robust', 'evaluation'],
-};
+// Rank verified public GitHub evidence, supplemented by user-added CV projects.
+// The title and stated skill requirements outweigh unrelated generic terms.
 export function projectSelectionForOffer(offer: InternshipOffer, language: CvLanguage) {
-  const base = loadCvDraft(language);
-  const combined = [...base.projects, ...additionalProjects[language].filter(p => !base.projects.some(existing => existing.id === p.id))];
-  const job = normalized([offer.title, offer.domain, offer.specialization, offer.relevance, ...offer.skills].filter(Boolean).join(' '));
-  const ranked = combined.map(project => {
-    const evidence = normalized([project.name, ...project.bullets].join(' '));
-    const topics = topicWords[project.id] || [];
-    const matches = topics.filter(word => job.includes(word));
-    const overlaps = ['python', 'pytorch', 'opencv', 'machine learning', 'deep learning', 'segmentation', 'data', 'image', 'signal', 'camera', 'classification', 'evaluation'].filter(word => job.includes(word) && evidence.includes(word));
-    const score = matches.length * 5 + overlaps.length * 2;
-    return { project, score, reason: project.name + ' : ' + (matches.concat(overlaps).slice(0, 3).join(', ') || 'compétences transversales') };
-  }).sort((a, b) => b.score - a.score || a.project.name.localeCompare(b.project.name));
-  return ranked.slice(0, 3);
+  const current = loadCvDraft(language).projects;
+  const verifiedIds = new Set(publicProjectCatalog.map(entry => entry.id));
+  const profiles = [
+    ...publicProjectCatalog.map(entry => ({ project: entry.cv[language], tags: entry.tags, url: entry.url })),
+    ...current.filter(project => !verifiedIds.has(project.id)).map(project => ({
+      project, tags: normalized([project.name, ...project.bullets].join(' ')).split(/[^a-z0-9]+/).filter(x => x.length > 3),
+      url: '',
+    })),
+  ];
+  const priority = normalized(offer.title + ' ' + (offer.specialization || ''));
+  const requirements = normalized([offer.domain, ...offer.skills].filter(Boolean).join(' '));
+  const broad = normalized(offer.relevance || '');
+  const common = new Set(['data', 'python', 'image', 'machine', 'learning', 'model', 'classification', 'analysis', 'processing', 'evaluation', 'research', 'computer', 'vision']);
+  const matchesText = (term: string, text: string) => {
+    if (term.length < 3) return false;
+    // Avoid matching short fragments inside unrelated words.
+    return text.split(/[^a-z0-9]+/).some(word => word === term || (term.length > 5 && word.startsWith(term)));
+  };
+  const unique = new Set<string>();
+  const ranked = profiles.map(entry => {
+    const matched = [...new Set(entry.tags)].filter(t => !common.has(t));
+    const titleMatches = matched.filter(t => matchesText(t, priority));
+    const skillMatches = matched.filter(t => matchesText(t, requirements));
+    const contextMatches = matched.filter(t => matchesText(t, broad));
+    const genericMatches = entry.tags.filter(t => common.has(t) && (matchesText(t, priority) || matchesText(t, requirements)));
+    const score = titleMatches.length * 12 + skillMatches.length * 7 + contextMatches.length * 2 + genericMatches.length;
+    const reasons = [...new Set([...titleMatches, ...skillMatches, ...genericMatches])].slice(0, 4);
+    return { project: { ...entry.project, bullets: [...entry.project.bullets] }, score,
+      sourceUrl: entry.url, reason: entry.project.name + ' : ' + (reasons.join(', ') || (language === 'FR' ? 'compétences transversales' : 'transferable skills')) };
+  }).sort((a,b) => b.score - a.score || a.project.name.localeCompare(b.project.name));
+  return ranked.filter(entry => {
+    const name = normalized(entry.project.name);
+    if (unique.has(name)) return false;
+    unique.add(name);
+    return true;
+  }).slice(0, 3);
 }
 
 export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): CvDraft {
