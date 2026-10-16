@@ -105,6 +105,7 @@ export function ClStudioPage() {
         </div>
       </div>
 
+      {localStorage.getItem('monstage:application-review:v1') ? <p role="status" className="workspace-note">Lettre de candidature en préparation : vérifie les quatre paragraphes, l’en-tête et la signature. Aucun envoi avant ton accord explicite.</p> : null}
       {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
 
       <div className="cl-studio-layout">
