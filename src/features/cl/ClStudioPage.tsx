@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { loadApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
 import { useOffers } from '../../hooks/useOffers';
 import { recipientForOffer, tailorLetterForOffer } from '../applications/tailoredPackage';
 import { useSearchParams } from 'react-router-dom';
@@ -52,7 +53,7 @@ export function ClStudioPage() {
       review?.title === job.title && review?.language === languageParam &&
       review?.documentsVersion === 4 && stored.company === job.company &&
       stored.internshipTitle === job.title && stored.language === languageParam;
-    const prepared = sameJob ? stored : tailorLetterForOffer(job, languageParam);
+    const prepared = loadApplicationDossier(job.id, languageParam)?.letter || (sameJob ? stored : tailorLetterForOffer(job, languageParam));
     // Upgrade only the addressee of already prepared letters. Never overwrite
     // user-edited paragraphs, company, signature, or verified named contacts.
     const genericRecipient = !prepared.recipientName.trim() &&
