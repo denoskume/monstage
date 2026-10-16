@@ -29,7 +29,8 @@ export function StudioPage() {
 
   function prepare() {
     if (!offer) return;
-    prepareApplicationDossier(offer, language);
+    // Explicit regeneration only: preserve existing edited dossiers on normal navigation.
+    prepareApplicationDossier(offer, language, true);
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title,
       language, state: 'awaiting_review', documentsVersion: 5,
@@ -55,10 +56,10 @@ export function StudioPage() {
             <>
               <h2 style={{ marginBottom: 8 }}>{offer.company} — {offer.title}</h2>
               <p>{offer.city} · {offer.duration || 'Durée à confirmer'} · {offer.skills.slice(0, 5).join(', ')}</p>
-              <p>Les brouillons restent modifiables. La préparation ne transmet aucun document au recruteur.</p>
+              <p>Les brouillons restent modifiables et indépendants. Régénérer remplace uniquement les brouillons de cette offre et de cette langue, jamais le CV maître. Aucun document n’est envoyé.</p>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                 <label>Langue <select value={language} onChange={event => setLanguage(event.target.value as CvLanguage)}><option value="FR">Français</option><option value="EN">English</option></select></label>
-                <button className="button button--primary" type="button" onClick={prepare}>Préparer CV + lettre dans Studio</button>
+                <button className="button button--primary" type="button" onClick={prepare}>Régénérer CV + lettre pour cette offre</button>
               </div>
               {preparedId === offer.id + ':' + language ? (
                 <div role="status" style={{ marginTop: 18 }}>
