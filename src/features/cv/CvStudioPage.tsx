@@ -90,8 +90,8 @@ function AtsScore({ draft }: { draft: CvDraft }) {
     const hasSummary = draft.summary.trim().length >= 60;
     const hasSkills = draft.skills.split(',').filter(Boolean).length >= 6;
     const hasExperienceBullets = draft.experience.every((item) => item.bullets.filter(Boolean).length >= 2);
-    const hasProjectBullets = draft.projects.every((item) => item.bullets.filter(Boolean).length >= 2);
-    const onePageFriendly = draft.projects.length <= 3 && draft.experience.length <= 3;
+    const hasProjectBullets = draft.projects.length <= 2 && draft.projects.every((item) => item.bullets.filter(Boolean).length === 4);
+    const onePageFriendly = draft.projects.length <= 2 && draft.experience.length <= 3;
     return [
       ['Contact details', hasContact],
       ['Focused objective', hasSummary],
