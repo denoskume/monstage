@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import './strategy.css';
 
@@ -37,7 +37,7 @@ export function StrategyPage() {
   const pending = actions.filter((a) => a.status !== 'completed').length;
 
   function persist(value: Action[]) { setActions(value); localStorage.setItem(STORAGE_KEY, JSON.stringify(value)); }
-  function createAction(event: React.FormEvent<HTMLFormElement>) {
+  function createAction(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const label = target.trim();
     const step = nextStep.trim();
