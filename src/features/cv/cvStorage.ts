@@ -249,6 +249,15 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
 export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
   // Keep application drafts separate from the generic CV.
   try {
+    const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
+    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    if (review?.offerId && params.get('offer') === review.offerId && review.language === language) {
+      const key = 'monstage:application-dossiers:v1:' + encodeURIComponent(review.offerId) + ':' + language;
+      const dossier = JSON.parse(localStorage.getItem(key) || 'null');
+      if (dossier?.cv && dossier.offerId === review.offerId) return dossier.cv as CvDraft;
+    }
+  } catch { /* use master CV when there is no valid application dossier */ }
+  try {
     const raw = localStorage.getItem(KEY_PREFIX + language);
     if (raw) return { ...freshCvDraft(language), ...JSON.parse(raw), language };
 
