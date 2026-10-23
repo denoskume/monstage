@@ -10,8 +10,8 @@ const safSummary = {
   EN: 'Final-year MSc student at Centrale Nantes seeking a six-month Machine Learning and Computer Vision internship from February 2027. Projects in image segmentation and audio model evaluation.',
 };
 const safSkills = {
-  FR: 'Python & données : Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\\nVision & signal : OpenCV, scikit-image, segmentation, filtrage spatial/fréquentiel\\nOutils : Git, GitHub, Linux, VS Code',
-  EN: 'Python & data: Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\\nVision & signals: OpenCV, scikit-image, segmentation, spatial/frequency filtering\\nTools: Git, GitHub, Linux, VS Code',
+  FR: 'Python & données : Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\nVision & signal : OpenCV, scikit-image, segmentation, filtrage spatial/fréquentiel\nOutils : Git, GitHub, Linux, VS Code',
+  EN: 'Python & data: Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\nVision & signals: OpenCV, scikit-image, segmentation, spatial/frequency filtering\nTools: Git, GitHub, Linux, VS Code',
 };
 function optimizeSafranCv<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
   const next = structuredClone(cv);
