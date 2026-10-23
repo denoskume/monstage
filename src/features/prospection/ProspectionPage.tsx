@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { prepareSafranAiDossier, SAFRAN_AI_DOSSIER_ID } from '../applications/safranAiDossier';
 import { useEffect, useMemo, useState } from 'react';
 import './ProspectionPage.css';
 
@@ -16,6 +18,13 @@ function load(): Lead[] {
   try { const value = JSON.parse(localStorage.getItem(KEY) || '[]'); if (!Array.isArray(value)) return []; const saved = value.filter((v) => v && typeof v.id === 'string') as Lead[]; const originalSafran = targets.filter(t => t.company !== 'Safran.AI'); const hasPreviousThree = originalSafran.every(t => saved.some(l => l.company === t.company && l.site === t.site)); const alreadyHasAI = saved.some(l => l.company === 'Safran.AI'); if (hasPreviousThree && !alreadyHasAI) { const ai = targets.find(t => t.company === 'Safran.AI'); return ai ? [...saved, {...ai, id:crypto.randomUUID()}] : saved; } return saved; } catch { return []; }
 }
 export function ProspectionPage() {
+  const navigate = useNavigate();
+  function openSafranStudio(kind: 'cv' | 'cl') {
+    const dossier = prepareSafranAiDossier('FR');
+    localStorage.setItem('monstage:application-review:v1', JSON.stringify({offerId:dossier.offerId,company:dossier.company,title:dossier.title,language:'FR',state:'awaiting_review',documentsVersion:5,preparedAt:new Date().toISOString()}));
+    navigate('/'+kind+'?offer='+encodeURIComponent(SAFRAN_AI_DOSSIER_ID)+'&language=FR');
+  }
+
   const [leads,setLeads] = useState<Lead[]>(load);
   const [draft,setDraft] = useState<Omit<Lead,'id'>>(empty);
   const [editing,setEditing] = useState<string | null>(null);
