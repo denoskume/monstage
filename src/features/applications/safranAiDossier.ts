@@ -8,7 +8,7 @@ export const SAFRAN_AI_DOSSIER_ID = 'spontaneous:safran-ai:paris';
 export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(SAFRAN_AI_DOSSIER_ID,language);
   if (existing) {
-    const evidence = language === 'FR' ? 'Anglais — C1 (4 ans d’études universitaires en anglais)' : 'English — C1 (4 years of university studies taught in English)';
+    const evidence = language === 'FR' ? 'Anglais — C1 (plus de 4 ans d’études universitaires en anglais)' : 'English — C1 (over 4 years of university studies taught in English)';
     const languages = existing.cv.languages.replace(/Anglais — C1(?: \([^)]*\))?|English — C1(?: \([^)]*\))?/, evidence);
     if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages) {
       const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr',languages}};
@@ -19,7 +19,7 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   }
   const cv = structuredClone(loadCvDraft(language));
   cv.email = 'kamenan.kume@eleves.ec-nantes.fr';
-  cv.languages = language === 'FR' ? 'Français — Langue maternelle | Anglais — C1 (4 ans d’études universitaires en anglais)' : 'French — Native | English — C1 (4 years of university studies taught in English)';
+  cv.languages = language === 'FR' ? 'Français — Langue maternelle | Anglais — C1 (plus de 4 ans d’études universitaires en anglais)' : 'French — Native | English — C1 (over 4 years of university studies taught in English)';
   const chosen = ['background','clap'].map(id => publicProjectCatalog.find(item => item.id === id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
   cv.projects = chosen.map(x => ({...x.cv[language], bullets: [...x.cv[language].bullets].slice(0,4)}));
   cv.headline = language === 'FR' ? 'Stage de fin d’études — Machine Learning & Computer Vision' : 'End-of-studies internship — Machine Learning & Computer Vision';
