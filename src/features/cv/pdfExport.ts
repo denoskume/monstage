@@ -48,16 +48,17 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
   let page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
-  let y = A4_HEIGHT - MARGIN_TOP;
+  const compact = draft.email === 'kamenan.kume@eleves.ec-nantes.fr' && /Computer Vision/i.test(draft.headline);
+  let y = A4_HEIGHT - (compact ? 27 : MARGIN_TOP);
 
   const textColor = rgb(0.07, 0.07, 0.07);
   const ruleColor = rgb(0.25, 0.25, 0.25);
   const usableWidth = A4_WIDTH - (MARGIN_X * 2);
 
   const ensureSpace = (height: number) => {
-    if (y - height < MARGIN_BOTTOM) {
+    if (y - height < (compact ? 24 : MARGIN_BOTTOM)) {
       page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
-      y = A4_HEIGHT - MARGIN_TOP;
+      y = A4_HEIGHT - (compact ? 27 : MARGIN_TOP);
     }
   };
 
@@ -65,7 +66,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     const safe = normalizeCvPdfText(text);
     const width = font.widthOfTextAtSize(safe, size);
     page.drawText(safe, { x: Math.max(MARGIN_X, (A4_WIDTH - width) / 2), y, size, font, color: textColor });
-    y -= size + 5;
+    y -= size + (compact ? 2 : 5);
   };
 
   const drawLines = (text: string, size = 9.5, font = regular, indent = 0, leading = size + 3) => {
@@ -79,11 +80,11 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   const drawSectionTitle = (title: string) => {
     ensureSpace(24);
-    y -= 4;
+    y -= compact ? 2 : 4;
     page.drawText(normalizeCvPdfText(title.toUpperCase()), { x: MARGIN_X, y, size: 10.5, font: bold, color: textColor });
     y -= 5;
     page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 0.8, color: ruleColor });
-    y -= 12;
+    y -= compact ? 7 : 12;
   };
 
   const drawRightAligned = (text: string, yValue: number, size = 9.5, font = regular) => {
@@ -96,17 +97,17 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     ensureSpace(18);
     page.drawText(normalizeCvPdfText(left), { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
     if (right) drawRightAligned(right, y, 9.5, regular);
-    y -= 13;
+    y -= compact ? 11 : 13;
   };
 
   const drawBullet = (text: string) => {
     const bulletIndent = 12;
-    const lines = wrapText(text, usableWidth - bulletIndent, regular, 9.2);
-    ensureSpace(lines.length * 12 + 3);
+    const lines = wrapText(text, usableWidth - bulletIndent, regular, compact ? 8.7 : 9.2);
+    ensureSpace(lines.length * (compact ? 10 : 12) + 3);
     page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
     lines.forEach((line, index) => {
-      page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: 9.2, font: regular, color: textColor });
-      y -= 12;
+      page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: compact ? 8.7 : 9.2, font: regular, color: textColor });
+      y -= compact ? 10 : 12;
     });
   };
 
@@ -116,11 +117,11 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   drawCentered([draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
   y -= 2;
   page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 1, color: textColor });
-  y -= 12;
+  y -= compact ? 7 : 12;
 
   if (draft.summary.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Objectif' : 'Objective');
-    drawLines(draft.summary.trim(), 9.5);
+    drawLines(draft.summary.trim(), compact ? 9 : 9.5);
   }
 
   const sectionOrder = draft.sectionOrder?.length
@@ -133,8 +134,8 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       for (const item of draft.education) {
         drawEntryHeader(item.school, item.period);
         drawEntryHeader(item.degree, item.location);
-        if (item.details.trim()) drawLines(item.details.trim(), 9.2);
-        y -= 4;
+        if (item.details.trim()) drawLines(item.details.trim(), compact ? 8.7 : 9.2);
+        y -= compact ? 1 : 4;
       }
     }
 
@@ -168,7 +169,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
     if (sectionKey === 'skills' && draft.skills.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter((value) => value.trim())) drawLines(line.trim(), 9.5);
+      for (const line of draft.skills.split('\n').filter((value) => value.trim())) drawLines(line.trim(), compact ? 8.8 : 9.5);
     }
 
     if (sectionKey === 'languages' && draft.languages.trim()) {
