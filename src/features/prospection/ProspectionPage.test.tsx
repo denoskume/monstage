@@ -23,6 +23,16 @@ describe('ProspectionPage', () => {
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
     expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
   });
+  it('migrates existing three Safran targets to four without deleting data', () => {
+    const names = ['Safran Trusted 4D', 'Safran Aircraft Engines', 'Safran Helicopter Engines'];
+    const sites = ['Nantes', 'Villaroche (Réau / Moissy-Cramayel)', 'Bordes'];
+    localStorage.setItem('monstage.prospection.v1', JSON.stringify(names.map((company,i)=>({id:String(i),company,site:sites[i],team:'',role:'Saved role',contact:'',contactLink:'',channel:'',status:'À identifier',date:'',followUp:'',notes:'Original note'}))));
+    render(<ProspectionPage />);
+    expect(screen.getByText('Safran.AI')).toBeInTheDocument();
+    const saved=JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]');
+    expect(saved).toHaveLength(4);
+    expect(saved.filter((x:{notes:string})=>x.notes==='Original note')).toHaveLength(3);
+  });
   it('filters a locally saved lead by keyword', () => {
     localStorage.setItem('monstage.prospection.v1', JSON.stringify([{id:'1',company:'Safran',site:'Nantes',team:'R&D',role:'Computer Vision',contact:'',contactLink:'',channel:'',status:'À contacter',date:'',followUp:'',notes:''}]));
     render(<ProspectionPage />);
