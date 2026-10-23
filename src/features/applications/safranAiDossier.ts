@@ -7,8 +7,16 @@ import { loadApplicationDossier, saveApplicationDossier } from './applicationDos
 export const SAFRAN_AI_DOSSIER_ID = 'spontaneous:safran-ai:paris';
 export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(SAFRAN_AI_DOSSIER_ID,language);
-  if (existing) return existing;
+  if (existing) {
+    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr') {
+      const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr'}};
+      saveApplicationDossier(updated);
+      return updated;
+    }
+    return existing;
+  }
   const cv = structuredClone(loadCvDraft(language));
+  cv.email = 'kamenan.kume@eleves.ec-nantes.fr';
   const chosen = ['background','clap'].map(id => publicProjectCatalog.find(item => item.id === id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
   cv.projects = chosen.map(x => ({...x.cv[language], bullets: [...x.cv[language].bullets].slice(0,4)}));
   cv.headline = language === 'FR' ? 'Stage de fin d’études — Machine Learning & Computer Vision' : 'End-of-studies internship — Machine Learning & Computer Vision';
