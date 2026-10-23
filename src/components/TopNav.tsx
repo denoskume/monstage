@@ -4,6 +4,7 @@ import { AccountMenu } from '../features/auth/AccountMenu';
 const links = [
   ['/offers', 'Jobs'],
   ['/studio', 'Studio'],
+  ['/prospection', 'Prospection'],
   ['/dashboard', 'Insights'],
 ] as const;
 
