@@ -71,7 +71,7 @@ export const defaultCvEn: CvDraft = {
   summary: 'I am seeking a 6-month end-of-studies internship from February 2027 in Computer Vision and Image Processing. I want to contribute to industrial vision projects focused on segmentation, robustness and system reliability.',
   education: [
     { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Program focused on understanding and developing state-of-the-art methodologies for data analysis, machine learning, and signal and image processing.' },
-    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, India', period: '2021–2024', details: 'Dual-major programme combining programming, software development and data analysis with digital electronics, communication systems and embedded technologies.' },
+    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, India', period: '2021–2025', details: 'Dual-major programme combining programming, software development and data analysis with digital electronics, communication systems and embedded technologies.' },
   ],
   experience: [
     { id: 'unified', role: 'Data Analyst Intern', company: 'Unified Mentor Pvt. Ltd.', location: 'Bengaluru, India', period: 'Sep–Dec 2024', bullets: [
@@ -131,7 +131,7 @@ export const defaultCvFr: CvDraft = {
   summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de 6 mois dès février 2027. Je souhaite appliquer l’analyse de données, l’IA et l’automatisation à des problématiques concrètes de qualité et d’amélioration de processus industriels, tout en progressant au contact d’une équipe expérimentée.',
   education: [
     { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur des méthodes avancées en data science, machine learning, optimisation, traitement du signal et de l’image, avec mise en œuvre sur des problèmes concrets.' },
-    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2024', details: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.' },
+    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2025', details: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.' },
   ],
   experience: [
     { id: 'rws', role: 'Spécialiste en évaluation Speech AI · Freelance', company: 'RWS Moravia', location: 'À distance', period: 'Août 2026–En cours', bullets: [
