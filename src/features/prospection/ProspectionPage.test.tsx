@@ -16,11 +16,12 @@ describe('ProspectionPage', () => {
   });
   it('imports Safran targets once without duplicates', () => {
     render(<ProspectionPage />);
-    fireEvent.click(screen.getByRole('button',{name:/Ajouter 3 pistes Safran/}));
+    fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
     expect(screen.getByText('Safran Trusted 4D')).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
-    fireEvent.click(screen.getByRole('button',{name:/Ajouter 3 pistes Safran/}));
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
+    expect(screen.getByText('Safran.AI')).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
+    fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
   });
   it('filters a locally saved lead by keyword', () => {
     localStorage.setItem('monstage.prospection.v1', JSON.stringify([{id:'1',company:'Safran',site:'Nantes',team:'R&D',role:'Computer Vision',contact:'',contactLink:'',channel:'',status:'À contacter',date:'',followUp:'',notes:''}]));
