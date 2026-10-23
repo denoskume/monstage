@@ -111,7 +111,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
       { text: draft.signer || 'Denos Kume', size: 17.5, font: bold },
       { text: 'Nantes, France', size: 9.3, font: regular },
       { text: '+33 6 62 91 94 68', size: 9.3, font: regular },
-      { text: (draft.company === 'Safran.AI' ? 'kamenan.kume@eleves.ec-nantes.fr' : 'denoskume@yahoo.com'), size: 9.3, font: regular },
+      { text: ('kamenan.kume@eleves.ec-nantes.fr'), size: 9.3, font: regular },
       { text: 'github.com/denoskume', size: 9.3, font: regular },
       { text: 'linkedin.com/in/denoskume', size: 9.3, font: regular },
     ];
@@ -143,7 +143,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     drawRight(draft.signer || 'Denos Kume', 17.5, bold);
     drawRight('Nantes, France', 9.3, regular);
     drawRight('+33 6 62 91 94 68', 9.3, regular);
-    drawRight(draft.company === 'Safran.AI' ? 'kamenan.kume@eleves.ec-nantes.fr' : 'denoskume@yahoo.com', 9.3, regular);
+    drawRight('kamenan.kume@eleves.ec-nantes.fr', 9.3, regular);
     drawRight('github.com/denoskume', 9.3, regular);
     drawRight('linkedin.com/in/denoskume', 9.3, regular);
 
