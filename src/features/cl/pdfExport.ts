@@ -111,7 +111,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
       { text: draft.signer || 'Denos Kume', size: 17.5, font: bold },
       { text: 'Nantes, France', size: 9.3, font: regular },
       { text: '+33 6 62 91 94 68', size: 9.3, font: regular },
-      { text: 'denoskume@yahoo.com', size: 9.3, font: regular },
+      { text: (draft.company === 'Safran.AI' ? 'kamenan.kume@eleves.ec-nantes.fr' : 'denoskume@yahoo.com'), size: 9.3, font: regular },
       { text: 'github.com/denoskume', size: 9.3, font: regular },
       { text: 'linkedin.com/in/denoskume', size: 9.3, font: regular },
     ];
@@ -136,14 +136,14 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     };
     if (draft.recipientName) drawRecipientRight('À l’attention de ' + draft.recipientName, bold);
     if (draft.company) drawRecipientRight(draft.company, bold);
-    if (draft.team) drawRecipientRight(draft.team);
+    if (draft.team && !/équipe souhaitée, non confirmée/i.test(draft.team)) drawRecipientRight(draft.team);
     if (draft.recipientRole) drawRecipientRight(draft.recipientRole);
     if (draft.recipientLocation) drawRecipientRight(draft.recipientLocation);
   } else {
     drawRight(draft.signer || 'Denos Kume', 17.5, bold);
     drawRight('Nantes, France', 9.3, regular);
     drawRight('+33 6 62 91 94 68', 9.3, regular);
-    drawRight('denoskume@yahoo.com', 9.3, regular);
+    drawRight(draft.company === 'Safran.AI' ? 'kamenan.kume@eleves.ec-nantes.fr' : 'denoskume@yahoo.com', 9.3, regular);
     drawRight('github.com/denoskume', 9.3, regular);
     drawRight('linkedin.com/in/denoskume', 9.3, regular);
 
@@ -151,7 +151,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     if (draft.recipientName) drawWrapped(draft.recipientName, 10.2, bold, 13.6);
     const recipientCompany = [draft.recipientRole, draft.company].filter(Boolean).join(' - ');
     if (recipientCompany) drawWrapped(recipientCompany, 10.2, bold, 13.6);
-    if (draft.team) drawWrapped(draft.team, 10.2, regular, 13.6);
+    if (draft.team && !/équipe souhaitée, non confirmée/i.test(draft.team)) drawWrapped(draft.team, 10.2, regular, 13.6);
     if (draft.recipientLocation) drawWrapped(draft.recipientLocation, 10.2, regular, 13.6);
   }
 
@@ -164,7 +164,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   y -= 28;
 
   const subject = draft.language === 'FR'
-    ? 'Objet : Candidature — ' + (draft.internshipTitle || '[INTITULE DU STAGE]')
+    ? 'Objet : ' + (/^Candidature/i.test(draft.internshipTitle) ? draft.internshipTitle : 'Candidature — ' + (draft.internshipTitle || '[INTITULE DU STAGE]'))
     : 'Re: Application for ' + (draft.internshipTitle || '[INTERNSHIP TITLE]');
   drawWrapped(subject, 10.8, bold, 14.5);
   page.drawLine({ start: { x: MX, y: y + 6 }, end: { x: WIDTH - MX, y: y + 6 }, thickness: 0.55, color: lineColor });
