@@ -24,15 +24,20 @@ function optimizeSafranCv<T extends import('../cv/cvStorage').CvDraft>(cv: T): T
 export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(SAFRAN_AI_DOSSIER_ID,language);
   if (existing) {
+    const letter = {...existing.letter};
+    if (/équipe souhaitée, non confirmée/.test(letter.team)) letter.team = '';
+    if (/Candidatur spontanée/.test(letter.internshipTitle)) letter.internshipTitle = letter.internshipTitle.replace('Candidatur spontanée','Candidature spontanée');
     const evidence = language === 'FR' ? 'Anglais — C1 (plus de 4 ans d’études universitaires)' : 'English — C1 (over 4 years of university studies)';
     const languages = existing.cv.languages.replace(/Anglais — C1(?: \([^)]*\))?|English — C1(?: \([^)]*\))?/, evidence);
     const priorSummary = existing.cv.summary;
     const newSummary = /Je souhaite contribuer à des projets d’IA appliquée|I hope to contribute to applied AI projects/.test(priorSummary) ? safSummary[language] : priorSummary;
     const priorSkills = existing.cv.skills;
     const newSkills = /Automatisation & Outils|Engineering Tools|Computer Vision & Traitement d’image/.test(priorSkills) ? safSkills[language] : priorSkills;
+    const experience = existing.cv.experience.map(item => ({...item,bullets:item.bullets.slice(0,3)}));
+    const leadership = existing.cv.leadership.map(item => ({...item,bullets:item.bullets.slice(0,2)}));
     const education = existing.cv.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item,period:'2021–2025'} : item);
-    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || education.some((e,i)=>e.period!==existing.cv.education[i].period) || newSummary !== priorSummary || newSkills !== priorSkills) {
-      const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,education,summary:newSummary,skills:newSkills}};
+    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || education.some((e,i)=>e.period!==existing.cv.education[i].period) || newSummary !== priorSummary || newSkills !== priorSkills || experience.some((e,i)=>e.bullets.length!==existing.cv.experience[i].bullets.length) || leadership.some((e,i)=>e.bullets.length!==existing.cv.leadership[i].bullets.length) || letter.team !== existing.letter.team || letter.internshipTitle !== existing.letter.internshipTitle) {
+      const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,education,summary:newSummary,skills:newSkills,experience,leadership},letter};
       saveApplicationDossier(updated);
       return updated;
     }
@@ -50,10 +55,10 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   cv.experience = cv.experience.map(item => ({...item, bullets:item.bullets.slice(0,3)}));
   const letter = freshCoverLetter(language);
   letter.company = 'Safran.AI';
-  letter.team = 'AI Production / Computer Vision (équipe souhaitée, non confirmée)';
+  letter.team = '';
   letter.recipientRole = language === 'FR' ? 'À l’attention de l’équipe recrutement' : 'Recruitment Team';
   letter.recipientLocation = 'Paris, France';
-  letter.internshipTitle = language === 'FR' ? 'Candidature spontanée — Stage Machine Learning & Computer Vision (6 mois, février 2027)' : 'Spontaneous application — Machine Learning & Computer Vision Internship (February 2027, six months)';
+  letter.internshipTitle = language === 'FR' ? 'Candidature spontanée — Stage de fin d’études Machine Learning & Computer Vision (février 2027)' : 'Spontaneous application — Machine Learning & Computer Vision Internship (February 2027, six months)';
   letter.date = new Date().toLocaleDateString(language === 'FR' ? 'fr-FR' : 'en-GB', {day:'numeric',month:'long',year:'numeric'});
   letter.paragraphs = language === 'FR' ? [
     'Actuellement étudiant en dernière année du MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois à partir de février 2027. Je souhaite rejoindre une équipe travaillant sur des applications concrètes du Machine Learning et de la Computer Vision.',
