@@ -13,7 +13,7 @@ const targets: Omit<Lead,'id'>[] = [
   {company:'Safran Helicopter Engines',site:'Bordes',team:'R&D / essais turbomoteurs',role:'Stage de fin d’études — analyse de données expérimentales et diagnostic',contact:'',contactLink:'',channel:'Site carrières Safran — candidature spontanée',status:'À identifier',date:'',followUp:'',notes:'Piste à qualifier — pas une offre de stage confirmée. Activités documentées : essais R&D de turbomoteurs hybridés. Source : https://www.safran-group.com/fr/offres/france/bordes/responsable-essais-r-turbomoteurs-hybrides-fh-173798'}
 ];
 function load(): Lead[] {
-  try { const value = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(value) ? value.filter((v) => v && typeof v.id === 'string') : []; } catch { return []; }
+  try { const value = JSON.parse(localStorage.getItem(KEY) || '[]'); if (!Array.isArray(value)) return []; const saved = value.filter((v) => v && typeof v.id === 'string') as Lead[]; const originalSafran = targets.filter(t => t.company !== 'Safran.AI'); const hasPreviousThree = originalSafran.every(t => saved.some(l => l.company === t.company && l.site === t.site)); const alreadyHasAI = saved.some(l => l.company === 'Safran.AI'); if (hasPreviousThree && !alreadyHasAI) { const ai = targets.find(t => t.company === 'Safran.AI'); return ai ? [...saved, {...ai, id:crypto.randomUUID()}] : saved; } return saved; } catch { return []; }
 }
 export function ProspectionPage() {
   const [leads,setLeads] = useState<Lead[]>(load);
