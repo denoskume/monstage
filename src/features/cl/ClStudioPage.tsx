@@ -1,3 +1,4 @@
+import { SAFRAN_AI_DOSSIER_ID, prepareSafranAiDossier } from '../applications/safranAiDossier';
 import { useEffect, useRef } from 'react';
 import { loadApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
 import { useOffers } from '../../hooks/useOffers';
@@ -32,6 +33,7 @@ export function ClStudioPage() {
     params.get('language') === 'FR' ? 'FR' : activeReview?.language === 'EN' ? 'EN' : 'FR';
   const { data, loading: offersLoading } = useOffers();
   const job = offerParam ? data?.offers.find(item => item.id === offerParam) : undefined;
+  const isSafranSpontaneous = offerParam === SAFRAN_AI_DOSSIER_ID;
   const [draft, setDraft] = useState<CoverLetterDraft>(() => loadCoverLetter());
   const [saved, setSaved] = useState(false);
   const [downloadError, setDownloadError] = useState('');
@@ -39,6 +41,11 @@ export function ClStudioPage() {
 
   useEffect(() => {
     if (!offerParam) return;
+    if (isSafranSpontaneous) {
+      setDraft(prepareSafranAiDossier(languageParam).letter);
+      setDownloadError('');
+      return;
+    }
     if (!job) {
       if (!offersLoading) setDownloadError('Offre introuvable : la lettre existante ne peut pas être présentée comme adaptée.');
       return;
@@ -78,7 +85,7 @@ export function ClStudioPage() {
     setDraft(prepared);
     setDownloadError('');
     setSaved(false);
-  }, [job?.id, offerParam, languageParam, offersLoading]);
+  }, [job?.id, offerParam, languageParam, offersLoading, isSafranSpontaneous]);
 
   function patch<K extends keyof CoverLetterDraft>(key: K, value: CoverLetterDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -86,7 +93,7 @@ export function ClStudioPage() {
   }
 
   function switchLanguage(language: CoverLetterLanguage) {
-    const next = job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
+    const next = isSafranSpontaneous ? prepareSafranAiDossier(language).letter : job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
     setDraft(next);
     if (job) {
       saveCoverLetter(next);
@@ -100,13 +107,16 @@ export function ClStudioPage() {
   }
 
   function save() {
-    if (job) updateApplicationLetter(job.id, draft.language, draft);
+    if (isSafranSpontaneous) updateApplicationLetter(SAFRAN_AI_DOSSIER_ID, draft.language, draft);
+    else if (job) updateApplicationLetter(job.id, draft.language, draft);
     else saveCoverLetter(draft);
     setSaved(true);
   }
 
   function reset() {
-    if (job) {
+    if (isSafranSpontaneous) {
+      setDraft(prepareSafranAiDossier(draft.language).letter);
+    } else if (job) {
       const next = tailorLetterForOffer(job, draft.language);
       saveCoverLetter(next);
       setDraft(next);
