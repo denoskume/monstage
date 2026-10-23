@@ -13,7 +13,7 @@ const safSkills = {
   FR: 'Python & données : Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\\nVision & signal : OpenCV, scikit-image, segmentation, filtrage spatial/fréquentiel\\nOutils : Git, GitHub, Linux, VS Code',
   EN: 'Python & data: Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\\nVision & signals: OpenCV, scikit-image, segmentation, spatial/frequency filtering\\nTools: Git, GitHub, Linux, VS Code',
 };
-function optimizeSafranCv<T extends import('../cv/cvStorage').CvDraft>(cv: T, language: CvLanguage): T {
+function optimizeSafranCv<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
   const next = structuredClone(cv);
   next.education = next.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item, period:'2021–2025'} : item);
   next.experience = next.experience.map(item => ({...item, bullets:item.bullets.slice(0,3)}));
@@ -26,15 +26,19 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   if (existing) {
     const evidence = language === 'FR' ? 'Anglais — C1 (plus de 4 ans d’études universitaires)' : 'English — C1 (over 4 years of university studies)';
     const languages = existing.cv.languages.replace(/Anglais — C1(?: \([^)]*\))?|English — C1(?: \([^)]*\))?/, evidence);
+    const priorSummary = existing.cv.summary;
+    const newSummary = /Je souhaite contribuer à des projets d’IA appliquée|I hope to contribute to applied AI projects/.test(priorSummary) ? safSummary[language] : priorSummary;
+    const priorSkills = existing.cv.skills;
+    const newSkills = /Automatisation & Outils|Engineering Tools|Computer Vision & Traitement d’image/.test(priorSkills) ? safSkills[language] : priorSkills;
     const education = existing.cv.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item,period:'2021–2025'} : item);
-    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || education.some((e,i)=>e.period!==existing.cv.education[i].period)) {
-      const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,education}};
+    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || education.some((e,i)=>e.period!==existing.cv.education[i].period) || newSummary !== priorSummary || newSkills !== priorSkills) {
+      const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,education,summary:newSummary,skills:newSkills}};
       saveApplicationDossier(updated);
       return updated;
     }
     return existing;
   }
-  const cv = optimizeSafranCv(structuredClone(loadCvDraft(language)), language);
+  const cv = optimizeSafranCv(structuredClone(loadCvDraft(language)));
   cv.email = 'kamenan.kume@eleves.ec-nantes.fr';
   cv.languages = language === 'FR' ? 'Français — Langue maternelle | Anglais — C1 (plus de 4 ans d’études universitaires)' : 'French — Native | English — C1 (over 4 years of university studies)';
   const chosen = ['background','clap'].map(id => publicProjectCatalog.find(item => item.id === id)).filter((x): x is NonNullable<typeof x> => Boolean(x));
