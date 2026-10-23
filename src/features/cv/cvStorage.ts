@@ -114,7 +114,7 @@ export const defaultCvEn: CvDraft = {
     },
   ],
   skills: 'Python & Scientific Computing: Python, NumPy, SciPy, pandas, Matplotlib, Jupyter\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\nComputer Vision & Image Processing: OpenCV, scikit-image, computer vision, image processing\nEngineering Tools: Git, GitHub, Linux, VS Code, Streamlit',
-  languages: 'French — Native | English — C1',
+  languages: 'French — Native | English — C1 (4 years of university studies taught in English)',
   interests: 'Artificial Intelligence & Technology | Football',
   sectionOrder: ['education', 'projects', 'experience', 'skills', 'languages', 'leadership', 'interests'],
 };
@@ -176,7 +176,7 @@ export const defaultCvFr: CvDraft = {
     },
   ],
   skills: 'Data & Analyse : Python, pandas, NumPy, SciPy, Matplotlib, Jupyter\nIA & Évaluation : scikit-learn, PyTorch, classification, évaluation de modèles, analyse d’erreurs\nAutomatisation & Outils : Google Apps Script, Google Sheets, Google Workspace, Git, GitHub, VS Code\nComputer Vision & Traitement d’image : OpenCV, scikit-image, segmentation, traitement d’image',
-  languages: 'Français — Langue maternelle | Anglais — C1',
+  languages: 'Français — Langue maternelle | Anglais — C1 (4 ans d’études universitaires en anglais)',
   interests: 'Intelligence artificielle & nouvelles technologies | Cuisine',
   sectionOrder: ['education', 'experience', 'projects', 'skills', 'leadership', 'languages', 'interests'],
 };
