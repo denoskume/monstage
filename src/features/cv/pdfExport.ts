@@ -112,9 +112,9 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     page.drawText(safe, { x: A4_WIDTH - MARGIN_X - width, y: yValue, size, font, color: textColor });
   };
 
-  const drawEntryHeader = (left: string, right: string) => {
+  const drawEntryHeader = (left: string, right: string, font = bold) => {
     ensureSpace(18);
-    page.drawText(normalizeCvPdfText(left), { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
+    page.drawText(normalizeCvPdfText(left), { x: MARGIN_X, y, size: 9.5, font, color: textColor });
     if (right) drawRightAligned(formatPeriod(right), y, 9.5, regular);
     y -= compact ? 13 : 13;
   };
@@ -152,7 +152,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       drawSectionTitle(draft.language === 'FR' ? 'Formation' : 'Education');
       for (const item of draft.education) {
         drawEntryHeader(item.school, item.period);
-        drawEntryHeader(item.degree, item.location);
+        drawEntryHeader(item.degree, item.location, regular);
         if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
         y -= compact ? 6 : 4;
       }
