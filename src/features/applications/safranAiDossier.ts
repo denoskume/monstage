@@ -28,6 +28,18 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
     // Refresh only an unchanged, previously generated opening paragraph.
     const standardOpening = language === 'FR' ? 'Actuellement étudiant en dernière année du MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois à partir de février 2027.' : 'I am a final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027';
     if (letter.paragraphs?.[0]?.startsWith(standardOpening)) letter.paragraphs = [language === 'FR' ? 'Après un BSc en Computer Science & Electronics à Bengaluru, en Inde, je poursuis mon parcours en France en dernière année du MSc Data Science, Signal & Image Processing à Centrale Nantes. Je recherche un stage de six mois dès février 2027 en Machine Learning et Computer Vision. Ce parcours entre deux environnements universitaires m’a appris à m’adapter à de nouvelles méthodes.' : 'After a BSc in Computer Science & Electronics in Bengaluru, India, I continued my studies in France and am now a final-year MSc student at Centrale Nantes. I seek a six-month internship from February 2027 in Machine Learning and Computer Vision. Studying in two countries has helped me adapt to new academic environments.', ...letter.paragraphs.slice(1)];
+    // Update only known generated text, without replacing a user-written opening.
+    const priorOpening = language === 'FR'
+      ? 'Après un BSc en Computer Science & Electronics à Bengaluru, en Inde, je poursuis mon parcours en France en dernière année du MSc Data Science, Signal & Image Processing à Centrale Nantes. Je recherche un stage de six mois dès février 2027 en Machine Learning et Computer Vision. Ce parcours entre deux environnements universitaires m’a appris à m’adapter à de nouvelles méthodes.'
+      : 'After a BSc in Computer Science & Electronics in Bengaluru, India, I continued my studies in France and am now a final-year MSc student at Centrale Nantes. I seek a six-month internship from February 2027 in Machine Learning and Computer Vision. Studying in two countries has helped me adapt to new academic environments.';
+    if (letter.paragraphs?.[0] === priorOpening) {
+      letter.paragraphs = [
+        language === 'FR'
+          ? 'Actuellement en dernière année du MSc Data Science, Signal and Image Processing à Centrale Nantes, je recherche un stage de six mois dès février 2027. Mon parcours universitaire entre l’Inde et la France m’a apporté de solides bases scientifiques et une capacité d’adaptation. Je souhaite mettre ces acquis en pratique chez Safran.AI.'
+          : 'I am in my final year of the MSc Data Science, Signal and Image Processing at Centrale Nantes and seeking a six-month internship from February 2027. Studying in India and France has strengthened my technical foundations and helped me adapt to new environments. I would like to put those skills to use at Safran.AI.',
+        ...letter.paragraphs.slice(1),
+      ];
+    }
     if (/équipe souhaitée, non confirmée/.test(letter.team)) letter.team = '';
     if (/Candidatur spontanée/.test(letter.internshipTitle)) letter.internshipTitle = letter.internshipTitle.replace('Candidatur spontanée','Candidature spontanée');
     const evidence = language === 'FR' ? 'Anglais — C1 (plus de 4 ans d’études universitaires)' : 'English — C1 (over 4 years of university studies)';
