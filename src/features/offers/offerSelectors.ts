@@ -130,7 +130,7 @@ function parseDateValue(value: string | null): number {
   const text = value.trim();
   // Sheets export French dates as DD/MM/YYYY; Date.parse interprets these as
   // MM/DD/YYYY in many JS runtimes and can push September above October.
-  const french = text.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})(?:\\s+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?)?$/);
+  const french = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
   if (french) {
     const [, day, month, year, hour = '0', minute = '0', second = '0'] = french;
     const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
