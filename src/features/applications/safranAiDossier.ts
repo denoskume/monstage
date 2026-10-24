@@ -9,6 +9,34 @@ const safSummary = {
   FR: 'En dernière année du MSc Data Science, Signal and Image Processing à Centrale Nantes, je recherche un stage de six mois dès février 2027 en Machine Learning et Computer Vision.',
   EN: 'Final-year MSc Data Science, Signal and Image Processing student at Centrale Nantes, seeking a six-month Machine Learning and Computer Vision internship from February 2027.',
 };
+const educationDescriptionUpdates: Record<CvLanguage, Record<string, { previous: string; next: string }>> = {
+  FR: {
+    ecn: { previous: 'Formation centrée sur des méthodes avancées en data science, machine learning, optimisation, traitement du signal et de l’image, avec mise en œuvre sur des problèmes concrets.', next: 'Mise en pratique du machine learning, de l’optimisation et du traitement d’images dans des travaux en Python et MATLAB, notamment en segmentation, filtrage et analyse de données.' },
+    kju: { previous: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.', next: 'Formation pluridisciplinaire en informatique et électronique, avec des bases en programmation, développement logiciel, analyse de données, électronique numérique et systèmes embarqués.' },
+  },
+  EN: {},
+};
+// Update only untouched default descriptions; preserve edits made in Studio.
+function refreshEducationDescriptions<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
+  return {
+    ...cv,
+    education: cv.education.map(item => {
+      const update = educationDescriptionUpdates[cv.language][item.id];
+      if (!update || item.details !== update.previous) return item;
+      return { ...item, details: update.next };
+    }),
+  };
+}
+const projectBulletCorrections: Record<string, string> = {
+  'Calculé les embeddings audio et texte avec LAION-CLAP, puis classé les classes par similarité cosinus.': 'Calculé les représentations audio et texte avec LAION-CLAP, puis classé les catégories selon leur similarité cosinus.',
+  'Développé des masques à partir du seuillage et du modèle de mélange gaussien sur les séquences fluoroscopiques.': 'Généré des masques de segmentation par seuillage et mélange gaussien sur des séquences fluoroscopiques.',
+};
+function polishKnownProjectBullets<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
+  return { ...cv, projects: cv.projects.map(project => ({
+    ...project,
+    bullets: project.bullets.map(bullet => projectBulletCorrections[bullet] ?? bullet),
+  })) };
+}
 const safSkills = {
   FR: 'Python & données : Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\nVision & signal : OpenCV, scikit-image, segmentation, filtrage spatial/fréquentiel\nOutils : Git, GitHub, Linux, VS Code',
   EN: 'Python & data: Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\nVision & signals: OpenCV, scikit-image, segmentation, spatial/frequency filtering\nTools: Git, GitHub, Linux, VS Code',
@@ -49,7 +77,7 @@ function optimizeSafranCv<T extends import('../cv/cvStorage').CvDraft>(cv: T): T
   next.experience = fourExperienceBullets(next).experience;
   next.sectionOrder = ['education','projects','experience','skills','languages','interests'];
   next.leadership = next.leadership.map(item => ({...item, bullets:item.bullets.slice(0,2)}));
-  return attachBachelorLeadership(next);
+  return attachBachelorLeadership(refreshEducationDescriptions(next));
 }
 export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(SAFRAN_AI_DOSSIER_ID,language);
@@ -81,8 +109,8 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
     const experience = fourExperienceBullets(existing.cv).experience;
     const leadership = existing.cv.leadership.map(item => ({...item,bullets:item.bullets.slice(0,2)}));
     const education = existing.cv.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item,period:'2021–2025'} : item);
-    const adjustedCv = attachBachelorLeadership({...existing.cv, education, leadership});
-    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || adjustedCv.education.some((e,i)=>e.period!==existing.cv.education[i].period || e.details!==existing.cv.education[i].details) || existing.cv.leadership.length > 0 || existing.cv.sectionOrder.includes('leadership') || newSummary !== priorSummary || newSkills !== priorSkills || experience.some((e,i)=>e.bullets.length!==existing.cv.experience[i].bullets.length) || leadership.some((e,i)=>e.bullets.length!==existing.cv.leadership[i].bullets.length) || letter.team !== existing.letter.team || letter.internshipTitle !== existing.letter.internshipTitle || letter.paragraphs !== existing.letter.paragraphs) {
+    const adjustedCv = polishKnownProjectBullets(attachBachelorLeadership(refreshEducationDescriptions({...existing.cv, education, leadership})));
+    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || adjustedCv.education.some((e,i)=>e.period!==existing.cv.education[i].period || e.details!==existing.cv.education[i].details) || adjustedCv.projects.some((p,i)=>p.bullets.some((bullet,j)=>bullet!==existing.cv.projects[i]?.bullets[j])) || existing.cv.leadership.length > 0 || existing.cv.sectionOrder.includes('leadership') || newSummary !== priorSummary || newSkills !== priorSkills || experience.some((e,i)=>e.bullets.length!==existing.cv.experience[i].bullets.length) || leadership.some((e,i)=>e.bullets.length!==existing.cv.leadership[i].bullets.length) || letter.team !== existing.letter.team || letter.internshipTitle !== existing.letter.internshipTitle || letter.paragraphs !== existing.letter.paragraphs) {
       const updated = {...existing,cv:{...adjustedCv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,summary:newSummary,skills:newSkills,experience},letter};
       saveApplicationDossier(updated);
       return updated;
@@ -99,7 +127,7 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   cv.skills = safSkills[language];
   cv.projects = cv.projects.map(project => ({...project, bullets:project.bullets.slice(0,4)}));
   cv.experience = fourExperienceBullets(cv).experience;
-  const finalizedCv = attachBachelorLeadership(cv);
+  const finalizedCv = polishKnownProjectBullets(attachBachelorLeadership(cv));
   const letter = freshCoverLetter(language);
   letter.company = 'Safran.AI';
   letter.team = '';
