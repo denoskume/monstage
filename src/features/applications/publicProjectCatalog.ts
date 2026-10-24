@@ -22,7 +22,7 @@ const basePublicProjectCatalog: VerifiedPublicProject[] = [
 const supportingEvidence: Record<string, Record<CvLanguage, string[]>> = {
   "background": {
     "FR": [
-      "Développé des masques à partir du seuillage et du modèle de mélange gaussien sur les séquences fluoroscopiques.",
+      "Généré des masques de segmentation par seuillage et mélange gaussien sur des séquences fluoroscopiques.",
       "Produit des tableaux de métriques temporelles et des figures de validation du pipeline retenu."
     ],
     "EN": [
@@ -32,7 +32,7 @@ const supportingEvidence: Record<string, Record<CvLanguage, string[]>> = {
   },
   "clap": {
     "FR": [
-      "Calculé les embeddings audio et texte avec LAION-CLAP, puis classé les classes par similarité cosinus.",
+      "Calculé les représentations audio et texte avec LAION-CLAP, puis classé les catégories selon leur similarité cosinus.",
       "Analysé les erreurs par classe et les performances Top-k pour comparer les stratégies de prompts."
     ],
     "EN": [
