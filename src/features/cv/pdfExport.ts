@@ -49,16 +49,16 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   let page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
   const compact = draft.email === 'kamenan.kume@eleves.ec-nantes.fr' && /Computer Vision/i.test(draft.headline);
-  let y = A4_HEIGHT - (compact ? 35 : MARGIN_TOP);
+  let y = A4_HEIGHT - MARGIN_TOP;
 
   const textColor = rgb(0.07, 0.07, 0.07);
   const ruleColor = rgb(0.25, 0.25, 0.25);
   const usableWidth = A4_WIDTH - (MARGIN_X * 2);
 
   const ensureSpace = (height: number) => {
-    if (y - height < (compact ? 24 : MARGIN_BOTTOM)) {
+    if (y - height < MARGIN_BOTTOM) {
       page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
-      y = A4_HEIGHT - (compact ? 27 : MARGIN_TOP);
+      y = A4_HEIGHT - MARGIN_TOP;
     }
   };
 
@@ -107,8 +107,8 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     ensureSpace(lines.length * (compact ? 11.7 : 12) + 3);
     page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
     lines.forEach((line, index) => {
-      page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: compact ? 8.7 : 9.2, font: regular, color: textColor });
-      y -= compact ? 10 : 12;
+      page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: compact ? 9.1 : 9.2, font: regular, color: textColor });
+      y -= compact ? 11.7 : 12;
     });
   };
 
