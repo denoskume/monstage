@@ -90,16 +90,16 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   // Helvetica's built-in encoding cannot display an en dash; use consistently spaced dates.
   const formatPeriod = (period: string) => period
-    .replace(/(\\d{4})\\s*[-–—]\\s*(\\d{4})/g, '$1 - $2')
-    .replace(/(\\d{4})\\s*[-–—]\\s*(En cours|Ongoing|Present)/gi, '$1 - $2')
-    .replace(/(\\b(?:Déc\\.|Sept\\.|Sep\\.|Dec\\.)?)\\s*[-–—]\\s*((?:Déc\\.|Sept\\.|Sep\\.|Dec\\.)\\s*\\d{4})/g, '$1 - $2');
+    .replace(/(\d{4})\s*[-–—]\s*(\d{4})/g, '$1 - $2')
+    .replace(/(\d{4})\s*[-–—]\s*(En cours|Ongoing|Present)/gi, '$1 - $2')
+    .replace(/(\b(?:Déc\.|Sept\.|Sep\.|Dec\.)?)\s*[-–—]\s*((?:Déc\.|Sept\.|Sep\.|Dec\.)\s*\d{4})/g, '$1 - $2');
   const drawEducationDetails = (details: string, size: number) => {
-    const activity = details.split('\\n');
+    const activity = details.split('\n');
     drawLines(activity[0], size);
     for (const line of activity.slice(1).filter(Boolean)) {
-      const match = line.match(/^(Activité associative :|Student leadership:)\\s*(.+?)\\s*[-–—]\\s*(.+)$/);
+      const match = line.match(/^(Activité associative :|Student leadership:)\s*(.+?)\s*[-–—]\s*(.+)$/);
       if (!match) { drawLines(line, size); continue; }
-      const heading = match[1] + ' ' + match[2].replace(/(\\d{4})\\s*[-–—]\\s*(\\d{4})/g, '$1 - $2');
+      const heading = match[1] + ' ' + match[2].replace(/(\d{4})\s*[-–—]\s*(\d{4})/g, '$1 - $2');
       y -= 4;
       drawLines(heading, size, bold);
       drawLines(match[3], size);
