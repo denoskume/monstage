@@ -70,7 +70,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   };
 
   const drawLines = (text: string, size = 9.5, font = regular, indent = 0, leading = size + 3) => {
-    const paragraphs = text.split(/\\n/).filter(Boolean);
+    const paragraphs = text.split(/\n/).filter(Boolean);
     const lines = paragraphs.flatMap((paragraph, index) => [ ...(index ? [''] : []), ...wrapText(paragraph, usableWidth - indent, font, size) ]);
     ensureSpace(lines.length * leading + 4);
     for (const line of lines) {
