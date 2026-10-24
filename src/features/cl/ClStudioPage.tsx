@@ -264,11 +264,11 @@ export function ClStudioPage() {
         <article className={`cl-preview cl-preview--template ${draft.language === 'FR' ? 'cl-preview--fr' : 'cl-preview--en'}`}>
           <header className={`cl-preview__sender ${draft.language === 'FR' ? 'cl-preview__sender--left' : 'cl-preview__sender--right'}`}>
             <strong>{draft.signer}</strong>
-            {draft.senderLocation ? <span>{draft.senderLocation}</span> : null}
-            {draft.senderPhone ? <span>{draft.senderPhone}</span> : null}
-            {draft.senderEmail ? <span>{draft.senderEmail}</span> : null}
-            {draft.senderGithub ? <span>{draft.senderGithub}</span> : null}
-            {draft.senderLinkedin ? <span>{draft.senderLinkedin}</span> : null}
+            {(draft.senderLocation ?? 'Nantes, France') ? <span>{draft.senderLocation ?? 'Nantes, France'}</span> : null}
+            {(draft.senderPhone ?? '+33 6 62 91 94 68') ? <span>{draft.senderPhone ?? '+33 6 62 91 94 68'}</span> : null}
+            {(draft.senderEmail ?? 'kamenan.kume@eleves.ec-nantes.fr') ? <span>{draft.senderEmail ?? 'kamenan.kume@eleves.ec-nantes.fr'}</span> : null}
+            {(draft.senderGithub ?? 'github.com/denoskume') ? <span>{draft.senderGithub ?? 'github.com/denoskume'}</span> : null}
+            {(draft.senderLinkedin ?? 'linkedin.com/in/denoskume') ? <span>{draft.senderLinkedin ?? 'linkedin.com/in/denoskume'}</span> : null}
           </header>
 
           <div className="cl-preview__recipient">
