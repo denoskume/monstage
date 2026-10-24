@@ -6,20 +6,37 @@ import { loadApplicationDossier, saveApplicationDossier } from './applicationDos
 
 export const SAFRAN_AI_DOSSIER_ID = 'spontaneous:safran-ai:paris';
 const safSummary = {
-  FR: 'Après un BSc en Computer Science & Electronics à Bengaluru (Inde), je termine un MSc à Centrale Nantes. Je recherche un stage de six mois dès février 2027 en Machine Learning et Computer Vision, pour contribuer et apprendre au sein d’une équipe industrielle.',
-  EN: 'Following a BSc in Computer Science & Electronics in Bengaluru, India, I am completing an MSc at Centrale Nantes. I seek a six-month internship from February 2027 in Machine Learning and Computer Vision, to contribute and learn in an engineering team.',
+  FR: 'En dernière année du MSc Data Science, Signal and Image Processing à Centrale Nantes, je recherche un stage de six mois dès février 2027 en Machine Learning et Computer Vision.',
+  EN: 'Final-year MSc Data Science, Signal and Image Processing student at Centrale Nantes, seeking a six-month Machine Learning and Computer Vision internship from February 2027.',
 };
 const safSkills = {
   FR: 'Python & données : Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles\nVision & signal : OpenCV, scikit-image, segmentation, filtrage spatial/fréquentiel\nOutils : Git, GitHub, Linux, VS Code',
   EN: 'Python & data: Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning: scikit-learn, PyTorch, classification, model evaluation\nVision & signals: OpenCV, scikit-image, segmentation, spatial/frequency filtering\nTools: Git, GitHub, Linux, VS Code',
 };
+// Keep university student leadership attached to the university where it took place.
+const bachelorLeadership = {
+  FR: 'Activité associative : Secrétaire, International Students Forum (2022–2024) — coordination d’activités culturelles et accueil de plus de 100 étudiants internationaux.',
+  EN: 'Student leadership: Secretary, International Students Forum (2022–2024) — helped coordinate cultural events and welcome over 100 international students.',
+};
+function attachBachelorLeadership<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
+  const next = structuredClone(cv);
+  const note = bachelorLeadership[next.language];
+  next.education = next.education.map(item => {
+    if (item.id !== 'kju') return item;
+    const details = item.details.replace(/(?:Activité associative :|Student leadership:)[^\\n]*/g, '').trim();
+    return {...item, details: [details, note].filter(Boolean).join('\\n')};
+  });
+  next.leadership = [];
+  next.sectionOrder = next.sectionOrder.filter(section => section !== 'leadership');
+  return next;
+}
 function optimizeSafranCv<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
   const next = structuredClone(cv);
   next.education = next.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item, period:'2021–2025'} : item);
   next.experience = next.experience.map(item => ({...item, bullets:item.bullets.slice(0,3)}));
-  next.sectionOrder = ['education','projects','experience','skills','languages','leadership','interests'];
+  next.sectionOrder = ['education','projects','experience','skills','languages','interests'];
   next.leadership = next.leadership.map(item => ({...item, bullets:item.bullets.slice(0,2)}));
-  return next;
+  return attachBachelorLeadership(next);
 }
 export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(SAFRAN_AI_DOSSIER_ID,language);
@@ -51,8 +68,9 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
     const experience = existing.cv.experience.map(item => ({...item,bullets:item.bullets.slice(0,3)}));
     const leadership = existing.cv.leadership.map(item => ({...item,bullets:item.bullets.slice(0,2)}));
     const education = existing.cv.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item,period:'2021–2025'} : item);
-    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || education.some((e,i)=>e.period!==existing.cv.education[i].period) || newSummary !== priorSummary || newSkills !== priorSkills || experience.some((e,i)=>e.bullets.length!==existing.cv.experience[i].bullets.length) || leadership.some((e,i)=>e.bullets.length!==existing.cv.leadership[i].bullets.length) || letter.team !== existing.letter.team || letter.internshipTitle !== existing.letter.internshipTitle || letter.paragraphs !== existing.letter.paragraphs) {
-      const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,education,summary:newSummary,skills:newSkills,experience,leadership},letter};
+    const adjustedCv = attachBachelorLeadership({...existing.cv, education, leadership});
+    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || adjustedCv.education.some((e,i)=>e.period!==existing.cv.education[i].period || e.details!==existing.cv.education[i].details) || existing.cv.leadership.length > 0 || existing.cv.sectionOrder.includes('leadership') || newSummary !== priorSummary || newSkills !== priorSkills || experience.some((e,i)=>e.bullets.length!==existing.cv.experience[i].bullets.length) || leadership.some((e,i)=>e.bullets.length!==existing.cv.leadership[i].bullets.length) || letter.team !== existing.letter.team || letter.internshipTitle !== existing.letter.internshipTitle || letter.paragraphs !== existing.letter.paragraphs) {
+      const updated = {...existing,cv:{...adjustedCv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,summary:newSummary,skills:newSkills,experience},letter};
       saveApplicationDossier(updated);
       return updated;
     }
@@ -68,6 +86,7 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   cv.skills = safSkills[language];
   cv.projects = cv.projects.map(project => ({...project, bullets:project.bullets.slice(0,4)}));
   cv.experience = cv.experience.map(item => ({...item, bullets:item.bullets.slice(0,3)}));
+  const finalizedCv = attachBachelorLeadership(cv);
   const letter = freshCoverLetter(language);
   letter.company = 'Safran.AI';
   letter.team = '';
@@ -86,7 +105,7 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
     'My projects have taught me to test ideas, compare methods and examine their limits. I have worked on fluoroscopy image segmentation. With LAION-CLAP, I raised Top-1 accuracy from 83.05% to 91.15% by comparing ten prompt strategies on 2,000 audio clips, without retraining the model. I hope to bring this careful approach to your team while continuing to learn.',
     'I would welcome a conversation about your team’s needs. I could walk you through my projects and discuss how I might contribute during the internship.'
   ];
-  const dossier = {offerId:SAFRAN_AI_DOSSIER_ID,company:'Safran.AI',title:letter.internshipTitle,language,cv,letter,selectionReasons:chosen.map(x=>x.cv[language].name),state:'awaiting_review' as const,preparedAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  const dossier = {offerId:SAFRAN_AI_DOSSIER_ID,company:'Safran.AI',title:letter.internshipTitle,language,cv:finalizedCv,letter,selectionReasons:chosen.map(x=>x.cv[language].name),state:'awaiting_review' as const,preparedAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
   saveApplicationDossier(dossier);
   return dossier;
 }
