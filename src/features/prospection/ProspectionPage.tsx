@@ -46,8 +46,18 @@ export function ProspectionPage() {
   }
   function download() {const blob = new Blob([JSON.stringify(leads,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='monstage-prospection.json';link.click();URL.revokeObjectURL(url);}
   return <main className="prospection">
-    <header className="prospection__head"><div><p className="prospection__eyebrow">Candidatures spontanées · Marché caché</p><h1>Prospection</h1><p>Identifie les équipes, contacte les bons interlocuteurs et suis les opportunités avant leur publication.</p></div><div className="prospection__actions"><button type="button" onClick={addSafranTargets}>Ajouter les pistes Safran</button><button type="button" onClick={download} disabled={!leads.length}>Exporter mes données</button><button type="button" className="prospection__primary" onClick={()=>{setDraft(empty);setEditing(null);setShowForm(s=>!s);}}>+ Nouvelle piste</button></div></header>
+    <header className="prospection__head"><div><p className="prospection__eyebrow">Candidatures spontanées · Marché caché</p><h1>Prospection</h1><p>Privilégie 30 démarches sérieusement ciblées plutôt que des centaines d’envois génériques. Identifie le besoin d’une équipe et montre comment tu peux contribuer tout en apprenant.</p></div><div className="prospection__actions"><button type="button" onClick={addSafranTargets}>Ajouter les pistes Safran</button><button type="button" onClick={download} disabled={!leads.length}>Exporter mes données</button><button type="button" className="prospection__primary" onClick={()=>{setDraft(empty);setEditing(null);setShowForm(s=>!s);}}>+ Nouvelle piste</button></div></header>
     <section className="prospection__stats" aria-label="Statistiques"><div><strong>{leads.length}</strong><span>Pistes identifiées</span></div><div><strong>{leads.filter(l=>['Contacté','Candidature envoyée','Relance prévue','Entretien'].includes(l.status)).length}</strong><span>Démarches engagées</span></div><div><strong>{leads.filter(l=>l.status==='Entretien').length}</strong><span>Entretiens</span></div><div><strong>{leads.filter(l=>l.followUp && l.followUp<=new Date().toLocaleDateString('en-CA') && l.status!=='Terminé').length}</strong><span>Relances à faire</span></div></section>
+    <section className="prospection__principles" aria-label="Préparer une candidature spontanée ciblée">
+      <h2>Avant de contacter une équipe</h2>
+      <ol>
+        <li><strong>Équipe identifiée :</strong> ses activités et son site sont connus ou à vérifier.</li>
+        <li><strong>Besoin plausible :</strong> indique ce que tu pourrais aider à réaliser, sans inventer une offre.</li>
+        <li><strong>Deux projets pertinents :</strong> explique ce que tu as réellement fait, mesuré et appris.</li>
+        <li><strong>Motivation et adaptation :</strong> montre que tu souhaites apprendre leurs méthodes et devenir utile progressivement.</li>
+        <li><strong>Contact et suivi :</strong> choisis un canal pertinent et prévois une relance respectueuse.</li>
+      </ol>
+    </section>
     {showForm && <form className="prospection__form" onSubmit={save}><h2>{editing?'Modifier la piste':'Ajouter une piste'}</h2><div className="prospection__fields">
     <label>Entreprise *<input required value={draft.company} onChange={e=>setDraft(d=>({...d,company:e.target.value}))} placeholder="Ex. Safran" /></label>
     <label>Site / ville<input value={draft.site} onChange={e=>setDraft(d=>({...d,site:e.target.value}))} placeholder="Ex. Nantes" /></label>
