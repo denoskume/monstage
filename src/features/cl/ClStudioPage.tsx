@@ -16,7 +16,7 @@ import {
 import { buildCoverLetterPdfBytes, coverLetterPdfFileName } from './pdfExport';
 
 function subjectLine(draft: CoverLetterDraft): string {
-  if (draft.language === 'FR') return `Objet : Candidature — ${draft.internshipTitle || '[INTITULÉ DU STAGE]'}`;
+  if (draft.language === 'FR') return `Objet : ${/^Candidature/i.test(draft.internshipTitle) ? draft.internshipTitle : 'Candidature — ' + (draft.internshipTitle || '[INTITULÉ DU STAGE]')}`;
   return `Re: Application for ${draft.internshipTitle || '[INTERNSHIP TITLE]'}`;
 }
 
@@ -203,6 +203,17 @@ export function ClStudioPage() {
       <div className="cl-studio-layout">
         <aside className="cl-editor card">
           <section className="cv-editor-section">
+            <h2>En-tête — vos coordonnées (modifiable)</h2>
+            <div className="cv-editor-grid">
+              <label>Nom et prénom<input value={draft.signer} onChange={(e) => patch('signer', e.target.value)} /></label>
+              <label>Ville<input value={draft.senderLocation ?? 'Nantes, France'} onChange={(e) => patch('senderLocation', e.target.value)} /></label>
+              <label>Téléphone<input value={draft.senderPhone ?? '+33 6 62 91 94 68'} onChange={(e) => patch('senderPhone', e.target.value)} /></label>
+              <label>Adresse e-mail<input type="email" value={draft.senderEmail ?? 'kamenan.kume@eleves.ec-nantes.fr'} onChange={(e) => patch('senderEmail', e.target.value)} /></label>
+              <label>GitHub<input value={draft.senderGithub ?? 'github.com/denoskume'} onChange={(e) => patch('senderGithub', e.target.value)} /></label>
+              <label>LinkedIn<input value={draft.senderLinkedin ?? 'linkedin.com/in/denoskume'} onChange={(e) => patch('senderLinkedin', e.target.value)} /></label>
+            </div>
+          </section>
+          <section className="cv-editor-section">
             <h2>Application details</h2>
             {job ? <button type="button" className="button button--secondary" onClick={personalizeRecipient}>Adapter le destinataire à cette offre</button> : null}
             <div className="cv-editor-grid">
@@ -253,11 +264,11 @@ export function ClStudioPage() {
         <article className={`cl-preview cl-preview--template ${draft.language === 'FR' ? 'cl-preview--fr' : 'cl-preview--en'}`}>
           <header className={`cl-preview__sender ${draft.language === 'FR' ? 'cl-preview__sender--left' : 'cl-preview__sender--right'}`}>
             <strong>{draft.signer}</strong>
-            <span>Nantes, France</span>
-            <span>+33 6 62 91 94 68</span>
-            <span>denoskume@yahoo.com</span>
-            <span>github.com/denoskume</span>
-            <span>linkedin.com/in/denoskume</span>
+            {(draft.senderLocation ?? 'Nantes, France') ? <span>{draft.senderLocation ?? 'Nantes, France'}</span> : null}
+            {(draft.senderPhone ?? '+33 6 62 91 94 68') ? <span>{draft.senderPhone ?? '+33 6 62 91 94 68'}</span> : null}
+            {(draft.senderEmail ?? 'kamenan.kume@eleves.ec-nantes.fr') ? <span>{draft.senderEmail ?? 'kamenan.kume@eleves.ec-nantes.fr'}</span> : null}
+            {(draft.senderGithub ?? 'github.com/denoskume') ? <span>{draft.senderGithub ?? 'github.com/denoskume'}</span> : null}
+            {(draft.senderLinkedin ?? 'linkedin.com/in/denoskume') ? <span>{draft.senderLinkedin ?? 'linkedin.com/in/denoskume'}</span> : null}
           </header>
 
           <div className="cl-preview__recipient">
