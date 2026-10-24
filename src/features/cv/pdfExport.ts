@@ -49,7 +49,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   let page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
   const compact = draft.email === 'kamenan.kume@eleves.ec-nantes.fr' && /Computer Vision/i.test(draft.headline);
-  let y = A4_HEIGHT - (compact ? 27 : MARGIN_TOP);
+  let y = A4_HEIGHT - (compact ? 35 : MARGIN_TOP);
 
   const textColor = rgb(0.07, 0.07, 0.07);
   const ruleColor = rgb(0.25, 0.25, 0.25);
@@ -70,21 +70,22 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   };
 
   const drawLines = (text: string, size = 9.5, font = regular, indent = 0, leading = size + 3) => {
-    const lines = wrapText(text, usableWidth - indent, font, size);
+    const paragraphs = text.split(/\\n/).filter(Boolean);
+    const lines = paragraphs.flatMap((paragraph, index) => [ ...(index ? [''] : []), ...wrapText(paragraph, usableWidth - indent, font, size) ]);
     ensureSpace(lines.length * leading + 4);
     for (const line of lines) {
-      page.drawText(line, { x: MARGIN_X + indent, y, size, font, color: textColor });
-      y -= leading;
+      if (line) page.drawText(line, { x: MARGIN_X + indent, y, size, font, color: textColor });
+      y -= line ? leading : Math.max(3, leading * 0.5);
     }
   };
 
   const drawSectionTitle = (title: string) => {
     ensureSpace(24);
-    y -= compact ? 2 : 4;
+    y -= compact ? 7 : 4;
     page.drawText(normalizeCvPdfText(title.toUpperCase()), { x: MARGIN_X, y, size: 10.5, font: bold, color: textColor });
     y -= 5;
     page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 0.8, color: ruleColor });
-    y -= compact ? 7 : 12;
+    y -= compact ? 11 : 12;
   };
 
   const drawRightAligned = (text: string, yValue: number, size = 9.5, font = regular) => {
@@ -97,13 +98,13 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     ensureSpace(18);
     page.drawText(normalizeCvPdfText(left), { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
     if (right) drawRightAligned(right, y, 9.5, regular);
-    y -= compact ? 11 : 13;
+    y -= compact ? 13 : 13;
   };
 
   const drawBullet = (text: string) => {
     const bulletIndent = 12;
-    const lines = wrapText(text, usableWidth - bulletIndent, regular, compact ? 8.7 : 9.2);
-    ensureSpace(lines.length * (compact ? 10 : 12) + 3);
+    const lines = wrapText(text, usableWidth - bulletIndent, regular, compact ? 9.1 : 9.2);
+    ensureSpace(lines.length * (compact ? 11.7 : 12) + 3);
     page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
     lines.forEach((line, index) => {
       page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: compact ? 8.7 : 9.2, font: regular, color: textColor });
@@ -121,7 +122,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   if (draft.summary.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Objectif' : 'Objective');
-    drawLines(draft.summary.trim(), compact ? 9 : 9.5);
+    drawLines(draft.summary.trim(), compact ? 9.3 : 9.5);
   }
 
   const sectionOrder = draft.sectionOrder?.length
@@ -135,7 +136,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         drawEntryHeader(item.school, item.period);
         drawEntryHeader(item.degree, item.location);
         if (item.details.trim()) drawLines(item.details.trim(), compact ? 8.7 : 9.2);
-        y -= compact ? 1 : 4;
+        y -= compact ? 6 : 4;
       }
     }
 
@@ -144,7 +145,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       for (const item of draft.projects) {
         drawEntryHeader(item.name, item.period || '');
         for (const bullet of item.bullets.filter((value) => value.trim())) drawBullet(bullet.trim());
-        y -= 4;
+        y -= compact ? 8 : 4;
       }
     }
 
@@ -169,7 +170,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
     if (sectionKey === 'skills' && draft.skills.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter((value) => value.trim())) drawLines(line.trim(), compact ? 8.8 : 9.5);
+      for (const line of draft.skills.split('\n').filter((value) => value.trim())) drawLines(line.trim(), compact ? 9.1 : 9.5);
     }
 
     if (sectionKey === 'languages' && draft.languages.trim()) {
