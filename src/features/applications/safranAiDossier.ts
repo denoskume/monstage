@@ -23,8 +23,8 @@ function attachBachelorLeadership<T extends import('../cv/cvStorage').CvDraft>(c
   const note = bachelorLeadership[next.language];
   next.education = next.education.map(item => {
     if (item.id !== 'kju') return item;
-    const details = item.details.replace(/(?:Activité associative :|Student leadership:)[^\\n]*/g, '').trim();
-    return {...item, details: [details, note].filter(Boolean).join('\\n')};
+    const details = item.details.replace(/(?:Activité associative :|Student leadership:)[^\n]*/g, '').trim();
+    return {...item, details: [details, note].filter(Boolean).join('\n')};
   });
   next.leadership = [];
   next.sectionOrder = next.sectionOrder.filter(section => section !== 'leadership');
