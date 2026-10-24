@@ -200,3 +200,23 @@ test('classifies and filters offers by industry', () => {
   expect(offerIndustry(medtech)).toBe('MedTech & Healthcare');
   expect(filterOffers([aerospace, medtech], { ...filters, industry: 'Aerospace & Space' }).map((offer) => offer.id)).toEqual(['airbus']);
 });
+
+test('Most recent sorts French DD/MM/YYYY dates chronologically, not as US dates', () => {
+  const offers = [
+    { ...base, id: 'sept', publishedAt: '11/09/2026', decisionScore: 100 },
+    { ...base, id: 'oct', publishedAt: '20/10/2026', decisionScore: 80 },
+    { ...base, id: 'oct-newer', publishedAt: '23/10/2026', decisionScore: 70 },
+    { ...base, id: 'invalid', publishedAt: '31/02/2026', decisionScore: 99 },
+  ];
+  expect(sortOffers(offers, 'recent').map(offer => offer.id))
+    .toEqual(['oct-newer', 'oct', 'sept', 'invalid']);
+});
+
+test('Most recent compares French, ISO and ISO timestamps by actual date', () => {
+  const offers = [
+    { ...base, id: 'fr', publishedAt: '11/09/2026' },
+    { ...base, id: 'iso', publishedAt: '2026-10-22' },
+    { ...base, id: 'timestamp', publishedAt: '2026-10-23T09:00:00Z' },
+  ];
+  expect(sortOffers(offers, 'recent').map(offer => offer.id)).toEqual(['timestamp', 'iso', 'fr']);
+});

@@ -127,13 +127,19 @@ export function filterOffers(offers: InternshipOffer[], filters: OfferFilters): 
 
 function parseDateValue(value: string | null): number {
   if (!value) return 0;
-  const direct = Date.parse(value);
-  if (!Number.isNaN(direct)) return direct;
-
-  const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
-  if (!match) return 0;
-  const [, day, month, year, hour = '0', minute = '0', second = '0'] = match;
-  return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second)).getTime();
+  const text = value.trim();
+  // Sheets export French dates as DD/MM/YYYY; Date.parse interprets these as
+  // MM/DD/YYYY in many JS runtimes and can push September above October.
+  const french = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (french) {
+    const [, day, month, year, hour = '0', minute = '0', second = '0'] = french;
+    const date = new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second));
+    return date.getFullYear() === Number(year) && date.getMonth() === Number(month) - 1 && date.getDate() === Number(day)
+      ? date.getTime()
+      : 0;
+  }
+  const direct = Date.parse(text);
+  return Number.isFinite(direct) ? direct : 0;
 }
 
 function recentValue(offer: InternshipOffer): number {
