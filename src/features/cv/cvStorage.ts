@@ -130,8 +130,8 @@ export const defaultCvFr: CvDraft = {
   github: 'github.com/denoskume',
   summary: 'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de 6 mois dès février 2027. Je souhaite appliquer l’analyse de données, l’IA et l’automatisation à des problématiques concrètes de qualité et d’amélioration de processus industriels, tout en progressant au contact d’une équipe expérimentée.',
   education: [
-    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Formation centrée sur des méthodes avancées en data science, machine learning, optimisation, traitement du signal et de l’image, avec mise en œuvre sur des problèmes concrets.' },
-    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2025', details: 'Double cursus combinant programmation, développement logiciel et analyse de données avec électronique numérique, systèmes de communication et technologies embarquées.' },
+    { id: 'ecn', school: 'Centrale Nantes', degree: 'MSc. Control and Robotics — Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027', details: 'Mise en pratique du machine learning, de l’optimisation et du traitement d’images dans des travaux en Python et MATLAB, notamment en segmentation, filtrage et analyse de données.' },
+    { id: 'kju', school: 'Kristu Jayanti University', degree: 'BSc. Computer Science & Electronics', location: 'Bengaluru, Inde', period: '2021–2025', details: 'Formation pluridisciplinaire en informatique et électronique, avec des bases en programmation, développement logiciel, analyse de données, électronique numérique et systèmes embarqués.' },
   ],
   experience: [
     { id: 'rws', role: 'Spécialiste en évaluation Speech AI · Freelance', company: 'RWS Moravia', location: 'À distance', period: 'Août 2026–En cours', bullets: [
