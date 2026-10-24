@@ -109,13 +109,14 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   if (draft.language === 'FR') {
     const senderLines = [
       { text: draft.signer || 'Denos Kume', size: 17.5, font: bold },
-      { text: 'Nantes, France', size: 9.3, font: regular },
-      { text: '+33 6 62 91 94 68', size: 9.3, font: regular },
+      { text: (draft.senderLocation ?? 'Nantes, France'), size: 9.3, font: regular },
+      { text: (draft.senderPhone ?? '+33 6 62 91 94 68'), size: 9.3, font: regular },
       { text: ('kamenan.kume@eleves.ec-nantes.fr'), size: 9.3, font: regular },
-      { text: 'github.com/denoskume', size: 9.3, font: regular },
-      { text: 'linkedin.com/in/denoskume', size: 9.3, font: regular },
+      { text: (draft.senderGithub ?? 'github.com/denoskume'), size: 9.3, font: regular },
+      { text: (draft.senderLinkedin ?? 'linkedin.com/in/denoskume'), size: 9.3, font: regular },
     ];
     for (const line of senderLines) {
+      if (!line.text.trim()) continue;
       page.drawText(normalizeCoverLetterPdfText(line.text), { x: MX, y, size: line.size, font: line.font, color });
       y -= line.size + 3.4;
     }
@@ -141,11 +142,11 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     if (draft.recipientLocation) drawRecipientRight(draft.recipientLocation);
   } else {
     drawRight(draft.signer || 'Denos Kume', 17.5, bold);
-    drawRight('Nantes, France', 9.3, regular);
-    drawRight('+33 6 62 91 94 68', 9.3, regular);
-    drawRight('kamenan.kume@eleves.ec-nantes.fr', 9.3, regular);
-    drawRight('github.com/denoskume', 9.3, regular);
-    drawRight('linkedin.com/in/denoskume', 9.3, regular);
+    if ((draft.senderLocation ?? 'Nantes, France').trim()) drawRight(draft.senderLocation ?? 'Nantes, France', 9.3, regular);
+    if ((draft.senderPhone ?? '+33 6 62 91 94 68').trim()) drawRight(draft.senderPhone ?? '+33 6 62 91 94 68', 9.3, regular);
+    if ((draft.senderEmail ?? 'kamenan.kume@eleves.ec-nantes.fr').trim()) drawRight(draft.senderEmail ?? 'kamenan.kume@eleves.ec-nantes.fr', 9.3, regular);
+    if ((draft.senderGithub ?? 'github.com/denoskume').trim()) drawRight(draft.senderGithub ?? 'github.com/denoskume', 9.3, regular);
+    if ((draft.senderLinkedin ?? 'linkedin.com/in/denoskume').trim()) drawRight(draft.senderLinkedin ?? 'linkedin.com/in/denoskume', 9.3, regular);
 
     y -= 4;
     if (draft.recipientName) drawWrapped(draft.recipientName, 10.2, bold, 13.6);
