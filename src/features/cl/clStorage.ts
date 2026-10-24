@@ -13,6 +13,11 @@ export interface CoverLetterDraft {
   paragraphs: string[];
   closing: string;
   signer: string;
+  senderLocation?: string;
+  senderPhone?: string;
+  senderEmail?: string;
+  senderGithub?: string;
+  senderLinkedin?: string;
   signatureDataUrl: string;
 }
 
@@ -51,6 +56,11 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
   ],
   closing: 'Cordialement,',
   signer: 'Denos Kume',
+  senderLocation: 'Nantes, France',
+  senderPhone: '+33 6 62 91 94 68',
+  senderEmail: 'kamenan.kume@eleves.ec-nantes.fr',
+  senderGithub: 'github.com/denoskume',
+  senderLinkedin: 'linkedin.com/in/denoskume',
   signatureDataUrl: '',
 };
 
@@ -67,6 +77,11 @@ export const defaultCoverLetterEn: CoverLetterDraft = {
   paragraphs: enParagraphs,
   closing: 'Sincerely,',
   signer: 'Denos Kume',
+  senderLocation: 'Nantes, France',
+  senderPhone: '+33 6 62 91 94 68',
+  senderEmail: 'kamenan.kume@eleves.ec-nantes.fr',
+  senderGithub: 'github.com/denoskume',
+  senderLinkedin: 'linkedin.com/in/denoskume',
   signatureDataUrl: '',
 };
 
