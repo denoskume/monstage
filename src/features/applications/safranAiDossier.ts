@@ -25,6 +25,9 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(SAFRAN_AI_DOSSIER_ID,language);
   if (existing) {
     const letter = {...existing.letter};
+    // Refresh only an unchanged, previously generated opening paragraph.
+    const standardOpening = language === 'FR' ? 'Actuellement étudiant en dernière année du MSc Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois à partir de février 2027.' : 'I am a final-year MSc student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027';
+    if (letter.paragraphs?.[0]?.startsWith(standardOpening)) letter.paragraphs = [language === 'FR' ? 'Après un BSc en Computer Science & Electronics à Bengaluru, en Inde, je poursuis mon parcours en France en dernière année du MSc Data Science, Signal & Image Processing à Centrale Nantes. Je recherche un stage de six mois dès février 2027 en Machine Learning et Computer Vision. Ce parcours entre deux environnements universitaires m’a appris à m’adapter à de nouvelles méthodes.' : 'After a BSc in Computer Science & Electronics in Bengaluru, India, I continued my studies in France and am now a final-year MSc student at Centrale Nantes. I seek a six-month internship from February 2027 in Machine Learning and Computer Vision. Studying in two countries has helped me adapt to new academic environments.', ...letter.paragraphs.slice(1)];
     if (/équipe souhaitée, non confirmée/.test(letter.team)) letter.team = '';
     if (/Candidatur spontanée/.test(letter.internshipTitle)) letter.internshipTitle = letter.internshipTitle.replace('Candidatur spontanée','Candidature spontanée');
     const evidence = language === 'FR' ? 'Anglais — C1 (plus de 4 ans d’études universitaires)' : 'English — C1 (over 4 years of university studies)';
@@ -36,7 +39,7 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
     const experience = existing.cv.experience.map(item => ({...item,bullets:item.bullets.slice(0,3)}));
     const leadership = existing.cv.leadership.map(item => ({...item,bullets:item.bullets.slice(0,2)}));
     const education = existing.cv.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item,period:'2021–2025'} : item);
-    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || education.some((e,i)=>e.period!==existing.cv.education[i].period) || newSummary !== priorSummary || newSkills !== priorSkills || experience.some((e,i)=>e.bullets.length!==existing.cv.experience[i].bullets.length) || leadership.some((e,i)=>e.bullets.length!==existing.cv.leadership[i].bullets.length) || letter.team !== existing.letter.team || letter.internshipTitle !== existing.letter.internshipTitle) {
+    if (existing.cv.email !== 'kamenan.kume@eleves.ec-nantes.fr' || languages !== existing.cv.languages || education.some((e,i)=>e.period!==existing.cv.education[i].period) || newSummary !== priorSummary || newSkills !== priorSkills || experience.some((e,i)=>e.bullets.length!==existing.cv.experience[i].bullets.length) || leadership.some((e,i)=>e.bullets.length!==existing.cv.leadership[i].bullets.length) || letter.team !== existing.letter.team || letter.internshipTitle !== existing.letter.internshipTitle || letter.paragraphs !== existing.letter.paragraphs) {
       const updated = {...existing,cv:{...existing.cv,email:'kamenan.kume@eleves.ec-nantes.fr',languages,education,summary:newSummary,skills:newSkills,experience,leadership},letter};
       saveApplicationDossier(updated);
       return updated;
