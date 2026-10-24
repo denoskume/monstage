@@ -88,6 +88,24 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     y -= compact ? 11 : 12;
   };
 
+  // Helvetica's built-in encoding cannot display an en dash; use consistently spaced dates.
+  const formatPeriod = (period: string) => period
+    .replace(/(\d{4})\s*[-–—]\s*(\d{4})/g, '$1 - $2')
+    .replace(/(\d{4})\s*[-–—]\s*(En cours|Ongoing|Present)/gi, '$1 - $2')
+    .replace(/(\b(?:Déc\.|Sept\.|Sep\.|Dec\.)?)\s*[-–—]\s*((?:Déc\.|Sept\.|Sep\.|Dec\.)\s*\d{4})/g, '$1 - $2');
+  const drawEducationDetails = (details: string, size: number) => {
+    const activity = details.split('\n');
+    drawLines(activity[0], size);
+    for (const line of activity.slice(1).filter(Boolean)) {
+      const match = line.match(/^(Activité associative :|Student leadership:)\s*(.+?)\s+[—-]\s+(.+)$/);
+      if (!match) { drawLines(line, size); continue; }
+      const heading = match[1] + ' ' + match[2].replace(/(\d{4})\s*[-–—]\s*(\d{4})/g, '$1 - $2');
+      y -= 4;
+      drawLines(heading, size, bold);
+      drawLines(match[3], size);
+    }
+  };
+
   const drawRightAligned = (text: string, yValue: number, size = 9.5, font = regular) => {
     const safe = normalizeCvPdfText(text);
     const width = font.widthOfTextAtSize(safe, size);
@@ -97,7 +115,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   const drawEntryHeader = (left: string, right: string) => {
     ensureSpace(18);
     page.drawText(normalizeCvPdfText(left), { x: MARGIN_X, y, size: 9.5, font: bold, color: textColor });
-    if (right) drawRightAligned(right, y, 9.5, regular);
+    if (right) drawRightAligned(formatPeriod(right), y, 9.5, regular);
     y -= compact ? 13 : 13;
   };
 
@@ -135,7 +153,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       for (const item of draft.education) {
         drawEntryHeader(item.school, item.period);
         drawEntryHeader(item.degree, item.location);
-        if (item.details.trim()) drawLines(item.details.trim(), compact ? 8.7 : 9.2);
+        if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
         y -= compact ? 6 : 4;
       }
     }
