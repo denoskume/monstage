@@ -15,7 +15,7 @@ describe('Safran.AI one-page CV export', () => {
       if (!entry) throw new Error('Missing verified project '+id);
       return entry.cv.FR;
     });
-    draft.education = draft.education.map(item => item.id === 'kju' ? {...item, details: item.details + '\\nActivité associative : Secrétaire, International Students Forum (2022–2024) — coordination d’activités culturelles et accueil de plus de 100 étudiants internationaux.'} : item);
+    draft.education = draft.education.map(item => item.id === 'kju' ? {...item, details: item.details + '\nActivité associative : Secrétaire, International Students Forum (2022–2024) — coordination d’activités culturelles et accueil de plus de 100 étudiants internationaux.'} : item);
     draft.leadership = [];
     draft.sectionOrder = ['education','projects','experience','skills','languages','interests'];
     expect(draft.projects.every(p => p.bullets.length === 4)).toBe(true);
