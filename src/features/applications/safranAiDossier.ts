@@ -1,5 +1,5 @@
 import type { CvLanguage } from '../cv/cvStorage';
-import { loadCvDraft } from '../cv/cvStorage';
+import { loadCvDraft, freshCvDraft } from '../cv/cvStorage';
 import { freshCoverLetter } from '../cl/clStorage';
 import { publicProjectCatalog } from './publicProjectCatalog';
 import { loadApplicationDossier, saveApplicationDossier } from './applicationDossiers';
@@ -30,10 +30,23 @@ function attachBachelorLeadership<T extends import('../cv/cvStorage').CvDraft>(c
   next.sectionOrder = next.sectionOrder.filter(section => section !== 'leadership');
   return next;
 }
+// Restore the fourth, already verified master-CV point for each experience.
+function fourExperienceBullets<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
+  const reference = freshCvDraft(cv.language);
+  return {
+    ...cv,
+    experience: cv.experience.map(item => {
+      const original = reference.experience.find(entry => entry.id === item.id);
+      const bullets = item.bullets.filter(Boolean).slice(0, 4);
+      if (bullets.length === 3 && original?.bullets[3]) bullets.push(original.bullets[3]);
+      return {...item, bullets};
+    }),
+  };
+}
 function optimizeSafranCv<T extends import('../cv/cvStorage').CvDraft>(cv: T): T {
   const next = structuredClone(cv);
   next.education = next.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item, period:'2021–2025'} : item);
-  next.experience = next.experience.map(item => ({...item, bullets:item.bullets.slice(0,3)}));
+  next.experience = fourExperienceBullets(next).experience;
   next.sectionOrder = ['education','projects','experience','skills','languages','interests'];
   next.leadership = next.leadership.map(item => ({...item, bullets:item.bullets.slice(0,2)}));
   return attachBachelorLeadership(next);
@@ -62,10 +75,10 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
     const evidence = language === 'FR' ? 'Anglais — C1 (plus de 4 ans d’études universitaires)' : 'English — C1 (over 4 years of university studies)';
     const languages = existing.cv.languages.replace(/Anglais — C1(?: \([^)]*\))?|English — C1(?: \([^)]*\))?/, evidence);
     const priorSummary = existing.cv.summary;
-    const newSummary = /Je souhaite contribuer à des projets d’IA appliquée|I hope to contribute to applied AI projects/.test(priorSummary) ? safSummary[language] : priorSummary;
+    const newSummary = /Je souhaite contribuer à des projets d’IA appliquée|I hope to contribute to applied AI projects|Étudiant en dernière année de MSc à Centrale Nantes|Après un BSc en Computer Science & Electronics|Following a BSc in Computer Science & Electronics/.test(priorSummary) ? safSummary[language] : priorSummary;
     const priorSkills = existing.cv.skills;
     const newSkills = /Automatisation & Outils|Engineering Tools|Computer Vision & Traitement d’image/.test(priorSkills) ? safSkills[language] : priorSkills;
-    const experience = existing.cv.experience.map(item => ({...item,bullets:item.bullets.slice(0,3)}));
+    const experience = fourExperienceBullets(existing.cv).experience;
     const leadership = existing.cv.leadership.map(item => ({...item,bullets:item.bullets.slice(0,2)}));
     const education = existing.cv.education.map(item => item.id === 'kju' && item.period === '2021–2024' ? {...item,period:'2021–2025'} : item);
     const adjustedCv = attachBachelorLeadership({...existing.cv, education, leadership});
@@ -85,7 +98,7 @@ export function prepareSafranAiDossier(language: CvLanguage = 'FR') {
   cv.summary = safSummary[language];
   cv.skills = safSkills[language];
   cv.projects = cv.projects.map(project => ({...project, bullets:project.bullets.slice(0,4)}));
-  cv.experience = cv.experience.map(item => ({...item, bullets:item.bullets.slice(0,3)}));
+  cv.experience = fourExperienceBullets(cv).experience;
   const finalizedCv = attachBachelorLeadership(cv);
   const letter = freshCoverLetter(language);
   letter.company = 'Safran.AI';
