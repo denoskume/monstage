@@ -262,7 +262,7 @@ jobs:
           with urllib.request.urlopen(request, timeout=60) as response:
               body = json.loads(response.read().decode())
           if body.get("status") != 200 or not isinstance(body.get("documents"), list):
-              raise SystemExit("Drive archive check failed: " + str(body.get("error") or body.get("message") or "INVALID_RESPONSE"))
+              raise SystemExit("Drive archive check failed: " + str(body.get("error") or body.get("message") or "INVALID_RESPONSE") + "; deployerIsFolderOwner=" + str(body.get("deployerIsFolderOwner", "unknown")))
           print("Drive archive reading verified for Safran application folder.")
           PY
 
