@@ -13,17 +13,21 @@ import { saveApplicationStatus } from '../../api/applications';
 import { useAuth } from '../../auth/useAuth';
 import { getWorkspaceState } from '../workspace/workspaceStorage';
 
-type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'archived';
+type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'refused' | 'archived';
 
 function TrackingList({
   offers,
   emptyTitle,
   stage,
   onMove,
+  onStatus,
+  saving,
 }: {
   offers: InternshipOffer[];
   emptyTitle: string;
-  stage: 'application' | 'interview' | 'archived';
+  stage: 'application' | 'interview' | 'refused' | 'archived';
+  onStatus: (offer: InternshipOffer, status: string) => void;
+  saving: string | null;
   onMove: (offer: InternshipOffer, next: 'application' | 'interview' | 'archived' | null) => void;
 }) {
   if (offers.length === 0) return <EmptyState title={emptyTitle} />;
@@ -40,14 +44,21 @@ function TrackingList({
             <h2>{offer.title}</h2>
             <p>{offer.company}</p>
             <span>{offer.city ?? 'City not specified'}</span>
-            <small>{offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus) ? displayValue(offer.applicationStatus) : stage === 'application' ? 'Postulé' : stage === 'interview' ? 'Entretien' : 'Archivé'}{offer.appliedAt ? ' · ' + offer.appliedAt : ''}</small>
+            <small>{offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus) ? displayValue(offer.applicationStatus) : stage === 'application' ? 'Postulé' : stage === 'interview' ? 'Entretien' : stage === 'refused' ? 'Refus' : 'Archivé'}{offer.appliedAt ? ' · ' + offer.appliedAt : ''}</small>
           </div>
 
           <div className="my-jobs-saved-row__actions">
             <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Open</Link>
-            {stage === 'application' ? <button className="button button--secondary" type="button" onClick={() => onMove(offer, 'interview')}>Mark interview</button> : null}
-            {stage === 'interview' ? <button className="button button--secondary" type="button" onClick={() => onMove(offer, 'application')}>Back to applications</button> : null}
-            {stage !== 'archived' ? <button className="button button--secondary" type="button" onClick={() => onMove(offer, 'archived')}>Archive</button> : <button className="button button--secondary" type="button" onClick={() => onMove(offer, null)}>Restore</button>}
+            <select aria-label={`Statut de ${offer.company}`} value={offer.applicationStatus === 'Test technique' ? 'Test technique' : stage === 'refused' ? 'Refus' : stage === 'interview' ? 'Entretien' : stage === 'archived' ? 'Abandonné' : offer.applicationStatus === 'Relance' ? 'Relance' : 'Candidature envoyée'} disabled={saving === offer.id} onChange={(event) => onStatus(offer, event.target.value)} className="button button--secondary">
+              <option value="Candidature envoyée">En cours — sans réponse</option>
+              <option value="Relance">Relance effectuée</option>
+              <option value="Entretien">Entretien</option>
+              <option value="Test technique">Test technique</option>
+              <option value="Offre reçue">Offre reçue</option>
+              <option value="Refus">Refus reçu</option>
+              <option value="Abandonné">Abandonnée</option>
+            </select>
+            {stage === 'archived' ? <button className="button button--secondary" type="button" onClick={() => onMove(offer, null)}>Restaurer</button> : null}
             {offer.applicationUrl ? (
               <a className="offer-action-icon my-jobs-secondary-action" href={offer.applicationUrl} target="_blank" rel="noreferrer" aria-label="View job" title="View job">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -76,12 +87,14 @@ export function ShortlistPage() {
     () => sortOffers(allOffers.filter((offer) => !actions.isHidden(offer.id) && actions.isSaved(offer.id, offer.shortlist)), 'best'),
     [data, actions.savedIds, actions.unsavedIds, actions.hidden],
   );
-  function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'archived' | null {
+  function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'refused' | 'archived' | null {
     const manual = actions.stages[offer.id];
-    if (manual === 'archived' || manual === 'interview') return manual;
     const status = offer.applicationStatus ?? '';
+    if (status === 'Refus') return 'refused';
     if (status === 'Entretien' || status === 'Test technique') return 'interview';
-    if (['Refus', 'Abandonné'].includes(status)) return 'archived';
+    if (manual === 'archived') return 'archived';
+    if (manual === 'interview') return 'interview';
+    if (status === 'Abandonné') return 'archived';
     if (manual === 'application' || getWorkspaceState(offer.id).submitted ||
         Boolean(offer.appliedAt) ||
         ['Candidature envoyée', 'Relance', 'Réponse recruteur', 'Offre reçue'].includes(status)) return 'application';
@@ -96,6 +109,7 @@ export function ShortlistPage() {
     () => allOffers.filter((offer) => resolvedStage(offer) === 'interview'),
     [data, actions.stages],
   );
+  const refused = useMemo(() => allOffers.filter(offer => resolvedStage(offer) === 'refused'), [data, actions.stages]);
   const archived = useMemo(
     () => allOffers.filter((offer) => resolvedStage(offer) === 'archived'),
     [data, actions.stages],
@@ -129,6 +143,19 @@ export function ShortlistPage() {
     }
   }
 
+  async function setStatus(offer: InternshipOffer, status: string) {
+    if (savingId) return;
+    setSavingId(offer.id);
+    try {
+      await saveApplicationStatus(token, offer.id, status);
+      actions.setStage(offer.id, status === 'Entretien' || status === 'Test technique' ? 'interview' : status === 'Abandonné' ? 'archived' : status === 'Refus' ? null : 'application');
+      setNotice('Statut actualisé et enregistré.');
+      retry();
+    } catch (error) {
+      setNotice(error instanceof Error ? 'Modification impossible : ' + error.message : 'Modification impossible.');
+    } finally { setSavingId(null); }
+  }
+
   async function shareOffer(offer: InternshipOffer) {
     const url = offer.applicationUrl || window.location.href;
     const text = `${offer.title} — ${offer.company}`;
@@ -151,6 +178,7 @@ export function ShortlistPage() {
     ['saved', 'Saved jobs', savedOffers.length],
     ['applications', 'Applications', applications.length],
     ['interviews', 'Interviews', interviews.length],
+    ['refused', 'Refus', refused.length],
     ['archived', 'Archived', archived.length],
   ];
 
@@ -211,9 +239,10 @@ export function ShortlistPage() {
         )
       ) : null}
 
-      {tab === 'applications' ? <TrackingList offers={applications} emptyTitle="Aucune candidature envoyée." stage="application" onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
-      {tab === 'interviews' ? <TrackingList offers={interviews} emptyTitle="No interviews scheduled yet." stage="interview" onMove={moveOffer} /> : null}
-      {tab === 'archived' ? <TrackingList offers={archived} emptyTitle="No archived applications." stage="archived" onMove={moveOffer} /> : null}
+      {tab === 'applications' ? <TrackingList offers={applications} emptyTitle="Aucune candidature envoyée." stage="application" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
+      {tab === 'interviews' ? <TrackingList offers={interviews} emptyTitle="No interviews scheduled yet." stage="interview" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
+      {tab === 'refused' ? <TrackingList offers={refused} emptyTitle="Aucun refus enregistré." stage="refused" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
+      {tab === 'archived' ? <TrackingList offers={archived} emptyTitle="No archived applications." stage="archived" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
     </section>
   );
 }
