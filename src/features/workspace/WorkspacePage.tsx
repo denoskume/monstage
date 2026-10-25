@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { listApplicationDocuments, saveApplicationDocument, removeApplicationDocument, type ApplicationDocument, type ApplicationDocumentKind } from './documentVault';
+import { useAuth } from '../../auth/useAuth';
 import { useSearchParams } from 'react-router-dom';
 import type { InternshipOffer } from '../../api/contract';
 import { Badge } from '../../components/Badge';
@@ -18,44 +19,39 @@ import {
   type WorkspaceStore,
 } from './workspaceStorage';
 
-function ApplicationDocuments({ offerId }: { offerId: string }) {
+function ApplicationDocuments({ offerId, company }: { offerId: string; company: string }) {
+  const { token } = useAuth();
+  const [folderUrl, setFolderUrl] = useState<string | null>(null);
   const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let live = true;
-    void listApplicationDocuments(offerId).then(items => { if (live) setDocuments(items); }).catch(() => { if (live) setError('Impossible de lire les documents enregistrés.'); });
+    void listApplicationDocuments(offerId, token).then(result => { if (live) { setDocuments(result.documents); setFolderUrl(result.folderUrl); } }).catch(() => { if (live) setError('Impossible de lire les documents enregistrés.'); });
     return () => { live = false; };
-  }, [offerId]);
+  }, [offerId, token]);
 
   async function attach(file: File | undefined, kind: ApplicationDocumentKind) {
     if (!file) return;
     setBusy(true);
     try {
-      await saveApplicationDocument(offerId, kind, file);
-      setDocuments(await listApplicationDocuments(offerId));
+      await saveApplicationDocument(offerId, kind, file, token, company);
+      { const result = await listApplicationDocuments(offerId, token); setDocuments(result.documents); setFolderUrl(result.folderUrl); }
       setError('');
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Enregistrement impossible.'); }
     finally { setBusy(false); }
   }
   function openPdf(document: ApplicationDocument) {
-    const url = URL.createObjectURL(document.file);
-    const anchor = window.document.createElement('a');
-    anchor.href = url;
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-    window.document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    window.open(document.url, '_blank', 'noopener,noreferrer');
   }
   async function remove(id: string) {
     if (!window.confirm('Supprimer ce document du dossier ?')) return;
-    try { await removeApplicationDocument(id); setDocuments(await listApplicationDocuments(offerId)); }
+    try { await removeApplicationDocument(offerId, id, token); setDocuments(await listApplicationDocuments(offerId)); }
     catch { setError('Suppression impossible.'); }
   }
   return <section className="workspace-section">
     <div className="workspace-section__heading"><h3>Documents de candidature</h3><span>{documents.length} fichier{documents.length > 1 ? 's' : ''}</span></div>
+    {folderUrl ? <a href={folderUrl} target="_blank" rel="noreferrer">Ouvrir le dossier privé Google Drive ↗</a> : null}
     <p className="workspace-note">Conservez ici les PDF réellement envoyés. Chaque version reste associée à cette offre et peut être retrouvée lors d'une relance ou d'un entretien.</p>
     <div className="workspace-actions">
       {([['cv', '+ Joindre le CV envoyé'], ['letter', '+ Joindre la lettre envoyée'], ['other', '+ Autre document']] as const).map(([kind, label]) =>
@@ -77,7 +73,7 @@ function ApplicationDocuments({ offerId }: { offerId: string }) {
       </div>
     )}</div> : <p className="workspace-note">Aucun document archivé pour cette candidature.</p>}
     {error ? <p role="alert" className="workspace-warning">{error}</p> : null}
-    <small>Stockage privé dans ce navigateur : non synchronisé entre appareils. Conservez aussi une sauvegarde externe.</small>
+    <small>Documents conservés sur votre Google Drive privé, consultables depuis vos appareils connectés au même compte. Les versions générées sont des brouillons tant que vous ne confirmez pas l’envoi.</small>
   </section>;
 }
 
@@ -156,7 +152,7 @@ function WorkspaceCard({
         <p className="workspace-note">External application status is evidence-driven. Opening the employer page never marks an application as submitted.</p>
       </section>
 
-      <ApplicationDocuments offerId={offer.id} />
+      <ApplicationDocuments offerId={offer.id} company={offer.company} />
 
       <section className="workspace-section workspace-grid">
         <div>
