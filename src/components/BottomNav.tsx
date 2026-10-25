@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 const links = [
   ['/offers', '⌕', 'Jobs'],
   ['/shortlist', '☆', 'Saved'],
+  ['/applications', '✓', 'Postulé'],
   ['/studio', '▣', 'Studio'],
   ['/dashboard', '▦', 'Insights'],
 ] as const;

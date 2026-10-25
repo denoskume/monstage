@@ -3,6 +3,7 @@ import { AccountMenu } from '../features/auth/AccountMenu';
 
 const links = [
   ['/offers', 'Jobs'],
+  ['/applications', 'Candidatures'],
   ['/studio', 'Studio'],
   ['/prospection', 'Prospection'],
   ['/dashboard', 'Insights'],
