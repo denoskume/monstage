@@ -247,6 +247,26 @@ jobs:
           PY
 
 
+      - name: Verify Google Drive application archive access
+        if: steps.cloudflare.outputs.configured == 'true'
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          payload = json.dumps({
+              "gatewaySecret": os.environ["APPS_SCRIPT_GATEWAY_SECRET"],
+              "action": "listApplicationDocuments",
+              "document": {"offerId": "EXT-SAFRANAI-20261025"}
+          }).encode()
+          request = urllib.request.Request(os.environ["APPS_SCRIPT_URL"], data=payload,
+              headers={"Content-Type": "application/json"}, method="POST")
+          with urllib.request.urlopen(request, timeout=60) as response:
+              body = json.loads(response.read().decode())
+          if body.get("status") != 200 or not isinstance(body.get("documents"), list):
+              raise SystemExit("Drive archive check failed: " + str(body.get("error") or body.get("message") or "INVALID_RESPONSE"))
+          print("Drive archive reading verified for Safran application folder.")
+          PY
+
+
   deploy-apps-script:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
