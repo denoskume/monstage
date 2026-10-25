@@ -2357,7 +2357,7 @@ function doPost(e) {
         return jsonOutput_({
           status: permissionIssue ? 403 : notFound ? 404 : 500,
           error: permissionIssue ? 'DRIVE_PERMISSION_DENIED' : notFound ? 'DRIVE_FOLDER_NOT_ACCESSIBLE' : 'DRIVE_DOCUMENT_OPERATION_FAILED',
-          message: permissionIssue ? 'Google Apps Script n\\'a pas accès au dossier Drive. Vérifiez le compte de déploiement et autorisez le service Drive.' :
+          message: permissionIssue ? 'Google Apps Script ne peut pas accéder au dossier Drive. Vérifiez le compte de déploiement et autorisez le service Drive.' :
             notFound ? 'Le dossier de stockage Google Drive est introuvable pour le compte exécutant Apps Script.' :
             'L’opération Google Drive a échoué. Consultez les exécutions Apps Script pour le diagnostic.'
         });
