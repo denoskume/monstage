@@ -149,7 +149,7 @@ export function ShortlistPage() {
 
   const tabs: Array<[MyJobsTab, string, number]> = [
     ['saved', 'Saved jobs', savedOffers.length],
-    ['applications', 'Postulées', applications.length],
+    ['applications', 'Applications', applications.length],
     ['interviews', 'Interviews', interviews.length],
     ['archived', 'Archived', archived.length],
   ];
