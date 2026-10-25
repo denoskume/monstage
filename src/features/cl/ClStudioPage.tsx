@@ -1,3 +1,4 @@
+import { useAuth } from '../../auth/useAuth';
 import { SAFRAN_AI_DOSSIER_ID, prepareSafranAiDossier } from '../applications/safranAiDossier';
 import { useEffect, useRef } from 'react';
 import { loadApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
@@ -22,6 +23,7 @@ function subjectLine(draft: CoverLetterDraft): string {
 }
 
 export function ClStudioPage() {
+  const { token } = useAuth();
   const [params] = useSearchParams();
   const activeReview = (() => {
     try {
@@ -164,7 +166,7 @@ export function ClStudioPage() {
       const pdfBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
       if (offerParam) {
-        try { await saveApplicationDocument(offerParam, 'letter', new File([blob], coverLetterPdfFileName(draft), { type: 'application/pdf' })); }
+        try { await saveApplicationDocument(offerParam, 'letter', new File([blob], coverLetterPdfFileName(draft), { type: 'application/pdf' }), token, draft.company); }
         catch { /* Archiving is best-effort: PDF download must still work. */ }
       }
       const objectUrl = URL.createObjectURL(blob);
