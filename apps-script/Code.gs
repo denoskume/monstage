@@ -2257,6 +2257,25 @@ function updateApplicationStatus_(input) {
 }
 
 
+// Run manually once in the Google Apps Script editor after deployment.
+// This triggers the Drive OAuth consent for the account executing the web app.
+// It does not share files, upload applicant data, or modify the archive.
+function authorizeMonStageDrive() {
+  var root = DriveApp.getFolderById('1ueX0s3S2TW-pkr5SqeF0YXqM4-HTj2MY');
+  var name = root.getName();
+  if (name !== 'MonStage — Dossiers de candidature') {
+    throw new Error('Wrong Drive folder: ' + name);
+  }
+  var folders = root.getFolders();
+  var count = 0;
+  while (folders.hasNext()) {
+    folders.next();
+    count += 1;
+  }
+  Logger.log('MONSTAGE_DRIVE_ACCESS_OK: ' + name + '; application folders=' + count);
+  return 'MONSTAGE_DRIVE_ACCESS_OK';
+}
+
 // Private Google Drive archive for each application. Never alter Drive sharing.
 var MONSTAGE_DOCUMENTS_ROOT_ID_ = '1ueX0s3S2TW-pkr5SqeF0YXqM4-HTj2MY';
 
