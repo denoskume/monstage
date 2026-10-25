@@ -165,9 +165,10 @@ export function ClStudioPage() {
       const bytes = await buildCoverLetterPdfBytes(draft);
       const pdfBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+      let archiveError = '';
       if (offerParam) {
         try { await saveApplicationDocument(offerParam, 'letter', new File([blob], coverLetterPdfFileName(draft), { type: 'application/pdf' }), token, draft.company); }
-        catch { /* Archiving is best-effort: PDF download must still work. */ }
+        catch (error) { archiveError = error instanceof Error ? error.message : 'Erreur Google Drive'; }
       }
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -179,7 +180,7 @@ export function ClStudioPage() {
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
-      setDownloadError('');
+      setDownloadError(archiveError ? 'PDF téléchargé, mais non enregistré dans Google Drive : ' + archiveError : '');
     } catch (error) {
       setDownloadError(error instanceof Error ? error.message : 'Unable to download the cover letter PDF.');
     }
