@@ -7,6 +7,7 @@ export function OfferList({
   selectedKey,
   onSelect,
   isSaved,
+  isApplied,
   onToggleSave,
   onHide,
   onShare,
@@ -15,6 +16,7 @@ export function OfferList({
   selectedKey: string | null;
   onSelect: (offer: InternshipOffer) => void;
   isSaved: (offer: InternshipOffer) => boolean;
+  isApplied: (offer: InternshipOffer) => boolean;
   onToggleSave: (offer: InternshipOffer) => void;
   onHide: (offer: InternshipOffer) => void;
   onShare: (offer: InternshipOffer) => void;
@@ -27,6 +29,7 @@ export function OfferList({
         <OfferCard
           key={offerIdentity(offer)}
           offer={offer}
+          applied={isApplied(offer)}
           selected={selectionKey(offer) === selectedKey}
           saved={isSaved(offer)}
           onSelect={() => onSelect(offer)}
