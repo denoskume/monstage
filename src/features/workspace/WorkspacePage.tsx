@@ -46,7 +46,7 @@ function ApplicationDocuments({ offerId, company }: { offerId: string; company: 
   }
   async function remove(id: string) {
     if (!window.confirm('Supprimer ce document du dossier ?')) return;
-    try { await removeApplicationDocument(offerId, id, token); setDocuments(await listApplicationDocuments(offerId)); }
+    try { await removeApplicationDocument(offerId, id, token); const result = await listApplicationDocuments(offerId, token); setDocuments(result.documents); setFolderUrl(result.folderUrl); }
     catch { setError('Suppression impossible.'); }
   }
   return <section className="workspace-section">
