@@ -22,7 +22,9 @@ async function requestDocuments(token: string | null, action: string, document: 
     body: JSON.stringify({ action, document }),
   });
   const result = await response.json().catch(() => ({})) as Record<string, unknown>;
-  if (!response.ok) throw new Error(String(result.message || result.error || 'Erreur Google Drive'));
+  if (!response.ok || (typeof result.status === 'number' && (result.status < 200 || result.status >= 300)) || result.error) {
+    throw new Error(String(result.message || result.error || 'Erreur Google Drive'));
+  }
   return result;
 }
 export async function listApplicationDocuments(offerId: string, token: string | null): Promise<DocumentCollection> {
@@ -39,9 +41,10 @@ export async function saveApplicationDocument(offerId: string, kind: Application
   for (let i = 0; i < buffer.length; i += sliceSize) {
     binary += String.fromCharCode(...buffer.subarray(i, i + sliceSize));
   }
-  await requestDocuments(token, 'uploadApplicationDocument', {
+  const result = await requestDocuments(token, 'uploadApplicationDocument', {
     offerId, company, kind, name: file.name, contentBase64: btoa(binary),
   });
+  if (result.saved !== true || typeof result.id !== 'string') throw new Error('Google Drive ne confirme pas la sauvegarde du PDF.');
 }
 export async function removeApplicationDocument(offerId: string, documentId: string, token: string | null): Promise<void> {
   await requestDocuments(token, 'deleteApplicationDocument', { offerId, documentId });
