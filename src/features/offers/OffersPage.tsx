@@ -13,6 +13,8 @@ import { OfferList } from './OfferList';
 import type { InternshipOffer } from '../../api/contract';
 import { useOfferActions } from './offerActions';
 import { getWorkspaceState, loadWorkspace, updateWorkspaceState } from '../workspace/workspaceStorage';
+import { saveApplicationStatus } from '../../api/applications';
+import { useAuth } from '../../auth/useAuth';
 
 function initialFilters(): OfferFilterState {
   const prefs = loadPreferences();
@@ -70,16 +72,22 @@ export function OffersPage() {
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
   const [actionNotice, setActionNotice] = useState<{ text: string; offerId?: string } | null>(null);
   const actions = useOfferActions();
+  const { token } = useAuth();
   const [trackingVersion, setTrackingVersion] = useState(0);
   const isApplied = (offer: InternshipOffer) => Boolean(offer.appliedAt || (offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus)) || getWorkspaceState(offer.id).submitted);
-  function markApplied(offer: InternshipOffer) {
+  async function markApplied(offer: InternshipOffer) {
     if (isApplied(offer)) return;
-    if (!window.confirm('Confirmer que cette candidature a bien été envoyée ?')) return;
-    updateWorkspaceState(loadWorkspace(), offer.id, { submitted: true });
-    setTrackingVersion(value => value + 1);
-    setActionNotice({ text: 'Candidature enregistrée. Elle figure maintenant dans Applications.' });
+    if (!window.confirm('Confirmer que la candidature a réellement été envoyée ?')) return;
+    try {
+      await saveApplicationStatus(token, offer.id, 'Candidature envoyée');
+      updateWorkspaceState(loadWorkspace(), offer.id, { submitted: true });
+      setTrackingVersion(value => value + 1);
+      setActionNotice({ text: 'Candidature enregistrée dans My jobs et synchronisée.' });
+      retry();
+    } catch (error) {
+      setActionNotice({ text: error instanceof Error ? 'Enregistrement impossible : ' + error.message : 'Enregistrement impossible.' });
+    }
   }
-
 
   const offers = data?.offers ?? [];
   const availableOffers = useMemo(
@@ -326,7 +334,7 @@ export function OffersPage() {
           </div>
           <div className={'offers-layout' + (mobileDetail ? ' mobile-detail-open' : '')}>
             <div className="offers-list-pane"><OfferList offers={paginatedOffers} selectedKey={selectedOffer ? selectionKey(selectedOffer) : null} onSelect={chooseOffer} isSaved={(offer) => actions.isSaved(offer.id, offer.shortlist)} isApplied={(offer) => { void trackingVersion; return isApplied(offer); }} onToggleSave={toggleSaved} onHide={hideOffer} onShare={(offer) => void shareOffer(offer)} /></div>
-            <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} applied={isApplied(selectedOffer)} onMarkApplied={() => markApplied(selectedOffer)} onBack={() => setMobileDetail(false)} saved={actions.isSaved(selectedOffer.id, selectedOffer.shortlist)} onToggleSave={() => toggleSaved(selectedOffer)} onHide={() => hideOffer(selectedOffer)} onShare={() => void shareOffer(selectedOffer)} /> : null}</div>
+            <div className="offer-detail-pane">{selectedOffer ? <OfferDetail offer={selectedOffer} applied={isApplied(selectedOffer)} onMarkApplied={() => void markApplied(selectedOffer)} onBack={() => setMobileDetail(false)} saved={actions.isSaved(selectedOffer.id, selectedOffer.shortlist)} onToggleSave={() => toggleSaved(selectedOffer)} onHide={() => hideOffer(selectedOffer)} onShare={() => void shareOffer(selectedOffer)} /> : null}</div>
           </div>
           {totalPages > 1 ? (
             <nav className="jobs-pagination" aria-label="Jobs pagination">
