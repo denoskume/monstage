@@ -1,3 +1,4 @@
+import { useAuth } from '../../auth/useAuth';
 import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey } from './cvStorage';
@@ -114,6 +115,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 }
 
 export function CvStudioPage() {
+  const { token } = useAuth();
   const [params] = useSearchParams();
   const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
   const offerParam = params.get('offer');
@@ -167,7 +169,7 @@ export function CvStudioPage() {
       const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
       if (offerParam) {
-        try { await saveApplicationDocument(offerParam, 'cv', new File([blob], cvPdfFileName(draft.name), { type: 'application/pdf' })); }
+        try { await saveApplicationDocument(offerParam, 'cv', new File([blob], cvPdfFileName(draft.name), { type: 'application/pdf' }), token, ''); }
         catch { /* Archiving is best-effort: PDF download must still work. */ }
       }
       const objectUrl = URL.createObjectURL(blob);
