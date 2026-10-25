@@ -168,9 +168,10 @@ export function CvStudioPage() {
     try {
       const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+      let archiveError = '';
       if (offerParam) {
         try { await saveApplicationDocument(offerParam, 'cv', new File([blob], cvPdfFileName(draft.name), { type: 'application/pdf' }), token, ''); }
-        catch { /* Archiving is best-effort: PDF download must still work. */ }
+        catch (error) { archiveError = error instanceof Error ? error.message : 'Erreur Google Drive'; }
       }
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -181,7 +182,7 @@ export function CvStudioPage() {
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
-      setDownloadError('');
+      setDownloadError(archiveError ? 'PDF téléchargé, mais non enregistré dans Google Drive : ' + archiveError : '');
     } catch (error) {
       setDownloadError(error instanceof Error ? error.message : 'Unable to download the PDF.');
     }
