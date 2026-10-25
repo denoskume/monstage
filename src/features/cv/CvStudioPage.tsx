@@ -444,7 +444,7 @@ export function CvStudioPage() {
             <p className="cv-preview__contact cv-preview__contact--links">{[draft.linkedin, draft.github].filter(Boolean).join(' | ')}</p>
           </header>
 
-          <section><h2>{draft.language === 'FR' ? 'Objectif' : 'Objective'}</h2><p>{draft.summary}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2><p>{draft.summary}</p></section>
 
           {draft.sectionOrder.map((section) => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>
