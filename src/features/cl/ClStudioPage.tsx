@@ -160,6 +160,28 @@ export function ClStudioPage() {
     reader.readAsDataURL(file);
   }
 
+
+  // Persist a stable tailored letter PDF automatically, without marking it as submitted.
+  useEffect(() => {
+    if (!offerParam || !token || (!job && !isSafranSpontaneous)) return;
+    if (job && (draft.company !== job.company || draft.internshipTitle !== job.title)) return;
+    const snapshot = JSON.stringify(draft);
+    const key = 'monstage:drive-autosave:letter:' + offerParam + ':' + draft.language;
+    if (sessionStorage.getItem(key) === snapshot) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void buildCoverLetterPdfBytes(draft)
+        .then(bytes => {
+          if (cancelled) return;
+          const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+          return saveApplicationDocument(offerParam, 'letter', new File([buffer], 'BROUILLON_' + coverLetterPdfFileName(draft), { type: 'application/pdf' }), token, draft.company);
+        })
+        .then(saved => { if (!cancelled && saved) { sessionStorage.setItem(key, snapshot); setDownloadError(''); } })
+        .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique Google Drive impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
+    }, 3000);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [offerParam, token, job?.id, isSafranSpontaneous, draft]);
+
   async function downloadPdf() {
     try {
       const bytes = await buildCoverLetterPdfBytes(draft);
