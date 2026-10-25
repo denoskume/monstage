@@ -110,11 +110,12 @@ export function ShortlistPage() {
     if (next === 'application' && !offer.appliedAt &&
         !['Candidature envoyée', 'Relance', 'Réponse recruteur', 'Entretien', 'Test technique', 'Offre reçue'].includes(offer.applicationStatus ?? '') &&
         !window.confirm('Confirmer que vous avez réellement envoyé cette candidature ?')) return;
-    const status = next === 'interview' ? 'Entretien' : next === 'archived' ? 'Abandonné' : 'Candidature envoyée';
+    const status = next === 'interview' ? 'Entretien' : next === 'archived' ? (offer.applicationStatus === 'Refus' ? 'Refus' : 'Abandonné') : 'Candidature envoyée';
     if (next === null) {
       actions.setStage(offer.id, null);
       return;
     }
+    if (next === 'archived' && offer.applicationStatus === 'Refus') { actions.setStage(offer.id, 'archived'); return; }
     setSavingId(offer.id);
     try {
       await saveApplicationStatus(token, offer.id, status);
