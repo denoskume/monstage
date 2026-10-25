@@ -8,7 +8,7 @@ import { useOffers } from '../../hooks/useOffers';
 import { displayValue } from '../../i18n/display';
 import type { InternshipOffer } from '../../api/contract';
 import { getFollowUpAdvice } from '../workspace/intelligence';
-import { getWorkspaceState } from '../workspace/workspaceStorage';
+import { getWorkspaceState, loadWorkspace } from '../workspace/workspaceStorage';
 import { ExternalApplicationForm } from './ExternalApplicationForm';
 
 const statusOrder = ['Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus', 'Abandonné'];
@@ -47,10 +47,18 @@ export function ApplicationsPage() {
   const { data, loading, error, retry } = useOffers();
   const [externalFormOpen, setExternalFormOpen] = useState(false);
   const [createdNotice, setCreatedNotice] = useState(false);
+  const [query, setQuery] = useState('');
   const grouped = useMemo(() => {
-    const all = (data?.offers ?? []).filter((offer) => offer.applicationStatus && offer.applicationStatus !== 'À candidater');
-    return statusOrder.map((status) => ({ status, offers: all.filter((offer) => offer.applicationStatus === status) })).filter((group) => group.offers.length > 0);
-  }, [data]);
+    const local = loadWorkspace();
+    const all = (data?.offers ?? []).filter(offer => {
+      const backendApplied = Boolean(offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus));
+      return backendApplied || Boolean(local[offer.id]?.submitted);
+    }).map(offer => local[offer.id]?.submitted && (!offer.applicationStatus || ['À candidater', 'À qualifier'].includes(offer.applicationStatus))
+      ? { ...offer, applicationStatus: 'Candidature envoyée', appliedAt: local[offer.id].updatedAt?.slice(0, 10) || offer.appliedAt }
+      : offer);
+    const matching = all.filter(offer => [offer.company, offer.title, offer.city].join(' ').toLowerCase().includes(query.trim().toLowerCase()));
+    return statusOrder.map(status => ({ status, offers: matching.filter(offer => offer.applicationStatus === status) })).filter(group => group.offers.length > 0);
+  }, [data, query]);
 
   if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
   if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
@@ -59,6 +67,7 @@ export function ApplicationsPage() {
   return (
     <section className="page applications-page">
       <div className="page-header"><div><h1>Applications</h1><p>Track every application, including those submitted outside MonStage.</p></div><button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Add external application</button></div>
+      <label className="external-app-field"><span>Rechercher dans mes candidatures</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Entreprise, poste ou ville" /></label>
       {createdNotice ? <div className="offer-action-notice" role="status"><span>External application added.</span><button type="button" onClick={() => setCreatedNotice(false)}>×</button></div> : null}
       {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={() => { setExternalFormOpen(false); setCreatedNotice(true); retry(); }} /> : null}
       {data?.autonomyLastSync ? <div className="autonomy-sync card"><span>Autonomy engine</span><strong>Last sync: {new Date(data.autonomyLastSync).toLocaleString()}</strong></div> : null}
