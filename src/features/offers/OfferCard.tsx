@@ -74,7 +74,7 @@ function Icon({ name }: { name: 'save' | 'hide' | 'share' }) {
 
 export function OfferCard({
   offer,
-  applied,
+  applied = false,
   selected,
   saved,
   onSelect,
@@ -83,7 +83,7 @@ export function OfferCard({
   onShare,
 }: {
   offer: InternshipOffer;
-  applied: boolean;
+  applied?: boolean;
   selected: boolean;
   saved: boolean;
   onSelect: () => void;
