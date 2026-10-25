@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { listApplicationDocuments, saveApplicationDocument, removeApplicationDocument, type ApplicationDocument, type ApplicationDocumentKind } from './documentVault';
 import { useSearchParams } from 'react-router-dom';
 import type { InternshipOffer } from '../../api/contract';
 import { Badge } from '../../components/Badge';
@@ -16,6 +17,69 @@ import {
   type ApplicationWorkspaceState,
   type WorkspaceStore,
 } from './workspaceStorage';
+
+function ApplicationDocuments({ offerId }: { offerId: string }) {
+  const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void listApplicationDocuments(offerId).then(items => { if (live) setDocuments(items); }).catch(() => { if (live) setError('Impossible de lire les documents enregistrés.'); });
+    return () => { live = false; };
+  }, [offerId]);
+
+  async function attach(file: File | undefined, kind: ApplicationDocumentKind) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      await saveApplicationDocument(offerId, kind, file);
+      setDocuments(await listApplicationDocuments(offerId));
+      setError('');
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Enregistrement impossible.'); }
+    finally { setBusy(false); }
+  }
+  function openPdf(document: ApplicationDocument) {
+    const url = URL.createObjectURL(document.file);
+    const anchor = window.document.createElement('a');
+    anchor.href = url;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    window.document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  async function remove(id: string) {
+    if (!window.confirm('Supprimer ce document du dossier ?')) return;
+    try { await removeApplicationDocument(id); setDocuments(await listApplicationDocuments(offerId)); }
+    catch { setError('Suppression impossible.'); }
+  }
+  return <section className="workspace-section">
+    <div className="workspace-section__heading"><h3>Documents de candidature</h3><span>{documents.length} fichier{documents.length > 1 ? 's' : ''}</span></div>
+    <p className="workspace-note">Conservez ici les PDF réellement envoyés. Chaque version reste associée à cette offre et peut être retrouvée lors d'une relance ou d'un entretien.</p>
+    <div className="workspace-actions">
+      {([['cv', '+ Joindre le CV envoyé'], ['letter', '+ Joindre la lettre envoyée'], ['other', '+ Autre document']] as const).map(([kind, label]) =>
+        <label key={kind} className="button button--secondary" style={{ cursor: busy ? 'wait' : 'pointer' }}>
+          {label}<input type="file" accept=".pdf,application/pdf" disabled={busy} style={{ display: 'none' }} onChange={event => { void attach(event.currentTarget.files?.[0], kind); event.currentTarget.value = ''; }} />
+        </label>
+      )}
+    </div>
+    {documents.length ? <div className="my-jobs-saved-list">{documents.map(doc =>
+      <div key={doc.id} className="my-jobs-saved-row">
+        <div className="my-jobs-saved-row__main">
+          <strong>{doc.kind === 'cv' ? 'CV' : doc.kind === 'letter' ? 'Lettre de motivation' : 'Pièce jointe'}</strong>
+          <p>{doc.name}</p><small>Ajouté le {new Date(doc.createdAt).toLocaleDateString('fr-FR')}</small>
+        </div>
+        <div className="my-jobs-saved-row__actions">
+          <button className="button button--secondary" type="button" onClick={() => openPdf(doc)}>Ouvrir le PDF</button>
+          <button className="button button--secondary" type="button" onClick={() => { void remove(doc.id); }}>Supprimer</button>
+        </div>
+      </div>
+    )}</div> : <p className="workspace-note">Aucun document archivé pour cette candidature.</p>}
+    {error ? <p role="alert" className="workspace-warning">{error}</p> : null}
+    <small>Stockage privé dans ce navigateur : non synchronisé entre appareils. Conservez aussi une sauvegarde externe.</small>
+  </section>;
+}
 
 function PackageCheck({
   label,
@@ -91,6 +155,8 @@ function WorkspaceCard({
         </div>
         <p className="workspace-note">External application status is evidence-driven. Opening the employer page never marks an application as submitted.</p>
       </section>
+
+      <ApplicationDocuments offerId={offer.id} />
 
       <section className="workspace-section workspace-grid">
         <div>
