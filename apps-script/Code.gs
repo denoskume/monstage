@@ -2223,6 +2223,39 @@ function ingestRunnerAtsPostings_(request) {
   return { provider: provider, sourceId: sourceId, accepted: rows.length, counters: counters };
 }
 
+function updateApplicationStatus_(input) {
+  input = input || {};
+  var offerId = normalizeText_(input.offerId);
+  var status = normalizeText_(input.status);
+  var allowed = ['Candidature envoyée', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus', 'Abandonné'];
+  if (!offerId || allowed.indexOf(status) === -1) return { status: 400, payload: { error: 'INVALID_STATUS' } };
+  var sheet = getSpreadsheet_().getSheetByName('Offres');
+  if (!sheet) return { status: 500, payload: { error: 'SHEET_MISSING' } };
+  var values = sheet.getDataRange().getDisplayValues();
+  var headers = buildHeaderMap_(values[0]);
+  var idCol = headers['ID'], statusCol = headers['Statut candidature'];
+  var dateCol = headers['Date candidature'];
+  var actionCol = headers['Prochaine action'];
+  if (idCol === undefined || statusCol === undefined) return { status: 500, payload: { error: 'SCHEMA_ERROR' } };
+  var index = -1;
+  for (var i = 1; i < values.length; i++) {
+    if (normalizeText_(values[i][idCol]) === offerId) { index = i + 1; break; }
+  }
+  if (index < 0) return { status: 404, payload: { error: 'OFFER_NOT_FOUND' } };
+  var current = normalizeText_(values[index - 1][statusCol]);
+  if (['Refus', 'Offre reçue'].indexOf(current) !== -1 && current !== status)
+    return { status: 409, payload: { error: 'STATUS_LOCKED', message: 'Existing final status requires manual review.' } };
+  sheet.getRange(index, statusCol + 1).setValue(status);
+  if (status === 'Candidature envoyée' && dateCol !== undefined && !values[index - 1][dateCol])
+    sheet.getRange(index, dateCol + 1).setValue(Utilities.formatDate(new Date(), 'Europe/Paris', 'dd/MM/yyyy'));
+  if (actionCol !== undefined) sheet.getRange(index, actionCol + 1).setValue(
+    status === 'Candidature envoyée' ? 'Suivre la réponse du recruteur' :
+    status === 'Entretien' ? 'Préparer l’entretien' :
+    status === 'Refus' ? 'Candidature clôturée' : 'Suivre le dossier'
+  );
+  return { status: 200, payload: { updated: true, offerId: offerId, applicationStatus: status } };
+}
+
 function doPost(e) {
   try {
     var expectedSecret = PropertiesService
@@ -2236,6 +2269,13 @@ function doPost(e) {
 
     var body = parseRequestBody_(e);
     var action = normalizeText_(body.action) || 'offers';
+
+    if (action === 'updateApplicationStatus') {
+      var statusResult = updateApplicationStatus_(body.application || {});
+      var statusPayload = statusResult.payload || {};
+      statusPayload.status = statusResult.status;
+      return jsonOutput_(statusPayload);
+    }
 
     if (action === 'submitApplication') {
       var result = submitApplication_(body.application || {});
