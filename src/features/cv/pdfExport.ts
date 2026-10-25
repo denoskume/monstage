@@ -130,6 +130,22 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     });
   };
 
+  // Education bullets use a measured, single-line font size so PDF matches the
+  // Studio preview instead of silently wrapping and pushing sections to page 2.
+  const drawEducationBullet = (text: string) => {
+    const safe = normalizeCvPdfText(text).trim();
+    if (!safe) return;
+    const indent = 12;
+    const maxWidth = usableWidth - indent;
+    const baseSize = compact ? 9.1 : 9.2;
+    const naturalWidth = regular.widthOfTextAtSize(safe, baseSize);
+    const size = naturalWidth > maxWidth ? baseSize * maxWidth / naturalWidth : baseSize;
+    ensureSpace(compact ? 11.7 : 12);
+    page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
+    page.drawText(safe, { x: MARGIN_X + indent, y, size, font: regular, color: textColor });
+    y -= compact ? 11.7 : 12;
+  };
+
   drawCentered(draft.name, 18, bold);
   drawCentered(draft.headline, 10.5, bold);
   drawCentered([draft.location, draft.email, draft.phone].filter(Boolean).join(' | '), 8.5, regular);
@@ -154,7 +170,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         drawEntryHeader(item.school, item.period);
         drawEntryHeader(item.degree, item.location, regular);
         if (item.bullets?.some(value => value.trim())) {
-          for (const bullet of item.bullets.filter(value => value.trim())) drawBullet(bullet.trim());
+          for (const bullet of item.bullets.filter(value => value.trim())) drawEducationBullet(bullet.trim());
         } else if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
         y -= compact ? 6 : 4;
       }
