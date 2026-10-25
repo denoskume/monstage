@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
+import { saveApplicationDocument } from '../workspace/documentVault';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
   return items.map((item, current) => current === index ? next : item);
@@ -165,6 +166,10 @@ export function CvStudioPage() {
     try {
       const pdfBuffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+      if (offerParam) {
+        try { await saveApplicationDocument(offerParam, 'cv', new File([blob], cvPdfFileName(draft.name), { type: 'application/pdf' })); }
+        catch { /* Archiving is best-effort: PDF download must still work. */ }
+      }
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
