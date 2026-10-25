@@ -9,6 +9,7 @@ import { displayValue } from '../../i18n/display';
 import { sortOffers } from '../offers/offerSelectors';
 import { useOfferActions } from '../offers/offerActions';
 import { ExternalApplicationForm } from '../applications/ExternalApplicationForm';
+import { getWorkspaceState } from '../workspace/workspaceStorage';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'archived';
 
@@ -37,7 +38,7 @@ function TrackingList({
             <h2>{offer.title}</h2>
             <p>{offer.company}</p>
             <span>{offer.city ?? 'City not specified'}</span>
-            <small>{stage === 'application' ? 'Application' : stage === 'interview' ? 'Interview' : 'Archived'}</small>
+            <small>{offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus) ? displayValue(offer.applicationStatus) : stage === 'application' ? 'Postulé' : stage === 'interview' ? 'Entretien' : 'Archivé'}{offer.appliedAt ? ' · ' + offer.appliedAt : ''}</small>
           </div>
 
           <div className="my-jobs-saved-row__actions">
@@ -72,7 +73,15 @@ export function ShortlistPage() {
     [data, actions.savedIds, actions.unsavedIds, actions.hidden],
   );
   function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'archived' | null {
-    return actions.stages[offer.id] ?? null;
+    const manual = actions.stages[offer.id];
+    if (manual === 'archived' || manual === 'interview') return manual;
+    const status = offer.applicationStatus ?? '';
+    if (status === 'Entretien' || status === 'Test technique') return 'interview';
+    if (['Refus', 'Abandonné'].includes(status)) return 'archived';
+    if (manual === 'application' || getWorkspaceState(offer.id).submitted ||
+        Boolean(offer.appliedAt) ||
+        ['Candidature envoyée', 'Relance', 'Réponse recruteur', 'Offre reçue'].includes(status)) return 'application';
+    return null;
   }
 
   const applications = useMemo(
