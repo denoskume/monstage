@@ -266,6 +266,55 @@ jobs:
           print("Drive archive reading verified for Safran application folder.")
           PY
 
+      - name: Verify PDF write, read and cleanup in private Google Drive
+        if: steps.cloudflare.outputs.configured == 'true'
+        run: |
+          python - <<'PY'
+          import base64, json, os, urllib.request, uuid
+          offer_id = "EXT-SAFRANAI-20261025"
+          filename = "MONSTAGE_CI_TEST_" + uuid.uuid4().hex + ".pdf"
+          # Minimal, valid single-page PDF. Never use or overwrite real applicant files.
+          parts = [b"%PDF-1.4\n", b"1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n",
+                   b"2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n",
+                   b"3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] >> endobj\n"]
+          offsets = []
+          pdf = parts[0]
+          for part in parts[1:]:
+              offsets.append(len(pdf))
+              pdf += part
+          xref = len(pdf)
+          pdf += ("xref\n0 4\n0000000000 65535 f \n" + "".join(f"{offset:010d} 00000 n \n" for offset in offsets) +
+                  f"trailer << /Root 1 0 R /Size 4 >>\nstartxref\n{xref}\n%%EOF\n").encode()
+          def call(action, document):
+              payload = json.dumps({"gatewaySecret": os.environ["APPS_SCRIPT_GATEWAY_SECRET"],
+                                   "action": action, "document": document}).encode()
+              req = urllib.request.Request(os.environ["APPS_SCRIPT_URL"], data=payload,
+                        headers={"Content-Type": "application/json"}, method="POST")
+              with urllib.request.urlopen(req, timeout=60) as response:
+                  result = json.loads(response.read().decode())
+              if result.get("status") != 200:
+                  raise RuntimeError(action + " failed: " + str(result.get("error") or result.get("message")))
+              return result
+          created_id = None
+          try:
+              upload = call("uploadApplicationDocument", {
+                  "offerId": offer_id, "company": "Safran.AI", "kind": "other",
+                  "name": filename, "contentBase64": base64.b64encode(pdf).decode()})
+              if upload.get("saved") is not True or not upload.get("id"):
+                  raise RuntimeError("Drive did not confirm PDF upload")
+              created_id = upload["id"]
+              listing = call("listApplicationDocuments", {"offerId": offer_id})
+              if not any(item.get("id") == created_id and item.get("name") == filename for item in listing.get("documents", [])):
+                  raise RuntimeError("Uploaded test PDF not retrievable")
+              print("Google Drive PDF upload and read confirmed.")
+          finally:
+              if created_id:
+                  deleted = call("deleteApplicationDocument", {"offerId": offer_id, "documentId": created_id})
+                  if deleted.get("deleted") is not True:
+                      raise RuntimeError("Test PDF cleanup not confirmed")
+                  print("Test PDF safely moved to trash.")
+          PY
+
 
   deploy-apps-script:
     if: github.ref == 'refs/heads/main'
