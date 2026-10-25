@@ -209,6 +209,25 @@ export function CvStudioPage() {
     };
   }, [draft]);
 
+
+  // Archive a stable CV draft automatically; downloading is no longer required.
+  useEffect(() => {
+    if (!offerParam || !token || !pdfReady || !pdfBytes) return;
+    const snapshot = JSON.stringify(draft);
+    const key = 'monstage:drive-autosave:cv:' + offerParam + ':' + draft.language;
+    if (sessionStorage.getItem(key) === snapshot) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      const buffer = pdfBytes.buffer.slice(pdfBytes.byteOffset, pdfBytes.byteOffset + pdfBytes.byteLength) as ArrayBuffer;
+      const filename = 'BROUILLON_' + cvPdfFileName(draft.name);
+      void saveApplicationDocument(offerParam, 'cv', new File([buffer], filename, { type: 'application/pdf' }), token, '')
+        .then(() => { if (!cancelled) { sessionStorage.setItem(key, snapshot); setDownloadError(''); } })
+        .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique Google Drive impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
+    }, 2500);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [offerParam, token, draft, pdfReady, pdfBytes]);
+
   return (
     <section className="page cv-studio-page">
       <div className="page-header cv-studio-header">
