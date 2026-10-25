@@ -2342,12 +2342,26 @@ function doPost(e) {
     var action = normalizeText_(body.action) || 'offers';
 
     if (action === 'listApplicationDocuments' || action === 'uploadApplicationDocument' || action === 'deleteApplicationDocument') {
-      var documentResult = action === 'listApplicationDocuments' ? listApplicationDocuments_(body.document || {}) :
-        action === 'uploadApplicationDocument' ? uploadApplicationDocument_(body.document || {}) :
-        deleteApplicationDocument_(body.document || {});
-      var documentResponse = documentResult.payload || {};
-      documentResponse.status = documentResult.status;
-      return jsonOutput_(documentResponse);
+      try {
+        var documentResult = action === 'listApplicationDocuments' ? listApplicationDocuments_(body.document || {}) :
+          action === 'uploadApplicationDocument' ? uploadApplicationDocument_(body.document || {}) :
+          deleteApplicationDocument_(body.document || {});
+        var documentResponse = documentResult.payload || {};
+        documentResponse.status = documentResult.status;
+        return jsonOutput_(documentResponse);
+      } catch (documentError) {
+        console.error('Application document operation failed: ' + String(documentError));
+        var errorText = String(documentError && documentError.message || documentError);
+        var permissionIssue = /permission|access|authoriz|scope|not have|denied|insufficient/i.test(errorText);
+        var notFound = /not found|no item|does not exist/i.test(errorText);
+        return jsonOutput_({
+          status: permissionIssue ? 403 : notFound ? 404 : 500,
+          error: permissionIssue ? 'DRIVE_PERMISSION_DENIED' : notFound ? 'DRIVE_FOLDER_NOT_ACCESSIBLE' : 'DRIVE_DOCUMENT_OPERATION_FAILED',
+          message: permissionIssue ? 'Google Apps Script n\\'a pas accès au dossier Drive. Vérifiez le compte de déploiement et autorisez le service Drive.' :
+            notFound ? 'Le dossier de stockage Google Drive est introuvable pour le compte exécutant Apps Script.' :
+            'L’opération Google Drive a échoué. Consultez les exécutions Apps Script pour le diagnostic.'
+        });
+      }
     }
 
     if (action === 'updateApplicationStatus') {
