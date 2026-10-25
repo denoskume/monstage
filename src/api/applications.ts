@@ -79,3 +79,17 @@ export async function addExternalApplication(token: string | null, payload: Exte
   if (!response.ok) throw new Error(body.message || body.error || 'EXTERNAL_APPLICATION_CREATE_FAILED');
   return body;
 }
+
+export async function saveApplicationStatus(token: string | null, offerId: string, status: string): Promise<void> {
+  if (!token) throw new ApiAuthError(401);
+  const response = await fetch(apiBaseUrl() + '/api/applications/status', {
+    method: 'POST', cache: 'no-store',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ offerId, status }),
+  });
+  if (response.status === 401 || response.status === 403) throw new ApiAuthError(response.status);
+  if (!response.ok) {
+    const result = await response.json().catch(() => ({})) as { message?: string; error?: string };
+    throw new Error(result.message || result.error || 'Impossible de sauvegarder le statut.');
+  }
+}

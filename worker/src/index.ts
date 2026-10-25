@@ -1,5 +1,5 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
-import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript } from './appsScript';
+import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript } from './appsScript';
 import { clearCachedOffers, getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
@@ -16,6 +16,7 @@ export interface WorkerDependencies {
   fetchOffers: (env: Env) => Promise<unknown>;
   submitApplication?: (env: Env, application: unknown) => Promise<{ status: number; payload: unknown }>;
   addExternalApplication?: (env: Env, application: unknown) => Promise<{ status: number; payload: unknown }>;
+  updateApplicationStatus?: (env: Env, application: unknown) => Promise<{ status: number; payload: unknown }>;
   getCachedOffers: () => Promise<CachedOffers | null>;
   clearCachedOffers?: () => Promise<void>;
   putCachedOffers: (payload: unknown, ttlSeconds: number) => Promise<void>;
@@ -34,6 +35,7 @@ const defaultDependencies: WorkerDependencies = {
   fetchOffers: fetchMergedOffers,
   submitApplication: submitApplicationToAppsScript,
   addExternalApplication: addExternalApplicationToAppsScript,
+  updateApplicationStatus: updateApplicationStatusInAppsScript,
   getCachedOffers,
   clearCachedOffers,
   putCachedOffers,
@@ -84,10 +86,11 @@ export async function handleRequest(
   const isOffersRoute = request.method === 'GET' && url.pathname === '/api/offers';
   const isSubmitRoute = request.method === 'POST' && url.pathname === '/api/applications/submit';
   const isExternalApplicationRoute = request.method === 'POST' && url.pathname === '/api/applications/external';
+  const isUpdateStatusRoute = request.method === 'POST' && url.pathname === '/api/applications/status';
   const isCvPdfRoute = request.method === 'POST' && url.pathname === '/api/cv/pdf';
   const isClPdfRoute = request.method === 'POST' && url.pathname === '/api/cl/pdf';
 
-  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isExternalApplicationRoute && !isCvPdfRoute && !isClPdfRoute) {
+  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isExternalApplicationRoute && !isUpdateStatusRoute && !isCvPdfRoute && !isClPdfRoute) {
     return jsonResponse({ error: 'NOT_FOUND' }, 404, origin);
   }
 
@@ -129,6 +132,18 @@ export async function handleRequest(
     } catch {
       return jsonResponse({ error: 'PDF_GENERATION_FAILED' }, 500, origin);
     }
+  }
+
+  if (isUpdateStatusRoute) {
+    let body: unknown;
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin); }
+    if (!body || typeof body !== 'object') return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin);
+    try {
+      const update = dependencies.updateApplicationStatus ?? defaultDependencies.updateApplicationStatus!;
+      const result = await update(env, body);
+      if (result.status >= 200 && result.status < 300) await (dependencies.clearCachedOffers ?? clearCachedOffers)();
+      return jsonResponse(result.payload, result.status, origin);
+    } catch { return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin); }
   }
 
   if (isExternalApplicationRoute) {
