@@ -1,5 +1,5 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
-import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript } from './appsScript';
+import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript, postToAppsScript } from './appsScript';
 import { clearCachedOffers, getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
@@ -87,10 +87,11 @@ export async function handleRequest(
   const isSubmitRoute = request.method === 'POST' && url.pathname === '/api/applications/submit';
   const isExternalApplicationRoute = request.method === 'POST' && url.pathname === '/api/applications/external';
   const isUpdateStatusRoute = request.method === 'POST' && url.pathname === '/api/applications/status';
+  const isDocumentRoute = request.method === 'POST' && url.pathname === '/api/applications/documents';
   const isCvPdfRoute = request.method === 'POST' && url.pathname === '/api/cv/pdf';
   const isClPdfRoute = request.method === 'POST' && url.pathname === '/api/cl/pdf';
 
-  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isExternalApplicationRoute && !isUpdateStatusRoute && !isCvPdfRoute && !isClPdfRoute) {
+  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isExternalApplicationRoute && !isUpdateStatusRoute && !isDocumentRoute && !isCvPdfRoute && !isClPdfRoute) {
     return jsonResponse({ error: 'NOT_FOUND' }, 404, origin);
   }
 
@@ -132,6 +133,19 @@ export async function handleRequest(
     } catch {
       return jsonResponse({ error: 'PDF_GENERATION_FAILED' }, 500, origin);
     }
+  }
+
+  if (isDocumentRoute) {
+    let body: Record<string, unknown>;
+    try { body = await request.json() as Record<string, unknown>; } catch { return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin); }
+    if (!body || typeof body !== 'object' || !['listApplicationDocuments', 'uploadApplicationDocument', 'deleteApplicationDocument'].includes(String(body.action || '')))
+      return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin);
+    try {
+      const upstream = await postToAppsScript(env, { action: body.action, document: body.document });
+      const result = await upstream.json() as { status?: number; error?: string };
+      const status = typeof result.status === 'number' ? result.status : upstream.status;
+      return jsonResponse(result, status, origin);
+    } catch { return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin); }
   }
 
   if (isUpdateStatusRoute) {

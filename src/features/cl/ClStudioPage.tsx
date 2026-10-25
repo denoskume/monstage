@@ -1,3 +1,4 @@
+import { useAuth } from '../../auth/useAuth';
 import { SAFRAN_AI_DOSSIER_ID, prepareSafranAiDossier } from '../applications/safranAiDossier';
 import { useEffect, useRef } from 'react';
 import { loadApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
@@ -14,6 +15,7 @@ import {
   type CoverLetterLanguage,
 } from './clStorage';
 import { buildCoverLetterPdfBytes, coverLetterPdfFileName } from './pdfExport';
+import { saveApplicationDocument } from '../workspace/documentVault';
 
 function subjectLine(draft: CoverLetterDraft): string {
   if (draft.language === 'FR') return `Objet : ${/^Candidature/i.test(draft.internshipTitle) ? draft.internshipTitle : 'Candidature — ' + (draft.internshipTitle || '[INTITULÉ DU STAGE]')}`;
@@ -21,6 +23,7 @@ function subjectLine(draft: CoverLetterDraft): string {
 }
 
 export function ClStudioPage() {
+  const { token } = useAuth();
   const [params] = useSearchParams();
   const activeReview = (() => {
     try {
@@ -162,6 +165,10 @@ export function ClStudioPage() {
       const bytes = await buildCoverLetterPdfBytes(draft);
       const pdfBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
       const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
+      if (offerParam) {
+        try { await saveApplicationDocument(offerParam, 'letter', new File([blob], coverLetterPdfFileName(draft), { type: 'application/pdf' }), token, draft.company); }
+        catch { /* Archiving is best-effort: PDF download must still work. */ }
+      }
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
