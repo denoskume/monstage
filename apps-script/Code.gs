@@ -2372,10 +2372,15 @@ function doPost(e) {
         console.error('Application document operation failed: ' + String(documentError));
         var errorText = String(documentError && documentError.message || documentError);
         var permissionIssue = /permission|access|authoriz|scope|not have|denied|insufficient/i.test(errorText);
+        var effectiveAccount = '';
+        try { effectiveAccount = Session.getEffectiveUser().getEmail().toLowerCase(); } catch (_) {}
+        var deployerIsFolderOwner = effectiveAccount === 'denoskume77@gmail.com';
+        console.error('MonStage Drive context: ownerAccount=' + deployerIsFolderOwner + '; ' + errorText);
         var notFound = /not found|no item|does not exist/i.test(errorText);
         return jsonOutput_({
           status: permissionIssue ? 403 : notFound ? 404 : 500,
           error: permissionIssue ? 'DRIVE_PERMISSION_DENIED' : notFound ? 'DRIVE_FOLDER_NOT_ACCESSIBLE' : 'DRIVE_DOCUMENT_OPERATION_FAILED',
+          deployerIsFolderOwner: deployerIsFolderOwner,
           message: permissionIssue ? 'Google Apps Script ne peut pas accéder au dossier Drive. Vérifiez le compte de déploiement et autorisez le service Drive.' :
             notFound ? 'Le dossier de stockage Google Drive est introuvable pour le compte exécutant Apps Script.' :
             'L’opération Google Drive a échoué. Consultez les exécutions Apps Script pour le diagnostic.'
