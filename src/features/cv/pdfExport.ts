@@ -139,7 +139,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   y -= compact ? 7 : 12;
 
   if (draft.summary.trim()) {
-    drawSectionTitle(draft.language === 'FR' ? 'Objectif' : 'Objective');
+    drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Profile');
     drawLines(draft.summary.trim(), compact ? 9.3 : 9.5);
   }
 
@@ -153,7 +153,9 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       for (const item of draft.education) {
         drawEntryHeader(item.school, item.period);
         drawEntryHeader(item.degree, item.location, regular);
-        if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
+        if (item.bullets?.some(value => value.trim())) {
+          for (const bullet of item.bullets.filter(value => value.trim())) drawBullet(bullet.trim());
+        } else if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
         y -= compact ? 6 : 4;
       }
     }
