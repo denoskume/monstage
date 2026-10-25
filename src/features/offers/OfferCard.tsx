@@ -74,6 +74,7 @@ function Icon({ name }: { name: 'save' | 'hide' | 'share' }) {
 
 export function OfferCard({
   offer,
+  applied = false,
   selected,
   saved,
   onSelect,
@@ -82,6 +83,7 @@ export function OfferCard({
   onShare,
 }: {
   offer: InternshipOffer;
+  applied?: boolean;
   selected: boolean;
   saved: boolean;
   onSelect: () => void;
@@ -120,6 +122,7 @@ export function OfferCard({
           </div>
         </div>
         <div className="offer-card__signals">
+          {applied ? <span className="signal signal--match">✓ Postulé</span> : null}
           {offer.decisionScore !== null ? <span className="signal signal--match">{offer.decisionScore}% match</span> : null}
           {offer.freshness ? <span className="signal">{displayValue(offer.freshness)}</span> : null}
         </div>

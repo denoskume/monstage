@@ -18,6 +18,8 @@ function ActionIcon({ name }: { name: 'save' | 'hide' | 'share' }) {
 
 export function OfferDetail({
   offer,
+  applied,
+  onMarkApplied,
   onBack,
   saved,
   onToggleSave,
@@ -25,6 +27,8 @@ export function OfferDetail({
   onShare,
 }: {
   offer: InternshipOffer;
+  applied: boolean;
+  onMarkApplied: () => void;
   onBack?: () => void;
   saved: boolean;
   onToggleSave: () => void;
@@ -49,7 +53,11 @@ export function OfferDetail({
       </header>
 
       <div className="offer-detail__actions offer-detail__actions--indeed">
-        {offer.applicationUrl ? (
+        {applied ? <span className="signal signal--match" role="status">✓ Déjà postulé</span> : null}
+        {!applied ? <button className="button button--secondary button--large" type="button" onClick={onMarkApplied}>✓ J’ai postulé</button> : null}
+        {applied ? (
+          <Link className="button button--primary button--large" to="/applications">Voir ma candidature</Link>
+        ) : offer.applicationUrl ? (
           <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a>
         ) : (
           <button className="button button--primary button--large" disabled>Application link unavailable</button>
