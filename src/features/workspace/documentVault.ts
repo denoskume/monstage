@@ -1,57 +1,48 @@
+import { ApiAuthError, apiBaseUrl } from '../../api/authClient';
+
 export type ApplicationDocumentKind = 'cv' | 'letter' | 'other';
 export interface ApplicationDocument {
   id: string;
-  offerId: string;
   kind: ApplicationDocumentKind;
   name: string;
-  mimeType: string;
+  url: string;
   createdAt: string;
-  file: Blob;
+  modifiedAt?: string;
 }
-const DB_NAME = 'monstage-application-documents';
-const STORE_NAME = 'documents';
-function openDatabase(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
-        store.createIndex('byOffer', 'offerId', { unique: false });
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error('Database unavailable'));
+export interface DocumentCollection {
+  documents: ApplicationDocument[];
+  folderUrl: string | null;
+}
+
+async function requestDocuments(token: string | null, action: string, document: Record<string, unknown>): Promise<Record<string, unknown>> {
+  if (!token) throw new ApiAuthError(401);
+  const response = await fetch(apiBaseUrl() + '/api/applications/documents', {
+    method: 'POST', cache: 'no-store',
+    headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, document }),
+  });
+  const result = await response.json().catch(() => ({})) as Record<string, unknown>;
+  if (!response.ok) throw new Error(String(result.message || result.error || 'Erreur Google Drive'));
+  return result;
+}
+export async function listApplicationDocuments(offerId: string, token: string | null): Promise<DocumentCollection> {
+  const result = await requestDocuments(token, 'listApplicationDocuments', { offerId });
+  return { documents: Array.isArray(result.documents) ? result.documents as ApplicationDocument[] : [], folderUrl: typeof result.folderUrl === 'string' ? result.folderUrl : null };
+}
+export async function saveApplicationDocument(offerId: string, kind: ApplicationDocumentKind, file: File, token: string | null, company: string): Promise<void> {
+  if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== 'application/pdf')) throw new Error('Document PDF requis.');
+  if (file.size > 5 * 1024 * 1024) throw new Error('Fichier trop volumineux (5 Mo max).');
+  const buffer = new Uint8Array(await file.arrayBuffer());
+  if (buffer.length < 5 || String.fromCharCode(...buffer.slice(0, 5)) !== '%PDF-') throw new Error('Fichier PDF invalide.');
+  let binary = '';
+  const sliceSize = 8192;
+  for (let i = 0; i < buffer.length; i += sliceSize) {
+    binary += String.fromCharCode(...buffer.subarray(i, i + sliceSize));
+  }
+  await requestDocuments(token, 'uploadApplicationDocument', {
+    offerId, company, kind, name: file.name, contentBase64: btoa(binary),
   });
 }
-export async function listApplicationDocuments(offerId: string): Promise<ApplicationDocument[]> {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const request = tx.objectStore(STORE_NAME).index('byOffer').getAll(offerId);
-    request.onsuccess = () => resolve((request.result as ApplicationDocument[]).sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-    request.onerror = () => reject(request.error);
-    tx.oncomplete = () => db.close();
-  });
-}
-export async function saveApplicationDocument(offerId: string, kind: ApplicationDocumentKind, file: File): Promise<void> {
-  if (!file.name.toLowerCase().endsWith('.pdf') || file.type && file.type !== 'application/pdf') throw new Error('Document PDF requis.');
-  if (file.size > 10 * 1024 * 1024) throw new Error('Fichier trop volumineux (10 Mo max).');
-  const db = await openDatabase();
-  const item: ApplicationDocument = { id: crypto.randomUUID(), offerId, kind, name: file.name, mimeType: 'application/pdf', createdAt: new Date().toISOString(), file };
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).add(item);
-    tx.oncomplete = () => { db.close(); resolve(); };
-    tx.onerror = () => { db.close(); reject(tx.error); };
-  });
-}
-export async function removeApplicationDocument(id: string): Promise<void> {
-  const db = await openDatabase();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).delete(id);
-    tx.oncomplete = () => { db.close(); resolve(); };
-    tx.onerror = () => { db.close(); reject(tx.error); };
-  });
+export async function removeApplicationDocument(offerId: string, documentId: string, token: string | null): Promise<void> {
+  await requestDocuments(token, 'deleteApplicationDocument', { offerId, documentId });
 }
