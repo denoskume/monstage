@@ -2256,6 +2256,77 @@ function updateApplicationStatus_(input) {
   return { status: 200, payload: { updated: true, offerId: offerId, applicationStatus: status } };
 }
 
+
+// Private Google Drive archive for each application. Never alter Drive sharing.
+var MONSTAGE_DOCUMENTS_ROOT_ID_ = '1ueX0s3S2TW-pkr5SqeF0YXqM4-HTj2MY';
+
+function applicationFolder_(offerId, company, create) {
+  offerId = normalizeText_(offerId);
+  if (!/^[a-zA-Z0-9:_-]{1,120}$/.test(offerId)) throw new Error('INVALID_OFFER_ID');
+  var root = DriveApp.getFolderById(MONSTAGE_DOCUMENTS_ROOT_ID_);
+  var folders = root.getFolders();
+  while (folders.hasNext()) {
+    var folder = folders.next();
+    if (folder.getName().slice(-offerId.length - 3) === ' - ' + offerId) return folder;
+  }
+  if (!create) return null;
+  var safeCompany = (normalizeText_(company) || 'Candidature').replace(/[\\/<>:"|?*]/g, ' ').slice(0, 70);
+  return root.createFolder(safeCompany + ' - ' + offerId);
+}
+function listApplicationDocuments_(input) {
+  input = input || {};
+  var folder = applicationFolder_(input.offerId, '', false);
+  var documents = [];
+  if (folder) {
+    var files = folder.getFiles();
+    while (files.hasNext()) {
+      var file = files.next();
+      if (file.getMimeType() !== MimeType.PDF) continue;
+      documents.push({
+        id: file.getId(), kind: file.getDescription() || 'other',
+        name: file.getName(), url: file.getUrl(),
+        createdAt: file.getDateCreated().toISOString(),
+        modifiedAt: file.getLastUpdated().toISOString()
+      });
+    }
+  }
+  documents.sort(function(a,b) { return b.createdAt.localeCompare(a.createdAt); });
+  return { status: 200, payload: { documents: documents, folderUrl: folder ? folder.getUrl() : null } };
+}
+function uploadApplicationDocument_(input) {
+  input = input || {};
+  var kind = normalizeText_(input.kind);
+  var name = normalizeText_(input.name);
+  var encoded = normalizeText_(input.contentBase64);
+  if (['cv', 'letter', 'other'].indexOf(kind) === -1 || !/\.pdf$/i.test(name) || !encoded || encoded.length > 8000000)
+    return { status: 400, payload: { error: 'INVALID_DOCUMENT' } };
+  var bytes = Utilities.base64Decode(encoded);
+  if (bytes.length > 5 * 1024 * 1024 || bytes.length < 5 ||
+      bytes[0] !== 37 || bytes[1] !== 80 || bytes[2] !== 68 || bytes[3] !== 70 || bytes[4] !== 45)
+    return { status: 400, payload: { error: 'INVALID_PDF' } };
+  var folder = applicationFolder_(input.offerId, input.company, true);
+  var filename = name.replace(/[\\/<>:"|?*]/g, '_').slice(0, 150);
+  var file = folder.createFile(Utilities.newBlob(bytes, MimeType.PDF, filename));
+  file.setDescription(kind);
+  return { status: 200, payload: { saved: true, id: file.getId(), url: file.getUrl(), folderUrl: folder.getUrl() } };
+}
+function deleteApplicationDocument_(input) {
+  input = input || {};
+  var folder = applicationFolder_(input.offerId, '', false);
+  if (!folder) return { status: 404, payload: { error: 'FOLDER_NOT_FOUND' } };
+  var id = normalizeText_(input.documentId);
+  if (!id) return { status: 400, payload: { error: 'INVALID_DOCUMENT_ID' } };
+  var files = folder.getFiles();
+  while (files.hasNext()) {
+    var file = files.next();
+    if (file.getId() === id) {
+      file.setTrashed(true);
+      return { status: 200, payload: { deleted: true } };
+    }
+  }
+  return { status: 404, payload: { error: 'DOCUMENT_NOT_FOUND' } };
+}
+
 function doPost(e) {
   try {
     var expectedSecret = PropertiesService
@@ -2269,6 +2340,15 @@ function doPost(e) {
 
     var body = parseRequestBody_(e);
     var action = normalizeText_(body.action) || 'offers';
+
+    if (action === 'listApplicationDocuments' || action === 'uploadApplicationDocument' || action === 'deleteApplicationDocument') {
+      var documentResult = action === 'listApplicationDocuments' ? listApplicationDocuments_(body.document || {}) :
+        action === 'uploadApplicationDocument' ? uploadApplicationDocument_(body.document || {}) :
+        deleteApplicationDocument_(body.document || {});
+      var documentResponse = documentResult.payload || {};
+      documentResponse.status = documentResult.status;
+      return jsonOutput_(documentResponse);
+    }
 
     if (action === 'updateApplicationStatus') {
       var statusResult = updateApplicationStatus_(body.application || {});
