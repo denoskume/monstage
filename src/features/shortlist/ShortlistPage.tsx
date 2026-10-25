@@ -87,14 +87,13 @@ export function ShortlistPage() {
     () => sortOffers(allOffers.filter((offer) => !actions.isHidden(offer.id) && actions.isSaved(offer.id, offer.shortlist)), 'best'),
     [data, actions.savedIds, actions.unsavedIds, actions.hidden],
   );
-  function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'archived' | null {
+  function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'refused' | 'archived' | null {
     const manual = actions.stages[offer.id];
+    const status = offer.applicationStatus ?? '';
     if (status === 'Refus') return 'refused';
     if (status === 'Entretien' || status === 'Test technique') return 'interview';
     if (manual === 'archived') return 'archived';
     if (manual === 'interview') return 'interview';
-    const status = offer.applicationStatus ?? '';
-    if (status === 'Entretien' || status === 'Test technique') return 'interview';
     if (status === 'Abandonné') return 'archived';
     if (manual === 'application' || getWorkspaceState(offer.id).submitted ||
         Boolean(offer.appliedAt) ||
