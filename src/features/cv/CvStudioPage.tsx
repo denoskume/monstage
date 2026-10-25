@@ -34,7 +34,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
       {draft.education.map((item) => <div className="cv-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{item.school}</strong><span>{item.period}</span></div>
         <div className="cv-entry__top"><span>{item.degree}</span><span>{item.location}</span></div>
-        {item.details ? <p>{item.details}</p> : null}
+        {item.bullets?.some(Boolean) ? <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul> : item.details ? <p>{item.details}</p> : null}
       </div>)}
     </section>
   );
@@ -94,7 +94,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
     const onePageFriendly = draft.projects.length <= 2 && draft.experience.length <= 3;
     return [
       ['Contact details', hasContact],
-      ['Focused objective', hasSummary],
+      ['Focused profile', hasSummary],
       ['Keyword-rich skills', hasSkills],
       ['Experience bullets', hasExperienceBullets],
       ['Project evidence', hasProjectBullets],
@@ -259,7 +259,7 @@ export function CvStudioPage() {
           </section>
 
           <section className="cv-editor-section">
-            <h2>Professional summary</h2>
+            <h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2>
             <textarea rows={4} value={draft.summary} onChange={(e) => patch('summary', e.target.value)} />
           </section>
 
@@ -276,7 +276,19 @@ export function CvStudioPage() {
                   <label>Location<input value={item.location} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, location: e.target.value }))} /></label>
                   <label>Period<input value={item.period} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, period: e.target.value }))} /></label>
                 </div>
-                <label>Details<textarea rows={2} value={item.details} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, details: e.target.value }))} /></label>
+                <label>{draft.language === 'FR' ? 'Description (si aucune puce)' : 'Description (if no bullets)'}<textarea rows={2} value={item.details} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, details: e.target.value }))} /></label>
+                {(item.bullets ?? []).map((bullet, bulletIndex) => (
+                  <div className="cv-bullet-row" key={bulletIndex}>
+                    <label>{draft.language === 'FR' ? 'Puce' : 'Bullet'} {bulletIndex + 1}
+                      <textarea rows={2} value={bullet} onChange={(e) => {
+                        const bullets = (item.bullets ?? []).map((value, current) => current === bulletIndex ? e.target.value : value);
+                        patch('education', updateAt(draft.education, index, { ...item, bullets }));
+                      }} />
+                    </label>
+                    <button className="cv-remove-button cv-remove-button--compact" type="button" onClick={() => patch('education', updateAt(draft.education, index, { ...item, bullets: removeAt(item.bullets ?? [], bulletIndex) }))}>−</button>
+                  </div>
+                ))}
+                <button className="button button--secondary cv-add-button" type="button" onClick={() => patch('education', updateAt(draft.education, index, { ...item, bullets: [...(item.bullets ?? []), ''] }))}>+ {draft.language === 'FR' ? 'Ajouter une puce' : 'Add bullet'}</button>
                 <button className="cv-remove-button" type="button" onClick={() => patch('education', removeAt(draft.education, index))}>{draft.language === 'FR' ? 'Supprimer' : 'Remove'}</button>
               </div>
             ))}
@@ -432,7 +444,7 @@ export function CvStudioPage() {
             <p className="cv-preview__contact cv-preview__contact--links">{[draft.linkedin, draft.github].filter(Boolean).join(' | ')}</p>
           </header>
 
-          <section><h2>{draft.language === 'FR' ? 'Objectif' : 'Objective'}</h2><p>{draft.summary}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2><p>{draft.summary}</p></section>
 
           {draft.sectionOrder.map((section) => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>

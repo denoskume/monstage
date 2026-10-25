@@ -18,6 +18,7 @@ export interface CvEducation {
   location: string;
   period: string;
   details: string;
+  bullets?: string[];
 }
 
 export interface CvProject {
