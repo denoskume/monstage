@@ -22,8 +22,12 @@ function refreshEducationDescriptions<T extends import('../cv/cvStorage').CvDraf
     ...cv,
     education: cv.education.map(item => {
       const update = educationDescriptionUpdates[cv.language][item.id];
-      if (!update || item.details !== update.previous) return item;
-      return { ...item, details: update.next };
+      if (!update) return item;
+      // A saved BSc includes a separate leadership line. Migrate its original
+      // curriculum description without removing the user's university activity.
+      const lines = item.details.split('\n');
+      if (lines[0]?.replace(/'/g, '’') !== update.previous) return item;
+      return { ...item, details: [update.next, ...lines.slice(1)].join('\n') };
     }),
   };
 }
