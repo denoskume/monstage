@@ -31,7 +31,7 @@ export async function listApplicationDocuments(offerId: string, token: string | 
   const result = await requestDocuments(token, 'listApplicationDocuments', { offerId });
   return { documents: Array.isArray(result.documents) ? result.documents as ApplicationDocument[] : [], folderUrl: typeof result.folderUrl === 'string' ? result.folderUrl : null };
 }
-export async function saveApplicationDocument(offerId: string, kind: ApplicationDocumentKind, file: File, token: string | null, company: string): Promise<void> {
+export async function saveApplicationDocument(offerId: string, kind: ApplicationDocumentKind, file: File, token: string | null, company: string): Promise<ApplicationDocument> {
   if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== 'application/pdf')) throw new Error('Document PDF requis.');
   if (file.size > 5 * 1024 * 1024) throw new Error('Fichier trop volumineux (5 Mo max).');
   const buffer = new Uint8Array(await file.arrayBuffer());
@@ -45,6 +45,15 @@ export async function saveApplicationDocument(offerId: string, kind: Application
     offerId, company, kind, name: file.name, contentBase64: btoa(binary),
   });
   if (result.saved !== true || typeof result.id !== 'string') throw new Error('Google Drive ne confirme pas la sauvegarde du PDF.');
+  // Confirm that the saved PDF is actually retrievable from the application's Drive folder.
+  // Drive listings can be briefly delayed, so retry before declaring an archive failure.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const collection = await listApplicationDocuments(offerId, token);
+    const saved = collection.documents.find(document => document.id === result.id);
+    if (saved) return saved;
+    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+  }
+  throw new Error('Le PDF a été envoyé, mais sa présence dans le dossier Google Drive reste à vérifier.');
 }
 export async function removeApplicationDocument(offerId: string, documentId: string, token: string | null): Promise<void> {
   await requestDocuments(token, 'deleteApplicationDocument', { offerId, documentId });
