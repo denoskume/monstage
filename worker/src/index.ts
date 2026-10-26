@@ -1,5 +1,5 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
-import { handleGithubDocuments } from './githubArchive';
+import { handleGithubDocuments, moveGithubApplicationArchive } from './githubArchive';
 import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript } from './appsScript';
 import { clearCachedOffers, getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
@@ -154,7 +154,15 @@ export async function handleRequest(
     try {
       const update = dependencies.updateApplicationStatus ?? defaultDependencies.updateApplicationStatus!;
       const result = await update(env, body);
-      if (result.status >= 200 && result.status < 300) await (dependencies.clearCachedOffers ?? clearCachedOffers)();
+      if (result.status >= 200 && result.status < 300) {
+        await (dependencies.clearCachedOffers ?? clearCachedOffers)();
+        const changed = body as Record<string, unknown>;
+        try {
+          await moveGithubApplicationArchive(env, changed.offerId, String(changed.status || ''));
+        } catch {
+          return jsonResponse({ error: 'ARCHIVE_STATUS_SYNC_FAILED', message: 'Le statut a été enregistré, mais les PDF n’ont pas pu être reclassés. Vérifie ton archive.' }, 502, origin);
+        }
+      }
       return jsonResponse(result.payload, result.status, origin);
     } catch { return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin); }
   }
