@@ -31,12 +31,9 @@ function ApplicationRow({ offer }: { offer: InternshipOffer }) {
         <div><dt>Next action</dt><dd>{displayValue(offer.nextAction ?? offer.actionLevel) ?? '—'}</dd></div>
         <div><dt>Assistant</dt><dd>{followUp}</dd></div>
       </dl>
-      {offer.autonomy ? <div className="application-evidence">
-        <strong>Auto-detected</strong>
-        <span>{offer.autonomy.type} · {offer.autonomy.confidence !== null ? Math.round(offer.autonomy.confidence * 100) + '% confidence' : 'confidence n/a'}</span>
-      </div> : null}
       <div className="application-row__actions">
-        <Link className="application-row__link" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Workspace →</Link>
+        <Link className="application-row__link" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier et documents →</Link>
+        <Link className="application-row__link" to={`/studio?offer=${encodeURIComponent(offer.id)}`}>Préparer CV et lettre →</Link>
         {offer.applicationUrl ? <a className="application-row__link" href={offer.applicationUrl} target="_blank" rel="noreferrer">View job ↗</a> : null}
       </div>
     </article>
@@ -66,11 +63,10 @@ export function ApplicationsPage() {
 
   return (
     <section className="page applications-page">
-      <div className="page-header"><div><h1>Applications</h1><p>Track every application, including those submitted outside MonStage.</p></div><button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Add external application</button></div>
+      <div className="page-header"><div><h1>Mes candidatures</h1><p>Prépare tes documents, retrouve tes candidatures et suis leur progression.</p></div><button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Add external application</button></div>
       <label className="external-app-field"><span>Rechercher dans mes candidatures</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Entreprise, poste ou ville" /></label>
       {createdNotice ? <div className="offer-action-notice" role="status"><span>External application added.</span><button type="button" onClick={() => setCreatedNotice(false)}>×</button></div> : null}
       {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={() => { setExternalFormOpen(false); setCreatedNotice(true); retry(); }} /> : null}
-      {data?.autonomyLastSync ? <div className="autonomy-sync card"><span>Autonomy engine</span><strong>Last sync: {new Date(data.autonomyLastSync).toLocaleString()}</strong></div> : null}
       {total === 0 ? <EmptyState title="No active applications yet." /> : grouped.map((group) => (
         <section className="application-group" key={group.status}><div className="application-group__heading"><h2>{displayValue(group.status)}</h2><span>{group.offers.length}</span></div><div className="application-group__list">{group.offers.map((offer) => <ApplicationRow key={offer.id || `${offer.company}-${offer.title}`} offer={offer} />)}</div></section>
       ))}
