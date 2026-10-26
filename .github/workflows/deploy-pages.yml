@@ -187,7 +187,7 @@ jobs:
           python - <<'PY'
           import base64, json, os, urllib.request, urllib.error, uuid
           token = os.environ["GITHUB_ARCHIVE_TOKEN"]
-          path = "Stage_2027/01_En_preparation/CI_TEST_" + uuid.uuid4().hex + ".txt"
+          path = "Stage_2027/01_En_preparation/CI_TEST_" + uuid.uuid4().hex + ".pdf"
           url = "https://api.github.com/repos/denoskume/Candidatures_Stages/contents/" + path
           headers = {"Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
                      "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "MonStage-Archive-Test"}
@@ -198,7 +198,7 @@ jobs:
                   return json.loads(response.read())
           created = False
           try:
-              result = call("PUT", {"message":"MonStage private archive smoke test", "content":base64.b64encode(b"MonStage CI only").decode(), "branch":"main"})
+              result = call("PUT", {"message":"MonStage private archive smoke test", "content":base64.b64encode(b"%PDF-1.4\\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\\n2 0 obj << /Type /Pages /Count 0 /Kids [] >> endobj\\ntrailer << /Root 1 0 R >>\\n%%EOF\\n").decode(), "branch":"main"})
               sha = result["content"]["sha"]
               created = True
               actual = call("GET")
