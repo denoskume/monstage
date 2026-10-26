@@ -4,9 +4,14 @@ import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier } from '../applications/applicationDossiers';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import type { CvLanguage } from '../cv/cvStorage';
+import { useAuth } from '../../auth/useAuth';
+import { saveApplicationStatus } from '../../api/applications';
 
 export function StudioPage() {
   const [params] = useSearchParams();
+  const { token } = useAuth();
+  const [statusBusy, setStatusBusy] = useState(false);
+  const [statusNotice, setStatusNotice] = useState('');
   const offerId = params.get('offer');
   const { data, loading } = useOffers();
   const [language, setLanguage] = useState<CvLanguage>('FR');
@@ -41,6 +46,19 @@ export function StudioPage() {
 
   const dossier = offer ? loadApplicationDossier(offer.id, language) : null;
 
+  async function confirmSent() {
+    if (!offer || statusBusy) return;
+    if (!window.confirm('Confirmer que cette candidature a réellement été envoyée ? Aucun document ne sera envoyé par MonStage.')) return;
+    setStatusBusy(true);
+    setStatusNotice('');
+    try {
+      await saveApplicationStatus(token, offer.id, 'Candidature envoyée');
+      setStatusNotice('Statut envoyé enregistré. Retrouvez les documents dans le dossier de candidature.');
+    } catch (error) {
+      setStatusNotice(error instanceof Error ? 'Statut non enregistré : ' + error.message : 'Statut non enregistré.');
+    } finally { setStatusBusy(false); }
+  }
+
   return (
     <section className="page studio-page">
       <div className="page-header">
@@ -68,6 +86,12 @@ export function StudioPage() {
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <Link className="button button--secondary" to={`/cv?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner le CV →</Link>
                     <Link className="button button--secondary" to={`/cl?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner la lettre →</Link>
+                    <Link className="button button--secondary" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier et PDF →</Link>
+                  </div>
+                  <div style={{ marginTop: 16 }}>
+                    <p><strong>Après l'envoi réel :</strong> confirme le statut pour suivre la candidature.</p>
+                    <button className="button button--primary" type="button" disabled={statusBusy} onClick={() => void confirmSent()}>{statusBusy ? 'Enregistrement…' : "J'ai envoyé cette candidature"}</button>
+                    {statusNotice ? <p role="status">{statusNotice}</p> : null}
                   </div>
                 </div>
               ) : null}
