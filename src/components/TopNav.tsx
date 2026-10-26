@@ -30,7 +30,7 @@ export function TopNav() {
 
         <nav className="top-nav__links" aria-label="Primary navigation">
           {links.map(([to, label]) => (
-            <NavLink key={to} to={to} className="nav-link" aria-label={to === '/dashboard' ? 'Dashboard' : label}>{label}</NavLink>
+            <NavLink key={to} to={to} className="nav-link" aria-label={label}>{label}</NavLink>
           ))}
         </nav>
 
