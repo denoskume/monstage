@@ -170,8 +170,8 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   await expect(page.getByRole('heading', { name: 'My jobs' })).toBeVisible();
   await page.getByRole('tab', { name: /Applications/ }).click();
   await expect(page.getByRole('tab', { name: /Applications/ })).toHaveAttribute('aria-selected', 'true');
-  await page.locator('.top-nav').getByRole('link', { name: 'Dashboard' }).click();
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await page.locator('.top-nav').getByRole('link', { name: 'Candidatures' }).click();
+  await expect(page.getByRole('heading', { name: 'Mes candidatures' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Account' }).click();
   await page.getByRole('button', { name: 'Sign out' }).click();
