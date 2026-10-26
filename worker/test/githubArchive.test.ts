@@ -4,7 +4,6 @@ import type { Env } from '../src/env';
 
 const env = { GITHUB_ARCHIVE_TOKEN: 'test-token' } as Env;
 const files = new Map<string, { content: string; sha: string }>();
-let version = 0;
 const prefix = '/repos/denoskume/Candidatures_Stages/contents/';
 function mockGithub() {
   vi.stubGlobal('fetch', vi.fn(async (request: string | URL | Request, init?: RequestInit) => {
@@ -21,7 +20,7 @@ function mockGithub() {
     }
     if (method === 'PUT') {
       if (!body.content) return Response.json({ error: 'content' }, { status: 400 });
-      const sha = 'sha' + (++version);
+      const sha = 'sha-' + body.content;
       files.set(path, { content: body.content, sha });
       return Response.json({ content: { sha, html_url: 'https://github.com/example' } });
     }
@@ -34,7 +33,7 @@ function mockGithub() {
     return Response.json({}, { status: 405 });
   }));
 }
-afterEach(() => { vi.unstubAllGlobals(); files.clear(); version = 0; });
+afterEach(() => { vi.unstubAllGlobals(); files.clear(); });
 test('archives two PDFs and lists them under an isolated application folder', async () => {
   mockGithub();
   const offerId = 'CI-PDF-2027';
