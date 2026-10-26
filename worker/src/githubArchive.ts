@@ -55,7 +55,7 @@ export async function moveGithubApplicationArchive(env: Env, offerId: unknown, s
   const source = await locate(env, id);
   const target = ROOT + '/' + categoryForStatus(status) + '/' + id;
   if (source.folder === target) return;
-  const files = source.files.filter(file => file.type === 'file' && /\\.pdf$/i.test(file.name));
+  const files = source.files.filter(file => file.type === 'file' && /\.pdf$/i.test(file.name));
   // Commit each destination file and verify before deleting any originals.
   for (const file of files) {
     const oldFile = await github(env, file.path);
@@ -68,7 +68,7 @@ export async function moveGithubApplicationArchive(env: Env, offerId: unknown, s
     const prior = destination.ok ? (await destination.json() as GithubFile).sha : undefined;
     const written = await github(env, newPath, 'PUT', {
       message: 'Classement candidature ' + id + ' vers ' + categoryForStatus(status),
-      content: original.content.replace(/\\s/g, ''), branch: 'main', ...(prior ? { sha: prior } : {}),
+      content: original.content.replace(/\s/g, ''), branch: 'main', ...(prior ? { sha: prior } : {}),
     });
     if (!written.ok) throw new Error('GITHUB_MOVE_WRITE_FAILED_' + written.status);
     const verified = await github(env, newPath);
