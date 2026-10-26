@@ -1,5 +1,6 @@
 import { AuthError, verifyAuthorizedUser } from './auth';
-import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript, postToAppsScript } from './appsScript';
+import { handleGithubDocuments } from './githubArchive';
+import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript } from './appsScript';
 import { clearCachedOffers, getCachedOffers, putCachedOffers, type CachedOffers } from './cache';
 import { allowedOrigin, responseHeaders } from './cors';
 import type { AuthorizedUser, Env } from './env';
@@ -141,10 +142,8 @@ export async function handleRequest(
     if (!body || typeof body !== 'object' || !['listApplicationDocuments', 'uploadApplicationDocument', 'deleteApplicationDocument'].includes(String(body.action || '')))
       return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin);
     try {
-      const upstream = await postToAppsScript(env, { action: body.action, document: body.document });
-      const result = await upstream.json() as { status?: number; error?: string };
-      const status = typeof result.status === 'number' ? result.status : upstream.status;
-      return jsonResponse(result, status, origin);
+      const result = await handleGithubDocuments(env, String(body.action), (body.document && typeof body.document === 'object') ? body.document as Record<string, unknown> : {});
+      return jsonResponse(result.payload, result.status, origin);
     } catch { return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin); }
   }
 
