@@ -93,7 +93,7 @@ export async function handleGithubDocuments(env: Env, action: string, input: Rec
     if (action === 'listApplicationDocuments') {
       const files = location.files;
       return { status: 200, payload: { folderUrl, documents: files.filter(f => f.type === 'file' && /\.pdf$/i.test(f.name)).map(f => ({
-        id: f.sha, name: f.name, url: f.html_url, kind: f.name.toLowerCase().startsWith('cv') ? 'cv' : f.name.toLowerCase().startsWith('lm') ? 'letter' : 'other', createdAt: '',
+        id: f.sha, name: f.name, url: f.html_url, kind: /^(?:BROUILLON_)?CV[_ -]/i.test(f.name) ? 'cv' : /^(?:BROUILLON_)?(?:LM|LETTRE)[_ -]/i.test(f.name) ? 'letter' : 'other', createdAt: '',
       })) } };
     }
     if (action === 'uploadApplicationDocument') {
