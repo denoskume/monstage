@@ -51,7 +51,7 @@ function ApplicationDocuments({ offerId, company }: { offerId: string; company: 
   }
   return <section className="workspace-section">
     <div className="workspace-section__heading"><h3>Documents de candidature</h3><span>{documents.length} fichier{documents.length > 1 ? 's' : ''}</span></div>
-    {folderUrl ? <a href={folderUrl} target="_blank" rel="noreferrer">Ouvrir le dossier privé Google Drive ↗</a> : null}
+    {folderUrl ? <a href={folderUrl} target="_blank" rel="noreferrer">Ouvrir le dossier GitHub privé ↗</a> : null}
     <p className="workspace-note">Conservez ici les PDF réellement envoyés. Chaque version reste associée à cette offre et peut être retrouvée lors d'une relance ou d'un entretien.</p>
     <div className="workspace-actions">
       {([['cv', '+ Joindre le CV envoyé'], ['letter', '+ Joindre la lettre envoyée'], ['other', '+ Autre document']] as const).map(([kind, label]) =>
@@ -64,11 +64,11 @@ function ApplicationDocuments({ offerId, company }: { offerId: string; company: 
       <div key={doc.id} className="my-jobs-saved-row">
         <div className="my-jobs-saved-row__main">
           <strong>{doc.kind === 'cv' ? 'CV' : doc.kind === 'letter' ? 'Lettre de motivation' : 'Pièce jointe'}</strong>
-          <p>{doc.name}</p><small>Ajouté le {new Date(doc.createdAt).toLocaleDateString('fr-FR')}</small>
+          <p>{doc.name}</p>{doc.createdAt ? <small>Ajouté le {new Date(doc.createdAt).toLocaleDateString('fr-FR')}</small> : null}
         </div>
         <div className="my-jobs-saved-row__actions">
           <button className="button button--secondary" type="button" onClick={() => openPdf(doc)}>Ouvrir le PDF</button>
-          <button className="button button--secondary" type="button" onClick={() => { void remove(doc.id); }}>Supprimer</button>
+
         </div>
       </div>
     )}</div> : <p className="workspace-note">Aucun document archivé pour cette candidature.</p>}
