@@ -98,6 +98,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
       APPS_SCRIPT_GATEWAY_SECRET: ${{ secrets.APPS_SCRIPT_GATEWAY_SECRET }}
+      GITHUB_ARCHIVE_TOKEN: ${{ secrets.MONSTAGE_ARCHIVE_GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -171,6 +172,15 @@ jobs:
             [ "$attempt" = 3 ] && exit 1
             sleep $((attempt * 5))
           done
+      - name: Configure private GitHub document archive
+        if: steps.cloudflare.outputs.configured == 'true'
+        run: |
+          if [ -n "$GITHUB_ARCHIVE_TOKEN" ]; then
+            printf '%s' "$GITHUB_ARCHIVE_TOKEN" | npm --prefix worker exec -- wrangler secret put GITHUB_ARCHIVE_TOKEN
+            echo "Private GitHub archive token configured in Cloudflare Worker."
+          else
+            echo "::warning::MONSTAGE_ARCHIVE_GITHUB_TOKEN is not configured; private PDF archiving will remain disabled."
+          fi
       - name: Force and diagnose external source sync
         if: steps.cloudflare.outputs.configured == 'true'
         run: |
