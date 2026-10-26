@@ -176,7 +176,7 @@ jobs:
         if: steps.cloudflare.outputs.configured == 'true'
         run: |
           if [ -n "$GITHUB_ARCHIVE_TOKEN" ]; then
-            printf '%s' "$GITHUB_ARCHIVE_TOKEN" | npm --prefix worker exec -- wrangler secret put GITHUB_ARCHIVE_TOKEN
+            printf '%s' "$GITHUB_ARCHIVE_TOKEN" | npx wrangler secret put GITHUB_ARCHIVE_TOKEN --config worker/wrangler.toml
             echo "Private GitHub archive token configured in Cloudflare Worker."
           else
             echo "::warning::MONSTAGE_ARCHIVE_GITHUB_TOKEN is not configured; private PDF archiving will remain disabled."
