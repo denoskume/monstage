@@ -4,8 +4,8 @@ import { AccountMenu } from '../features/auth/AccountMenu';
 const links = [
   ['/offers', 'Jobs'],
   ['/studio', 'Studio'],
+  ['/applications', 'Candidatures'],
   ['/prospection', 'Prospection'],
-  ['/dashboard', 'Insights'],
 ] as const;
 
 function BookmarkIcon() {
@@ -39,9 +39,6 @@ export function TopNav() {
         <nav className="top-nav__icon-links" aria-label="Quick actions">
           <NavLink to="/shortlist" className="top-nav__icon-link" aria-label="Saved jobs" title="Saved jobs">
             <BookmarkIcon />
-          </NavLink>
-          <NavLink to="/messages" className="top-nav__icon-link" aria-label="Recruiter activity" title="Recruiter activity">
-            <MessageIcon />
           </NavLink>
           <NavLink to="/notifications" className="top-nav__icon-link" aria-label="Notifications" title="Notifications">
             <BellIcon />
