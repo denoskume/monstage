@@ -166,7 +166,7 @@ export function ClStudioPage() {
     if (!offerParam || !token || (!job && !isSafranSpontaneous)) return;
     if (job && (draft.company !== job.company || draft.internshipTitle !== job.title)) return;
     const snapshot = JSON.stringify(draft);
-    const key = 'monstage:drive-autosave:letter:' + offerParam + ':' + draft.language;
+    const key = 'monstage:github-autosave:letter:' + offerParam + ':' + draft.language;
     if (sessionStorage.getItem(key) === snapshot) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
@@ -177,7 +177,7 @@ export function ClStudioPage() {
           return saveApplicationDocument(offerParam, 'letter', new File([buffer], 'BROUILLON_' + coverLetterPdfFileName(draft), { type: 'application/pdf' }), token, draft.company);
         })
         .then(saved => { if (!cancelled && saved) { sessionStorage.setItem(key, snapshot); setDownloadError(''); } })
-        .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique Google Drive impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
+        .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique GitHub privé impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
     }, 3000);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [offerParam, token, job?.id, isSafranSpontaneous, draft]);
@@ -190,7 +190,7 @@ export function ClStudioPage() {
       let archiveError = '';
       if (offerParam) {
         try { await saveApplicationDocument(offerParam, 'letter', new File([blob], coverLetterPdfFileName(draft), { type: 'application/pdf' }), token, draft.company); }
-        catch (error) { archiveError = error instanceof Error ? error.message : 'Erreur Google Drive'; }
+        catch (error) { archiveError = error instanceof Error ? error.message : 'Erreur GitHub privé'; }
       }
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -202,7 +202,7 @@ export function ClStudioPage() {
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
-      setDownloadError(archiveError ? 'PDF téléchargé, mais non enregistré dans Google Drive : ' + archiveError : '');
+      setDownloadError(archiveError ? 'PDF téléchargé, mais non enregistré dans GitHub privé : ' + archiveError : '');
     } catch (error) {
       setDownloadError(error instanceof Error ? error.message : 'Unable to download the cover letter PDF.');
     }
