@@ -2,7 +2,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProspectionPage } from '../features/prospection/ProspectionPage';
 import { OffersPage } from '../features/offers/OffersPage';
 import { ShortlistPage } from '../features/shortlist/ShortlistPage';
-import { ApplicationsPage } from '../features/applications/ApplicationsPage';
 import { DashboardPage } from '../features/dashboard/DashboardPage';
 import { WorkspacePage } from '../features/workspace/WorkspacePage';
 import { CvStudioPage } from '../features/cv/CvStudioPage';
@@ -21,7 +20,7 @@ export function AppRoutes() {
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/prospection" element={<ProspectionPage />} />
         <Route path="/shortlist" element={<ShortlistPage />} />
-        <Route path="/applications" element={<ApplicationsPage />} />
+        <Route path="/applications" element={<Navigate to="/shortlist" replace />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/workspace" element={<WorkspacePage />} />
