@@ -55,7 +55,7 @@ export function OfferDetail({
         {applied ? <span className="signal signal--match" role="status">✓ Déjà postulé</span> : null}
         {!applied ? <button className="button button--secondary button--large" type="button" onClick={onMarkApplied}>✓ J’ai postulé</button> : null}
         {applied ? (
-          <Link className="button button--primary button--large" to="/applications">Voir ma candidature</Link>
+          <Link className="button button--primary button--large" to="/shortlist">Voir ma candidature</Link>
         ) : offer.applicationUrl ? (
           <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a>
         ) : (
