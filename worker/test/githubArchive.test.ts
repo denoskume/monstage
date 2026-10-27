@@ -63,3 +63,16 @@ test('reclassifies PDFs across sent, interview and refused statuses without losi
     expect([...files.keys()].filter(x => x.endsWith('.pdf')).length).toBe(2);
   }
 });
+
+test('accepts external ATS identifiers containing colons and path separators safely', async () => {
+  mockGithub();
+  const offerId = 'workday:airbus:/jobs/2027/Stage-R&T';
+  const result = await handleGithubDocuments(env, 'uploadApplicationDocument', {
+    offerId, name: 'CV_Airbus.pdf', kind: 'cv', contentBase64: 'JVBERi0xLjQKJUVPRgo=',
+  });
+  expect(result.status).toBe(200);
+  const listing = await handleGithubDocuments(env, 'listApplicationDocuments', { offerId });
+  expect(listing.status).toBe(200);
+  expect((listing.payload.documents as Array<{ name: string }>).map(d => d.name)).toEqual(['CV_Airbus.pdf']);
+  expect([...files.keys()].every(path => !path.includes('/jobs/2027/'))).toBe(true);
+});
