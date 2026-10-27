@@ -23,7 +23,7 @@ async function requestDocuments(token: string | null, action: string, document: 
   });
   const result = await response.json().catch(() => ({})) as Record<string, unknown>;
   if (!response.ok || (typeof result.status === 'number' && (result.status < 200 || result.status >= 300)) || result.error) {
-    throw new Error(String(result.message || result.error || 'Erreur Google Drive'));
+    throw new Error(String(result.message || result.error || 'Erreur GitHub privé'));
   }
   return result;
 }
@@ -44,7 +44,7 @@ export async function saveApplicationDocument(offerId: string, kind: Application
   const result = await requestDocuments(token, 'uploadApplicationDocument', {
     offerId, company, kind, name: file.name, contentBase64: btoa(binary),
   });
-  if (result.saved !== true || typeof result.id !== 'string') throw new Error('Google Drive ne confirme pas la sauvegarde du PDF.');
+  if (result.saved !== true || typeof result.id !== 'string') throw new Error('GitHub privé ne confirme pas la sauvegarde du PDF.');
   // Confirm that the saved PDF is actually retrievable from the application's Drive folder.
   // Drive listings can be briefly delayed, so retry before declaring an archive failure.
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -53,7 +53,7 @@ export async function saveApplicationDocument(offerId: string, kind: Application
     if (saved) return saved;
     if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
   }
-  throw new Error('Le PDF a été envoyé, mais sa présence dans le dossier Google Drive reste à vérifier.');
+  throw new Error('Le PDF a été envoyé, mais sa présence dans le dossier GitHub privé reste à vérifier.');
 }
 export async function removeApplicationDocument(offerId: string, documentId: string, token: string | null): Promise<void> {
   await requestDocuments(token, 'deleteApplicationDocument', { offerId, documentId });
