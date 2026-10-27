@@ -48,7 +48,7 @@ function TrackingList({
           </div>
 
           <div className="my-jobs-saved-row__actions">
-            <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Open</Link>
+            <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier</Link>
             <select aria-label={`Statut de ${offer.company}`} value={offer.applicationStatus === 'Test technique' ? 'Test technique' : stage === 'refused' ? 'Refus' : stage === 'interview' ? 'Entretien' : stage === 'archived' ? 'Abandonné' : offer.applicationStatus === 'Relance' ? 'Relance' : 'Candidature envoyée'} disabled={saving === offer.id} onChange={(event) => onStatus(offer, event.target.value)} className="button button--secondary">
               <option value="Candidature envoyée">En cours — sans réponse</option>
               <option value="Relance">Relance effectuée</option>
@@ -79,7 +79,7 @@ export function ShortlistPage() {
   const { token } = useAuth();
   const [savingId, setSavingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [tab, setTab] = useState<MyJobsTab>('saved');
+  const [tab, setTab] = useState<MyJobsTab>('applications');
   const [externalFormOpen, setExternalFormOpen] = useState(false);
 
   const allOffers = data?.offers ?? [];
@@ -175,20 +175,20 @@ export function ShortlistPage() {
   if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
 
   const tabs: Array<[MyJobsTab, string, number]> = [
-    ['saved', 'Saved jobs', savedOffers.length],
-    ['applications', 'Applications', applications.length],
-    ['interviews', 'Interviews', interviews.length],
+    ['saved', 'Enregistrées', savedOffers.length],
+    ['applications', 'Envoyées', applications.length],
+    ['interviews', 'Entretiens', interviews.length],
     ['refused', 'Refus', refused.length],
-    ['archived', 'Archived', archived.length],
+    ['archived', 'Archives', archived.length],
   ];
 
   return (
     <section className="page my-jobs-page">
       <div className="page-header">
-        <div><h1>My jobs</h1><p>Toutes vos offres enregistrées, candidatures envoyées, entretiens et archives au même endroit.</p></div>
-        <button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Add external application</button>
+        <div><h1>Mes offres</h1><p>Retrouve tes offres enregistrées, candidatures envoyées, entretiens, refus et archives au même endroit.</p></div>
+        <button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Ajouter une candidature</button>
       </div>
-      {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={(offerId) => { actions.setStage(offerId, 'application'); setExternalFormOpen(false); setNotice('External application added.'); setTab('applications'); retry(); }} /> : null}
+      {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={(offerId) => { actions.setStage(offerId, 'application'); setExternalFormOpen(false); setNotice('Candidature ajoutée.'); setTab('applications'); retry(); }} /> : null}
 
       <div className="my-jobs-tabs" role="tablist" aria-label="My jobs">
         {tabs.map(([value, label, count]) => (
@@ -202,7 +202,7 @@ export function ShortlistPage() {
       {notice ? <div className="offer-action-notice" role="status"><span>{notice}</span><button type="button" onClick={() => setNotice(null)}>×</button></div> : null}
 
       {tab === 'saved' ? (
-        savedOffers.length === 0 ? <EmptyState title="Your saved jobs are empty." /> : (
+        savedOffers.length === 0 ? <EmptyState title="Aucune offre enregistrée." /> : (
           <div className="my-jobs-saved-list">
             {savedOffers.map((offer) => (
               <article className="my-jobs-saved-row" key={offer.id}>
@@ -214,7 +214,7 @@ export function ShortlistPage() {
                   <h2>{offer.title}</h2>
                   <p>{offer.company}</p>
                   <span>{offer.city ?? 'City not specified'}</span>
-                  <small>Saved in My jobs</small>
+                  <small>Offre enregistrée</small>
                 </div>
 
                 <div className="my-jobs-saved-row__actions">
@@ -240,9 +240,9 @@ export function ShortlistPage() {
       ) : null}
 
       {tab === 'applications' ? <TrackingList offers={applications} emptyTitle="Aucune candidature envoyée." stage="application" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
-      {tab === 'interviews' ? <TrackingList offers={interviews} emptyTitle="No interviews scheduled yet." stage="interview" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
+      {tab === 'interviews' ? <TrackingList offers={interviews} emptyTitle="Aucun entretien programmé." stage="interview" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
       {tab === 'refused' ? <TrackingList offers={refused} emptyTitle="Aucun refus enregistré." stage="refused" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
-      {tab === 'archived' ? <TrackingList offers={archived} emptyTitle="No archived applications." stage="archived" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
+      {tab === 'archived' ? <TrackingList offers={archived} emptyTitle="Aucune candidature archivée." stage="archived" saving={savingId} onStatus={(offer, status) => { void setStatus(offer, status); }} onMove={(offer, next) => { void moveOffer(offer, next); }} /> : null}
     </section>
   );
 }
