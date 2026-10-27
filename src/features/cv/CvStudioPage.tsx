@@ -171,7 +171,7 @@ export function CvStudioPage() {
       let archiveError = '';
       if (offerParam) {
         try { await saveApplicationDocument(offerParam, 'cv', new File([blob], cvPdfFileName(draft.name), { type: 'application/pdf' }), token, ''); }
-        catch (error) { archiveError = error instanceof Error ? error.message : 'Erreur Google Drive'; }
+        catch (error) { archiveError = error instanceof Error ? error.message : 'Erreur GitHub privé'; }
       }
       const objectUrl = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
@@ -182,7 +182,7 @@ export function CvStudioPage() {
       anchor.click();
       anchor.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
-      setDownloadError(archiveError ? 'PDF téléchargé, mais non enregistré dans Google Drive : ' + archiveError : '');
+      setDownloadError(archiveError ? 'PDF téléchargé, mais non enregistré dans GitHub privé : ' + archiveError : '');
     } catch (error) {
       setDownloadError(error instanceof Error ? error.message : 'Unable to download the PDF.');
     }
@@ -214,7 +214,7 @@ export function CvStudioPage() {
   useEffect(() => {
     if (!offerParam || !token || !pdfReady || !pdfBytes) return;
     const snapshot = JSON.stringify(draft);
-    const key = 'monstage:drive-autosave:cv:' + offerParam + ':' + draft.language;
+    const key = 'monstage:github-autosave:cv:' + offerParam + ':' + draft.language;
     if (sessionStorage.getItem(key) === snapshot) return;
     let cancelled = false;
     const timer = window.setTimeout(() => {
@@ -223,7 +223,7 @@ export function CvStudioPage() {
       const filename = 'BROUILLON_' + cvPdfFileName(draft.name);
       void saveApplicationDocument(offerParam, 'cv', new File([buffer], filename, { type: 'application/pdf' }), token, '')
         .then(() => { if (!cancelled) { sessionStorage.setItem(key, snapshot); setDownloadError(''); } })
-        .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique Google Drive impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
+        .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique GitHub privé impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
     }, 2500);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [offerParam, token, draft, pdfReady, pdfBytes]);
