@@ -1,5 +1,6 @@
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
+import { getCvMatch } from '../workspace/intelligence';
 
 type Publication = { date: Date | null; hasTime: boolean; dateLabel: string; exact: boolean };
 
@@ -123,7 +124,7 @@ export function OfferCard({
         </div>
         <div className="offer-card__signals">
           {applied ? <span className="signal signal--match">✓ Postulé</span> : null}
-          {offer.decisionScore !== null ? <span className="signal signal--match">{offer.decisionScore}% match</span> : null}
+          {offer.skills.length > 0 ? <span className="signal signal--match">{getCvMatch(offer).score}% CV match</span> : <span className="signal" title="Les compétences demandées ne sont pas renseignées">Adéquation à vérifier</span>}
           {offer.freshness ? <span className="signal">{displayValue(offer.freshness)}</span> : null}
         </div>
       </button>
