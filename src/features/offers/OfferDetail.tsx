@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { ApplicationPackageActions } from '../applications/ApplicationPackageActions';
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 import { getCvMatch } from '../workspace/intelligence';
@@ -65,10 +64,9 @@ export function OfferDetail({
         <button className={'offer-action-icon offer-action-icon--large' + (saved ? ' is-active' : '')} type="button" onClick={onToggleSave} aria-pressed={saved} aria-label={saved ? 'Remove from saved jobs' : 'Save job'} title={saved ? 'Saved' : 'Save'}><ActionIcon name="save" /></button>
         <button className="offer-action-icon offer-action-icon--large" type="button" onClick={onHide} aria-label="Not interested" title="Not interested"><ActionIcon name="hide" /></button>
         <button className="offer-action-icon offer-action-icon--large" type="button" onClick={onShare} aria-label="Share job" title="Share"><ActionIcon name="share" /></button>
-        <Link className="button button--secondary button--large" to={'/workspace?offer=' + encodeURIComponent(offer.id)}>Prepare application</Link>
+        <Link className="button button--secondary button--large" to={'/workspace?offer=' + encodeURIComponent(offer.id)}>Préparer ma candidature</Link>
       </div>
 
-      <ApplicationPackageActions offer={offer} />
 
       <section className="detail-section detail-section--summary">
         <h2>Job details</h2>
