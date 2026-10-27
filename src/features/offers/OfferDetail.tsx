@@ -81,9 +81,9 @@ export function OfferDetail({
       <section className="detail-section">
         <div className="detail-section__heading">
           <h2>Why this fits you</h2>
-          <strong>{match.score}% CV match</strong>
+          <strong>{offer.skills.length ? `${match.score}% CV match` : 'Adéquation à vérifier'}</strong>
         </div>
-        <div className="match-meter"><span style={{ width: match.score + '%' }} /></div>
+        {offer.skills.length ? <div className="match-meter"><span style={{ width: match.score + '%' }} /></div> : null}
         {match.matched.length ? <p><strong>Strong overlap:</strong> {match.matched.slice(0, 6).join(', ')}.</p> : <p>The source does not expose enough skill detail for a full comparison.</p>}
         {match.alignedProjects.length ? <p><strong>Best project evidence:</strong> {match.alignedProjects.join(', ')}.</p> : null}
         {match.missing.length ? <p><strong>Prepare:</strong> {match.missing.slice(0, 5).join(', ')}.</p> : null}
