@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
 import { OfferCard } from './OfferCard';
+import { getCvMatch } from '../workspace/intelligence';
 
 const offer: InternshipOffer = {
   id: '1', company: 'Assystem', title: 'Ingénieur Data Science - Vision par ordinateur - Stage H/F', domain: 'Computer Vision', city: 'Courbevoie', region: 'Île-de-France',
@@ -33,7 +34,7 @@ test('renders a concise job-card summary and actions', () => {
   expect(screen.getByText(offer.title)).toBeInTheDocument();
   expect(screen.getByText(/Courbevoie/)).toBeInTheDocument();
   expect(screen.getByText('1 300 €/mois')).toBeInTheDocument();
-  expect(screen.getByText('100% match')).toBeInTheDocument();
+  expect(screen.getByText(`${getCvMatch(offer).score}% CV match`)).toBeInTheDocument();
   expect(screen.getByText('Verified <24h')).toBeInTheDocument();
   expect(screen.getByText(/Il y a 3 semaines · 15 sept. 2026/)).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Remove from saved jobs' })).toBeInTheDocument();
