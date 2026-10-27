@@ -5,8 +5,14 @@ import type { OfferFilters } from './offerTypes';
 
 const priorityRank: Record<string, number> = { 'A+': 4, A: 3, 'B+': 2, B: 1 };
 
+// One calculation per immutable offer object, reused by filtering and sorting.
+// Sorting 1,000+ offers otherwise recomputes the full CV matcher tens of thousands of times.
+const cvMatchCache = new WeakMap<InternshipOffer, number | null>();
 export function verifiedCvMatchScore(offer: InternshipOffer): number | null {
-  return offer.skills.length > 0 ? getCvMatch(offer).score : null;
+  if (cvMatchCache.has(offer)) return cvMatchCache.get(offer)!;
+  const score = offer.skills.length > 0 ? getCvMatch(offer).score : null;
+  cvMatchCache.set(offer, score);
+  return score;
 }
 
 export function offerIdentity(offer: InternshipOffer): string {
@@ -120,7 +126,7 @@ export function filterOffers(offers: InternshipOffer[], filters: OfferFilters): 
     if (filters.industry !== null && offerIndustry(offer) !== filters.industry) return false;
     if (!equalsNullable(offer.city, filters.city)) return false;
     if (filters.priority !== null && normalize(offer.priority) !== normalize(filters.priority)) return false;
-    if (filters.minScore > 0 && (verifiedCvMatchScore(offer) === null || verifiedCvMatchScore(offer)! < filters.minScore)) return false;
+    if (filters.minScore > 0 && ((verifiedCvMatchScore(offer) ?? -1) < filters.minScore)) return false;
     if (!equalsNullable(offer.freshness, filters.freshness)) return false;
     if (!equalsNullable(offer.m2Fit, filters.m2Fit)) return false;
     if (!equalsNullable(offer.sourceQuality, filters.sourceQuality)) return false;
