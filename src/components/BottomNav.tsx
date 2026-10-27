@@ -4,7 +4,7 @@ const links = [
   ['/offers', '⌕', 'Offres'],
   ['/shortlist', '☆', 'Sélection'],
   ['/studio', '▣', 'Préparer'],
-  ['/applications', '▦', 'Suivi'],
+  ['/prospection', '▦', 'Prospection'],
 ] as const;
 
 export function BottomNav() {
