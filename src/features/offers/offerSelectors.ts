@@ -1,8 +1,13 @@
 import type { InternshipOffer } from '../../api/contract';
+import { getCvMatch } from '../workspace/intelligence';
 import type { SortMode } from '../../storage/preferences';
 import type { OfferFilters } from './offerTypes';
 
 const priorityRank: Record<string, number> = { 'A+': 4, A: 3, 'B+': 2, B: 1 };
+
+export function verifiedCvMatchScore(offer: InternshipOffer): number | null {
+  return offer.skills.length > 0 ? getCvMatch(offer).score : null;
+}
 
 export function offerIdentity(offer: InternshipOffer): string {
   return [
@@ -104,7 +109,7 @@ export function isForMe(offer: InternshipOffer): boolean {
   const activeStatus = !['Refus', 'Abandonné'].includes(offer.applicationStatus ?? '');
   const strongPriority = ['A+', 'A'].includes(offer.priority);
   const m2Compatible = ['Oui', 'Oui probable'].includes(offer.m2Fit ?? '');
-  const strongScore = (offer.decisionScore ?? 0) >= 85;
+  const strongScore = (verifiedCvMatchScore(offer) ?? 0) >= 85;
   return activeStatus && strongPriority && m2Compatible && strongScore;
 }
 
@@ -115,7 +120,7 @@ export function filterOffers(offers: InternshipOffer[], filters: OfferFilters): 
     if (filters.industry !== null && offerIndustry(offer) !== filters.industry) return false;
     if (!equalsNullable(offer.city, filters.city)) return false;
     if (filters.priority !== null && normalize(offer.priority) !== normalize(filters.priority)) return false;
-    if (filters.minScore > 0 && (offer.decisionScore === null || offer.decisionScore < filters.minScore)) return false;
+    if (filters.minScore > 0 && (verifiedCvMatchScore(offer) === null || verifiedCvMatchScore(offer)! < filters.minScore)) return false;
     if (!equalsNullable(offer.freshness, filters.freshness)) return false;
     if (!equalsNullable(offer.m2Fit, filters.m2Fit)) return false;
     if (!equalsNullable(offer.sourceQuality, filters.sourceQuality)) return false;
@@ -157,7 +162,7 @@ export function selectVisibleOffers(
 }
 
 function compareBest(a: InternshipOffer, b: InternshipOffer): number {
-  return (b.decisionScore ?? -1) - (a.decisionScore ?? -1)
+  return (verifiedCvMatchScore(b) ?? -1) - (verifiedCvMatchScore(a) ?? -1)
     || (priorityRank[b.priority] ?? 0) - (priorityRank[a.priority] ?? 0)
     || (b.technicalFit ?? -1) - (a.technicalFit ?? -1)
     || recentValue(b) - recentValue(a)
