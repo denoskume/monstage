@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
-import { listApplicationDocuments, saveApplicationDocument, removeApplicationDocument, type ApplicationDocument, type ApplicationDocumentKind } from './documentVault';
+import { useEffect, useState } from 'react';
+import { listApplicationDocuments, saveApplicationDocument, type ApplicationDocument, type ApplicationDocumentKind } from './documentVault';
 import { useAuth } from '../../auth/useAuth';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import type { InternshipOffer } from '../../api/contract';
 import { Badge } from '../../components/Badge';
 import { EmptyState } from '../../components/EmptyState';
@@ -9,11 +9,10 @@ import { ErrorState } from '../../components/ErrorState';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { useOffers } from '../../hooks/useOffers';
 import { displayValue } from '../../i18n/display';
-import { getCvMatch, getFollowUpAdvice } from './intelligence';
+import { getFollowUpAdvice } from './intelligence';
 import {
   getWorkspaceState,
   loadWorkspace,
-  packageProgress,
   updateWorkspaceState,
   type ApplicationWorkspaceState,
   type WorkspaceStore,
@@ -44,11 +43,6 @@ function ApplicationDocuments({ offerId, company }: { offerId: string; company: 
   function openPdf(document: ApplicationDocument) {
     window.open(document.url, '_blank', 'noopener,noreferrer');
   }
-  async function remove(id: string) {
-    if (!window.confirm('Supprimer ce document du dossier ?')) return;
-    try { await removeApplicationDocument(offerId, id, token); const result = await listApplicationDocuments(offerId, token); setDocuments(result.documents); setFolderUrl(result.folderUrl); }
-    catch { setError('Suppression impossible.'); }
-  }
   return <section className="workspace-section">
     <div className="workspace-section__heading"><h3>Documents de candidature</h3><span>{documents.length} fichier{documents.length > 1 ? 's' : ''}</span></div>
     {folderUrl ? <a href={folderUrl} target="_blank" rel="noreferrer">Ouvrir le dossier GitHub privé ↗</a> : null}
@@ -73,119 +67,60 @@ function ApplicationDocuments({ offerId, company }: { offerId: string; company: 
       </div>
     )}</div> : <p className="workspace-note">Aucun document archivé pour cette candidature.</p>}
     {error ? <p role="alert" className="workspace-warning">{error}</p> : null}
-    <small>Documents conservés sur votre Google Drive privé, consultables depuis vos appareils connectés au même compte. Les versions générées sont des brouillons tant que vous ne confirmez pas l’envoi.</small>
+    <small>Documents enregistrés dans le dépôt GitHub privé Stage_2027. Les versions générées sont des brouillons tant que vous ne confirmez pas l’envoi.</small>
   </section>;
 }
 
-function PackageCheck({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <label className="workspace-check">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      <span>{label}</span>
-    </label>
-  );
-}
-
-function WorkspaceCard({
-  offer,
-  state,
-  selected,
-  onUpdate,
-}: {
+function WorkspaceCard({ offer, state, onUpdate }: {
   offer: InternshipOffer;
   state: ApplicationWorkspaceState;
-  selected: boolean;
   onUpdate: (patch: Partial<ApplicationWorkspaceState>) => void;
 }) {
-  const match = getCvMatch(offer);
-  const progress = packageProgress(state);
+  const progress = Math.round(([state.cvReady, state.coverLetterReady].filter(Boolean).length / 2) * 100);
   const followUp = getFollowUpAdvice(offer, state.followUpDate);
-
   return (
-    <article className={`workspace-card card${selected ? ' workspace-card--selected' : ''}`}>
+    <article className="workspace-card card" style={{ maxWidth: 1080, margin: '0 auto', padding: 24 }}>
       <header className="workspace-card__header">
         <div>
-          <p>{offer.company}</p>
+          <p style={{ fontWeight: 700 }}>{offer.company}</p>
           <h2>{offer.title}</h2>
-          <span>{[offer.city, offer.specialization].filter(Boolean).map((value) => displayValue(String(value))).join(' · ')}</span>
+          <span>{[offer.city, offer.specialization].filter(Boolean).map(value => displayValue(String(value))).join(' · ')}</span>
         </div>
-        <div className="workspace-score">
-          <strong>{match.score}</strong>
-          <span>CV match</span>
-        </div>
+        <Badge>{offer.applicationStatus ? displayValue(offer.applicationStatus) : 'En préparation'}</Badge>
       </header>
 
-      <div className="workspace-summary">
-        <Badge tone={offer.priority === 'A+' ? 'success' : 'accent'}>{offer.priority || '—'}</Badge>
-        <Badge>{progress}% package</Badge>
-        {offer.applicationStatus ? <Badge>{displayValue(offer.applicationStatus)}</Badge> : null}
-        {offer.autonomy?.source ? <Badge tone="success">Auto · {offer.autonomy.source}</Badge> : null}
-      </div>
-
-      {offer.autonomy ? <section className="workspace-section autonomy-evidence">
-        <div className="workspace-section__heading"><h3>Autonomy evidence</h3><span>{offer.autonomy.confidence !== null ? Math.round(offer.autonomy.confidence * 100) + '% confidence' : 'confidence n/a'}</span></div>
-        <p><strong>{offer.autonomy.type}</strong> detected from {offer.autonomy.source}.</p>
-        {offer.autonomy.evidence ? <p>{offer.autonomy.evidence}</p> : null}
-        {offer.autonomy.detectedAt ? <small>{new Date(offer.autonomy.detectedAt).toLocaleString()}</small> : null}
-      </section> : null}
+      <section className="workspace-section">
+        <div className="workspace-section__heading"><h3>1. Préparer les documents</h3><span>{progress}% prêts</span></div>
+        <p className="workspace-note">Les documents sont propres à cette offre. Tu peux les adapter, les relire et les enregistrer avant de postuler.</p>
+        <div className="workspace-progress"><span style={{ width: `${progress}%` }} /></div>
+        <div className="workspace-actions" style={{ marginTop: 14, flexWrap: 'wrap' }}>
+          <Link className="button button--primary" to={`/cv?offer=${encodeURIComponent(offer.id)}`}>Préparer le CV</Link>
+          <Link className="button button--secondary" to={`/cl?offer=${encodeURIComponent(offer.id)}`}>Préparer la lettre</Link>
+          <Link className="button button--secondary" to={`/studio?offer=${encodeURIComponent(offer.id)}`}>Voir le dossier de préparation</Link>
+        </div>
+        <div className="workspace-checks" style={{ marginTop: 16 }}>
+          <label className="workspace-check"><input type="checkbox" checked={state.cvReady} onChange={event => onUpdate({ cvReady: event.target.checked })}/><span>CV vérifié</span></label>
+          <label className="workspace-check"><input type="checkbox" checked={state.coverLetterReady} onChange={event => onUpdate({ coverLetterReady: event.target.checked })}/><span>Lettre vérifiée</span></label>
+        </div>
+      </section>
 
       <section className="workspace-section">
-        <div className="workspace-section__heading">
-          <h3>Application package</h3>
-          <span>{progress}% ready</span>
-        </div>
-        <div className="workspace-progress"><span style={{ width: `${progress}%` }} /></div>
-        <div className="workspace-checks">
-          <PackageCheck label="Tailored CV" checked={state.cvReady} onChange={(cvReady) => onUpdate({ cvReady })} />
-          <PackageCheck label="Cover letter / message" checked={state.coverLetterReady} onChange={(coverLetterReady) => onUpdate({ coverLetterReady })} />
-          <PackageCheck label="Interview prep" checked={state.interviewPrepReady} onChange={(interviewPrepReady) => onUpdate({ interviewPrepReady })} />
-          <PackageCheck label="Local package complete" checked={state.submitted} onChange={(submitted) => onUpdate({ submitted })} />
-        </div>
-        <p className="workspace-note">External application status is evidence-driven. Opening the employer page never marks an application as submitted.</p>
+        <div className="workspace-section__heading"><h3>2. Enregistrer les PDF</h3></div>
+        <ApplicationDocuments offerId={offer.id} company={offer.company}/>
       </section>
 
-      <ApplicationDocuments offerId={offer.id} company={offer.company} />
-
-      <section className="workspace-section workspace-grid">
-        <div>
-          <h3>CV intelligence</h3>
-          {match.matched.length ? <p className="workspace-positive">Matched: {match.matched.slice(0, 6).join(', ')}</p> : <p>No explicit skills were provided by the source.</p>}
-          {match.missing.length ? <p className="workspace-warning">Strengthen or prepare: {match.missing.slice(0, 5).join(', ')}</p> : null}
-          {offer.gaps ? <p className="workspace-note">To confirm: {offer.gaps}</p> : null}
+      <section className="workspace-section">
+        <div className="workspace-section__heading"><h3>3. Postuler et suivre</h3></div>
+        <p className="workspace-note">Le clic sur le site de l'employeur n'enregistre pas une candidature envoyée. Confirme l'envoi uniquement après avoir réellement postulé.</p>
+        <div className="workspace-actions" style={{ flexWrap: 'wrap' }}>
+          {offer.applicationUrl ? <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Ouvrir l'offre et postuler ↗</a> : null}
+          <Link className="button button--secondary" to={`/studio?offer=${encodeURIComponent(offer.id)}`}>Confirmer l'envoi dans Studio</Link>
         </div>
-        <div>
-          <h3>Company / role intelligence</h3>
-          <p><strong>Source:</strong> {displayValue(offer.sourceQuality) ?? 'Needs verification'}</p>
-          <p><strong>Verified:</strong> {offer.verifiedAt ?? '—'}</p>
-          <p><strong>Compensation:</strong> {offer.compensation ?? 'Not specified'}</p>
-          {offer.relevance ? <p>{offer.relevance}</p> : null}
+        <div className="workspace-grid" style={{ marginTop: 18 }}>
+          <label className="workspace-field"><span>Date de relance</span><input type="date" value={state.followUpDate} onChange={event => onUpdate({ followUpDate: event.target.value })}/><small>{followUp}</small></label>
+          <label className="workspace-field"><span>Notes privées</span><textarea rows={3} value={state.notes} onChange={event => onUpdate({ notes: event.target.value })} placeholder="Réponse du recruteur, entretien, prochaines actions…"/></label>
         </div>
       </section>
-
-      <section className="workspace-section workspace-grid">
-        <label className="workspace-field">
-          <span>Manual fallback follow-up date</span>
-          <input type="date" value={state.followUpDate} onChange={(event) => onUpdate({ followUpDate: event.target.value })} />
-          <small>{followUp}</small>
-        </label>
-        <label className="workspace-field">
-          <span>Private notes</span>
-          <textarea rows={3} value={state.notes} onChange={(event) => onUpdate({ notes: event.target.value })} placeholder="Recruiter, interview focus, decision notes…" />
-        </label>
-      </section>
-
-      <footer className="workspace-actions">
-        {offer.applicationUrl ? <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a> : null}
-        <span>Application status changes only after verified evidence.</span>
-      </footer>
     </article>
   );
 }
@@ -196,36 +131,22 @@ export function WorkspacePage() {
   const selectedId = searchParams.get('offer');
   const [store, setStore] = useState<WorkspaceStore>(() => loadWorkspace());
 
-  const offers = useMemo(() => {
-    const all = data?.offers ?? [];
-    return all
-      .filter((offer) => offer.shortlist || (offer.applicationStatus && offer.applicationStatus !== 'À candidater') || ['A+', 'A'].includes(offer.priority))
-      .sort((a, b) => {
-        if (a.id === selectedId) return -1;
-        if (b.id === selectedId) return 1;
-        return (b.decisionScore ?? 0) - (a.decisionScore ?? 0);
-      });
-  }, [data, selectedId]);
-
   if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
   if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
 
+  const offer = selectedId ? data?.offers.find(item => item.id === selectedId) : undefined;
   return (
     <section className="page workspace-page">
-      <div className="page-header"><div><h1>Workspace</h1></div></div>
-
-      {offers.length === 0 ? <EmptyState title="No priority applications yet." /> : (
-        <div className="workspace-list">
-          {offers.map((offer) => (
-            <WorkspaceCard
-              key={offer.id || `${offer.company}-${offer.title}`}
-              offer={offer}
-              state={{ ...getWorkspaceState(offer.id), ...(store[offer.id] ?? {}) }}
-              selected={offer.id === selectedId}
-              onUpdate={(patch) => setStore((current) => updateWorkspaceState(current, offer.id, patch))}
-            />
-          ))}
-        </div>
+      <div className="page-header" style={{ maxWidth: 1080, margin: '0 auto 20px' }}>
+        <div><h1>Dossier de candidature</h1><p>Une seule offre, un seul dossier : prépare, enregistre et suis ta candidature.</p></div>
+        <Link className="button button--secondary" to="/offers">← Retour aux offres</Link>
+      </div>
+      {!selectedId ? (
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}><EmptyState title="Sélectionne une offre puis clique sur Préparer la candidature."/><Link className="button button--primary" to="/offers">Voir les offres</Link></div>
+      ) : !offer ? (
+        <div style={{ maxWidth: 1080, margin: '0 auto' }}><EmptyState title="Cette offre n'est pas disponible actuellement."/><Link className="button button--secondary" to="/offers">Retour aux offres</Link></div>
+      ) : (
+        <WorkspaceCard key={offer.id} offer={offer} state={{ ...getWorkspaceState(offer.id), ...(store[offer.id] ?? {}) }} onUpdate={patch => setStore(current => updateWorkspaceState(current, offer.id, patch))}/>
       )}
     </section>
   );
