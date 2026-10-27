@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
-import { dedupeOffers, filterOffers, isForMe, offerIndustry, selectVisibleOffers, sortOffers } from './offerSelectors';
+import { dedupeOffers, filterOffers, isForMe, offerIndustry, selectVisibleOffers, sortOffers, verifiedCvMatchScore } from './offerSelectors';
 import type { OfferFilters } from './offerTypes';
 
 const base: InternshipOffer = {
@@ -19,25 +19,32 @@ test('searches company title city specialization and skills', () => {
   expect(filterOffers([base], { ...filters, query: 'lyon' })).toHaveLength(0);
 });
 
-test('filters by minimum decision score', () => {
-  expect(filterOffers([{ ...base, decisionScore: 89 }], { ...filters, minScore: 90 })).toHaveLength(0);
+test('filters by the same CV match that is displayed', () => {
+  const score = verifiedCvMatchScore(base)!;
+  expect(filterOffers([base], { ...filters, minScore: score + 1 })).toHaveLength(0);
+  expect(filterOffers([base], { ...filters, minScore: score })).toHaveLength(1);
 });
 
 test('Pour moi requires active A/A+, M2 compatibility and score >= 85', () => {
-  expect(isForMe(base)).toBe(true);
+  expect(isForMe(base)).toBe((verifiedCvMatchScore(base) ?? 0) >= 85);
   expect(isForMe({ ...base, priority: 'B+' })).toBe(false);
   expect(isForMe({ ...base, m2Fit: 'Possible' })).toBe(false);
-  expect(isForMe({ ...base, decisionScore: 84 })).toBe(false);
+  expect(isForMe({ ...base, skills: [] })).toBe(false);
   expect(isForMe({ ...base, applicationStatus: 'Abandonné' })).toBe(false);
 });
 
-test('best sort ranks decision score then priority then technical fit', () => {
+test('best sort ranks matching evidence before priority and technical fit', () => {
   const offers = [
     { ...base, id: 'a', decisionScore: 95, priority: 'A', technicalFit: 99 },
     { ...base, id: 'b', decisionScore: 96, priority: 'B+', technicalFit: 90 },
     { ...base, id: 'c', decisionScore: 95, priority: 'A+', technicalFit: 90 },
   ];
-  expect(sortOffers(offers, 'best').map((offer) => offer.id)).toEqual(['b', 'c', 'a']);
+  const expected = [...offers].sort((x, y) =>
+    (verifiedCvMatchScore(y) ?? -1) - (verifiedCvMatchScore(x) ?? -1)
+    || ({ 'A+': 4, A: 3, 'B+': 2, B: 1 }[y.priority] ?? 0) - ({ 'A+': 4, A: 3, 'B+': 2, B: 1 }[x.priority] ?? 0)
+    || (y.technicalFit ?? -1) - (x.technicalFit ?? -1)
+  ).map(offer => offer.id);
+  expect(sortOffers(offers, 'best').map(offer => offer.id)).toEqual(expected);
 });
 
 test('recent sort uses publication dates only and never substitutes verification timestamps', () => {
@@ -82,9 +89,9 @@ test('each exact filter criterion is enforced', () => {
   expect(filterOffers([base], { ...filters, city: 'Lyon' })).toHaveLength(0);
 });
 
-test('minimum score excludes offers with missing scores when a threshold is active', () => {
-  expect(filterOffers([{ ...base, decisionScore: null }], { ...filters, minScore: 70 })).toHaveLength(0);
-  expect(filterOffers([{ ...base, decisionScore: null }], filters)).toHaveLength(1);
+test('minimum CV score excludes offers without job requirements', () => {
+  expect(filterOffers([{ ...base, skills: [] }], { ...filters, minScore: 70 })).toHaveLength(0);
+  expect(filterOffers([{ ...base, skills: [] }], filters)).toHaveLength(1);
 });
 
 
@@ -121,7 +128,7 @@ test('every categorical filter returns only matching offers across a mixed datas
     [{ m2Fit: 'Oui' }, 'match'],
     [{ sourceQuality: 'Officiel / direct' }, 'match'],
     [{ applicationStatus: 'À candidater' }, 'match'],
-    [{ minScore: 90 }, 'match'],
+    [{ minScore: Math.max(1, verifiedCvMatchScore(base) ?? 0) }, 'match'],
   ];
 
   for (const [partial, expectedId] of cases) {
@@ -135,7 +142,7 @@ test('every categorical filter returns only matching offers across a mixed datas
       if (partial.m2Fit) expect(offer.m2Fit).toBe(partial.m2Fit);
       if (partial.sourceQuality) expect(offer.sourceQuality).toBe(partial.sourceQuality);
       if (partial.applicationStatus) expect(offer.applicationStatus).toBe(partial.applicationStatus);
-      if (partial.minScore) expect(offer.decisionScore).not.toBeNull(), expect(offer.decisionScore!).toBeGreaterThanOrEqual(partial.minScore);
+      if (partial.minScore) expect(verifiedCvMatchScore(offer)).not.toBeNull(), expect(verifiedCvMatchScore(offer)!).toBeGreaterThanOrEqual(partial.minScore);
     }
   }
 });
@@ -145,7 +152,7 @@ test('combined filters use AND logic and exclude any partially matching offer', 
     { ...base, id: 'exact', city: 'Nantes', specialization: 'Computer Vision / 3D', priority: 'A+', m2Fit: 'Oui', sourceQuality: 'Officiel / direct', freshness: 'Vérifié <24h', applicationStatus: 'À candidater', decisionScore: 96 },
     { ...base, id: 'wrong-city', city: 'Paris' },
     { ...base, id: 'wrong-priority', priority: 'B+' },
-    { ...base, id: 'wrong-score', decisionScore: 89 },
+    { ...base, id: 'wrong-score', skills: [] },
     { ...base, id: 'wrong-status', applicationStatus: 'Entretien' },
   ];
 
@@ -154,7 +161,7 @@ test('combined filters use AND logic and exclude any partially matching offer', 
     city: 'Nantes',
     specialization: 'Computer Vision / 3D',
     priority: 'A+',
-    minScore: 90,
+    minScore: Math.max(1, verifiedCvMatchScore(base) ?? 0),
     m2Fit: 'Oui',
     sourceQuality: 'Officiel / direct',
     freshness: 'Vérifié <24h',
