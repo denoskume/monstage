@@ -16,14 +16,14 @@ export function categoryForStatus(status: string): string {
 
 function validId(value: unknown): string {
   const id = typeof value === 'string' ? value.trim() : '';
-  if (!id || id.length > 300 || /[\\u0000-\\u001f\\u007f]/.test(id)) throw new Error('INVALID_OFFER_ID');
+  if (!id || id.length > 300 || /[\u0000-\u001f\u007f]/.test(id)) throw new Error('INVALID_OFFER_ID');
   // Preserve folders already created for simple IDs. External ATS IDs may contain
   // colons, slashes or other characters unsafe for GitHub folder paths.
   if (/^[A-Za-z0-9_-]{1,110}$/.test(id)) return id;
   const encoded = new TextEncoder().encode(id);
   let binary = '';
   for (const byte of encoded) binary += String.fromCharCode(byte);
-  return 'offer_' + btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+  return 'offer_' + btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 function filename(value: unknown): string {
   const name = String(value || '').trim();
