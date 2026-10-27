@@ -8,8 +8,6 @@ const primaryLinks = [
 ] as const;
 
 const utilityLinks = [
-  ['/applications', 'Applications'],
-  ['/workspace', 'Workspace'],
   ['/notifications', 'Notifications'],
 ] as const;
 
