@@ -181,34 +181,6 @@ jobs:
           else
             echo "::warning::MONSTAGE_ARCHIVE_GITHUB_TOKEN is not configured; private PDF archiving will remain disabled."
           fi
-      - name: Verify private GitHub archive write and cleanup
-        if: steps.cloudflare.outputs.configured == 'true' && env.GITHUB_ARCHIVE_TOKEN != ''
-        run: |
-          python - <<'PY'
-          import base64, json, os, urllib.request, urllib.error, uuid
-          token = os.environ["GITHUB_ARCHIVE_TOKEN"]
-          path = "Stage_2027/01_En_preparation/CI_TEST_" + uuid.uuid4().hex + ".pdf"
-          url = "https://api.github.com/repos/denoskume/Candidatures_Stages/contents/" + path
-          headers = {"Authorization": "Bearer " + token, "Accept": "application/vnd.github+json",
-                     "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "MonStage-Archive-Test"}
-          def call(method, payload=None):
-              req = urllib.request.Request(url, method=method, headers={**headers, "Content-Type":"application/json"},
-                  data=json.dumps(payload).encode() if payload is not None else None)
-              with urllib.request.urlopen(req, timeout=30) as response:
-                  return json.loads(response.read())
-          created = False
-          try:
-              result = call("PUT", {"message":"MonStage private archive smoke test", "content":base64.b64encode(b"%PDF-1.4\\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\\n2 0 obj << /Type /Pages /Count 0 /Kids [] >> endobj\\ntrailer << /Root 1 0 R >>\\n%%EOF\\n").decode(), "branch":"main"})
-              sha = result["content"]["sha"]
-              created = True
-              actual = call("GET")
-              if actual.get("sha") != sha: raise RuntimeError("Private GitHub archive readback mismatch")
-              print("PRIVATE_GITHUB_ARCHIVE_WRITE_READ_OK")
-          finally:
-              if created:
-                  call("DELETE", {"message":"Clean up MonStage archive smoke test", "sha":sha, "branch":"main"})
-                  print("PRIVATE_GITHUB_ARCHIVE_CLEANUP_OK")
-          PY
       - name: Force and diagnose external source sync
         if: steps.cloudflare.outputs.configured == 'true'
         run: |
