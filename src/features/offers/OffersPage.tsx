@@ -70,6 +70,7 @@ export function OffersPage() {
   const [rankingInfoOpen, setRankingInfoOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
+  const resultsHeaderRef = useRef<HTMLDivElement | null>(null);
   const [actionNotice, setActionNotice] = useState<{ text: string; offerId?: string } | null>(null);
   const actions = useOfferActions();
   const { token } = useAuth();
@@ -102,6 +103,20 @@ export function OffersPage() {
     () => sortOffers(filteredOffers, sort),
     [filteredOffers, sort],
   );
+  function goToPage(page: number) {
+    if (page === currentPage) return;
+    setCurrentPage(page);
+    setMobileDetail(false);
+    // Bring the next group of ten jobs back into view, below the sticky header.
+    requestAnimationFrame(() => {
+      const header = resultsHeaderRef.current;
+      if (!header) return;
+      const top = window.scrollY + header.getBoundingClientRect().top - 88;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      document.querySelector('.offers-list-pane')?.scrollTo({ top: 0 });
+      document.querySelector('.offer-detail-pane')?.scrollTo({ top: 0 });
+    });
+  }
   const totalPages = Math.max(1, Math.ceil(visibleOffers.length / PAGE_SIZE));
   const paginatedOffers = useMemo(
     () => visibleOffers.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
@@ -280,7 +295,7 @@ export function OffersPage() {
 
       {visibleOffers.length === 0 ? <EmptyState actionLabel="Reset filters" onAction={resetAll} /> : (
         <>
-          <div className="jobs-results-header">
+          <div className="jobs-results-header" ref={resultsHeaderRef}>
             <div className="jobs-results-count">
               <span className="jobs-results-primary">
                 <strong>{visibleOffers.length}</strong>
@@ -342,7 +357,7 @@ export function OffersPage() {
                 type="button"
                 className="jobs-pagination__nav"
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                onClick={() => goToPage(Math.max(1, currentPage - 1))}
               >
                 Previous
               </button>
@@ -355,7 +370,7 @@ export function OffersPage() {
                     type="button"
                     className={'jobs-pagination__page' + (item === currentPage ? ' is-active' : '')}
                     aria-current={item === currentPage ? 'page' : undefined}
-                    onClick={() => setCurrentPage(item)}
+                    onClick={() => goToPage(item)}
                   >
                     {item}
                   </button>
@@ -365,7 +380,7 @@ export function OffersPage() {
                 type="button"
                 className="jobs-pagination__nav"
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
               >
                 Next
               </button>
