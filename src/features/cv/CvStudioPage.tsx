@@ -1,4 +1,7 @@
 import { useAuth } from '../../auth/useAuth';
+import { useOffers } from '../../hooks/useOffers';
+import { prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
+import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey } from './cvStorage';
@@ -116,6 +119,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 
 export function CvStudioPage() {
   const { token } = useAuth();
+  const { data: offersData } = useOffers();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
@@ -155,6 +159,16 @@ export function CvStudioPage() {
     saveCvDraft(draft);
     setDraft(loadCvDraft(language));
     setSaved(false);
+  }
+
+  function generateCv() {
+    const offer = offersData?.offers.find(item => item.id === offerParam);
+    if (!offer || !window.confirm('Régénérer le CV pour cette offre ? Les modifications manuelles de ce CV seront remplacées, pas celles de la lettre.')) return;
+    prepareApplicationDossier(offer, draft.language);
+    const next = tailorCvForOffer(offer, draft.language);
+    updateApplicationCv(offer.id, draft.language, next);
+    setDraft(next);
+    setSaved(true);
   }
 
   function reset() {
@@ -234,16 +248,17 @@ export function CvStudioPage() {
       <div className="page-header cv-studio-header">
         <div>
           <h1>CV Studio</h1>
-          <p>{draft.language === 'FR' ? 'Créez et adaptez un CV ATS clair avec un contenu rédigé naturellement en français.' : 'Create and tailor a clean ATS-friendly CV written naturally for English-speaking recruiters.'}</p>
+          <p>{draft.language === 'FR' ? 'CV adapté à l’offre, modifiable et exportable en PDF.' : 'Create and tailor a clean ATS-friendly CV written naturally for English-speaking recruiters.'}</p>
         </div>
         <div className="cv-studio-actions">
           <div className="cl-language-toggle" aria-label="CV language">
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
           </div>
-          <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
-          <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
-          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Enregistrer et retourner au dossier</button> : null}
+          {offerParam ? <button className="button button--primary" type="button" disabled={!offersData?.offers.some(item => item.id === offerParam)} onClick={generateCv}>Générer CV</button> : null}
+          <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
+          <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistré' : 'Enregistrer'}</button>
+          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Dossier</button> : null}
           {pdfReady && pdfBytes ? (
             <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPreparedPdf()} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
           ) : (
