@@ -206,7 +206,24 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
     if (sectionKey === 'skills' && draft.skills.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter((value) => value.trim())) drawLines(line.trim(), compact ? 9.1 : 9.5);
+      for (const line of draft.skills.split('\n').filter((value) => value.trim())) {
+        const match = line.trim().match(/^\*\*(.+?)\*\*(.*)$/);
+        const size = compact ? 9.1 : 9.5;
+        if (!match) { drawLines(line.trim(), size); continue; }
+        const label = normalizeCvPdfText(match[1]);
+        const rest = normalizeCvPdfText(match[2]);
+        const labelWidth = bold.widthOfTextAtSize(label, size);
+        const firstWords = rest.trim().split(/\s+/).filter(Boolean);
+        const firstLine = [];
+        while (firstWords.length && labelWidth + regular.widthOfTextAtSize(firstLine.concat(firstWords[0]).join(' '), size) + 4 < usableWidth) firstLine.push(firstWords.shift()!);
+        const remaining = firstWords.join(' ');
+        const extra = remaining ? wrapText(remaining, usableWidth, regular, size) : [];
+        ensureSpace((1 + extra.length) * (size + 3) + 4);
+        page.drawText(label, { x: MARGIN_X, y, size, font: bold, color: textColor });
+        if (firstLine.length) page.drawText(' ' + firstLine.join(' '), { x: MARGIN_X + labelWidth, y, size, font: regular, color: textColor });
+        y -= size + 3;
+        for (const part of extra) { page.drawText(part, { x: MARGIN_X, y, size, font: regular, color: textColor }); y -= size + 3; }
+      }
     }
 
     if (sectionKey === 'languages' && draft.languages.trim()) {
