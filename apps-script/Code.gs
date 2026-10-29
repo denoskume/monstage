@@ -252,7 +252,8 @@ function targetSignalScore_(posting) {
 
   var weighted = [
     ['computer vision', 12], ['vision par ordinateur', 12],
-    ['image processing', 11], ['traitement d image', 11],
+    ['image processing', 12], ['traitement d image', 12],
+    ['analyse d images', 9], ['image analysis', 9], ['imagerie', 5],
     ['signal processing', 11], ['traitement du signal', 11],
     ['machine learning', 10], ['apprentissage automatique', 10],
     ['deep learning', 10], ['apprentissage profond', 10], ['data science', 9],
@@ -279,7 +280,7 @@ function targetSignalScore_(posting) {
   }, 0);
 
   var titleBoosts = [
-    ['computer vision', 8], ['vision par ordinateur', 8], ['image', 5],
+    ['computer vision', 8], ['vision par ordinateur', 8], ['image processing', 9], ['traitement d image', 9], ['imagerie', 5], ['image', 4],
     ['machine learning', 7], ['apprentissage automatique', 7],
     ['data scientist', 6], ['analytics', 4], ['data', 2], ['ai engineer', 7], ['ingenieur ia', 7],
     ['intelligence artificielle', 6], ['signal', 7],
@@ -966,6 +967,7 @@ function fetchWorkdayJobs_(source) {
     'stage data', 'stage analytics', 'stage intelligence artificielle',
     'stage ai', 'stage machine learning', 'stage deep learning',
     'stage vision', 'stage image', 'stage signal', 'stage digital',
+    'traitement d images', 'image processing', 'stage traitement image',
     'maintenance prédictive', 'predictive maintenance', 'stage fiabilité',
     'intern data', 'intern machine learning', 'intern ai'
   ];
