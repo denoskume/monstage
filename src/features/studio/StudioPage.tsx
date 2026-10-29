@@ -13,7 +13,7 @@ export function StudioPage() {
   const [statusBusy, setStatusBusy] = useState(false);
   const [statusNotice, setStatusNotice] = useState('');
   const offerId = params.get('offer');
-  const { data, loading } = useOffers();
+  const { data, loading, retry } = useOffers();
   const [language, setLanguage] = useState<CvLanguage>('FR');
   const [preparedId, setPreparedId] = useState<string | null>(null);
   const [chosenOfferId, setChosenOfferId] = useState('');
@@ -53,7 +53,8 @@ export function StudioPage() {
     setStatusNotice('');
     try {
       await saveApplicationStatus(token, offer.id, 'Candidature envoyée');
-      setStatusNotice('Statut envoyé enregistré. Retrouvez les documents dans le dossier de candidature.');
+      retry();
+      setStatusNotice('Candidature envoyée enregistrée dans la base. Consultez « Mes offres → Envoyées » pour le suivi.');
     } catch (error) {
       setStatusNotice(error instanceof Error ? 'Statut non enregistré : ' + error.message : 'Statut non enregistré.');
     } finally { setStatusBusy(false); }
