@@ -229,14 +229,14 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     if (sectionKey === 'languages' && draft.languages.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Langues' : 'Languages');
       const size = 9.5;
-      const parts = draft.languages.trim().split(/(\\*\\*[^*]+\\*\\*)/g).filter(Boolean);
+      const parts = draft.languages.trim().split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
       let x = MARGIN_X;
       ensureSpace(size + 4);
       for (const part of parts) {
         const strong = part.startsWith('**') && part.endsWith('**');
         const font = strong ? bold : regular;
         const value = normalizeCvPdfText(strong ? part.slice(2, -2) : part);
-        for (const token of value.match(/\\s+|\\S+/g) || []) {
+        for (const token of value.match(/\s+|\S+/g) || []) {
           const width = font.widthOfTextAtSize(token, size);
           if (x > MARGIN_X && x + width > MARGIN_X + usableWidth) { y -= size + 3; x = MARGIN_X; ensureSpace(size + 4); }
           if (x === MARGIN_X && !token.trim()) continue;
