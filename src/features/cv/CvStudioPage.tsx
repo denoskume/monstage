@@ -1,5 +1,5 @@
 import { useAuth } from '../../auth/useAuth';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
@@ -117,6 +117,7 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 export function CvStudioPage() {
   const { token } = useAuth();
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
   const offerParam = params.get('offer');
   const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft(languageParam));
@@ -242,6 +243,7 @@ export function CvStudioPage() {
           </div>
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
+          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Enregistrer et retourner au dossier</button> : null}
           {pdfReady && pdfBytes ? (
             <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPreparedPdf()} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
           ) : (
