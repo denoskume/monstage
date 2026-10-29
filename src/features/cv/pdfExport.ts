@@ -167,7 +167,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   drawCentered([draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
   y -= 2;
   page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 1, color: textColor });
-  y -= compact ? 17 : 22;
+  y -= compact ? 10 : 15;
 
   if (draft.summary.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Profile');
