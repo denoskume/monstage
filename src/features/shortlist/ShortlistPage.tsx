@@ -12,6 +12,7 @@ import { ExternalApplicationForm } from '../applications/ExternalApplicationForm
 import { saveApplicationStatus } from '../../api/applications';
 import { useAuth } from '../../auth/useAuth';
 import { getWorkspaceState } from '../workspace/workspaceStorage';
+import { getFollowUpAdvice } from '../workspace/intelligence';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'refused' | 'archived';
 
@@ -45,6 +46,7 @@ function TrackingList({
             <p>{offer.company}</p>
             <span>{offer.city ?? 'City not specified'}</span>
             <small>{offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus) ? displayValue(offer.applicationStatus) : stage === 'application' ? 'Postulé' : stage === 'interview' ? 'Entretien' : stage === 'refused' ? 'Refus' : 'Archivé'}{offer.appliedAt ? ' · ' + offer.appliedAt : ''}</small>
+            {stage === 'application' ? <small>Suivi automatique : {getFollowUpAdvice(offer, getWorkspaceState(offer.id).followUpDate || undefined)}</small> : null}
           </div>
 
           <div className="my-jobs-saved-row__actions">
