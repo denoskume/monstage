@@ -79,7 +79,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
 
   if (section === 'languages') {
     if (!draft.languages.trim()) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{draft.languages}</p></section>;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{draft.languages.split(/(\*\*[^*]+\*\*)/g).map((part, index) => part.startsWith('**') && part.endsWith('**') ? <strong key={index}>{part.slice(2, -2)}</strong> : <span key={index}>{part}</span>)}</p></section>;
   }
 
   if (!draft.interests.trim()) return null;
