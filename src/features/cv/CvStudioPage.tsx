@@ -1,6 +1,6 @@
 import { useAuth } from '../../auth/useAuth';
 import { useOffers } from '../../hooks/useOffers';
-import { prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
+import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
@@ -126,8 +126,16 @@ export function CvStudioPage() {
   const offerParam = params.get('offer');
   const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft(languageParam));
   useEffect(() => {
-    setDraft(loadCvDraft(languageParam));
-  }, [offerParam, languageParam]);
+    if (!offerParam) {
+      setDraft(loadCvDraft(languageParam));
+      return;
+    }
+    const offer = offersData?.offers.find(item => item.id === offerParam);
+    if (!offer) return;
+    const dossier = loadApplicationDossier(offer.id, languageParam) ?? prepareApplicationDossier(offer, languageParam);
+    setDraft(dossier.cv);
+    setSaved(false);
+  }, [offerParam, languageParam, offersData]);
   const [saved, setSaved] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
@@ -157,7 +165,9 @@ export function CvStudioPage() {
 
   function switchLanguage(language: CvLanguage) {
     saveCvDraft(draft);
-    setDraft(loadCvDraft(language));
+    const offer = offersData?.offers.find(item => item.id === offerParam);
+    const tailored = offer ? (loadApplicationDossier(offer.id, language) ?? prepareApplicationDossier(offer, language)).cv : loadCvDraft(language);
+    setDraft(tailored);
     setSaved(false);
   }
 
