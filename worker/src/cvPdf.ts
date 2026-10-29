@@ -190,7 +190,22 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
 
     if (sectionKey === 'languages' && draft.languages?.trim()) {
       section(draft.language === 'FR' ? 'Langues' : 'Languages');
-      lines(draft.languages);
+      const size = 9.5;
+      let x = MX;
+      ensure(size + 4);
+      for (const part of draft.languages.split(/(\\*\\*[^*]+\\*\\*)/g).filter(Boolean)) {
+        const strong = part.startsWith('**') && part.endsWith('**');
+        const font = strong ? bold : regular;
+        const value = safeText(strong ? part.slice(2, -2) : part);
+        for (const token of value.match(/\\s+|\\S+/g) || []) {
+          const width = font.widthOfTextAtSize(token, size);
+          if (x > MX && x + width > MX + usable) { y -= 12.5; x = MX; ensure(16); }
+          if (x === MX && !token.trim()) continue;
+          page.drawText(token, { x, y, size, font, color: text });
+          x += width;
+        }
+      }
+      y -= 12.5;
     }
 
     if (sectionKey === 'interests' && draft.interests?.trim()) {
