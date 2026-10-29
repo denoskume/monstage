@@ -117,6 +117,20 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
     }
   };
 
+  // Experience entries must occupy exactly one line per bullet, without dropping text.
+  const experienceBullet = (value: string) => {
+    const safe = safeText(value).replace(/\s+/g, ' ').trim();
+    if (!safe) return;
+    const maxWidth = usable - 12;
+    const baseSize = 9.2;
+    const measured = regular.widthOfTextAtSize(safe, baseSize);
+    const size = measured > maxWidth ? baseSize * maxWidth / measured : baseSize;
+    ensure(15);
+    page.drawCircle({ x: MX + 2.4, y: y + 3.4, size: 1.7, color: text });
+    page.drawText(safe, { x: MX + 12, y, size, font: regular, color: text });
+    y -= 12;
+  };
+
   centered(draft.name || 'CV', 18, bold);
   centered(draft.headline || '', 10.5, bold);
   centered([draft.location, draft.email, draft.phone, draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
@@ -155,7 +169,7 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
       for (const item of draft.experience) {
         entry([item.role, item.company].filter(Boolean).join(' - '), item.period || '');
         if (item.location) lines(item.location, 9.2);
-        for (const b of (item.bullets || []).filter((v) => v?.trim())) bullet(b);
+        for (const b of (item.bullets || []).filter((v) => v?.trim())) experienceBullet(b);
         y -= 4;
       }
     }
