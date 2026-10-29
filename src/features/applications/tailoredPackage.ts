@@ -104,7 +104,7 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
       '**Software Development:** React, TypeScript, Git, GitHub',
       '**Tools:** Jupyter, MATLAB, Matplotlib, Linux'
     ];
-    base.skills = skills.join('\\n');
+    base.skills = skills.join('\n');
     return base;
   }
 
