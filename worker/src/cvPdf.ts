@@ -136,9 +136,9 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   centered([draft.location, draft.email, draft.phone, draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
   y -= 2;
   page.drawLine({ start: { x: MX, y }, end: { x: WIDTH - MX, y }, thickness: 1, color: text });
-  y -= 15;
+  y -= 12;
 
-  if (draft.summary?.trim()) { section(draft.language === 'FR' ? 'Profil' : 'Profile'); lines(draft.summary); y -= 5; }
+  if (draft.summary?.trim()) { section(draft.language === 'FR' ? 'Profil' : 'Profile'); lines(draft.summary); }
 
   const sectionOrder = draft.sectionOrder?.length
     ? draft.sectionOrder
