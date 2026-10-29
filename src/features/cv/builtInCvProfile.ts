@@ -24,7 +24,7 @@ export const builtInCvProfile: BuiltInCvProfile = {
   target: {
     start: 'February 2027',
     durationMonths: 6,
-    domains: ['machine learning', 'computer vision', 'image processing', 'data science', 'signal processing'],
+    domains: ['machine learning', 'computer vision', 'image processing', 'data science', 'signal processing', 'predictive maintenance', 'maintenance prédictive', 'condition monitoring', 'anomaly detection', 'failure prediction'],
   },
   education: [
     {
