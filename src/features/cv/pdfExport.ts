@@ -130,6 +130,21 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     });
   };
 
+  // Preserve each experience bullet on one line in the exported CV.
+  const drawExperienceBullet = (text: string) => {
+    const safe = normalizeCvPdfText(text).replace(/\s+/g, ' ').trim();
+    if (!safe) return;
+    const indent = 12;
+    const baseSize = compact ? 9.1 : 9.2;
+    const maxWidth = usableWidth - indent;
+    const width = regular.widthOfTextAtSize(safe, baseSize);
+    const size = width > maxWidth ? baseSize * maxWidth / width : baseSize;
+    ensureSpace(15);
+    page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
+    page.drawText(safe, { x: MARGIN_X + indent, y, size, font: regular, color: textColor });
+    y -= compact ? 11.7 : 12;
+  };
+
   // Education bullets use a measured, single-line font size so PDF matches the
   // Studio preview instead of silently wrapping and pushing sections to page 2.
   const drawEducationBullet = (text: string) => {
@@ -190,7 +205,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       for (const item of draft.experience) {
         drawEntryHeader(item.role + ' — ' + item.company, item.period);
         if (item.location) drawLines(item.location, 9.2);
-        for (const bullet of item.bullets.filter((value) => value.trim())) drawBullet(bullet.trim());
+        for (const bullet of item.bullets.filter((value) => value.trim())) drawExperienceBullet(bullet.trim());
         y -= 4;
       }
     }
