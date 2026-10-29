@@ -84,8 +84,12 @@ export function ShortlistPage() {
 
   const allOffers = data?.offers ?? [];
   const savedOffers = useMemo(
-    () => sortOffers(allOffers.filter((offer) => !actions.isHidden(offer.id) && actions.isSaved(offer.id, offer.shortlist)), 'best'),
-    [data, actions.savedIds, actions.unsavedIds, actions.hidden],
+    () => sortOffers(allOffers.filter((offer) =>
+      !actions.isHidden(offer.id) &&
+      actions.isSaved(offer.id, offer.shortlist) &&
+      resolvedStage(offer) === null
+    ), 'best'),
+    [data, actions.savedIds, actions.unsavedIds, actions.hidden, actions.stages],
   );
   function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'refused' | 'archived' | null {
     const manual = actions.stages[offer.id];
