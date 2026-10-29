@@ -11,6 +11,16 @@ interface OfferActionState {
   stages: Record<string, ManualJobStage>;
 }
 
+// Explicitly curated applications. The source sheet's shortlist flag is a broad
+// discovery indicator, not a user's saved-applications list.
+const curatedSavedOffers = new Set([
+  '182', '504', '789', '924',
+  'OFFRE-SAFRAN-PHM-SIGNAUX-186830',
+  'OFFRE-SAFRAN-VIBRATIONS-188517',
+  'OFFRE-AIRBUS-NANTES-MAINT-10437797',
+  'OFFRE-ALSTOM-RAM-531476',
+]);
+
 const KEY = 'monstage:offer-actions:v1';
 const EVENT = 'monstage:offer-actions-changed';
 const emptyState: OfferActionState = { saved: [], unsaved: [], hidden: {}, stages: {} };
@@ -60,12 +70,12 @@ export function useOfferActions() {
 
   const isSaved = useCallback((offerId: string, sourceSaved = false) => {
     if (state.unsaved.includes(offerId)) return false;
-    return state.saved.includes(offerId) || sourceSaved;
+    return state.saved.includes(offerId) || curatedSavedOffers.has(offerId);
   }, [state.saved, state.unsaved]);
 
   const toggleSaved = useCallback((offerId: string, sourceSaved = false) => {
     const current = readState();
-    const currentlySaved = !current.unsaved.includes(offerId) && (current.saved.includes(offerId) || sourceSaved);
+    const currentlySaved = !current.unsaved.includes(offerId) && (current.saved.includes(offerId) || curatedSavedOffers.has(offerId));
 
     if (currentlySaved) {
       commit({
