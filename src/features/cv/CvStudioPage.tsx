@@ -74,7 +74,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
 
   if (section === 'skills') {
     if (!draft.skills.trim()) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2>{draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => <p key={index}>{line}</p>)}</section>;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2>{draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => { const match = line.match(/^\*\*(.+?)\*\*(.*)$/); return <p key={index}>{match ? <><strong>{match[1]}</strong>{match[2]}</> : line}</p>; })}</section>;
   }
 
   if (section === 'languages') {
