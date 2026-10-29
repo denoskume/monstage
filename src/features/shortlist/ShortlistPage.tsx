@@ -218,14 +218,11 @@ export function ShortlistPage() {
                 </div>
 
                 <div className="my-jobs-saved-row__actions">
+                  <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Préparer ma candidature</Link>
+                  {offer.applicationUrl ? <a className="button button--secondary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Postuler ↗</a> : null}
                   {resolvedStage(offer) ? (
-                    <button className="button button--primary my-jobs-apply" type="button" onClick={() => setTab(resolvedStage(offer) === 'interview' ? 'interviews' : resolvedStage(offer) === 'archived' ? 'archived' : 'applications')}>Voir le suivi</button>
-                  ) : offer.applicationUrl ? (
-                    <a className="button button--primary my-jobs-apply" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply</a>
-                  ) : (
-                    <button className="button button--primary my-jobs-apply" type="button" disabled>Apply</button>
-                  )}
-                  {!resolvedStage(offer) ? <button className="button button--secondary" type="button" disabled={savingId === offer.id} onClick={() => void moveOffer(offer, 'application')}>✓ J’ai postulé</button> : null}
+                    <button className="button button--secondary" type="button" onClick={() => setTab(resolvedStage(offer) === 'interview' ? 'interviews' : resolvedStage(offer) === 'archived' ? 'archived' : 'applications')}>Voir le suivi</button>
+                  ) : <button className="button button--secondary" type="button" disabled={savingId === offer.id} onClick={() => void moveOffer(offer, 'application')}>✓ J’ai postulé</button>}
 
                   <button className="offer-action-icon is-active my-jobs-bookmark" type="button" onClick={() => toggleSaved(offer)} aria-label="Remove from saved jobs" title="Saved">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-3.55L6 21V4.75Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
