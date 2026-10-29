@@ -167,12 +167,11 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   drawCentered([draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
   y -= 2;
   page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 1, color: textColor });
-  y -= compact ? 10 : 15;
+  y -= compact ? 7 : 12;
 
   if (draft.summary.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Profile');
     drawLines(draft.summary.trim(), compact ? 9.3 : 9.5);
-    y -= 5;
   }
 
   const sectionOrder = draft.sectionOrder?.length
