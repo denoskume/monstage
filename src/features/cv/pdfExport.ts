@@ -228,7 +228,23 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
     if (sectionKey === 'languages' && draft.languages.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Langues' : 'Languages');
-      drawLines(draft.languages.trim(), 9.5);
+      const size = 9.5;
+      const parts = draft.languages.trim().split(/(\\*\\*[^*]+\\*\\*)/g).filter(Boolean);
+      let x = MARGIN_X;
+      ensureSpace(size + 4);
+      for (const part of parts) {
+        const strong = part.startsWith('**') && part.endsWith('**');
+        const font = strong ? bold : regular;
+        const value = normalizeCvPdfText(strong ? part.slice(2, -2) : part);
+        for (const token of value.match(/\\s+|\\S+/g) || []) {
+          const width = font.widthOfTextAtSize(token, size);
+          if (x > MARGIN_X && x + width > MARGIN_X + usableWidth) { y -= size + 3; x = MARGIN_X; ensureSpace(size + 4); }
+          if (x === MARGIN_X && !token.trim()) continue;
+          page.drawText(token, { x, y, size, font, color: textColor });
+          x += width;
+        }
+      }
+      y -= size + 3;
     }
 
     if (sectionKey === 'interests' && draft.interests.trim()) {
