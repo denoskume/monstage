@@ -58,19 +58,20 @@ export function useOfferActions() {
     writeState(next);
   }, []);
 
-  const isSaved = useCallback((offerId: string, _sourceSaved = false) => {
-    return state.saved.includes(offerId);
-  }, [state.saved]);
+  const isSaved = useCallback((offerId: string, sourceSaved = false) => {
+    if (state.unsaved.includes(offerId)) return false;
+    return state.saved.includes(offerId) || sourceSaved;
+  }, [state.saved, state.unsaved]);
 
-  const toggleSaved = useCallback((offerId: string, _sourceSaved = false) => {
+  const toggleSaved = useCallback((offerId: string, sourceSaved = false) => {
     const current = readState();
-    const currentlySaved = current.saved.includes(offerId);
+    const currentlySaved = !current.unsaved.includes(offerId) && (current.saved.includes(offerId) || sourceSaved);
 
     if (currentlySaved) {
       commit({
         ...current,
         saved: current.saved.filter((id) => id !== offerId),
-        unsaved: [],
+        unsaved: Array.from(new Set([...current.unsaved, offerId])),
       });
       return false;
     }
@@ -78,7 +79,7 @@ export function useOfferActions() {
     commit({
       ...current,
       saved: Array.from(new Set([...current.saved, offerId])),
-      unsaved: [],
+      unsaved: current.unsaved.filter((id) => id !== offerId),
     });
     return true;
   }, [commit]);
