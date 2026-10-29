@@ -265,6 +265,10 @@ function targetSignalScore_(posting) {
     ['data processing', 5], ['data analysis', 5], ['business intelligence', 4],
     ['digitalization', 3], ['digitalisation', 3], ['digital transformation', 3],
     ['statistical', 3], ['statistics', 3], ['predictive', 4], ['forecasting', 4],
+    ['maintenance predictive', 12], ['predictive maintenance', 12],
+    ['pronostic de defaillance', 10], ['failure prediction', 10], ['fault detection', 9],
+    ['condition monitoring', 9], ['anomaly detection', 9], ['detection d anomalies', 9],
+    ['remaining useful life', 10], ['prognostics', 8], ['health monitoring', 7],
     ['python', 2], ['pytorch', 4], ['opencv', 6], ['scikit learn', 3],
     ['sql', 2], ['power bi', 2], ['tableau', 2], ['spark', 3],
     ['research', 3], ['r&d', 4]
@@ -279,7 +283,9 @@ function targetSignalScore_(posting) {
     ['machine learning', 7], ['apprentissage automatique', 7],
     ['data scientist', 6], ['analytics', 4], ['data', 2], ['ai engineer', 7], ['ingenieur ia', 7],
     ['intelligence artificielle', 6], ['signal', 7],
-    ['robotics', 6], ['r&d', 4]
+    ['robotics', 6], ['r&d', 4],
+    ['maintenance predictive', 12], ['predictive maintenance', 12],
+    ['surveillance de l etat', 7], ['diagnostic de panne', 7]
   ];
   score += titleBoosts.reduce(function (total, entry) {
     return total + (title.indexOf(entry[0]) !== -1 ? entry[1] : 0);
@@ -316,6 +322,7 @@ function externalFitScores_(posting) {
     'Signal / Audio': 17,
     'Machine Learning / AI': 15,
     'Data Science': 13,
+    'Predictive Maintenance / Reliability': 17,
     'Industrial AI / Process': 11,
     'Data Engineering / Analytics': 6,
     'Data / AI': 2
@@ -347,6 +354,7 @@ function specializationForPosting_(posting) {
     posting.descriptionPlain
   ].filter(Boolean).join(' '));
 
+  if (['maintenance predictive', 'predictive maintenance', 'failure prediction', 'condition monitoring', 'remaining useful life', 'fault detection', 'prognostics'].some(function (term) { return text.indexOf(term) !== -1; })) return 'Predictive Maintenance / Reliability';
   if (text.indexOf('computer vision') !== -1 || text.indexOf('image processing') !== -1 || text.indexOf('opencv') !== -1) return 'Computer Vision / Image Processing';
   if (text.indexOf('machine learning') !== -1 || text.indexOf('deep learning') !== -1 || text.indexOf('generative ai') !== -1 || text.indexOf('ai engineer') !== -1) return 'Machine Learning / AI';
   if (text.indexOf('data science') !== -1 || text.indexOf('data scientist') !== -1) return 'Data Science';
@@ -958,6 +966,7 @@ function fetchWorkdayJobs_(source) {
     'stage data', 'stage analytics', 'stage intelligence artificielle',
     'stage ai', 'stage machine learning', 'stage deep learning',
     'stage vision', 'stage image', 'stage signal', 'stage digital',
+    'maintenance prédictive', 'predictive maintenance', 'stage fiabilité',
     'intern data', 'intern machine learning', 'intern ai'
   ];
   var seen = {};
