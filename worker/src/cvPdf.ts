@@ -134,9 +134,8 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   centered(draft.name || 'CV', 18, bold);
   centered(draft.headline || '', 10.5, bold);
   centered([draft.location, draft.email, draft.phone, draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
-  y -= 2;
-  page.drawLine({ start: { x: MX, y }, end: { x: WIDTH - MX, y }, thickness: 1, color: text });
-  y -= 12;
+  // Keep the header open and separated from the profile without a horizontal rule.
+  y -= 20;
 
   if (draft.summary?.trim()) { section(draft.language === 'FR' ? 'Profil' : 'Profile'); lines(draft.summary); }
 
