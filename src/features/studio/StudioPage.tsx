@@ -93,7 +93,7 @@ export function StudioPage() {
                     <p><strong>Après l'envoi réel :</strong> confirme le statut pour suivre la candidature.</p>
                     <button className="button button--primary" type="button" disabled={statusBusy} onClick={() => void confirmSent()}>{statusBusy ? 'Enregistrement…' : "J'ai envoyé cette candidature"}</button>
                     {statusNotice ? <p role="status">{statusNotice}</p> : null}
-                    {statusNotice.startsWith('Candidature envoyée enregistrée') ? <div className="workspace-actions"><Link className="button button--secondary" to="/my-jobs">Voir le suivi dans Mes offres</Link><Link className="button button--secondary" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Retour au dossier</Link></div> : null}
+                    {statusNotice.startsWith('Candidature envoyée enregistrée') ? <div className="workspace-actions"><Link className="button button--secondary" to="/shortlist">Voir le suivi dans Mes offres</Link><Link className="button button--secondary" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Retour au dossier</Link></div> : null}
                   </div>
                 </div>
               ) : null}
