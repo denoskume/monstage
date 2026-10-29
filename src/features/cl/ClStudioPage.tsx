@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { loadApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
 import { useOffers } from '../../hooks/useOffers';
 import { recipientForOffer, tailorLetterForOffer } from '../applications/tailoredPackage';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
 import {
   freshCoverLetter,
@@ -25,6 +25,7 @@ function subjectLine(draft: CoverLetterDraft): string {
 export function ClStudioPage() {
   const { token } = useAuth();
   const [params] = useSearchParams();
+  const navigate = useNavigate();
   const activeReview = (() => {
     try {
       const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
@@ -223,6 +224,7 @@ export function ClStudioPage() {
           </div>
           <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
+          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Enregistrer et retourner au dossier</button> : null}
           <button className="button button--primary cl-download-button" type="button" onClick={downloadPdf} aria-label="Download cover letter PDF" title="Download cover letter PDF">⇩</button>
         </div>
       </div>
