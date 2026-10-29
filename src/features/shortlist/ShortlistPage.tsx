@@ -108,7 +108,13 @@ export function ShortlistPage() {
   }
 
   const applications = useMemo(
-    () => allOffers.filter((offer) => resolvedStage(offer) === 'application'),
+    () => allOffers.filter((offer) => resolvedStage(offer) === 'application').sort((a, b) => {
+      const dateKey = (value?: string | null) => {
+        const match = (value || '').match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);
+        return match ? `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}` : (value || '');
+      };
+      return dateKey(b.appliedAt).localeCompare(dateKey(a.appliedAt));
+    }),
     [data, actions.stages],
   );
   const interviews = useMemo(
