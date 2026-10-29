@@ -251,7 +251,7 @@ export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
   // Keep application drafts separate from the generic CV.
   try {
     const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
-    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    const params = new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '');
     if (review?.offerId && params.get('offer') === review.offerId && review.language === language) {
       const key = 'monstage:application-dossiers:v1:' + encodeURIComponent(review.offerId) + ':' + language;
       const dossier = JSON.parse(localStorage.getItem(key) || 'null');
@@ -285,9 +285,9 @@ export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
 
 export function saveCvDraft(draft: CvDraft): void {
   try {
-    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    const params = new URLSearchParams(window.location.search || window.location.hash.split('?')[1] || '');
     const offerId = params.get('offer');
-    if (window.location.hash.startsWith('#/cv?') && offerId) {
+    if ((window.location.pathname.endsWith('/cv') || window.location.hash.startsWith('#/cv?')) && offerId) {
       const key = 'monstage:application-dossiers:v1:' + encodeURIComponent(offerId) + ':' + draft.language;
       const dossier = JSON.parse(localStorage.getItem(key) || 'null');
       if (dossier?.offerId === offerId) {
