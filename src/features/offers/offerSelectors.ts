@@ -45,6 +45,7 @@ function normalize(value: string | null | undefined): string {
 }
 
 export type OfferIndustry =
+  | 'Predictive Maintenance & Reliability'
   | 'Aerospace & Space'
   | 'Manufacturing & Industry 4.0'
   | 'Automotive & Mobility'
@@ -56,6 +57,7 @@ export type OfferIndustry =
   | 'Other';
 
 export const industryOptions: OfferIndustry[] = [
+  'Predictive Maintenance & Reliability',
   'Aerospace & Space',
   'Manufacturing & Industry 4.0',
   'Automotive & Mobility',
@@ -78,6 +80,7 @@ export function offerIndustry(offer: InternshipOffer): OfferIndustry {
 
   const hasAny = (terms: string[]) => terms.some((term) => text.includes(normalize(term)));
 
+  if (hasAny(['maintenance predictive', 'maintenance prédictive', 'predictive maintenance', 'condition monitoring', 'failure prediction', 'fault detection', 'remaining useful life'])) return 'Predictive Maintenance & Reliability';
   if (hasAny(['airbus', 'safran', 'aeronaut', 'aerospace', 'spatial', 'space', 'satellite', 'avion', 'flight'])) return 'Aerospace & Space';
   if (hasAny(['industrie', 'industrial', 'manufactur', 'production', 'usine', 'factory', 'qualite', 'quality', 'process', 'lean', 'maintenance', 'industrie 4.0'])) return 'Manufacturing & Industry 4.0';
   if (hasAny(['automobile', 'automotive', 'vehicle', 'vehicule', 'adas', 'mobility', 'mobilite', 'rail', 'transport'])) return 'Automotive & Mobility';
