@@ -1,7 +1,7 @@
 import { useAuth } from '../../auth/useAuth';
 import { SAFRAN_AI_DOSSIER_ID, prepareSafranAiDossier } from '../applications/safranAiDossier';
 import { useEffect, useRef } from 'react';
-import { loadApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
+import { loadApplicationDossier, prepareApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
 import { useOffers } from '../../hooks/useOffers';
 import { recipientForOffer, tailorLetterForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -117,6 +117,16 @@ export function ClStudioPage() {
     setSaved(true);
   }
 
+  function generateLetter() {
+    if (!job || !window.confirm('Régénérer la lettre pour cette offre ? Les modifications manuelles de cette lettre seront remplacées, pas celles du CV.')) return;
+    prepareApplicationDossier(job, draft.language);
+    const next = tailorLetterForOffer(job, draft.language);
+    updateApplicationLetter(job.id, draft.language, next);
+    saveCoverLetter(next);
+    setDraft(next);
+    setSaved(true);
+  }
+
   function reset() {
     if (isSafranSpontaneous) {
       setDraft(prepareSafranAiDossier(draft.language).letter);
@@ -215,16 +225,17 @@ export function ClStudioPage() {
       <div className="page-header cl-studio-header">
         <div>
           <h1>CL Studio</h1>
-          <p>Use exactly four paragraphs: Who you are + what you want → Why them → Why you → Interview close. Keep each paragraph short, specific and natural.</p>
+          <p>Quatre paragraphes ciblés, modifiables et prêts à exporter en PDF.</p>
         </div>
         <div className="cl-studio-actions">
           <div className="cl-language-toggle" aria-label="Cover letter language">
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
           </div>
-          <button className="button button--secondary" type="button" onClick={reset}>Reset</button>
-          <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Saved' : 'Save'}</button>
-          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Enregistrer et retourner au dossier</button> : null}
+          {job ? <button className="button button--primary" type="button" onClick={generateLetter}>Générer CL</button> : null}
+          <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
+          <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistrée' : 'Enregistrer'}</button>
+          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Dossier</button> : null}
           <button className="button button--primary cl-download-button" type="button" onClick={downloadPdf} aria-label="Download cover letter PDF" title="Download cover letter PDF">⇩</button>
         </div>
       </div>
