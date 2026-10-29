@@ -171,7 +171,21 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
 
     if (sectionKey === 'skills' && draft.skills?.trim()) {
       section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter((v) => v.trim())) lines(line, 9.5);
+      for (const line of draft.skills.split('\n').filter((v) => v.trim())) {
+        const match = line.trim().match(/^\*\*(.+?)\*\*(.*)$/);
+        if (!match) { lines(line, 9.5); continue; }
+        const label = safeText(match[1]);
+        const rest = safeText(match[2]).trim().split(/\s+/).filter(Boolean);
+        const width = bold.widthOfTextAtSize(label, 9.5);
+        const first = [];
+        while (rest.length && width + regular.widthOfTextAtSize(' ' + first.concat(rest[0]).join(' '), 9.5) < usable) first.push(rest.shift()!);
+        const more = rest.length ? wrap(rest.join(' '), usable, regular, 9.5) : [];
+        ensure((more.length + 1) * 12.5 + 4);
+        page.drawText(label, { x: MX, y, size: 9.5, font: bold, color: text });
+        if (first.length) page.drawText(' ' + first.join(' '), { x: MX + width, y, size: 9.5, font: regular, color: text });
+        y -= 12.5;
+        for (const part of more) { page.drawText(part, { x: MX, y, size: 9.5, font: regular, color: text }); y -= 12.5; }
+      }
     }
 
     if (sectionKey === 'languages' && draft.languages?.trim()) {
