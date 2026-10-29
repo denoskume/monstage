@@ -14,7 +14,37 @@ function focus(offer: InternshipOffer): string[] {
 
 // Rank verified public GitHub evidence, supplemented by user-added CV projects.
 // The title and stated skill requirements outweigh unrelated generic terms.
+const isAlstomVision = (offer: InternshipOffer) => offer.id === '789' || (/alstom/i.test(offer.company) && /inspections automatis/i.test(offer.title));
+
+function alstomProjects(language: CvLanguage) {
+  const fr = language === 'FR';
+  const projects = fr ? [
+    { id: 'background', name: "Background Subtraction — Traitement d'images fluoroscopiques", period: 'Avril 2026', bullets: [
+      'Développé un pipeline de soustraction de fond combinant lissage, normalisation et filtrage de Fourier.',
+      'Comparé des méthodes de segmentation : seuil fixe, Otsu et EM/GMM.',
+      'Évalué les résultats avec MSE, PSNR, Dice et IoU.',
+      'Généré des visualisations et métriques pour comparer et valider les méthodes.' ] },
+    { id: 'portfolio-vision', name: 'Portfolio Computer Vision & Image Processing', period: 'Sept. 2025 – Juin 2026', bullets: [
+      "Réalisé des travaux pratiques en traitement d'images, segmentation et calibration caméra.",
+      "Implémenté des méthodes de suivi de points et d'analyse d'images.",
+      'Comparé les méthodes à l’aide de mesures quantitatives et de diagnostics visuels.',
+      'Structuré les notebooks et les résultats pour faciliter la reproduction des expériences.' ] }
+  ] : [
+    { id: 'background', name: 'Background Subtraction — Fluoroscopic Image Processing', period: 'April 2026', bullets: [
+      'Built a background subtraction pipeline combining smoothing, normalization and Fourier filtering.',
+      'Compared fixed thresholding, Otsu and EM/GMM segmentation methods.',
+      'Evaluated results using MSE, PSNR, Dice and IoU.',
+      'Generated visual comparisons and metrics to validate each method.' ] },
+    { id: 'portfolio-vision', name: 'Computer Vision & Image Processing Portfolio', period: 'Sep. 2025 – Jun. 2026', bullets: [
+      'Completed image processing, segmentation and camera calibration practical work.',
+      'Implemented feature tracking and image-analysis methods.',
+      'Compared methods using quantitative measurements and visual diagnostics.',
+      'Organized notebooks and outputs to make experiments reproducible.' ] }
+  ];
+  return projects.map(project => ({ project, score: 100, sourceUrl: '', reason: project.name + (fr ? ' : inspection et vision' : ' : inspection and vision') }));
+}
 export function projectSelectionForOffer(offer: InternshipOffer, language: CvLanguage) {
+  if (isAlstomVision(offer)) return alstomProjects(language);
   const current = loadCvDraft(language).projects;
   const verifiedIds = new Set(publicProjectCatalog.map(entry => entry.id));
   const profiles = [
@@ -55,6 +85,29 @@ export function projectSelectionForOffer(offer: InternshipOffer, language: CvLan
 
 export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): CvDraft {
   const base = structuredClone(loadCvDraft(language));
+  if (isAlstomVision(offer)) {
+    base.headline = 'Computer Vision | Image Processing | Python | Software Development';
+    base.summary = language === 'FR'
+      ? 'Étudiant en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de six mois dès février 2027 pour contribuer à des projets de vision par ordinateur, d’inspection automatisée et de maintenance ferroviaire.'
+      : 'Final-year MSc Control and Robotics student at Centrale Nantes, specializing in Data Science, Signal & Image Processing, seeking a six-month internship from February 2027 in computer vision, automated inspection and railway maintenance.';
+    base.projects = alstomProjects(language).map(item => item.project);
+    const skills = language === 'FR' ? [
+      '**Programmation :** Python, NumPy, pandas, SciPy, SQL',
+      '**Computer Vision & Image Processing :** OpenCV, segmentation, calibration caméra, suivi de points',
+      '**Machine Learning :** scikit-learn, PyTorch, classification, évaluation de modèles',
+      '**Développement logiciel :** React, TypeScript, Git, GitHub',
+      '**Outils :** Jupyter, MATLAB, Matplotlib, Linux'
+    ] : [
+      '**Programming:** Python, NumPy, pandas, SciPy, SQL',
+      '**Computer Vision & Image Processing:** OpenCV, segmentation, camera calibration, feature tracking',
+      '**Machine Learning:** scikit-learn, PyTorch, classification, model evaluation',
+      '**Software Development:** React, TypeScript, Git, GitHub',
+      '**Tools:** Jupyter, MATLAB, Matplotlib, Linux'
+    ];
+    base.skills = skills.join('\\n');
+    return base;
+  }
+
   // Use evidence across the CV master and the verified portfolio, not only two fixed projects.
   const selection = projectSelectionForOffer(offer, language);
   base.projects = selection.map(item => ({ ...item.project, bullets: item.project.bullets.filter(Boolean).slice(0, 4) }));
@@ -108,6 +161,21 @@ export function tailorLetterForOffer(offer: InternshipOffer, language: CvLanguag
     closing: language === 'FR' ? 'Cordialement,' : 'Sincerely,',
     paragraphs: [],
   };
+  if (isAlstomVision(offer)) {
+    draft.paragraphs = language === 'FR' ? [
+      'Actuellement en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois à partir de février 2027. Votre offre en Computer Vision et inspections automatisées a retenu mon attention, car elle associe mes compétences en traitement d’images à des applications concrètes dans le ferroviaire.',
+      'Utiliser la vision par ordinateur pour améliorer les inspections des trains et infrastructures correspond à mes centres d’intérêt. Je suis motivé par la possibilité de contribuer à la fiabilité d’un outil utilisé sur le terrain, tout en comprenant les besoins des équipes de maintenance. La collaboration entre développement, évaluation et utilisateurs m’intéresse particulièrement.',
+      'Après un BSc en informatique et électronique, j’ai approfondi le Machine Learning et le traitement d’images à Centrale Nantes. Mes projets portent notamment sur la segmentation, la calibration caméra, le suivi de points et l’évaluation quantitative des résultats. J’ai également développé des applications avec Python et des technologies web. Ces expériences m’ont appris à tester différentes approches et à documenter les résultats.',
+      'Motivé et désireux d’apprendre auprès de votre équipe, je serais heureux de contribuer à ce projet d’inspection automatisée. Je reste disponible pour un entretien afin d’échanger sur vos attentes et sur les contributions que je pourrais apporter.'
+    ] : [
+      'I am a final-year MSc Control and Robotics student specializing in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027. Your computer vision and automated inspection internship connects image processing with practical railway applications.',
+      'I am interested in using computer vision to improve the inspection of trains and infrastructure. Contributing to a tool used by maintenance teams, understanding their requirements and evaluating its reliability would be especially motivating.',
+      'Following a BSc in Computer Science and Electronics, I have developed skills in machine learning and image processing at Centrale Nantes. My projects involve segmentation, camera calibration, feature tracking and quantitative evaluation. I have also built software applications using Python and web technologies.',
+      'I would welcome an opportunity to learn from your team and contribute to this automated inspection project. I would be pleased to discuss how my background and motivation could support your work.'
+    ];
+    draft.closing = language === 'FR' ? 'Je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.' : 'Yours sincerely,';
+    return draft;
+  }
   if (/incertitude/i.test(subject) && /segmentation/i.test(subject)) {
     draft.paragraphs = language === 'FR' ? [
       'Étudiant en dernière année de MSc Data Science, Signal & Image Processing à Centrale Nantes, je souhaite candidater au stage d’ingénieur recherche IA consacré à l’incertitude en segmentation médicale (réf. 549574). Je recherche un stage de fin d’études de six mois à partir de février 2027.',
