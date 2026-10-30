@@ -14,7 +14,7 @@ interface OfferActionState {
 // Explicitly curated applications. The source sheet's shortlist flag is a broad
 // discovery indicator, not a user's saved-applications list.
 const curatedSavedOffers = new Set([
-  '182', '504', '789', '924',
+  '182', '504', '789', '924', '988',
   'OFFRE-SAFRAN-PHM-SIGNAUX-186830',
   'OFFRE-SAFRAN-VIBRATIONS-188517',
   'OFFRE-AIRBUS-NANTES-MAINT-10437797',
