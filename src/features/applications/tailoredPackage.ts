@@ -43,8 +43,37 @@ function alstomProjects(language: CvLanguage) {
   ];
   return projects.map(project => ({ project, score: 100, sourceUrl: '', reason: project.name + (fr ? ' : inspection et vision' : ' : inspection and vision') }));
 }
+const isAlstomReqAi = (offer: InternshipOffer) => offer.id === '988' || (/alstom/i.test(offer.company) && /req management|ia evaluation/i.test(offer.title));
+function alstomReqProjects(language: CvLanguage) {
+  const fr = language === 'FR';
+  const projects = fr ? [
+    { id: 'clap', name: 'CLAP Zero-Shot Audio Classification', period: 'Juin 2026', bullets: [
+      'Évalué un modèle zero-shot sur 2 000 extraits audio répartis en 50 classes.',
+      'Comparé dix stratégies de descriptions textuelles pour tester la sensibilité des prédictions.',
+      'Amélioré la précision Top-1 de 83,05 % à 91,15 %, soit 8,10 points.',
+      'Analysé les erreurs et documenté les résultats pour comparer les approches.' ] },
+    { id: 'fraud', name: 'Credit Card Fraud Detection — Évaluation de modèles ML', period: 'Projet académique', bullets: [
+      'Analysé un jeu de 284 807 transactions, dont 492 cas de fraude.',
+      'Comparé régression logistique, Random Forest, XGBoost et réseau MLP.',
+      'Évalué les modèles avec précision, rappel, F1, ROC-AUC et PR-AUC.',
+      'Obtenu une PR-AUC test de 0,8557 avec XGBoost et utilisé SHAP pour interpréter les résultats.' ] }
+  ] : [
+    { id: 'clap', name: 'CLAP Zero-Shot Audio Classification', period: 'June 2026', bullets: [
+      'Evaluated a zero-shot model across 2,000 audio clips and 50 classes.',
+      'Compared ten text-prompt strategies to test prediction sensitivity.',
+      'Improved Top-1 accuracy from 83.05% to 91.15%, an 8.10-point gain.',
+      'Analyzed errors and documented results to compare approaches.' ] },
+    { id: 'fraud', name: 'Credit Card Fraud Detection — ML Model Evaluation', period: 'Academic project', bullets: [
+      'Analyzed 284,807 transactions including 492 fraud cases.',
+      'Compared logistic regression, Random Forest, XGBoost and an MLP.',
+      'Evaluated precision, recall, F1, ROC-AUC and PR-AUC.',
+      'Reached 0.8557 test PR-AUC with XGBoost and used SHAP for interpretation.' ] }
+  ];
+  return projects.map(project => ({project,score:100,sourceUrl:'',reason:fr?'Évaluation de modèles IA':'AI model evaluation'}));
+}
 export function projectSelectionForOffer(offer: InternshipOffer, language: CvLanguage) {
   if (isAlstomVision(offer)) return alstomProjects(language);
+  if (isAlstomReqAi(offer)) return alstomReqProjects(language);
   const current = loadCvDraft(language).projects;
   const verifiedIds = new Set(publicProjectCatalog.map(entry => entry.id));
   const profiles = [
@@ -105,6 +134,28 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
       '**Tools:** Jupyter, MATLAB, Matplotlib, Linux'
     ];
     base.skills = skills.join('\n');
+    return base;
+  }
+
+  if (isAlstomReqAi(offer)) {
+    base.headline = 'AI Evaluation | Machine Learning | Data Analysis | Python';
+    base.summary = language === 'FR'
+      ? "Étudiant en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de six mois dès février 2027 pour contribuer à l'évaluation de solutions IA, à l'analyse d'erreurs et à l'amélioration de processus industriels."
+      : 'Final-year MSc Control and Robotics student specializing in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027 in AI evaluation, error analysis and industrial process improvement.';
+    base.projects = alstomReqProjects(language).map(item => item.project);
+    base.skills = (language === 'FR' ? [
+      '**Programmation :** Python, pandas, NumPy, SciPy, SQL',
+      '**Évaluation IA :** tests, analyse d’erreurs, comparaison de modèles, documentation',
+      '**Machine Learning :** scikit-learn, PyTorch, classification, métriques de performance',
+      '**Analyse de données :** nettoyage, statistiques, visualisation, Matplotlib',
+      '**Outils :** Jupyter, Git, GitHub, Linux, Excel'
+    ] : [
+      '**Programming:** Python, pandas, NumPy, SciPy, SQL',
+      '**AI evaluation:** testing, error analysis, model comparison, documentation',
+      '**Machine Learning:** scikit-learn, PyTorch, classification, performance metrics',
+      '**Data analysis:** cleaning, statistics, visualization, Matplotlib',
+      '**Tools:** Jupyter, Git, GitHub, Linux, Excel'
+    ]).join('\\n'.replace('\\n', '\n'));
     return base;
   }
 
@@ -174,6 +225,21 @@ export function tailorLetterForOffer(offer: InternshipOffer, language: CvLanguag
       'I would welcome an opportunity to learn from your team and contribute to this automated inspection project. I would be pleased to discuss how my background and motivation could support your work.'
     ];
     draft.closing = language === 'FR' ? 'Bien cordialement,' : 'Yours sincerely,';
+    return draft;
+  }
+  if (isAlstomReqAi(offer)) {
+    draft.paragraphs = language === 'FR' ? [
+      "Actuellement en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d'études de six mois à partir de février 2027. Votre stage IA Evaluation & Requirement Management (réf. 525188) retient mon attention par son objectif : rendre les outils d'IA internes plus fiables et utiles aux équipes qui gèrent les exigences.",
+      "L'intérêt de cette mission va, pour moi, au-delà de l'automatisation de tâches répétitives. Une évaluation rigoureuse permet de comprendre pourquoi un outil produit certaines réponses, de réduire les erreurs et de faciliter le travail des équipes métier. Dans un environnement ferroviaire exigeant, améliorer la qualité des processus et la confiance des utilisateurs dans ces outils représente une contribution concrète qui me motive.",
+      "Ma formation en informatique et électronique, puis en Machine Learning et traitement du signal, m'a donné des bases en Python, analyse de données et évaluation de modèles. Chez RWS, j'évalue des sorties d'IA à partir de critères précis, identifie les erreurs et justifie mes décisions. Mes projets CLAP et de détection de fraude m'ont également appris à comparer des approches, mesurer leurs performances et analyser leurs limites.",
+      "Je serais heureux de contribuer aux tests des nouvelles versions de vos outils, à l'analyse des résultats et à leur amélioration avec les équipes techniques et métier, tout en apprenant vos méthodes de gestion des exigences. Je reste à votre disposition pour un échange et vous remercie de l'attention portée à ma candidature."
+    ] : [
+      'I am a final-year MSc Control and Robotics student at Centrale Nantes, specializing in Data Science, Signal & Image Processing, looking for a six-month internship from February 2027. Your AI Evaluation and Requirement Management internship (ref. 525188) appeals to me because it focuses on making internal AI tools more reliable and useful for engineering teams.',
+      'Beyond automating repetitive tasks, rigorous evaluation helps explain errors, improve the relevance of AI outputs and build trust among business users. Contributing to reliable processes in a demanding railway environment is what motivates me.',
+      'My Computer Science and Electronics degree and MSc work have given me a foundation in Python, data analysis and ML evaluation. At RWS I assess AI outputs against specific criteria, identify errors and justify findings. My CLAP and fraud-detection projects further developed my model comparison and error analysis skills.',
+      'I would be pleased to support the testing and improvement of your AI tools alongside technical and business teams while learning your requirements management processes. Thank you for considering my application; I would welcome an opportunity to discuss it.'
+    ];
+    draft.closing = language === 'FR' ? 'Bien cordialement,' : 'Kind regards,';
     return draft;
   }
   if (/incertitude/i.test(subject) && /segmentation/i.test(subject)) {
