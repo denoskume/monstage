@@ -41,8 +41,6 @@ export function useOffers(): UseOffersState {
       })
       .catch((reason: unknown) => {
         if (!active) return;
-        setData(null);
-
         if (reason instanceof ApiAuthError) {
           if (reason.status === 401) {
             setError(null);

@@ -28,6 +28,7 @@ export function AppRoutes() {
         <Route path="/cv" element={<CvStudioPage />} />
         <Route path="/cl" element={<ClStudioPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard/:sectorId" element={<DashboardPage />} />
         <Route path="/sitemap" element={<InfoPage kind="sitemap" />} />
         <Route path="/accessibility" element={<InfoPage kind="accessibility" />} />
         <Route path="/privacy" element={<InfoPage kind="privacy" />} />
