@@ -1,7 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { prepareSafranAiDossier, SAFRAN_AI_DOSSIER_ID } from '../applications/safranAiDossier';
 import { useEffect, useMemo, useState } from 'react';
 import './ProspectionPage.css';
+import { PROSPECTION_EVENT } from '../targets/prospectionAdapter';
 
 type Status = 'À identifier' | 'À contacter' | 'Contacté' | 'Candidature envoyée' | 'Relance prévue' | 'Entretien' | 'Terminé';
 type Lead = { id: string; company: string; site: string; team: string; role: string; contact: string; contactLink: string; channel: string; status: Status; date: string; followUp: string; notes: string; };
@@ -19,6 +20,7 @@ function load(): Lead[] {
 }
 export function ProspectionPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   function openSafranStudio(kind: 'cv' | 'cl') {
     const dossier = prepareSafranAiDossier('FR');
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({offerId:dossier.offerId,company:dossier.company,title:dossier.title,language:'FR',state:'awaiting_review',documentsVersion:5,preparedAt:new Date().toISOString()}));
@@ -26,13 +28,19 @@ export function ProspectionPage() {
   }
 
   const [leads,setLeads] = useState<Lead[]>(load);
-  const [draft,setDraft] = useState<Omit<Lead,'id'>>(empty);
+  const [draft,setDraft] = useState<Omit<Lead,'id'>>(() => params.get('company') ? {...empty, company:params.get('company')!,role:'Stage de fin d’études — Computer Vision / traitement d’images'} : empty);
   const [editing,setEditing] = useState<string | null>(null);
   const [query,setQuery] = useState('');
   const [filter,setFilter] = useState('Tous');
-  const [showForm,setShowForm] = useState(false);
-  useEffect(()=>{try {localStorage.setItem(KEY,JSON.stringify(leads));} catch {/* Browsers can disable storage. */}},[leads]);
+  const [showForm,setShowForm] = useState(Boolean(params.get('company')));
+  useEffect(()=>{try {localStorage.setItem(KEY,JSON.stringify(leads));window.dispatchEvent(new Event(PROSPECTION_EVENT));} catch {/* Browsers can disable storage. */}},[leads]);
   const visible = useMemo(()=>leads.filter(l=>(filter==='Tous'||l.status===filter)&&[l.company,l.site,l.team,l.role,l.contact,l.notes].join(' ').toLowerCase().includes(query.toLowerCase())).sort((a,b)=>(a.followUp||'9999').localeCompare(b.followUp||'9999')),[leads,query,filter]);
+  useEffect(() => {
+    const id = params.get('lead');
+    if (!id) return;
+    const item = leads.find(lead => lead.id === id);
+    if (item) { const {id: leadId, ...rest} = item; setDraft(rest); setEditing(leadId); setShowForm(true); }
+  }, [params]);
   function save(e: React.FormEvent) {
     e.preventDefault();
     if(!draft.company.trim() || !draft.role.trim()) return;
