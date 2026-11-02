@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { AccountMenu } from '../features/auth/AccountMenu';
 
 const links = [
+  ['/dashboard', 'Tableau de bord'],
   ['/offers', 'Jobs'],
   ['/studio', 'Studio'],
   ['/prospection', 'Prospection'],
