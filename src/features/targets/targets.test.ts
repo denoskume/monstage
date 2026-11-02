@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
-import { sectors, targetOffers, followUpDue } from './targets';
+import { sectors, targetOffers, followUpDue, dateKey, editableStatuses } from './targets';
 const offer = (company: string, title: string, extra = {}) => ({company,title,skills:[],...extra}) as unknown as InternshipOffer;
 describe('target strategy', () => {
   it('keeps twenty companies across four sectors', () => {
@@ -15,6 +15,14 @@ describe('target strategy', () => {
   it('handles accents and subsidiary names', () => {
     expect(targetOffers([offer('Safran.AI','Computer Vision'),offer('Dassault Systemes','Imagerie')], sectors[0])).toHaveLength(1);
     expect(targetOffers([offer('Dassault Systemes','Imagerie')], sectors[3])).toHaveLength(1);
+  });
+  it('uses only backend-supported write statuses and parses French dates', () => {
+    expect(editableStatuses).not.toContain('À candidater');
+    expect(editableStatuses).not.toContain('Réponse recruteur');
+    expect(dateKey('02/11/2026')).toBe('2026-11-02');
+    expect(dateKey('2026-11-02T10:00:00Z')).toBe('2026-11-02');
+    expect(followUpDue(offer('Safran','CV',{followUpAt:'01/12/2026'}), '2026-11-02')).toBe(false);
+    expect(followUpDue(offer('Safran','CV',{followUpAt:'02/11/2026'}), '2026-11-02')).toBe(true);
   });
   it('counts due dates inclusively and excludes closed dossiers', () => {
     expect(followUpDue(offer('Safran','CV',{followUpAt:'2026-11-02',applicationStatus:'Relance'}), '2026-11-02')).toBe(true);

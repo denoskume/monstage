@@ -22,6 +22,14 @@ export function targetOffers(offers: InternshipOffer[], sector: typeof sectors[n
 }
 export const statuses = ['À candidater', 'Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus', 'Abandonné'];
 export function wasSent(offer: InternshipOffer) { return Boolean(offer.appliedAt) || statuses.slice(1, -1).includes(offer.applicationStatus || ''); }
+export const editableStatuses = statuses.filter(status => !['À candidater', 'Réponse recruteur'].includes(status));
+export function dateKey(value: string | null | undefined): string {
+  if (!value) return '';
+  const iso = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const fr = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  return fr ? `${fr[3]}-${fr[2].padStart(2, '0')}-${fr[1].padStart(2, '0')}` : '';
+}
 export function followUpDue(offer: InternshipOffer, today: string) {
-  return Boolean(offer.followUpAt && offer.followUpAt.slice(0, 10) <= today && !['Refus', 'Abandonné', 'Offre reçue'].includes(offer.applicationStatus || ''));
+  return Boolean(dateKey(offer.followUpAt) && dateKey(offer.followUpAt) <= today && !['Refus', 'Abandonné', 'Offre reçue'].includes(offer.applicationStatus || ''));
 }
