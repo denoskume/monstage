@@ -6,7 +6,7 @@ import { useOffers } from '../../hooks/useOffers';
 import { useAuth } from '../../auth/useAuth';
 import { saveApplicationStatus } from '../../api/applications';
 import { ExternalApplicationForm } from '../applications/ExternalApplicationForm';
-import { sectors, allSectors, targetOffers, matchesCompany, statuses, editableStatuses, dateKey, wasSent, followUpDue } from '../targets/targets';
+import { sectors, targetOffers, matchesCompany, statuses, editableStatuses, dateKey, wasSent, followUpDue } from '../targets/targets';
 import { PLAN_LABELS, type SearchPlan } from '../../../shared/searchScope';
 import '../targets/targets.css';
 import { readProspectionOffers, combineDossiers, PROSPECTION_EVENT } from '../targets/prospectionAdapter';
@@ -15,8 +15,8 @@ export function DashboardPage() {
   const { sectorId } = useParams();
   const [searchParams] = useSearchParams();
   const requestedPlan = searchParams.get('plan');
-  const plan: SearchPlan = requestedPlan === 'B1' || requestedPlan === 'B2' ? requestedPlan : 'A';
-  const visibleSectors = plan === 'A' ? sectors : allSectors;
+  const plan: SearchPlan = ['B', 'B1', 'B2'].includes(requestedPlan || '') ? 'B' : 'A';
+  const visibleSectors = sectors;
   const planHref = (key: SearchPlan) => '/dashboard?plan=' + key;
   const { data, loading, error, retry } = useOffers();
   const { token } = useAuth();
@@ -60,7 +60,7 @@ export function DashboardPage() {
   return <section className="page target-page">
     <header className="target-header"><div><p className="target-eyebrow">PLAN {plan} · {PLAN_LABELS[plan]}</p><h1>{sector?.name || 'Vue d’ensemble'}</h1></div><button className="button button--primary" onClick={() => setShowForm(true)}>Enregistrer un envoi</button></header>
     <nav className="target-plan-tabs" aria-label="Parcours professionnels">
-      {(['A', 'B1', 'B2'] as SearchPlan[]).map(key => <Link key={key} to={planHref(key)} aria-current={plan === key ? 'page' : undefined}><strong>Plan {key}</strong><span>{PLAN_LABELS[key]}</span></Link>)}
+      {(['A', 'B'] as SearchPlan[]).map(key => <Link key={key} to={planHref(key)} aria-current={plan === key ? 'page' : undefined}><strong>Plan {key}</strong><span>{PLAN_LABELS[key]}</span></Link>)}
     </nav>
     <nav className="target-tabs" aria-label="Secteurs ciblés"><Link aria-current={!sector ? 'page' : undefined} to={planHref(plan)}>Vue d’ensemble</Link>{visibleSectors.map(s => <Link key={s.id} aria-current={sector?.id === s.id ? 'page' : undefined} to={'/dashboard/' + s.id + '?plan=' + plan}>{s.name}</Link>)}</nav>
     {error && <p role="alert">Actualisation indisponible. Les dernières données restent affichées. <button onClick={retry}>Réessayer</button></p>}
