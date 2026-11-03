@@ -1,4 +1,4 @@
-import { isVisionMission, isTargetOffer } from '../../../shared/searchScope';
+import { isVisionMission, getOfferPlan, type SearchPlan } from '../../../shared/searchScope';
 import type { InternshipOffer } from '../../api/contract';
 export const sectors = [
   { id: 'aeronautique', name: 'Aéronautique & aérospatial', companies: [
@@ -10,6 +10,18 @@ export const sectors = [
   { id: 'sante', name: 'Santé & technologies médicales', companies: [
     ['GE HealthCare', 'careers.gehealthcare.com', 'ge healthcare|gehealthcare'], ['Siemens Healthineers', 'careers.siemens-healthineers.com', 'siemens healthineers'], ['Philips', 'careers.philips.com', 'philips'], ['Canon Medical Systems', 'fr.medical.canon', 'canon medical|olea medical'], ['Dassault Systèmes', '3ds.com/careers', 'dassault systemes|dassault systèmes'] ] },
 ] as const;
+/** Original sectors remain untouched. The added ten only participate in Plan B. */
+export const backupSectors = [
+  { id: 'data-industrie', name: 'Data · Énergie & infrastructures', companies: [
+    ['EDF / Enedis', 'edf.fr/edf-recrute', 'edf|enedis'], ['ENGIE', 'jobs.engie.com', 'engie'],
+    ['TotalEnergies', 'careers.totalenergies.com', 'totalenergies'], ['Schneider Electric', 'careers.se.com', 'schneider electric'],
+    ['VINCI', 'jobs.vinci.com', 'vinci'] ] },
+  { id: 'data-services', name: 'Data · Technologie & finance', companies: [
+    ['Orange', 'orange.jobs', 'orange'], ['Capgemini', 'capgemini.com/fr-fr/carrieres', 'capgemini'],
+    ['AXA', 'careers.axa.com', 'axa'], ['BNP Paribas', 'group.bnpparibas/emploi-carriere', 'bnp paribas'],
+    ['Société Générale', 'careers.societegenerale.com', 'societe generale|société générale|socgen'] ] },
+] as const;
+export const allSectors = [...sectors, ...backupSectors] as const;
 export function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
 export function matchesCompany(offer: InternshipOffer, aliases: string) {
   const company = normalize(offer.company);
@@ -18,8 +30,8 @@ export function matchesCompany(offer: InternshipOffer, aliases: string) {
 export function isVision(offer: InternshipOffer) {
   return isVisionMission(offer);
 }
-export function targetOffers(offers: InternshipOffer[], sector: typeof sectors[number] = sectors[0]) {
-  return offers.filter(offer => isTargetOffer(offer) && sector.companies.some(company => matchesCompany(offer, company[2])));
+export function targetOffers(offers: InternshipOffer[], sector: typeof allSectors[number] = sectors[0], plan: SearchPlan = 'A') {
+  return offers.filter(offer => getOfferPlan(offer) === plan && sector.companies.some(company => matchesCompany(offer, company[2])));
 }
 export const statuses = ['À candidater', 'Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus', 'Abandonné'];
 export function wasSent(offer: InternshipOffer) { return Boolean(offer.appliedAt) || statuses.slice(1, -1).includes(offer.applicationStatus || ''); }
