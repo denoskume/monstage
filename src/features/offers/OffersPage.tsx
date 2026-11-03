@@ -284,7 +284,7 @@ export function OffersPage() {
 
       <nav className="jobs-plan-tabs" aria-label="Parcours de recherche">
         <button type="button" className={selectedPlan === 'all' ? 'active' : ''} aria-pressed={selectedPlan === 'all'} onClick={() => choosePlan('all')}>Tous les plans <span>{availableOffers.length}</span></button>
-        {(['A', 'B1', 'B2'] as SearchPlan[]).map(key => <button key={key} type="button" className={selectedPlan === key ? 'active' : ''} aria-pressed={selectedPlan === key} title={PLAN_LABELS[key]} onClick={() => choosePlan(key)}>Plan {key}<span>{availableOffers.filter(offer => getOfferPlan(offer) === key).length}</span></button>)}
+        {(['A', 'B'] as SearchPlan[]).map(key => <button key={key} type="button" className={selectedPlan === key ? 'active' : ''} aria-pressed={selectedPlan === key} title={PLAN_LABELS[key]} onClick={() => choosePlan(key)}>Plan {key}<span>{availableOffers.filter(offer => getOfferPlan(offer) === key).length}</span></button>)}
       </nav>
       {selectedPlan !== 'all' ? <p className="jobs-plan-description">Plan {selectedPlan} · {PLAN_LABELS[selectedPlan]}</p> : null}
 
