@@ -1,3 +1,4 @@
+import { isTargetOffer } from '../../../shared/searchScope';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
@@ -92,7 +93,7 @@ export function OffersPage() {
 
   const offers = data?.offers ?? [];
   const availableOffers = useMemo(
-    () => dedupeOffers(offers.filter((offer) => !actions.isHidden(offer.id))),
+    () => dedupeOffers(offers.filter((offer) => isTargetOffer(offer) && !actions.isHidden(offer.id))),
     [offers, actions.hidden],
   );
   const filteredOffers = useMemo(
@@ -252,7 +253,8 @@ export function OffersPage() {
   return (
     <section className="page offers-page">
       <header className="jobs-page-heading">
-        <h1>Explore internships</h1>
+        <h1>Stages Computer Vision / traitement d’images</h1>
+        <p>Uniquement les 20 entreprises ciblées · 4 secteurs</p>
       </header>
 
       <div className="jobs-search-shell">

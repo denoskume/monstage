@@ -22,13 +22,13 @@ const user = {
 const offersPayload = {
   generatedAt: '2026-09-15T07:00:00.000Z',
   source: 'Stage Intelligence France',
-  offers: [{ id: 'offer-1', company: 'Example', title: 'ML Intern' }],
+  offers: [{ id: 'offer-1', company: 'Airbus', title: 'Computer Vision Intern' }],
 };
 
 const refreshedOffersPayload = {
   generatedAt: '2026-09-15T08:00:00.000Z',
   source: 'Stage Intelligence France',
-  offers: [{ id: 'offer-2', company: 'Example 2', title: 'CV Intern' }],
+  offers: [{ id: 'offer-2', company: 'Thales', title: 'Image Processing Intern' }],
 };
 
 function request(path: string, options: { token?: string; origin?: string; method?: string } = {}) {
@@ -317,4 +317,12 @@ describe('Apps Script proxy', () => {
     const mockFetch = vi.fn(async () => new Response(JSON.stringify({ offers: [] }), { status: 200 }));
     await expect(fetchOffersFromAppsScript(env, mockFetch as typeof fetch)).rejects.toThrow('INVALID_BACKEND_PAYLOAD');
   });
+});
+
+test('applies the exclusive scope even to cached historical offers', async () => {
+  const deps = dependencies();
+  const eligible = {id:'eligible',company:'Alstom',title:'Stage Computer Vision'};
+  deps.getCachedOffers = vi.fn(async () => ({cachedAt:Date.now(),payload:{...offersPayload,offers:[eligible,{id:'old',company:'Other',title:'ML Intern',applicationStatus:'Candidature envoyée'}]}}));
+  const response = await handleRequest(request('/api/offers', {token:'authorized-token'}), env, deps);
+  expect((await response.json() as {offers:unknown[]}).offers).toEqual([eligible]);
 });

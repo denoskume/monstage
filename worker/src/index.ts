@@ -1,3 +1,4 @@
+import { restrictOffersPayload } from '../../shared/searchScope';
 import { AuthError, verifyAuthorizedUser } from './auth';
 import { handleGithubDocuments, moveGithubApplicationArchive } from './githubArchive';
 import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript } from './appsScript';
@@ -210,14 +211,14 @@ export async function handleRequest(
   }
 
   const cachedOffers = await dependencies.getCachedOffers();
-  if (cachedOffers && isFresh(cachedOffers)) return jsonResponse(cachedOffers.payload, 200, origin);
+  if (cachedOffers && isFresh(cachedOffers)) return jsonResponse(restrictOffersPayload(cachedOffers.payload), 200, origin);
 
   try {
     const offers = await dependencies.fetchOffers(env);
     await dependencies.putCachedOffers(offers, OFFERS_CACHE_RETENTION_SECONDS);
-    return jsonResponse(offers, 200, origin);
+    return jsonResponse(restrictOffersPayload(offers), 200, origin);
   } catch {
-    if (cachedOffers && isWithinMaxStale(cachedOffers)) return jsonResponse(cachedOffers.payload, 200, origin);
+    if (cachedOffers && isWithinMaxStale(cachedOffers)) return jsonResponse(restrictOffersPayload(cachedOffers.payload), 200, origin);
     return jsonResponse({ error: 'BACKEND_UNAVAILABLE' }, 502, origin);
   }
 }

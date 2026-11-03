@@ -182,7 +182,7 @@ function latestAutonomyEvents_(spreadsheet) {
 }
 
 
-var EXTERNAL_SYNC_VERSION_ = '2026-10-13-publication-v4';
+var EXTERNAL_SYNC_VERSION_ = '2026-11-03-vision-20-only';
 
 var EXTERNAL_SOURCE_HEADERS_ = [
   'ID', 'Entreprise', "Intitulé de l'offre", 'Domaine', 'Ville', 'Région',
@@ -241,7 +241,21 @@ function isInternshipPosting_(posting) {
   });
 }
 
+
+// Exclusive discovery scope; source archives are not deleted.
+var TARGET_COMPANY_GROUPS_ = [["Safran", "safran", "preligens"], ["Airbus", "airbus"], ["Thales", "thales"], ["Dassault Aviation", "dassault aviation"], ["RTX / Collins Aerospace", "rtx", "collins aerospace", "raytheon"], ["Alstom", "alstom"], ["SNCF", "sncf"], ["Siemens Mobility", "siemens mobility"], ["Hitachi Rail", "hitachi rail"], ["Wabtec", "wabtec"], ["Valeo", "valeo"], ["Renault Group", "renault", "ampere"], ["Stellantis", "stellantis", "psa"], ["Bosch", "bosch"], ["FORVIA HELLA", "forvia", "hella", "faurecia"], ["GE HealthCare", "ge healthcare", "gehealthcare"], ["Siemens Healthineers", "siemens healthineers"], ["Philips", "philips"], ["Canon Medical Systems", "canon medical", "olea medical"], ["Dassault Systèmes", "dassault systemes"]];
+function strictCompany_(company) {
+  var text = ' ' + String(company || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
+  return TARGET_COMPANY_GROUPS_.some(function (group) { return group.slice(1).some(function (alias) { return text.indexOf(' ' + alias + ' ') !== -1; }); });
+}
+function strictVision_(title, context) {
+  var norm = function (v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+  if (/\b(marketing|communication|commercial|sales|juridique|finance|ressources humaines)\b/.test(norm(title))) return false;
+  return /\b(computer vision|vision par ordinateur|vision artificielle|vision industrielle|machine vision|vision 3d|image processing|traitement (d |des |de |d une |des donnees d )?images?|analyse (d |des |de )?images?|imagerie|imaging|recalage|image segmentation|segmentation (cardiaque|medicale|d images)|reconstruction (d |des )?images?)\b/.test(norm(title + ' ' + (context || '')));
+}
+
 function targetSignalScore_(posting) {
+  if (!strictVision_(posting.text, posting.descriptionPlain)) return 0;
   var title = normalizeComparable_(posting.text);
   var text = normalizeComparable_([
     posting.text,
@@ -450,6 +464,7 @@ function fetchLeverPostings_(source) {
 }
 
 function writeExternalOfferRows_(sheet, rows) {
+  rows = rows.filter(function (row) { return strictCompany_(row[1]) && strictVision_(row[2], row[3]); });
   // Preserve the last good snapshot if a provider returns no postings.
   if (!rows.length && sheet.getLastRow() > 1) {
     console.warn('Provider returned zero jobs; preserving previous snapshot: ' + sheet.getName());
@@ -483,7 +498,7 @@ function syncLeverSources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  LEVER_SOURCES_.forEach(function (source) {
+  LEVER_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
     fetchLeverPostings_(source).forEach(function (posting) {
       recordAtsMetric_('Lever', 'fetched');
       var location = posting.categories && posting.categories.location ? posting.categories.location : '';
@@ -599,7 +614,7 @@ function syncGreenhouseSources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  GREENHOUSE_SOURCES_.forEach(function (source) {
+  GREENHOUSE_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
     fetchGreenhouseJobs_(source).forEach(function (job) {
       recordAtsMetric_('Greenhouse', 'fetched');
       var posting = greenhouseAsTargetPosting_(job);
@@ -738,7 +753,7 @@ function syncAshbySources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  ASHBY_SOURCES_.forEach(function (source) {
+  ASHBY_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
     fetchAshbyJobs_(source).forEach(function (job) {
       recordAtsMetric_('Ashby', 'fetched');
       if (job.isListed === false) return;
@@ -775,7 +790,7 @@ function smartRecruitersList_(source) {
   var jobs = [];
   var seen = {};
   var limit = 100;
-  var queries = ['stage', 'internship', 'stagiaire'];
+  var queries = ['stage vision', 'stage image', 'intern vision'];
 
   queries.forEach(function (query) {
     var offset = 0;
@@ -900,7 +915,7 @@ function syncSmartRecruitersSources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  SMARTRECRUITERS_SOURCES_.forEach(function (source) {
+  SMARTRECRUITERS_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
     smartRecruitersList_(source).forEach(function (job) {
       recordAtsMetric_('SmartRecruiters', 'fetched');
       if (!smartRecruitersIsInternship_(job)) { recordAtsMetric_('SmartRecruiters', 'notInternship'); return; }
@@ -962,15 +977,8 @@ function fetchWorkdayPage_(source, searchText, offset) {
 }
 
 function fetchWorkdayJobs_(source) {
-  var searches = [
-    'stage', 'internship',
-    'stage data', 'stage analytics', 'stage intelligence artificielle',
-    'stage ai', 'stage machine learning', 'stage deep learning',
-    'stage vision', 'stage image', 'stage signal', 'stage digital',
-    'traitement d images', 'image processing', 'stage traitement image',
-    'maintenance prédictive', 'predictive maintenance', 'stage fiabilité',
-    'intern data', 'intern machine learning', 'intern ai'
-  ];
+  var searches = ['stage vision', 'stage image', 'stage imagerie', 'intern vision', 'intern imaging', 'traitement images', 'image processing'];
+
   var seen = {};
   var jobs = [];
 
@@ -1100,7 +1108,7 @@ function syncWorkdaySources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  WORKDAY_SOURCES_.forEach(function (source) {
+  WORKDAY_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
     fetchWorkdayJobs_(source).forEach(function (job) {
       recordAtsMetric_('Workday', 'fetched');
       var listPosting = workdayAsTargetPosting_(job, null);

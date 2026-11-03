@@ -56,3 +56,11 @@ test('fetchOffers rejects an invalid Worker payload', async () => {
 
   await expect(fetchOffers('google-id-token')).rejects.toThrow('MonStage API returned an invalid payload');
 });
+
+test('hides out-of-scope offers from an older backend response, including sent applications', async () => {
+  vi.stubEnv('VITE_MONSTAGE_API_URL', 'https://monstage-auth.example');
+  const allowed = {id:'a',company:'Valeo',title:'Stage traitement d’images'};
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,status:200,json:async () => ({...payload,offers:[allowed,{id:'b',company:'Google',title:'Computer Vision',applicationStatus:'Candidature envoyée'},{id:'c',company:'Safran',title:'Data Analyst'}]})}));
+  const result = await fetchOffers('token');
+  expect(result.offers).toEqual([allowed]);
+});
