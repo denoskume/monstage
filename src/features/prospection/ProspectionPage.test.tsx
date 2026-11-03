@@ -26,13 +26,13 @@ describe('ProspectionPage', () => {
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
     expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
   });
-  it('prefills and saves an EDF Enedis B1 spontaneous application', () => {
-    render(<MemoryRouter initialEntries={['/prospection?company=EDF%20%2F%20Enedis&plan=B1']}><ProspectionPage /></MemoryRouter>);
-    expect(screen.getByDisplayValue('EDF / Enedis')).toBeInTheDocument();
-    expect(screen.getByDisplayValue(/maintenance prédictive/i)).toBeInTheDocument();
+  it('prefills and saves an Alstom Plan B spontaneous application', () => {
+    render(<MemoryRouter initialEntries={['/prospection?company=Alstom&plan=B']}><ProspectionPage /></MemoryRouter>);
+    expect(screen.getByDisplayValue('Alstom')).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/Data Analyst/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /enregistrer la piste/i }));
-    expect(screen.getByText('EDF / Enedis')).toBeInTheDocument();
-    expect(screen.getAllByText(/Plan B1/).length).toBeGreaterThan(0);
+    expect(screen.getByText('Alstom')).toBeInTheDocument();
+    expect(screen.getAllByText(/Plan B/).length).toBeGreaterThan(0);
   });
   it('migrates existing three Safran targets to four without deleting data', () => {
     const names = ['Safran Trusted 4D', 'Safran Aircraft Engines', 'Safran Helicopter Engines'];
