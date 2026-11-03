@@ -76,11 +76,13 @@ export function isFinanceRole(offer: ScopeOffer): boolean {
 /** Entry-level backup scope: no Data Scientist or general Data Science positions. */
 export function isDataScientistRole(offer: ScopeOffer): boolean {
   const title = normalizeScope(offer.title);
-  return /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees|ingenieur machine learning|ingenieure machine learning|machine learning engineer|ml engineer)\b/.test(title);
+  return /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/.test(title);
 }
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   if (!targetCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
   if (originalTargetCompany(offer.company) && isVisionMission(offer)) return 'A';
+  // Plan A keeps legitimate vision-oriented ML roles; backup plans remain analyst-led.
+  if (/\b(ingenieur machine learning|ingenieure machine learning|machine learning engineer|ml engineer)\b/.test(normalizeScope(offer.title))) return null;
   if (isIndustrialAnalyticsMission(offer)) return 'B1';
   if (isDataAnalystMission(offer)) return 'B2';
   return null;
