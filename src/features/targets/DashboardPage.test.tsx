@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from '../dashboard/DashboardPage';
@@ -17,11 +17,11 @@ describe('company-first dashboard', () => {
   });
   it('shows the exact same companies under A and B, and no B1/B2 tabs', () => {
     const first = render(<MemoryRouter initialEntries={['/dashboard?plan=A']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(screen.getByRole('link',{name:/Plan A/})).toHaveAttribute('aria-current','page');
+    expect(within(screen.getByRole('navigation',{name:'Parcours professionnels'})).getByRole('link',{name:/Plan A/})).toHaveAttribute('aria-current','page');
     expect(screen.getByRole('heading',{name:'SNCF'})).toBeInTheDocument();
     first.unmount();
     render(<MemoryRouter initialEntries={['/dashboard?plan=B']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(screen.getByRole('link',{name:/Plan B/})).toHaveAttribute('aria-current','page');
+    expect(within(screen.getByRole('navigation',{name:'Parcours professionnels'})).getByRole('link',{name:/Plan B/})).toHaveAttribute('aria-current','page');
     expect(screen.getByRole('heading',{name:'SNCF'})).toBeInTheDocument();
     expect(screen.queryByRole('link',{name:/Plan B1|Plan B2/})).not.toBeInTheDocument();
   });
