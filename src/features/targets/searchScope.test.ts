@@ -1,69 +1,59 @@
 import { describe, it, expect } from 'vitest';
-import { TARGET_COMPANIES, BACKUP_COMPANIES, targetCompany, originalTargetCompany, getOfferPlan, isTargetOffer, restrictOffersPayload } from '../../../shared/searchScope';
+import { TARGET_COMPANIES, targetCompany, getOfferPlan, isTargetOffer, restrictOffersPayload } from '../../../shared/searchScope';
 
-describe('three-track discovery scope', () => {
-  it('keeps the twenty original groups plus exactly ten additional B-only giants', () => {
-    expect(TARGET_COMPANIES).toHaveLength(20);
-    expect(BACKUP_COMPANIES).toHaveLength(10);
-    expect(new Set([...TARGET_COMPANIES, ...BACKUP_COMPANIES].map(group => group[0])).size).toBe(30);
+describe('transport fifteen · A/B only', () => {
+  it('targets exactly fifteen groups in three transport sectors', () => {
+    expect(TARGET_COMPANIES).toHaveLength(15);
+    expect(new Set(TARGET_COMPANIES.map(group => group[0])).size).toBe(15);
     for (const [company] of TARGET_COMPANIES) {
-      expect(getOfferPlan({company,title:'Stage Computer Vision'})).toBe('A');
+      expect(targetCompany(company)).toBe(company);
+      expect(getOfferPlan({company,title:'Stage Computer Vision / traitement d’images'})).toBe('A');
+      expect(getOfferPlan({company,title:'Stage Data Analyst Power BI'})).toBe('B');
     }
-    for (const [company] of BACKUP_COMPANIES) {
-      expect(getOfferPlan({company,title:'Stage Computer Vision'})).toBeNull();
-      expect(getOfferPlan({company,title:'Stage Data Analyst Power BI'})).toBe('B2');
-    }
-    for (const company of ['Safran.AI', 'Airbus Atlantic', 'Olea Medical', 'Faurecia', 'Ampere SAS']) expect(originalTargetCompany(company)).not.toBeNull();
   });
-  it('classifies predictive industrial data as B1, general analytics and BI as B2', () => {
-    expect(getOfferPlan({company:'Alstom', title:'Stage Data Analyst Fiabilité RAMS'})).toBe('B1');
-    expect(getOfferPlan({company:'EDF Enedis', title:'Stage Data Analyst - Anticipation des pannes sur le réseau électrique'})).toBe('B1');
-    expect(getOfferPlan({company:'Veolia', title:'Stage Data Analyst Power BI'})).toBe('B2');
-    expect(getOfferPlan({company:'Orange', title:'Stage Business Intelligence & Reporting'})).toBe('B2');
-    expect(getOfferPlan({company:'Safran',title:'Stage IA',domain:'Computer Vision / traitement d’images'})).toBe('A');
-    expect(getOfferPlan({company:'GE HealthCare',title:'Stage imagerie médicale'})).toBe('A');
-    expect(getOfferPlan({company:'Schneider Electric',title:'Stage maintenance prédictive'})).toBe('B1');
-  });
-  it('rejects Data Scientist roles in every plan and every group', () => {
-    const titles = ['Stage Data Scientist', 'Stage Data Science', 'Data Scientist Maintenance Prédictive',
-      'Stage Data Science - anticipation des pannes'];
-    for (const company of ['Airbus', 'Alstom', 'EDF', 'Veolia', 'Capgemini']) {
-      for (const title of titles) expect(getOfferPlan({company, title, domain:'Computer Vision / Predictive Maintenance'})).toBeNull();
-    }
-    expect(getOfferPlan({company:'Safran',title:'Stage Machine Learning Engineer - Computer Vision'})).toBe('A');
-    expect(getOfferPlan({company:'Alstom',title:'Stage Machine Learning Engineer - Maintenance prédictive'})).toBeNull();
-    expect(getOfferPlan({company:'Alstom',title:'Stage Data Analyst - maintenance prédictive'})).toBe('B1');
-    expect(getOfferPlan({company:'Orange',title:'Stage Data Analyst SQL & Power BI'})).toBe('B2');
-  });
-  it('excludes arbitrary jobs even in target companies', () => {
-    for(const title of ['Stage RAG / LLM', 'Stage Python', 'Stage NLP', 'Stage Marketing Scanner', 'Stage Développement Commercial']) expect(isTargetOffer({company:'Safran',title})).toBe(false);
-    expect(isTargetOffer({company:'Google',title:'Stage Computer Vision'})).toBe(false);
-    expect(isTargetOffer({company:'Google',title:'Stage Data Analyst'})).toBe(false);
-    expect(isTargetOffer({company:'EDF',title:'Stage Computer Vision'})).toBe(false);
-  });
-  it('excludes financial positions even inside industrial groups', () => {
-    expect(getOfferPlan({company:'Veolia',title:'Stage Data Analyst Finance'})).toBeNull();
-    expect(getOfferPlan({company:'EDF',title:'Stage Analyste de données comptabilité'})).toBeNull();
-    expect(getOfferPlan({company:'Michelin',title:'Stage Data Analyst Power BI'})).toBe('B2');
-    expect(getOfferPlan({company:'Capgemini',title:'Stage Consultant en stratégie financière'})).toBeNull();
-  });
-  it('does not confuse Siemens divisions or match companies by partial words', () => {
-    expect(targetCompany('Siemens')).toBeNull();
-    expect(targetCompany('Boschman')).toBeNull();
-    expect(targetCompany('Siemens Mobility')).toBe('Siemens Mobility');
-    expect(targetCompany('Siemens Healthineers')).toBe('Siemens Healthineers');
-    expect(targetCompany('EDF Enedis')).toBe('EDF / Enedis');
-    for (const company of ['AXA', 'BNP Paribas', 'Société Générale']) expect(targetCompany(company)).toBeNull();
-  });
-  it('restricts visibility without destroying archived out-of-scope records', () => {
+
+  it('permits distinct A and B applications at the same employer', () => {
     const offers = [
-      {company:'Google',title:'Data Analyst'},
-      {company:'Stimio',title:'Stage Python',applicationStatus:'Candidature envoyée'},
-      {company:'Alstom',title:'Stage Computer Vision'},
-      {company:'EDF Enedis',title:'Stage maintenance prédictive'},
-      {company:'Veolia',title:'Stage Business Intelligence'},
+      {id:'alstom-a',company:'Alstom',title:'Stage Computer Vision - inspection des trains'},
+      {id:'alstom-b',company:'Alstom',title:'Stage Data Analyst - fiabilité ferroviaire'},
+      {id:'alstom-b2',company:'Alstom',title:'Stage Data Analyst Power BI - maintenance'},
+      {id:'airbus-a',company:'Airbus Atlantic',title:'Stage Image Processing'},
+      {id:'airbus-b',company:'Airbus Atlantic',title:'Stage Data Analyst reporting industriel'},
     ];
-    expect((restrictOffersPayload({offers}) as {offers:unknown[]}).offers).toEqual(offers.slice(2));
-    expect(offers).toHaveLength(5);
+    expect(offers.map(getOfferPlan)).toEqual(['A','B','B','A','B']);
+    expect((restrictOffersPayload({offers}) as {offers:typeof offers}).offers).toHaveLength(5);
+  });
+
+  it('excludes companies outside the fifteen, even if the title matches', () => {
+    for (const company of ['EDF', 'ENGIE', 'Orange', 'Capgemini', 'GE HealthCare', 'Wabtec', 'Bosch', 'RTX', 'Air Liquide']) {
+      expect(targetCompany(company)).toBeNull();
+      expect(isTargetOffer({company,title:'Stage Computer Vision'})).toBe(false);
+      expect(isTargetOffer({company,title:'Stage Data Analyst'})).toBe(false);
+    }
+    expect(targetCompany('Siemens')).toBeNull();
+    expect(targetCompany('Siemens Healthineers')).toBeNull();
+    expect(targetCompany('Siemens Mobility France')).toBe('Siemens Mobility');
+    expect(targetCompany('SNCF Connect & Tech')).toBe('SNCF');
+    expect(targetCompany('Air France Industries')).toBe('Air France-KLM');
+  });
+
+  it('rejects finance and Data Scientist; only vision-centric ML remains eligible for A', () => {
+    expect(isTargetOffer({company:'Michelin',title:'Stage Data Analyst Finance'})).toBe(false);
+    expect(isTargetOffer({company:'Renault Group',title:'Stage Data Scientist maintenance prédictive'})).toBe(false);
+    expect(isTargetOffer({company:'Alstom',title:'Stage Machine Learning Engineer maintenance prédictive'})).toBe(false);
+    expect(isTargetOffer({company:'Alstom',title:'Stage Marketing'})).toBe(false);
+    expect(getOfferPlan({company:'Safran',title:'Stage Machine Learning Engineer Computer Vision'})).toBe('A');
+    expect(getOfferPlan({company:'RATP',title:'Stage Data Analyst exploitation Power BI'})).toBe('B');
+    expect(getOfferPlan({company:'Air France-KLM',title:'Stage Data Analyst',domain:'Imagerie'})).toBe('B');
+  });
+
+  it('never deletes original records when narrowing discovery', () => {
+    const offers = [
+      {company:'EDF',title:'Stage Data Analyst',applicationStatus:'Candidature envoyée'},
+      {company:'Alstom',title:'Stage Computer Vision'},
+      {company:'Alstom',title:'Stage Data Analyst'},
+    ];
+    expect((restrictOffersPayload({offers}) as {offers:unknown[]}).offers).toHaveLength(2);
+    expect(offers).toHaveLength(3);
   });
 });

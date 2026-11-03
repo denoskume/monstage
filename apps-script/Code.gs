@@ -243,47 +243,47 @@ function isInternshipPosting_(posting) {
 
 
 // Exclusive discovery scope; source archives are not deleted.
-var TARGET_COMPANY_GROUPS_ = [["Safran", "safran", "preligens"], ["Airbus", "airbus"], ["Thales", "thales"], ["Dassault Aviation", "dassault aviation"], ["RTX / Collins Aerospace", "rtx", "collins aerospace", "raytheon"], ["Alstom", "alstom"], ["SNCF", "sncf"], ["Siemens Mobility", "siemens mobility"], ["Hitachi Rail", "hitachi rail"], ["Wabtec", "wabtec"], ["Valeo", "valeo"], ["Renault Group", "renault", "ampere"], ["Stellantis", "stellantis", "psa"], ["Bosch", "bosch"], ["FORVIA HELLA", "forvia", "hella", "faurecia"], ["GE HealthCare", "ge healthcare", "gehealthcare"], ["Siemens Healthineers", "siemens healthineers"], ["Philips", "philips"], ["Canon Medical Systems", "canon medical", "olea medical"], ["Dassault Systèmes", "dassault systemes"]];
-var BACKUP_COMPANY_GROUPS_ = [["EDF / Enedis", "edf", "enedis"], ["ENGIE", "engie"], ["TotalEnergies", "totalenergies"], ["Schneider Electric", "schneider electric"], ["VINCI", "vinci"], ["Orange", "orange"], ["Capgemini", "capgemini"], ["Air Liquide", "air liquide"], ["Veolia", "veolia"], ["Michelin", "michelin"]];
+// Both plans operate on EXACTLY the same 15 transport groups; no backup company pool.
+var TARGET_COMPANY_GROUPS_ = [
+  ["Airbus", "airbus"], ["Safran", "safran", "preligens"], ["Thales", "thales"],
+  ["Dassault Aviation", "dassault aviation"], ["Air France-KLM", "air france", "air france klm"],
+  ["Alstom", "alstom"], ["SNCF", "sncf"], ["RATP", "ratp"],
+  ["Siemens Mobility", "siemens mobility"], ["Hitachi Rail", "hitachi rail"],
+  ["Renault Group", "renault", "ampere"], ["Stellantis", "stellantis", "psa"],
+  ["Valeo", "valeo"], ["FORVIA HELLA", "forvia", "hella", "faurecia"], ["Michelin", "michelin"]
+];
+function scopeNorm_(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
 function strictCompany_(company) {
-  var text = ' ' + String(company || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
-  return TARGET_COMPANY_GROUPS_.concat(BACKUP_COMPANY_GROUPS_).some(function (group) { return group.slice(1).some(function (alias) { return text.indexOf(' ' + alias + ' ') !== -1; }); });
-}
-function strictVision_(title, context) {
-  var norm = function (v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
-  if (/\b(marketing|communication|commercial|sales|juridique|finance|ressources humaines)\b/.test(norm(title))) return false;
-  return /\b(computer vision|vision par ordinateur|vision artificielle|vision industrielle|machine vision|vision 3d|image processing|traitement (d |des |de |d une |des donnees d )?images?|analyse (d |des |de )?images?|imagerie|imaging|recalage|image segmentation|segmentation (cardiaque|medicale|d images)|reconstruction (d |des )?images?)\b/.test(norm(title + ' ' + (context || '')));
-}
-
-function strictRelevant_(title, context) {
-  var norm = function (v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
-  var name = norm(title);
-  var full = norm(title + ' ' + (context || ''));
-  // Backup searches explicitly target Data Analyst, not Data Scientist.
-  if (/\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/.test(name)) return false;
-  // Exclude all finance/accounting/insurance work even when a role contains 'data'.
-  if (/\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/.test(full)) return false;
-  if (strictVision_(title, context)) return true;
-  if (/\b(ingenieur machine learning|ingenieure machine learning|machine learning engineer|ml engineer)\b/.test(name)) return false;
-  var predictive = /\b(maintenance predictive|predictive maintenance|prediction de pannes?|anticipation des pannes?|analyse de fiabilite|fiabilite rams|reliability analytics|analyse des defaillances?|fault detection|failure prediction|remaining useful life|condition monitoring|industrial analytics)\b/;
-  var industry = /\b(maintenance|predictive|predictif|fiabilite|reliability|rams|pannes?|defaillances?|fault|failure|anomalies?|condition monitoring|inspection|industriel|industrielle|industrial|industrialisation|moteurs?|turbomoteurs?|usine|production|manufacturing|equipements?|assets?|reseau electrique|railway|ferroviaire|fleet|infrastructures?)\b/;
-  var data = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analyse des mesures|analyse de mesures|analytics engineer|business intelligence|power bi|reporting|kpi|tableaux? de bord|dashboard|sql|analyse statistique)\b/;
-  var analyst = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analytics engineer|business intelligence|power bi|reporting automatise|reporting data|kpi|tableaux? de bord|dashboard|sql analyst|business analyst data|data insights)\b/;
-  return predictive.test(name) || (industry.test(full) && (data.test(name) || /\b(modelisation predictive|analyse statistique)\b/.test(name))) || analyst.test(name);
-}
-
-function strictEligible_(company, title, context) {
-  if (!strictCompany_(company) || !strictRelevant_(title, context)) return false;
-  // A visual-only role at a new B-only company is never a Plan A opportunity.
-  var original = ' ' + String(company || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
-  var historicallyTargeted = TARGET_COMPANY_GROUPS_.some(function (group) {
-    return group.slice(1).some(function (alias) { return original.indexOf(' ' + alias + ' ') !== -1; });
+  var text = ' ' + scopeNorm_(company) + ' ';
+  return TARGET_COMPANY_GROUPS_.some(function (group) {
+    return group.slice(1).some(function (alias) { return text.indexOf(' ' + alias + ' ') !== -1; });
   });
-  if (!historicallyTargeted && strictVision_(title, context)) {
-    var role = String(title || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-    return /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analytics engineer|business intelligence|power bi|maintenance predictive|predictive maintenance|fiabilite rams|condition monitoring|reporting|dashboard|sql)\b/.test(role);
-  }
-  return true;
+}
+var SCOPE_FINANCE_ = /\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/;
+var SCOPE_SCIENTIST_ = /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/;
+var SCOPE_ANALYST_ = /\b(data analyst|analyste data|analyste de donnees|analyste des donnees|bi analyst|analyste bi|analyste business intelligence|business intelligence analyst|reporting analyst|analyste reporting|data analytics|data analysis|analyse de donnees|analyse des donnees|business intelligence|power bi|tableaux? de bord|data insights)\b/;
+var SCOPE_NON_ANALYST_ = /\b(data engineer|data engineering|ingenieur data|ingenieure data|machine learning engineer|ml engineer|ingenieur machine learning|ingenieure machine learning|consultant strateg|consultante strateg|developpeur logiciel|software engineer)\b/;
+function strictVision_(title, context) {
+  var text = scopeNorm_(title + ' ' + (context || ''));
+  var name = scopeNorm_(title);
+  return !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
+    /\b(computer vision|vision par ordinateur|vision artificielle|vision industrielle|machine vision|vision 3d|image processing|traitement (d |des |de |d une |des donnees d )?images?|analyse (d |des |de )?images?|imagerie|imaging|recalage|image segmentation|segmentation|reconstruction d images?)\b/.test(text);
+}
+function strictAnalyst_(title) {
+  var name = scopeNorm_(title);
+  return !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
+    !SCOPE_NON_ANALYST_.test(name) && SCOPE_ANALYST_.test(name);
+}
+function strictRelevant_(title, context) {
+  var full = scopeNorm_(title + ' ' + (context || ''));
+  if (SCOPE_FINANCE_.test(full) || SCOPE_SCIENTIST_.test(scopeNorm_(title))) return false;
+  return strictAnalyst_(title) || strictVision_(title, context);
+}
+function strictEligible_(company, title, context) {
+  return strictCompany_(company) && strictRelevant_(title, context);
 }
 
 function targetSignalScore_(posting) {

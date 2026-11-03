@@ -1,27 +1,28 @@
 import { isVisionMission, getOfferPlan, type SearchPlan } from '../../../shared/searchScope';
 import type { InternshipOffer } from '../../api/contract';
+/** Fifteen large transport employers in France. Both A and B share this roster. */
 export const sectors = [
-  { id: 'aeronautique', name: 'Aéronautique & aérospatial', companies: [
-    ['Safran', 'safran-group.com/fr/offres', 'safran'], ['Airbus', 'airbus.com/en/careers', 'airbus'], ['Thales', 'careers.thalesgroup.com', 'thales'], ['Dassault Aviation', 'carriere.dassault-aviation.com', 'dassault aviation'], ['RTX / Collins Aerospace', 'careers.rtx.com', 'rtx|collins aerospace|raytheon'] ] },
-  { id: 'ferroviaire', name: 'Ferroviaire', companies: [
-    ['Alstom', 'jobsearch.alstom.com', 'alstom'], ['SNCF', 'emploi.sncf.com', 'sncf'], ['Siemens Mobility', 'jobs.siemens.com', 'siemens mobility'], ['Hitachi Rail', 'careers.hitachi.com', 'hitachi rail'], ['Wabtec', 'careers.wabtec.com', 'wabtec'] ] },
-  { id: 'automobile', name: 'Automobile', companies: [
-    ['Valeo', 'valeo.com/fr/carrieres', 'valeo'], ['Renault Group', 'renaultgroup.com/talents', 'renault|ampere'], ['Stellantis', 'careers.stellantis.com', 'stellantis'], ['Bosch', 'bosch.fr/carrieres', 'bosch'], ['FORVIA HELLA', 'forvia.com/en/careers', 'forvia|hella|faurecia'] ] },
-  { id: 'sante', name: 'Santé & technologies médicales', companies: [
-    ['GE HealthCare', 'careers.gehealthcare.com', 'ge healthcare|gehealthcare'], ['Siemens Healthineers', 'careers.siemens-healthineers.com', 'siemens healthineers'], ['Philips', 'careers.philips.com', 'philips'], ['Canon Medical Systems', 'fr.medical.canon', 'canon medical|olea medical'], ['Dassault Systèmes', '3ds.com/careers', 'dassault systemes|dassault systèmes'] ] },
-] as const;
-/** Original sectors remain untouched. The added ten only participate in Plan B. */
-export const backupSectors = [
-  { id: 'data-industrie', name: 'Data · Énergie & infrastructures', companies: [
-    ['EDF / Enedis', 'edf.fr/edf-recrute', 'edf|enedis'], ['ENGIE', 'jobs.engie.com', 'engie'],
-    ['TotalEnergies', 'careers.totalenergies.com', 'totalenergies'], ['Schneider Electric', 'careers.se.com', 'schneider electric'],
-    ['VINCI', 'jobs.vinci.com', 'vinci'] ] },
-  { id: 'data-services', name: 'Data · Technologie & industrie', companies: [
-    ['Orange', 'orange.jobs', 'orange'], ['Capgemini', 'capgemini.com/fr-fr/carrieres', 'capgemini'],
-    ['Air Liquide', 'careers.airliquide.com', 'air liquide'], ['Veolia', 'jobs.veolia.com', 'veolia'],
+  { id: 'aeronautique', name: 'Transport aérien & aéronautique', companies: [
+    ['Airbus', 'airbus.com/en/careers', 'airbus'],
+    ['Safran', 'safran-group.com/fr/offres', 'safran'],
+    ['Thales', 'careers.thalesgroup.com', 'thales'],
+    ['Dassault Aviation', 'carriere.dassault-aviation.com', 'dassault aviation'],
+    ['Air France-KLM', 'recrutement.airfrance.com', 'air france'] ] },
+  { id: 'ferroviaire', name: 'Ferroviaire & transport public', companies: [
+    ['Alstom', 'jobsearch.alstom.com', 'alstom'],
+    ['SNCF', 'emploi.sncf.com', 'sncf'],
+    ['RATP', 'ratpgroup.com/fr/rejoignez-nous', 'ratp'],
+    ['Siemens Mobility', 'jobs.siemens.com', 'siemens mobility'],
+    ['Hitachi Rail', 'careers.hitachi.com', 'hitachi rail'] ] },
+  { id: 'automobile', name: 'Automobile & équipementiers', companies: [
+    ['Renault Group', 'renaultgroup.com/talents', 'renault|ampere'],
+    ['Stellantis', 'careers.stellantis.com', 'stellantis|psa'],
+    ['Valeo', 'valeo.com/fr/carrieres', 'valeo'],
+    ['FORVIA HELLA', 'forvia.com/en/careers', 'forvia|hella|faurecia'],
     ['Michelin', 'jobs.michelin.com', 'michelin'] ] },
 ] as const;
-export const allSectors = [...sectors, ...backupSectors] as const;
+export const allSectors = sectors;
+
 export function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
 export function matchesCompany(offer: InternshipOffer, aliases: string) {
   const company = normalize(offer.company);
@@ -30,7 +31,7 @@ export function matchesCompany(offer: InternshipOffer, aliases: string) {
 export function isVision(offer: InternshipOffer) {
   return isVisionMission(offer);
 }
-export function targetOffers(offers: InternshipOffer[], sector: typeof allSectors[number] = sectors[0], plan: SearchPlan = 'A') {
+export function targetOffers(offers: InternshipOffer[], sector: typeof sectors[number] = sectors[0], plan: SearchPlan = 'A') {
   return offers.filter(offer => getOfferPlan(offer) === plan && sector.companies.some(company => matchesCompany(offer, company[2])));
 }
 export const statuses = ['À candidater', 'Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus', 'Abandonné'];
