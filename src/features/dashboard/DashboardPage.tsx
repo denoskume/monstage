@@ -8,6 +8,7 @@ import { saveApplicationStatus } from '../../api/applications';
 import { ExternalApplicationForm } from '../applications/ExternalApplicationForm';
 import { sectors, targetOffers, matchesCompany, statuses, editableStatuses, dateKey, wasSent, followUpDue } from '../targets/targets';
 import { PLAN_LABELS, type SearchPlan } from '../../../shared/searchScope';
+import { CompanyBriefs } from './CompanyBriefs';
 import '../targets/targets.css';
 import { readProspectionOffers, combineDossiers, PROSPECTION_EVENT } from '../targets/prospectionAdapter';
 
@@ -66,7 +67,7 @@ export function DashboardPage() {
     {error && <p role="alert">Actualisation indisponible. Les dernières données restent affichées. <button onClick={retry}>Réessayer</button></p>}
     <div className="kpi-grid">{[['Dossiers Plan ' + plan, offers.length], ['Candidatures envoyées', sent], ['Entretiens et suites', interviews], ['Relances à faire', due.length]].map(([label, value]) => <article className="kpi-card card" key={label}><span>{label}</span><strong>{value}</strong></article>)}</div>
     {!sector && <div className="target-sectors">{groups.map(s => <article className="card target-sector" key={s.id}><span>5 entreprises</span><h2>{s.name}</h2><strong>{s.offers.filter(wasSent).length} envois <small>/ {s.offers.length} dossiers</small></strong><progress aria-label={'Entreprises avec envoi — ' + s.name} max={5} value={s.companies.filter(c => s.offers.some(o => matchesCompany(o, c[2]) && wasSent(o))).length}/><p>{s.companies.map(c => c[0]).join(' · ')}</p><Link className="button button--secondary" to={'/dashboard/' + s.id + '?plan=' + plan}>Voir le secteur</Link></article>)}</div>}
-    {sector && <div className="target-companies">{sector.companies.map(c => <article className="card" key={c[0]}><h2>{c[0]}</h2><p>{offers.filter(o => matchesCompany(o, c[2])).length} dossier(s)</p><div className="target-company-actions"><Link className="button button--primary" to={'/prospection?company=' + encodeURIComponent(c[0]) + '&plan=' + plan}>Préparer une spontanée</Link><a className="button button--secondary" href={'https://' + c[1]} target="_blank" rel="noreferrer">Site carrières</a></div></article>)}</div>}
+    <CompanyBriefs offers={dossiers} sectorId={sector?.id} />
     <div className="target-visual card"><h2>Avancement des candidatures</h2>{['À candidater', 'Candidature envoyée', 'Entretien', 'Offre reçue', 'Refus'].map(label => { const count = offers.filter(o => (o.applicationStatus || 'À candidater') === label).length; return <div key={label}><span>{label}</span><progress max={Math.max(offers.length, 1)} value={count} aria-label={label}/><strong>{count}</strong></div>; })}</div>
     {due.length > 0 && <aside className="card target-alert"><h2>Relances à faire</h2>{due.map(o => <p key={o.id}><Link to={dossierLink(o.id)}>{o.company} — {o.title}</Link> · {dateKey(o.followUpAt)}</p>)}</aside>}
     <div className="target-header"><h2>Suivi des dossiers</h2><div className="target-filters"><input aria-label="Rechercher un dossier" placeholder="Entreprise ou mission…" value={query} onChange={e => setQuery(e.target.value)}/><select aria-label="Filtrer les dossiers" value={status} onChange={e => setStatus(e.target.value)}><option value="">Tous les statuts</option>{statuses.map(s => <option key={s}>{s}</option>)}</select></div></div>
