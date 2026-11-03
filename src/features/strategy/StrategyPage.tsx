@@ -65,11 +65,11 @@ export function StrategyPage() {
       </header>
 
       <section className="strategy-tracks" aria-label="Plans de carrière">
-        {(['A', 'B1', 'B2'] as SearchPlan[]).map((plan) => (
+        {(['A', 'B'] as SearchPlan[]).map((plan) => (
           <article className="strategy-track" key={plan}>
             <span>Plan {plan}</span>
             <h2>{PLAN_LABELS[plan]}</h2>
-            <p>{plan === 'A' ? 'Prioritaire · 20 groupes ciblés · 60 % des démarches' : plan === 'B1' ? 'Data industrielle · 30 groupes · 30 % des démarches' : 'Data Analyst généraliste / BI · 30 groupes · 10 % des démarches'}</p>
+            <p>{plan === 'A' ? 'Prioritaire · 15 entreprises du transport · Computer Vision & images' : 'Les mêmes 15 entreprises · Data Analyst, y compris maintenance et opérations'}</p>
             <Link className="button button--secondary" to={'/dashboard?plan=' + plan}>Voir ce parcours</Link>
           </article>
         ))}
