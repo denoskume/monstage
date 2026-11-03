@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const makeOffer = (overrides: Record<string, unknown> = {}) => ({
-  id: '1', company: 'Assystem', title: 'Computer Vision Intern', domain: 'Computer Vision', city: 'Nantes', region: 'Pays de la Loire',
+  id: '1', company: 'Safran', title: 'Computer Vision Intern', domain: 'Computer Vision', city: 'Nantes', region: 'Pays de la Loire',
   m2Fit: 'Oui probable', start: 'Janvier 2027', duration: '6 mois', compensation: '1 300 €/mois', skills: ['Python', 'PyTorch', 'OpenCV'],
   publishedAt: '2026-09-15', offerStatus: 'Active', applicationStatus: 'À candidater', nextAction: 'Candidater', applicationUrl: 'https://company.example/jobs/1',
   shortlist: true, appliedAt: null, followUpAt: null, specialization: 'Computer Vision / 3D', technicalFit: 98, decisionScore: 100, priority: 'A+',
@@ -14,12 +14,14 @@ const payload = {
   source: 'Stage Intelligence France',
   offers: [
     makeOffer(),
-    makeOffer({ id: '2', company: 'Criteo', title: 'Machine Learning Intern', city: 'Paris', specialization: 'Machine Learning / Deep Learning', decisionScore: 96, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/2' }),
-    makeOffer({ id: '3', company: 'SII', title: 'Data AI Intern', city: 'Rennes', specialization: 'Data / AI', decisionScore: 82, priority: 'B+', m2Fit: 'Possible', shortlist: false, applicationUrl: 'https://company.example/jobs/3' }),
-    makeOffer({ id: '4', company: 'Wavestone', title: 'ML Engineer Intern', city: 'Puteaux', specialization: 'Machine Learning / Deep Learning', decisionScore: 94, priority: 'A', applicationStatus: 'Candidature envoyée', appliedAt: '14/09/2026', shortlist: false, applicationUrl: 'https://company.example/jobs/4' }),
-    makeOffer({ id: '5', company: 'ALTEN', title: 'Computer Vision Research Intern', city: 'Sèvres', decisionScore: 92, priority: 'A', applicationStatus: 'Entretien', shortlist: false, applicationUrl: 'https://company.example/jobs/5' }),
-    makeOffer({ id: '6', company: 'Example', title: 'Deep Learning Intern', city: 'Lyon', specialization: 'Machine Learning / Deep Learning', decisionScore: 88, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/6' }),
-    makeOffer({ id: '7', company: 'Naval Group', title: 'AI Vision Intern', city: 'Nantes', publishedAt: '2026-09-20', verifiedAt: '2026-09-20T10:00:00Z', decisionScore: 90, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/7' }),
+    makeOffer({id:'outside-company',company:'Other Company',title:'Excluded Computer Vision Intern'}),
+    makeOffer({id:'outside-domain',company:'Safran',title:'Excluded Data Analyst',domain:'Data Analytics',specialization:'Business Intelligence',applicationStatus:'Candidature envoyée'}),
+    makeOffer({ id: '2', company: 'Airbus', title: 'Machine Learning Intern', city: 'Paris', specialization: 'Machine Learning / Deep Learning', decisionScore: 96, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/2' }),
+    makeOffer({ id: '3', company: 'Thales', title: 'Data AI Intern', city: 'Rennes', specialization: 'Data / AI', decisionScore: 82, priority: 'B+', m2Fit: 'Possible', shortlist: false, applicationUrl: 'https://company.example/jobs/3' }),
+    makeOffer({ id: '4', company: 'Alstom', title: 'ML Engineer Intern', city: 'Puteaux', specialization: 'Machine Learning / Deep Learning', decisionScore: 94, priority: 'A', applicationStatus: 'Candidature envoyée', appliedAt: '14/09/2026', shortlist: false, applicationUrl: 'https://company.example/jobs/4' }),
+    makeOffer({ id: '5', company: 'GE HealthCare', title: 'Computer Vision Research Intern', city: 'Sèvres', decisionScore: 92, priority: 'A', applicationStatus: 'Entretien', shortlist: false, applicationUrl: 'https://company.example/jobs/5' }),
+    makeOffer({ id: '6', company: 'Valeo', title: 'Deep Learning Intern', city: 'Lyon', specialization: 'Machine Learning / Deep Learning', decisionScore: 88, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/6' }),
+    makeOffer({ id: '7', company: 'Renault Group', title: 'AI Vision Intern', city: 'Nantes', publishedAt: '2026-09-20', verifiedAt: '2026-09-20T10:00:00Z', decisionScore: 90, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/7' }),
   ],
 };
 
@@ -130,6 +132,8 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   await signIn(page);
 
   await expect(page.getByRole('button', { name: 'Account' })).toBeVisible();
+  await expect(page.getByText('Excluded Computer Vision Intern')).toHaveCount(0);
+  await expect(page.getByText('Excluded Data Analyst')).toHaveCount(0);
   await expect(page.getByText('Computer Vision Intern').first()).toBeVisible();
   await expect(page.locator('.offer-card').first().getByText(/% CV match|Adéquation à vérifier/)).toBeVisible();
   await page.getByRole('button', { name: /Machine Learning Intern/ }).click();
