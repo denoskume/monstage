@@ -53,7 +53,7 @@ export function isVisionMission(offer: ScopeOffer): boolean {
   return /\b(computer vision|vision par ordinateur|vision artificielle|vision industrielle|machine vision|vision 3d|image processing|traitement (d |des |de |d une |des donnees d )?images?|analyse (d |des |de )?images?|imagerie|imaging|recalage|image segmentation|segmentation (cardiaque|medicale|d images)|reconstruction (d |des )?images?)\b/.test(text);
 }
 const INDUSTRIAL = /\b(maintenance|predictive|predictif|predictive|fiabilite|reliability|rams|pannes?|defaillances?|fault|failure|anomalies?|condition monitoring|inspection|industriel|industrielle|industrial|industrialisation|moteurs?|turbomoteurs?|usine|production|manufacturing|equipements?|equipments?|assets?|reseau electrique|energy grid|power grid|railway|ferroviaire|fleet|flotte|infrastructures?|qualite industrielle)\b/;
-const DATA_ROLE = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analyse des mesures|analyse de mesures|analytics engineer|business intelligence|power bi|reporting|kpi|tableaux? de bord|dashboard|sql|data scientist|data science|ingenieur data|ingenieure data|statistical analysis|analyse statistique)\b/;
+const DATA_ROLE = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analyse des mesures|analyse de mesures|analytics engineer|business intelligence|power bi|reporting|kpi|tableaux? de bord|dashboard|sql|statistical analysis|analyse statistique)\b/;
 const PREDICTIVE = /\b(maintenance predictive|predictive maintenance|prediction de pannes?|anticipation des pannes?|analyse de fiabilite|fiabilite rams|reliability analytics|analyse des defaillances?|fault detection|failure prediction|remaining useful life|condition monitoring|industrial analytics)\b/;
 const ANALYST = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analytics engineer|business intelligence|power bi|reporting automatise|reporting data|kpi|tableaux? de bord|dashboard|sql analyst|business analyst data|data insights)\b/;
 export function isIndustrialAnalyticsMission(offer: ScopeOffer): boolean {
@@ -61,7 +61,7 @@ export function isIndustrialAnalyticsMission(offer: ScopeOffer): boolean {
   const context = normalizeScope([offer.domain, offer.specialization].filter(Boolean).join(' '));
   const full = [title, context].join(' ');
   if (PREDICTIVE.test(title)) return true;
-  return INDUSTRIAL.test(full) && (DATA_ROLE.test(title) || /\b(modelisation predictive|analyses? statistiques?|data driven|machine learning)\b/.test(title));
+  return INDUSTRIAL.test(full) && (DATA_ROLE.test(title) || /\b(modelisation predictive|analyses? statistiques?|data driven)\b/.test(title));
 }
 export function isDataAnalystMission(offer: ScopeOffer): boolean {
   const title = normalizeScope(offer.title);
@@ -73,9 +73,16 @@ const FINANCIAL_ROLE = /\b(finance|financial|financier|financiere|financement|ba
 export function isFinanceRole(offer: ScopeOffer): boolean {
   return FINANCIAL_ROLE.test(normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
 }
+/** Entry-level backup scope: no Data Scientist or general Data Science positions. */
+export function isDataScientistRole(offer: ScopeOffer): boolean {
+  const title = normalizeScope(offer.title);
+  return /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/.test(title);
+}
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
-  if (!targetCompany(offer.company) || isFinanceRole(offer)) return null;
+  if (!targetCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
   if (originalTargetCompany(offer.company) && isVisionMission(offer)) return 'A';
+  // Plan A keeps legitimate vision-oriented ML roles; backup plans remain analyst-led.
+  if (/\b(ingenieur machine learning|ingenieure machine learning|machine learning engineer|ml engineer)\b/.test(normalizeScope(offer.title))) return null;
   if (isIndustrialAnalyticsMission(offer)) return 'B1';
   if (isDataAnalystMission(offer)) return 'B2';
   return null;

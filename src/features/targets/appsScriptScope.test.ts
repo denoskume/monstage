@@ -11,7 +11,7 @@ it('keeps Apps Script collection aligned with the exclusive application scope', 
   expect(JSON.parse(JSON.stringify(context.backup))).toEqual(BACKUP_COMPANIES);
   for (const company of ['Safran.AI','Boschman','SNCF Voyageurs','Siemens','Siemens Healthineers','Google','EDF Enedis','Veolia','AXA']) expect(context.company(company)).toBe(targetCompany(company) !== null);
   for (const title of ['Computer Vision','Stage traitement d’images','Stage RAG','Data Analyst','Marketing imagerie','Imagerie médicale']) expect(context.vision(title,'')).toBe(isVisionMission({title}));
-  for(const title of ['Stage Data Analyst RH Power BI','Stage Data Analyst Finance','Stage Data Science anticipation des pannes','Stage RAG','Stage maintenance prédictive']) expect(context.relevant(title,'')).toBe(isTargetOffer({company:'Safran', title}));
+  for(const title of ['Stage Data Analyst RH Power BI','Stage Data Analyst Finance','Stage Data Scientist Maintenance Prédictive','Stage RAG','Stage maintenance prédictive']) expect(context.relevant(title,'')).toBe(isTargetOffer({company:'Safran', title}));
   const cases = [
     ['Safran', 'Stage Computer Vision', true],
     ['Veolia', 'Stage Computer Vision', false],
@@ -19,6 +19,12 @@ it('keeps Apps Script collection aligned with the exclusive application scope', 
     ['Air Liquide', 'Stage maintenance prédictive', true],
     ['Michelin', 'Stage Data Analyst Finance', false],
     ['AXA', 'Stage Data Analyst', false],
+    ['Safran', 'Stage Data Scientist Computer Vision', false],
+    ['Safran', 'Stage Machine Learning Engineer Computer Vision', true],
+    ['Alstom', 'Stage Machine Learning Engineer - Maintenance prédictive', false],
+    ['Alstom', 'Stage Data Science - maintenance prédictive', false],
+    ['EDF', 'Stage Data Scientist - fiabilité', false],
+    ['Veolia', 'Stage Data Analyst - maintenance prédictive', true],
   ] as const;
   for (const [company, title, expected] of cases) {
     expect(context.eligible(company,title,'')).toBe(expected);

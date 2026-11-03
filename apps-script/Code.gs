@@ -259,14 +259,17 @@ function strictRelevant_(title, context) {
   var norm = function (v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
   var name = norm(title);
   var full = norm(title + ' ' + (context || ''));
+  // Backup searches explicitly target Data Analyst, not Data Scientist.
+  if (/\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/.test(name)) return false;
   // Exclude all finance/accounting/insurance work even when a role contains 'data'.
   if (/\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/.test(full)) return false;
   if (strictVision_(title, context)) return true;
+  if (/\b(ingenieur machine learning|ingenieure machine learning|machine learning engineer|ml engineer)\b/.test(name)) return false;
   var predictive = /\b(maintenance predictive|predictive maintenance|prediction de pannes?|anticipation des pannes?|analyse de fiabilite|fiabilite rams|reliability analytics|analyse des defaillances?|fault detection|failure prediction|remaining useful life|condition monitoring|industrial analytics)\b/;
   var industry = /\b(maintenance|predictive|predictif|fiabilite|reliability|rams|pannes?|defaillances?|fault|failure|anomalies?|condition monitoring|inspection|industriel|industrielle|industrial|industrialisation|moteurs?|turbomoteurs?|usine|production|manufacturing|equipements?|assets?|reseau electrique|railway|ferroviaire|fleet|infrastructures?)\b/;
-  var data = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analyse des mesures|analyse de mesures|analytics engineer|business intelligence|power bi|reporting|kpi|tableaux? de bord|dashboard|sql|data scientist|data science|ingenieur data|ingenieure data|analyse statistique)\b/;
+  var data = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analyse des mesures|analyse de mesures|analytics engineer|business intelligence|power bi|reporting|kpi|tableaux? de bord|dashboard|sql|analyse statistique)\b/;
   var analyst = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analytics engineer|business intelligence|power bi|reporting automatise|reporting data|kpi|tableaux? de bord|dashboard|sql analyst|business analyst data|data insights)\b/;
-  return predictive.test(name) || (industry.test(full) && (data.test(name) || /\b(machine learning|modelisation predictive|analyse statistique)\b/.test(name))) || analyst.test(name);
+  return predictive.test(name) || (industry.test(full) && (data.test(name) || /\b(modelisation predictive|analyse statistique)\b/.test(name))) || analyst.test(name);
 }
 
 function strictEligible_(company, title, context) {
