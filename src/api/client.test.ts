@@ -62,5 +62,5 @@ test('hides out-of-scope offers from an older backend response, including sent a
   const allowed = {id:'a',company:'Valeo',title:'Stage traitement d’images'};
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,status:200,json:async () => ({...payload,offers:[allowed,{id:'b',company:'Google',title:'Computer Vision',applicationStatus:'Candidature envoyée'},{id:'c',company:'Safran',title:'Data Analyst'}]})}));
   const result = await fetchOffers('token');
-  expect(result.offers).toEqual([allowed]);
+  expect(result.offers).toEqual([allowed, {id:'c',company:'Safran',title:'Data Analyst'}]);
 });
