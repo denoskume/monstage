@@ -10,18 +10,24 @@
 
 **Live app:** [Open MonStage](https://denoskume.github.io/monstage/) *(restricted access)*
 
-## Three-track internship search policy (November 2026)
+## Focus transport 2027 · 15 entreprises, deux plans
 
-MonStage separates opportunities into **Plan A** (Computer Vision / Image Processing), **Plan B1** (industrial data analytics, reliability, predictive maintenance), and **Plan B2** (technical Data Analyst / Business Intelligence, including generalist roles).
+MonStage se concentre sur **exactement quinze grands groupes présents en France dans le transport**, avec les **mêmes quinze** dans les deux parcours.
 
-- **Plan A:** only the 20 long-established company groups in `shared/searchScope.ts`, strictly for image-related technical missions.
-- **Plan B1 and B2:** those same 20 groups plus 10 additional industrial/technology groups: **EDF/Enedis, ENGIE, TotalEnergies, Schneider Electric, VINCI, Orange, Capgemini, Air Liquide, Veolia, Michelin**.
-- **Data Analyst only for backup:** exclude Data Scientist and generic Data Science titles from A/B1/B2 discovery; preserve legitimate ML roles when they directly serve Computer Vision / images under Plan A; revisit a potential evolution toward Data Scientist only after relevant professional experience. Plan B1 means industrial Data Analyst and predictive-maintenance analytics, while B2 means generalist Data Analyst/BI, without requiring finance-domain expertise.
-- **No financial specialties:** finance, banking, insurance, accounting, actuarial, credit, investment and financial-risk roles are excluded, even if the title says Data Analyst or Power BI. **Capgemini** is considered only for technical, hands-on analytics or industrial data missions—not for finance or generic strategy consulting.
-- **Constraints:** internships in France, Nantes preferred, nationwide mobility possible, six months ideally starting January–February 2027. Confirm unverified dates/durations rather than guessing. Exclude clearly defense-oriented and academic/laboratory internships.
-- **Tracking:** separate plan-specific discovery, sector/company progress and spontaneous-prospection filters. Historical applications are archived, not deleted; never mark an application as submitted without confirmation.
+| Secteur (5 groupes chacun) | Employeurs |
+| --- | --- |
+| Aéronautique et transport aérien | Airbus, Safran, Thales, Dassault Aviation, Air France-KLM |
+| Ferroviaire et transport public | Alstom, SNCF, RATP, Siemens Mobility, Hitachi Rail |
+| Automobile et équipementiers | Renault Group, Stellantis, Valeo, FORVIA/HELLA, Michelin |
 
-The source-of-truth role classifier is `getOfferPlan` in `shared/searchScope.ts`. Both the frontend and Worker use it, with a corresponding Apps Script ingestion filter. External providers only cover documented/verifiable ATS endpoints; an unsupported employer does not imply there are no relevant positions.
+- **Plan A (prioritaire)** : Computer Vision / traitement d'images, inspection visuelle, vision industrielle, segmentation, contrôle qualité et ML exclusivement appliqué aux images.
+- **Plan B** : **Data Analyst uniquement** ; SQL, Power BI, Business Intelligence, reporting, KPI, analyse des opérations, maintenance, fiabilité et données industrielles. Exclure Data Scientist, Data Engineer, finance et conseil non technique.
+- **Un groupe = un dossier entreprise, pas une seule candidature.** Un même groupe peut recevoir différentes candidatures adaptées Plan A et Plan B. Les doublons concernent l'offre exacte, pas l'entreprise ; conserver pour chaque poste son lien, son état, ses documents et ses dates.
+- **Préparer les appels** : les quinze fiches regroupent postes visés, statuts et notes de contacts/équipes. Identifier immédiatement l'entreprise et le contexte lorsqu'un recruteur appelle ; ne jamais inventer de contact ou de démarche.
+- Stage Master 2 d'environ six mois, début janvier/février 2027, Nantes en priorité, mobilité France. Les missions clairement liées à la défense, académiques/hors domaine et les postes financiers sont exclus.
+- **Préservation des archives** : les offres hors des quinze entreprises ne sont plus proposées dans la prospection active, mais les anciens dossiers, statuts et documents ne sont pas effacés par ce filtrage.
+
+La règle commune est définie dans `shared/searchScope.ts`. Le frontend, le Worker et Apps Script la respectent. L'absence de résultat dans un portail ne prouve pas l'absence d'une opportunité dans une entreprise.
 
 ## Product flow
 
