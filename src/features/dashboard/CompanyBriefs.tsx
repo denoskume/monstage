@@ -36,7 +36,7 @@ export function CompanyBriefs({ offers, sectorId }: { offers: InternshipOffer[];
     </div>
     <div className="company-portfolio__grid">
       {companies.map(company => {
-        const companyOffers = offers.filter(offer => targetCompany(offer.company) === company.name);
+        const companyOffers = offers.filter(offer => targetCompany(offer.company) === company.name && getOfferPlan(offer) !== null);
         const planA = companyOffers.filter(offer => getOfferPlan(offer) === 'A');
         const planB = companyOffers.filter(offer => getOfferPlan(offer) === 'B');
         const sent = companyOffers.filter(wasSent);
