@@ -17,7 +17,7 @@ describe('target dashboard navigation', () => {
     expect(screen.getByText('Plan B1')).toBeInTheDocument();
     view.unmount();
     render(<MemoryRouter initialEntries={['/dashboard/data-services?plan=B2']}><Routes><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    for (const name of ['Orange', 'Capgemini', 'AXA', 'BNP Paribas', 'Société Générale']) expect(screen.getByRole('heading', {name})).toBeInTheDocument();
+    for (const name of ['Orange', 'Capgemini', 'Air Liquide', 'Veolia', 'Michelin']) expect(screen.getByRole('heading', {name})).toBeInTheDocument();
   });
   it('shows the five healthcare companies on its sector route', () => {
     render(<MemoryRouter initialEntries={['/dashboard/sante']}><Routes><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes></MemoryRouter>);
