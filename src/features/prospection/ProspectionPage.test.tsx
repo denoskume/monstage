@@ -18,13 +18,21 @@ describe('ProspectionPage', () => {
   it('imports Safran targets once without duplicates', () => {
     render(<MemoryRouter><ProspectionPage /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
-    expect(screen.queryByText('Safran Trusted 4D')).not.toBeInTheDocument();
+    expect(screen.getByText('Safran Trusted 4D')).toBeInTheDocument();
     expect(screen.getByText('Safran.AI')).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer le CV dans Studio'})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer la lettre dans Studio'})).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(1);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
+  });
+  it('prefills and saves an EDF Enedis B1 spontaneous application', () => {
+    render(<MemoryRouter initialEntries={['/prospection?company=EDF%20%2F%20Enedis&plan=B1']}><ProspectionPage /></MemoryRouter>);
+    expect(screen.getByDisplayValue('EDF / Enedis')).toBeInTheDocument();
+    expect(screen.getByDisplayValue(/maintenance prédictive/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /enregistrer la piste/i }));
+    expect(screen.getByText('EDF / Enedis')).toBeInTheDocument();
+    expect(screen.getByText(/Plan B1/)).toBeInTheDocument();
   });
   it('migrates existing three Safran targets to four without deleting data', () => {
     const names = ['Safran Trusted 4D', 'Safran Aircraft Engines', 'Safran Helicopter Engines'];
