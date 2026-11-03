@@ -22,9 +22,9 @@ describe('ProspectionPage', () => {
     expect(screen.getByText('Safran.AI')).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer le CV dans Studio'})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer la lettre dans Studio'})).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
   });
   it('prefills and saves an EDF Enedis B1 spontaneous application', () => {
     render(<MemoryRouter initialEntries={['/prospection?company=EDF%20%2F%20Enedis&plan=B1']}><ProspectionPage /></MemoryRouter>);
