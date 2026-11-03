@@ -14,6 +14,6 @@ describe('target dashboard navigation', () => {
   it('shows the five healthcare companies on its sector route', () => {
     render(<MemoryRouter initialEntries={['/dashboard/sante']}><Routes><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes></MemoryRouter>);
     for (const name of ['GE HealthCare','Siemens Healthineers','Philips','Canon Medical Systems','Dassault Systèmes']) expect(screen.getByRole('heading', {name})).toBeInTheDocument();
-    expect(screen.getAllByText('Site carrières ↗')).toHaveLength(5);
+    expect(screen.getAllByText('Site carrières')).toHaveLength(5);
   });
 });

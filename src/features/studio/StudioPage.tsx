@@ -54,7 +54,7 @@ export function StudioPage() {
     try {
       await saveApplicationStatus(token, offer.id, 'Candidature envoyée');
       retry();
-      setStatusNotice('Candidature envoyée enregistrée dans la base. Consultez « Mes offres → Envoyées » pour le suivi.');
+      setStatusNotice('Candidature envoyée enregistrée dans la base. Consultez « Mes offres, rubrique Envoyées » pour le suivi.');
     } catch (error) {
       setStatusNotice(error instanceof Error ? 'Statut non enregistré : ' + error.message : 'Statut non enregistré.');
     } finally { setStatusBusy(false); }
@@ -79,9 +79,9 @@ export function StudioPage() {
                 <div role="status" style={{ marginTop: 18 }}>
                   {dossier?.selectionReasons?.length ? <p><strong>Projets sélectionnés :</strong> {dossier.selectionReasons.join(' · ')}</p> : null}
                   <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <Link className="button button--secondary" to={`/cv?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner le CV →</Link>
-                    <Link className="button button--secondary" to={`/cl?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner la lettre →</Link>
-                    <Link className="button button--secondary" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier et PDF →</Link>
+                    <Link className="button button--secondary" to={`/cv?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner le CV</Link>
+                    <Link className="button button--secondary" to={`/cl?offer=${encodeURIComponent(offer.id)}&language=${language}`}>Examiner la lettre</Link>
+                    <Link className="button button--secondary" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier et PDF</Link>
                   </div>
                   <div style={{ marginTop: 16 }}>
                     <button className="button button--primary" type="button" disabled={statusBusy} onClick={() => void confirmSent()}>{statusBusy ? 'Enregistrement…' : "J'ai envoyé cette candidature"}</button>
@@ -98,22 +98,22 @@ export function StudioPage() {
         <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Catalogue GitHub vérifié — {publicProjectCatalog.length} projets publics et laboratoires</summary>
         <ul style={{ paddingLeft: 20 }}>
           {publicProjectCatalog.map(entry => <li key={entry.id} style={{ marginBottom: 9 }}>
-            <a href={entry.url} target="_blank" rel="noopener noreferrer">{entry.cv[language].name} ↗</a>
+            <a href={entry.url} target="_blank" rel="noopener noreferrer">{entry.cv[language].name}</a>
             <span style={{ marginLeft: 8, opacity: .75, fontSize: 12 }}>{entry.tags.slice(0, 4).join(' · ')}</span>
           </li>)}
         </ul>
       </details>
       <div className="studio-grid">
-        <Link to={offer ? `/cv?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cv'} className="card studio-card" aria-label="Open CV Studio">
+        <article className="card studio-card">
           <div className="studio-card__icon" aria-hidden="true">CV</div>
           <div><h2>CV</h2></div>
-          <span className="studio-card__arrow" aria-hidden="true">→</span>
-        </Link>
-        <Link to={offer ? `/cl?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cl'} className="card studio-card" aria-label="Open Cover Letter Studio">
+          <Link className="button button--secondary" to={offer ? `/cv?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cv'} aria-label="Open CV Studio">Ouvrir le CV</Link>
+        </article>
+        <article className="card studio-card">
           <div className="studio-card__icon" aria-hidden="true">CL</div>
           <div><h2>Cover Letter</h2></div>
-          <span className="studio-card__arrow" aria-hidden="true">→</span>
-        </Link>
+          <Link className="button button--secondary" to={offer ? `/cl?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cl'} aria-label="Open Cover Letter Studio">Ouvrir la lettre</Link>
+        </article>
       </div>
     </section>
   );

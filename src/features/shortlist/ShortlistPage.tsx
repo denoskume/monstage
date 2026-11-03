@@ -232,7 +232,7 @@ export function ShortlistPage() {
 
                 <div className="my-jobs-saved-row__actions">
                   <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Préparer ma candidature</Link>
-                  {offer.applicationUrl ? <a className="button button--secondary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Postuler ↗</a> : null}
+                  {offer.applicationUrl ? <a className="button button--secondary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Postuler</a> : null}
                   {resolvedStage(offer) ? (
                     <button className="button button--secondary" type="button" onClick={() => setTab(resolvedStage(offer) === 'interview' ? 'interviews' : resolvedStage(offer) === 'archived' ? 'archived' : 'applications')}>Voir le suivi</button>
                   ) : <button className="button button--secondary" type="button" disabled={savingId === offer.id} onClick={() => void moveOffer(offer, 'application')}>✓ J’ai postulé</button>}

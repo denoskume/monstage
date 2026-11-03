@@ -37,7 +37,7 @@ export function OfferDetail({
   const match = getCvMatch(offer);
   return (
     <article className="offer-detail card">
-      {onBack ? <button className="mobile-back" type="button" onClick={onBack}>← Back to jobs</button> : null}
+      {onBack ? <button className="mobile-back" type="button" onClick={onBack}>Back to jobs</button> : null}
 
       <header className="offer-detail__header">
         <div className="offer-detail__identity">
@@ -57,7 +57,7 @@ export function OfferDetail({
         {applied ? (
           <Link className="button button--primary button--large" to="/shortlist">Voir ma candidature</Link>
         ) : offer.applicationUrl ? (
-          <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply ↗</a>
+          <a className="button button--primary button--large" href={offer.applicationUrl} target="_blank" rel="noreferrer">Apply</a>
         ) : (
           <button className="button button--primary button--large" disabled>Application link unavailable</button>
         )}
