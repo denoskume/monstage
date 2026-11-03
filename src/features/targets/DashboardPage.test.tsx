@@ -2,26 +2,34 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from '../dashboard/DashboardPage';
+
 vi.mock('../../hooks/useOffers', () => ({ useOffers: () => ({ data: {offers: []}, loading: false, error: null, retry: vi.fn() }) }));
 vi.mock('../../auth/useAuth', () => ({ useAuth: () => ({ token: 'test' }) }));
-describe('target dashboard navigation', () => {
-  it('shows four linked sectors and zero real applications for an empty workspace', () => {
+
+describe('company-first dashboard', () => {
+  it('shows three transport sectors and exactly fifteen company dossiers', () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(screen.getByRole('heading', {name: 'Vue d’ensemble'})).toBeInTheDocument();
-    expect(screen.getAllByText('5 entreprises')).toHaveLength(4);
+    expect(screen.getByRole('heading', {name:'Vue d’ensemble'})).toBeInTheDocument();
+    expect(screen.getAllByText('5 entreprises')).toHaveLength(3);
+    expect(screen.getByRole('heading', {name:'15 entreprises · deux plans'})).toBeInTheDocument();
+    expect(screen.getAllByText('Fiche entreprise et préparation d’appel')).toHaveLength(15);
     expect(screen.getByText('Candidatures envoyées').nextElementSibling).toHaveTextContent('0');
   });
-  it('shows six sectors under Plan B1 and the new technology groups for B2', () => {
-    const view = render(<MemoryRouter initialEntries={['/dashboard?plan=B1']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(screen.getAllByText('5 entreprises')).toHaveLength(6);
-    expect(screen.getByText('Plan B1')).toBeInTheDocument();
-    view.unmount();
-    render(<MemoryRouter initialEntries={['/dashboard/data-services?plan=B2']}><Routes><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    for (const name of ['Orange', 'Capgemini', 'Air Liquide', 'Veolia', 'Michelin']) expect(screen.getByRole('heading', {name})).toBeInTheDocument();
+  it('shows the exact same companies under A and B, and no B1/B2 tabs', () => {
+    const first = render(<MemoryRouter initialEntries={['/dashboard?plan=A']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
+    expect(screen.getByRole('link',{name:/Plan A/})).toHaveAttribute('aria-current','page');
+    expect(screen.getByRole('heading',{name:'SNCF'})).toBeInTheDocument();
+    first.unmount();
+    render(<MemoryRouter initialEntries={['/dashboard?plan=B']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
+    expect(screen.getByRole('link',{name:/Plan B/})).toHaveAttribute('aria-current','page');
+    expect(screen.getByRole('heading',{name:'SNCF'})).toBeInTheDocument();
+    expect(screen.queryByRole('link',{name:/Plan B1|Plan B2/})).not.toBeInTheDocument();
   });
-  it('shows the five healthcare companies on its sector route', () => {
-    render(<MemoryRouter initialEntries={['/dashboard/sante']}><Routes><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    for (const name of ['GE HealthCare','Siemens Healthineers','Philips','Canon Medical Systems','Dassault Systèmes']) expect(screen.getByRole('heading', {name})).toBeInTheDocument();
+  it('supports railway company dossiers for both plans', () => {
+    render(<MemoryRouter initialEntries={['/dashboard/ferroviaire?plan=B']}><Routes><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes></MemoryRouter>);
+    for(const name of ['Alstom','SNCF','RATP','Siemens Mobility','Hitachi Rail']) expect(screen.getByRole('heading',{name})).toBeInTheDocument();
     expect(screen.getAllByText('Site carrières')).toHaveLength(5);
+    expect(screen.getAllByText('Candidature Plan A')).toHaveLength(5);
+    expect(screen.getAllByText('Candidature Plan B')).toHaveLength(5);
   });
 });
