@@ -12,7 +12,7 @@ describe('target strategy', () => {
     expect(allSectors.slice(4).flatMap(sector => sector.companies.map(company => company[0]))).toHaveLength(10);
     expect(targetOffers([offer('EDF Enedis','Stage Data Analyst maintenance prédictive')], allSectors[4], 'B1')).toHaveLength(1);
     expect(targetOffers([offer('EDF Enedis','Stage Computer Vision')], allSectors[4], 'A')).toHaveLength(0);
-    expect(targetOffers([offer('BNP Paribas','Stage Data Analyst Power BI')], allSectors[5], 'B2')).toHaveLength(1);
+    expect(targetOffers([offer('Veolia','Stage Data Analyst Power BI')], allSectors[5], 'B2')).toHaveLength(1);
     expect(targetOffers([offer('Alstom','Stage Data Analyst fiabilité RAMS')], allSectors[1], 'B1')).toHaveLength(1);
   });
   it('separates Siemens businesses and excludes unrelated missions', () => {
