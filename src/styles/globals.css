@@ -2076,3 +2076,13 @@ h1, h2, h3 { color: var(--text); }
 .cv-studio-actions > .button, .cl-studio-actions > .button { min-height: 36px; padding: 7px 11px; font-size: .82rem; white-space: nowrap; }
 .cv-studio-actions > .button--primary:not(.cv-download-button), .cl-studio-actions > .button--primary:not(.cl-download-button) { font-weight: 700; }
 @media (max-width: 1100px) { .cv-studio-actions, .cl-studio-actions { justify-content: flex-start; max-width: 100%; } }
+
+
+/* Career search tracks: no decorative arrows or oversized labels. */
+.jobs-plan-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.jobs-plan-tabs button{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #cbdad7;border-radius:9px;color:inherit;background:transparent;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.jobs-plan-tabs button.active{background:#e9f5f2;border-color:#168276;color:#135f57}
+.jobs-plan-tabs button span{font-variant-numeric:tabular-nums;color:#58736e}
+.jobs-plan-tabs button:focus-visible{outline:3px solid #168276;outline-offset:2px}
+.jobs-plan-description{margin:4px 0 10px;font-size:13px;color:#52716b}
+@media(max-width:500px){.jobs-plan-tabs button{flex:1 1 calc(50% - 8px);justify-content:space-between}}

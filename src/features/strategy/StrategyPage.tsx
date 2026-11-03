@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import './strategy.css';
+import { PLAN_LABELS, type SearchPlan } from '../../../shared/searchScope';
 
 type SkillId = 'offers' | 'spontaneous' | 'outreach' | 'profile' | 'interviews';
 type Status = 'planned' | 'in_progress' | 'completed';
@@ -63,6 +64,16 @@ export function StrategyPage() {
         </div>
       </header>
 
+      <section className="strategy-tracks" aria-label="Plans de carrière">
+        {(['A', 'B1', 'B2'] as SearchPlan[]).map((plan) => (
+          <article className="strategy-track" key={plan}>
+            <span>Plan {plan}</span>
+            <h2>{PLAN_LABELS[plan]}</h2>
+            <p>{plan === 'A' ? 'Prioritaire · 20 groupes ciblés · 60 % des démarches' : plan === 'B1' ? 'Data industrielle · 30 groupes · 30 % des démarches' : 'Data Analyst généraliste / BI · 30 groupes · 10 % des démarches'}</p>
+            <Link className="button button--secondary" to={'/dashboard?plan=' + plan}>Voir ce parcours</Link>
+          </article>
+        ))}
+      </section>
       <div className="strategy-layout">
         <nav className="strategy-sidebar" aria-label="Compétences de candidature">
           {skills.map((item) => {

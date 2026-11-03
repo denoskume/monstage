@@ -1,4 +1,4 @@
-import { targetCompany, isVisionMission, isTargetOffer } from '../../shared/searchScope';
+import { targetCompany, getOfferPlan, isTargetOffer } from '../../shared/searchScope';
 export interface ExternalOffer {
   id: string;
   company: string;
@@ -84,7 +84,7 @@ const SMART_SOURCES: SmartSource[] = [
   { companyId: 'Iliad-Free', company: 'Iliad-Free' },
 ];
 
-const WORKDAY_SEARCHES = ['stage vision', 'stage image', 'intern vision', 'intern imaging'];
+const WORKDAY_SEARCHES = ['stage vision', 'stage image', 'intern vision', 'intern imaging', 'stage data analyst', 'stage maintenance', 'intern data', 'power bi'];
 
 const WORKDAY_FOCUSED_SEARCHES: Record<string, string[]> = {};
 
@@ -115,8 +115,8 @@ function isInternship(title: string): boolean {
   return ['stage', 'stagiaire', 'internship', 'intern'].some((term) => text.includes(term));
 }
 
-function isRelevant(title: string): boolean {
-  return isVisionMission({title});
+function isRelevant(title: string, company: string): boolean {
+  return isTargetOffer({title, company});
 }
 
 function workdayPublishedAt(value: unknown): string | null {
@@ -171,7 +171,7 @@ function toOffer(input: {
     id: input.id,
     company: input.company,
     title: input.title,
-    domain: specialization(input.title),
+    domain: getOfferPlan(input) === 'B1' ? 'Industrial Data / Predictive Maintenance' : getOfferPlan(input) === 'B2' ? 'Data Analytics / BI' : specialization(input.title),
     city: input.city,
     region: input.region ?? null,
     m2Fit: 'Oui probable',
@@ -187,7 +187,7 @@ function toOffer(input: {
     shortlist: false,
     appliedAt: null,
     followUpAt: null,
-    specialization: specialization(input.title),
+    specialization: getOfferPlan(input) === 'B1' ? 'Industrial Data / Predictive Maintenance' : getOfferPlan(input) === 'B2' ? 'Data Analytics / BI' : specialization(input.title),
     technicalFit: fit,
     decisionScore: fit,
     priority: fit >= 88 ? 'A' : fit >= 80 ? 'B+' : 'B',
@@ -239,7 +239,7 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
       for (const job of jobs) {
         const title = String(job?.title ?? '');
         const path = String(job?.externalPath ?? '');
-        if (!title || !path || seen.has(path) || !isInternship(title) || !isRelevant(title)) continue;
+        if (!title || !path || seen.has(path) || !isInternship(title) || !isRelevant(title, source.company)) continue;
         seen.add(path);
         offers.push(toOffer({
           id: `workday:${source.tenant}:${path}`,
@@ -268,7 +268,7 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
 }
 
 async function fetchSmart(source: SmartSource): Promise<ExternalOffer[]> {
-  const queries = ['stage vision', 'stage image'];
+  const queries = ['stage vision', 'stage image', 'stage data', 'stage maintenance', 'stage analyst'];
   const seen = new Set<string>();
   const offers: ExternalOffer[] = [];
 
@@ -283,7 +283,7 @@ async function fetchSmart(source: SmartSource): Promise<ExternalOffer[]> {
       for (const job of jobs) {
         const title = String(job?.name ?? '');
         const id = String(job?.id ?? job?.uuid ?? title);
-        if (!title || seen.has(id) || !isInternship(title) || !isRelevant(title)) continue;
+        if (!title || seen.has(id) || !isInternship(title) || !isRelevant(title, source.company)) continue;
         seen.add(id);
         const location = job?.location ?? {};
         offers.push(toOffer({
@@ -323,7 +323,7 @@ async function fetchAshby(source: AshbySource): Promise<ExternalOffer[]> {
       return job?.isListed !== false &&
         title &&
         isInternship(title) &&
-        isRelevant(title) &&
+        isRelevant(title, source.company) &&
         normalize(locations).includes('france');
     })
     .map((job: any) => toOffer({
@@ -353,7 +353,7 @@ async function fetchGreenhouse(source: GreenhouseSource): Promise<ExternalOffer[
       const content = String(job?.content ?? '');
       return title &&
         isInternship(`${title} ${content}`) &&
-        isRelevant(`${title} ${content}`) &&
+        isRelevant(title, source.company) &&
         normalize(location).includes('france');
     })
     .map((job: any) => toOffer({

@@ -10,6 +10,18 @@
 
 **Live app:** [Open MonStage](https://denoskume.github.io/monstage/) *(restricted access)*
 
+## Three-track internship search policy (November 2026)
+
+MonStage separates opportunities into **Plan A** (Computer Vision / Image Processing), **Plan B1** (industrial data analytics, reliability, predictive maintenance), and **Plan B2** (technical Data Analyst / Business Intelligence, including generalist roles).
+
+- **Plan A:** only the 20 long-established company groups in `shared/searchScope.ts`, strictly for image-related technical missions.
+- **Plan B1 and B2:** those same 20 groups plus 10 additional industrial/technology groups: **EDF/Enedis, ENGIE, TotalEnergies, Schneider Electric, VINCI, Orange, Capgemini, Air Liquide, Veolia, Michelin**.
+- **No financial specialties:** finance, banking, insurance, accounting, actuarial, credit, investment and financial-risk roles are excluded, even if the title says Data Analyst or Power BI. **Capgemini** is considered only for technical, hands-on analytics or industrial data missions—not for finance or generic strategy consulting.
+- **Constraints:** internships in France, Nantes preferred, nationwide mobility possible, six months ideally starting January–February 2027. Confirm unverified dates/durations rather than guessing. Exclude clearly defense-oriented and academic/laboratory internships.
+- **Tracking:** separate plan-specific discovery, sector/company progress and spontaneous-prospection filters. Historical applications are archived, not deleted; never mark an application as submitted without confirmation.
+
+The source-of-truth role classifier is `getOfferPlan` in `shared/searchScope.ts`. Both the frontend and Worker use it, with a corresponding Apps Script ingestion filter. External providers only cover documented/verifiable ATS endpoints; an unsupported employer does not imply there are no relevant positions.
+
 ## Product flow
 
 **Discover → Evaluate → Prioritize → Prepare → Apply → Follow up → Interview → Learn**

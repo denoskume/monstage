@@ -1,11 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
-import { sectors, targetOffers, followUpDue, dateKey, editableStatuses } from './targets';
+import { sectors, allSectors, targetOffers, followUpDue, dateKey, editableStatuses } from './targets';
 const offer = (company: string, title: string, extra = {}) => ({company,title,skills:[],...extra}) as unknown as InternshipOffer;
 describe('target strategy', () => {
   it('keeps twenty companies across four sectors', () => {
     expect(sectors).toHaveLength(4);
     expect(new Set(sectors.flatMap(s => s.companies.map(c => c[0]))).size).toBe(20);
+  });
+  it('adds exactly ten B-only companies across two new sectors', () => {
+    expect(allSectors).toHaveLength(6);
+    expect(allSectors.slice(4).flatMap(sector => sector.companies.map(company => company[0]))).toHaveLength(10);
+    expect(targetOffers([offer('EDF Enedis','Stage Data Analyst maintenance prédictive')], allSectors[4], 'B1')).toHaveLength(1);
+    expect(targetOffers([offer('EDF Enedis','Stage Computer Vision')], allSectors[4], 'A')).toHaveLength(0);
+    expect(targetOffers([offer('Veolia','Stage Data Analyst Power BI')], allSectors[5], 'B2')).toHaveLength(1);
+    expect(targetOffers([offer('Alstom','Stage Data Analyst fiabilité RAMS')], allSectors[1], 'B1')).toHaveLength(1);
   });
   it('separates Siemens businesses and excludes unrelated missions', () => {
     const offers = [offer('Siemens Healthineers','Medical imaging'), offer('Siemens Mobility','Computer Vision'), offer('Alstom','Mechanical design'), offer('Alstom','Traitement d’images')];

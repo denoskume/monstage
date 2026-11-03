@@ -1,4 +1,4 @@
-import { isTargetOffer } from '../../../shared/searchScope';
+import { isTargetOffer, getOfferPlan, PLAN_LABELS, type SearchPlan } from '../../../shared/searchScope';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
@@ -64,6 +64,7 @@ export function OffersPage() {
   const [filters, setFilters] = useState<OfferFilterState>(() => initialFilters());
   const [draftFilters, setDraftFilters] = useState<OfferFilterState>(() => initialFilters());
   const [sort, setSort] = useState<SortMode>(initialPrefs.sort);
+  const [selectedPlan, setSelectedPlan] = useState<SearchPlan | 'all'>('all');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [mobileDetail, setMobileDetail] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -96,9 +97,13 @@ export function OffersPage() {
     () => dedupeOffers(offers.filter((offer) => isTargetOffer(offer) && !actions.isHidden(offer.id))),
     [offers, actions.hidden],
   );
+  const matchingPlanOffers = useMemo(
+    () => selectedPlan === 'all' ? availableOffers : availableOffers.filter(offer => getOfferPlan(offer) === selectedPlan),
+    [availableOffers, selectedPlan],
+  );
   const filteredOffers = useMemo(
-    () => filterOffers(availableOffers, filters),
-    [availableOffers, filters],
+    () => filterOffers(matchingPlanOffers, filters),
+    [matchingPlanOffers, filters],
   );
   const visibleOffers = useMemo(
     () => sortOffers(filteredOffers, sort),
@@ -134,7 +139,7 @@ export function OffersPage() {
   useEffect(() => {
     setCurrentPage(1);
     setMobileDetail(false);
-  }, [filters, sort]);
+  }, [filters, sort, selectedPlan]);
 
   useEffect(() => {
     if (selectedOffer && selectionKey(selectedOffer) !== selectedKey) setSelectedKey(selectionKey(selectedOffer));
@@ -182,6 +187,7 @@ export function OffersPage() {
     setFilters(resetFilters);
     setDraftFilters(resetFilters);
     setSort(defaultPreferences.sort);
+    setSelectedPlan('all');
     setFiltersOpen(false);
   }
 
@@ -268,10 +274,16 @@ export function OffersPage() {
         </div>
       </div>
 
+      <nav className="jobs-plan-tabs" aria-label="Parcours de recherche">
+        <button type="button" className={selectedPlan === 'all' ? 'active' : ''} aria-pressed={selectedPlan === 'all'} onClick={() => setSelectedPlan('all')}>Tous les plans <span>{availableOffers.length}</span></button>
+        {(['A', 'B1', 'B2'] as SearchPlan[]).map(key => <button key={key} type="button" className={selectedPlan === key ? 'active' : ''} aria-pressed={selectedPlan === key} title={PLAN_LABELS[key]} onClick={() => setSelectedPlan(key)}>Plan {key}<span>{availableOffers.filter(offer => getOfferPlan(offer) === key).length}</span></button>)}
+      </nav>
+      {selectedPlan !== 'all' ? <p className="jobs-plan-description">Plan {selectedPlan} · {PLAN_LABELS[selectedPlan]}</p> : null}
+
       {error && data ? <div className="stale-banner" role="status">Showing cached data. <button onClick={retry}>Refresh</button></div> : null}
       {actionNotice && !actionNotice.offerId && actionNotice.text !== 'Job hidden.' ? <div className="offer-action-notice" role="status"><span>{actionNotice.text}</span><button type="button" onClick={() => setActionNotice(null)}>×</button></div> : null}
 
-      {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) closeFilters(); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={offers} filters={draftFilters} onChange={setDraftFilters} onReset={() => setDraftFilters(resetFilters)} onClose={closeFilters} onApply={applyFilters} /></div></div> : null}
+      {filtersOpen ? <div className="filters-overlay filters-overlay--active" role="dialog" aria-modal="true" aria-label="Opportunity filters" onMouseDown={(event) => { if (event.target === event.currentTarget) closeFilters(); }}><div className="filters-sheet filters-sheet--desktop"><OfferFilters mobile offers={matchingPlanOffers} filters={draftFilters} onChange={setDraftFilters} onReset={() => setDraftFilters(resetFilters)} onClose={closeFilters} onApply={applyFilters} /></div></div> : null}
 
       {rankingInfoOpen ? (
         <div className="jobs-ranking-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRankingInfoOpen(false); }}>
