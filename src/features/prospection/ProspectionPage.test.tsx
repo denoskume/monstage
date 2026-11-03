@@ -56,6 +56,25 @@ describe('ProspectionPage', () => {
     expect(screen.getByText(/Candidature spontanée clôturée/)).toBeInTheDocument();
     expect(screen.queryByText(/Relance : 2026-11-09/)).not.toBeInTheDocument();
   });
+  it('repairs a Safran.AI lead imported after an earlier visit, without repeating the refusal note',()=>{
+    // A previous version set this marker even when no Safran.AI lead existed.
+    localStorage.setItem('monstage:safranai:refusal-20261102:v1','1');
+    localStorage.setItem('monstage.prospection.v1',JSON.stringify([{
+      id:'imported-ai',company:'Safran.AI',site:'Paris',team:'Computer Vision',
+      role:'Stage de fin d’études — Machine Learning et Computer Vision',
+      contact:'',contactLink:'',channel:'Lever',status:'Candidature envoyée',
+      date:'2026-10-25',followUp:'2026-11-09',notes:'Dépôt confirmé',
+    }]));
+    const first=render(<MemoryRouter><ProspectionPage/></MemoryRouter>);
+    const loaded=JSON.parse(localStorage.getItem('monstage.prospection.v1')||'[]');
+    expect(loaded[0]).toMatchObject({status:'Refus',date:'2026-10-25',followUp:''});
+    expect(loaded[0].notes).toContain('Dépôt confirmé');
+    expect(loaded[0].notes.match(/Refus reçu par email/g)).toHaveLength(1);
+    first.unmount();
+    render(<MemoryRouter><ProspectionPage/></MemoryRouter>);
+    const again=JSON.parse(localStorage.getItem('monstage.prospection.v1')||'[]');
+    expect(again[0].notes.match(/Refus reçu par email/g)).toHaveLength(1);
+  });
   it('allows drafting but blocks outreach without a specific team, site, rationale and channel',()=>{
     render(<MemoryRouter><ProspectionPage/></MemoryRouter>);
     fireEvent.click(screen.getByRole('button',{name:/nouvelle piste/i}));
