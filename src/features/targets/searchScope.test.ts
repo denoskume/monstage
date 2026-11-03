@@ -17,12 +17,21 @@ describe('three-track discovery scope', () => {
   });
   it('classifies predictive industrial data as B1, general analytics and BI as B2', () => {
     expect(getOfferPlan({company:'Alstom', title:'Stage Data Analyst Fiabilité RAMS'})).toBe('B1');
-    expect(getOfferPlan({company:'EDF Enedis', title:'Stage Data Science - Anticipation des pannes sur le réseau électrique'})).toBe('B1');
+    expect(getOfferPlan({company:'EDF Enedis', title:'Stage Data Analyst - Anticipation des pannes sur le réseau électrique'})).toBe('B1');
     expect(getOfferPlan({company:'Veolia', title:'Stage Data Analyst Power BI'})).toBe('B2');
     expect(getOfferPlan({company:'Orange', title:'Stage Business Intelligence & Reporting'})).toBe('B2');
     expect(getOfferPlan({company:'Safran',title:'Stage IA',domain:'Computer Vision / traitement d’images'})).toBe('A');
     expect(getOfferPlan({company:'GE HealthCare',title:'Stage imagerie médicale'})).toBe('A');
     expect(getOfferPlan({company:'Schneider Electric',title:'Stage maintenance prédictive'})).toBe('B1');
+  });
+  it('rejects Data Scientist roles in every plan and every group', () => {
+    const titles = ['Stage Data Scientist', 'Stage Data Science', 'Data Scientist Maintenance Prédictive',
+      'Stage Data Science - anticipation des pannes', 'Stage Machine Learning Engineer - inspection visuelle'];
+    for (const company of ['Airbus', 'Alstom', 'EDF', 'Veolia', 'Capgemini']) {
+      for (const title of titles) expect(getOfferPlan({company, title, domain:'Computer Vision / Predictive Maintenance'})).toBeNull();
+    }
+    expect(getOfferPlan({company:'Alstom',title:'Stage Data Analyst - maintenance prédictive'})).toBe('B1');
+    expect(getOfferPlan({company:'Orange',title:'Stage Data Analyst SQL & Power BI'})).toBe('B2');
   });
   it('excludes arbitrary jobs even in target companies', () => {
     for(const title of ['Stage RAG / LLM', 'Stage Python', 'Stage NLP', 'Stage Marketing Scanner', 'Stage Développement Commercial']) expect(isTargetOffer({company:'Safran',title})).toBe(false);
