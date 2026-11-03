@@ -183,6 +183,14 @@ export function OffersPage() {
     });
   }, [filters, sort]);
 
+  function choosePlan(next: SearchPlan | 'all') {
+    setSelectedPlan(next);
+    // The previous CV-specific recommendation filter must not silently hide
+    // the new industrial / generalist data backup roles on plan changes.
+    setFilters(current => ({ ...current, onlyForMe: false, specialization: null, industry: null, minScore: 0 }));
+    setDraftFilters(current => ({ ...current, onlyForMe: false, specialization: null, industry: null, minScore: 0 }));
+  }
+
   function resetAll() {
     setFilters(resetFilters);
     setDraftFilters(resetFilters);
@@ -275,8 +283,8 @@ export function OffersPage() {
       </div>
 
       <nav className="jobs-plan-tabs" aria-label="Parcours de recherche">
-        <button type="button" className={selectedPlan === 'all' ? 'active' : ''} aria-pressed={selectedPlan === 'all'} onClick={() => setSelectedPlan('all')}>Tous les plans <span>{availableOffers.length}</span></button>
-        {(['A', 'B1', 'B2'] as SearchPlan[]).map(key => <button key={key} type="button" className={selectedPlan === key ? 'active' : ''} aria-pressed={selectedPlan === key} title={PLAN_LABELS[key]} onClick={() => setSelectedPlan(key)}>Plan {key}<span>{availableOffers.filter(offer => getOfferPlan(offer) === key).length}</span></button>)}
+        <button type="button" className={selectedPlan === 'all' ? 'active' : ''} aria-pressed={selectedPlan === 'all'} onClick={() => choosePlan('all')}>Tous les plans <span>{availableOffers.length}</span></button>
+        {(['A', 'B1', 'B2'] as SearchPlan[]).map(key => <button key={key} type="button" className={selectedPlan === key ? 'active' : ''} aria-pressed={selectedPlan === key} title={PLAN_LABELS[key]} onClick={() => choosePlan(key)}>Plan {key}<span>{availableOffers.filter(offer => getOfferPlan(offer) === key).length}</span></button>)}
       </nav>
       {selectedPlan !== 'all' ? <p className="jobs-plan-description">Plan {selectedPlan} · {PLAN_LABELS[selectedPlan]}</p> : null}
 
