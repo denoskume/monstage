@@ -42,7 +42,7 @@ function load(): Lead[] {
     // visit must also be closed. Never alter unrelated Safran applications.
     saved = saved.map(lead => isSafranOriginalApplication(lead.company, lead.role, lead.date)
       ? {...lead, status:'Refus' as Status, date:lead.date || '2026-10-25', followUp:'',
-          notes:lead.notes.includes(SAFRAN_REFUS_NOTE) ? lead.notes :
+          notes:(lead.notes || '').includes(SAFRAN_REFUS_NOTE) ? lead.notes :
             [lead.notes, SAFRAN_REFUS_NOTE].filter(Boolean).join('\n\n')} : lead);
     const originalSafran = targets.filter(t => t.company !== 'Safran.AI');
     const hasPreviousThree = originalSafran.every(t => saved.some(l => l.company === t.company && l.site === t.site));
