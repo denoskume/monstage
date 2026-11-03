@@ -1,8 +1,8 @@
 import { NavLink } from 'react-router-dom';
 
 const links = [
-  ['/dashboard', '▥', 'Suivi'],
   ['/offers', '⌕', 'Offres'],
+  ['/dashboard', '▥', 'Suivi'],
   ['/shortlist', '☆', 'Sélection'],
   ['/studio', '▣', 'Préparer'],
   ['/prospection', '▦', 'Prospection'],
