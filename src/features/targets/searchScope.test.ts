@@ -18,7 +18,7 @@ describe('three-track discovery scope', () => {
   it('classifies predictive industrial data as B1, general analytics and BI as B2', () => {
     expect(getOfferPlan({company:'Alstom', title:'Stage Data Analyst Fiabilité RAMS'})).toBe('B1');
     expect(getOfferPlan({company:'EDF Enedis', title:'Stage Data Science - Anticipation des pannes sur le réseau électrique'})).toBe('B1');
-    expect(getOfferPlan({company:'BNP Paribas', title:'Stage Data Analyst RH Power BI'})).toBe('B2');
+    expect(getOfferPlan({company:'Veolia', title:'Stage Data Analyst Power BI'})).toBe('B2');
     expect(getOfferPlan({company:'Orange', title:'Stage Business Intelligence & Reporting'})).toBe('B2');
     expect(getOfferPlan({company:'Safran',title:'Stage IA',domain:'Computer Vision / traitement d’images'})).toBe('A');
     expect(getOfferPlan({company:'GE HealthCare',title:'Stage imagerie médicale'})).toBe('A');
@@ -30,12 +30,19 @@ describe('three-track discovery scope', () => {
     expect(isTargetOffer({company:'Google',title:'Stage Data Analyst'})).toBe(false);
     expect(isTargetOffer({company:'EDF',title:'Stage Computer Vision'})).toBe(false);
   });
+  it('excludes financial positions even inside industrial groups', () => {
+    expect(getOfferPlan({company:'Veolia',title:'Stage Data Analyst Finance'})).toBeNull();
+    expect(getOfferPlan({company:'EDF',title:'Stage Analyste de données comptabilité'})).toBeNull();
+    expect(getOfferPlan({company:'Michelin',title:'Stage Data Analyst Power BI'})).toBe('B2');
+    expect(getOfferPlan({company:'Capgemini',title:'Stage Consultant en stratégie financière'})).toBeNull();
+  });
   it('does not confuse Siemens divisions or match companies by partial words', () => {
     expect(targetCompany('Siemens')).toBeNull();
     expect(targetCompany('Boschman')).toBeNull();
     expect(targetCompany('Siemens Mobility')).toBe('Siemens Mobility');
     expect(targetCompany('Siemens Healthineers')).toBe('Siemens Healthineers');
     expect(targetCompany('EDF Enedis')).toBe('EDF / Enedis');
+    for (const company of ['AXA', 'BNP Paribas', 'Société Générale']) expect(targetCompany(company)).toBeNull();
   });
   it('restricts visibility without destroying archived out-of-scope records', () => {
     const offers = [
@@ -43,7 +50,7 @@ describe('three-track discovery scope', () => {
       {company:'Stimio',title:'Stage Python',applicationStatus:'Candidature envoyée'},
       {company:'Alstom',title:'Stage Computer Vision'},
       {company:'EDF Enedis',title:'Stage maintenance prédictive'},
-      {company:'AXA',title:'Stage Business Intelligence'},
+      {company:'Veolia',title:'Stage Business Intelligence'},
     ];
     expect((restrictOffersPayload({offers}) as {offers:unknown[]}).offers).toEqual(offers.slice(2));
     expect(offers).toHaveLength(5);
