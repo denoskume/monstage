@@ -46,7 +46,6 @@ function ApplicationDocuments({ offerId, company }: { offerId: string; company: 
   return <section className="workspace-section">
     <div className="workspace-section__heading"><h3>Documents de candidature</h3><span>{documents.length} fichier{documents.length > 1 ? 's' : ''}</span></div>
     {folderUrl ? <a href={folderUrl} target="_blank" rel="noreferrer">Ouvrir le dossier GitHub privé ↗</a> : null}
-    <p className="workspace-note">Conservez ici les PDF réellement envoyés. Chaque version reste associée à cette offre et peut être retrouvée lors d'une relance ou d'un entretien.</p>
     <div className="workspace-actions">
       {([['cv', '+ Joindre le CV envoyé'], ['letter', '+ Joindre la lettre envoyée'], ['other', '+ Autre document']] as const).map(([kind, label]) =>
         <label key={kind} className="button button--secondary" style={{ cursor: busy ? 'wait' : 'pointer' }}>
@@ -91,7 +90,6 @@ function WorkspaceCard({ offer, state, onUpdate }: {
 
       <section className="workspace-section">
         <div className="workspace-section__heading"><h3>1. Préparer les documents</h3><span>{progress}% prêts</span></div>
-        <p className="workspace-note">Les documents sont propres à cette offre. Tu peux les adapter, les relire et les enregistrer avant de postuler.</p>
         <div className="workspace-progress"><span style={{ width: `${progress}%` }} /></div>
         <div className="workspace-actions" style={{ marginTop: 14, flexWrap: 'wrap' }}>
           <Link className="button button--primary" to={`/cv?offer=${encodeURIComponent(offer.id)}`}>Préparer le CV</Link>
@@ -138,7 +136,7 @@ export function WorkspacePage() {
   return (
     <section className="page workspace-page">
       <div className="page-header" style={{ maxWidth: 1080, margin: '0 auto 20px' }}>
-        <div><h1>Dossier de candidature</h1><p>Une seule offre, un seul dossier : prépare, enregistre et suis ta candidature.</p></div>
+        <h1 className="sr-only">Dossier de candidature</h1>
         <Link className="button button--secondary" to="/offers">← Retour aux offres</Link>
       </div>
       {!selectedId ? (

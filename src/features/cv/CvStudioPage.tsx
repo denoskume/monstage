@@ -257,8 +257,7 @@ export function CvStudioPage() {
     <section className="page cv-studio-page">
       <div className="page-header cv-studio-header">
         <div>
-          <h1>CV Studio</h1>
-          <p>{draft.language === 'FR' ? 'CV adapté à l’offre, modifiable et exportable en PDF.' : 'Create and tailor a clean ATS-friendly CV written naturally for English-speaking recruiters.'}</p>
+          <h1 className="sr-only">CV Studio</h1>
         </div>
         <div className="cv-studio-actions">
           <div className="cl-language-toggle" aria-label="CV language">

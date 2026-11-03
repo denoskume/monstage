@@ -198,7 +198,7 @@ export function ShortlistPage() {
   return (
     <section className="page my-jobs-page">
       <div className="page-header">
-        <div><h1>Mes offres</h1><p>Retrouve tes offres enregistrées, candidatures envoyées, entretiens, refus et archives au même endroit.</p></div>
+        <h1 className="sr-only">Mes offres</h1>
         <button type="button" className="jobs-filter-button" onClick={() => setExternalFormOpen(true)}>+ Ajouter une candidature</button>
       </div>
       {externalFormOpen ? <ExternalApplicationForm onClose={() => setExternalFormOpen(false)} onCreated={(offerId) => { actions.setStage(offerId, 'application'); setExternalFormOpen(false); setNotice('Candidature ajoutée.'); setTab('applications'); retry(); }} /> : null}

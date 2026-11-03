@@ -106,10 +106,7 @@ export function TrainingPage() {
     if (importRef.current) importRef.current.value = '';
   }
   return <div className="lms page">
-    <header className="lms-hero">
-      <div><p className="eyebrow">BOOTCAMP 4.0 · Learning Management System</p><h1>Stage Computer Vision<br /><span>et traitement d’image</span></h1><p>De la première image à une solution d’inspection livrée.<br />8 semaines · 40 journées pratiques · 20–25 h / semaine</p></div>
-      <div className="lms-hero__goal"><span className="lms-pill">Objectif métier</span><strong>Computer Vision Engineer junior</strong><p>Réaliser, expliquer, déboguer et reproduire une mission en autonomie.</p><small>Fondamentaux : 2 jours. Week-ends disponibles pour rattrapage.</small></div>
-    </header>
+    <h1 className="sr-only">Stage Computer Vision et traitement d’image</h1>
     <div className="lms-savebar"><span role="status">{busy ? 'Enregistrement…' : message}{dirty && ' •'}</span><div><button className="button button--ghost" onClick={() => download('stage-cv-progression.json', JSON.stringify(state, null, 2))}>Exporter le suivi</button><button className="button button--primary" disabled={!ready || busy || !dirty} onClick={save}>Enregistrer le suivi</button></div></div>
     {error && <div className="lms-alert" role="alert">{error} {!ready && <button onClick={() => window.location.reload()}>Réessayer le chargement</button>}</div>}
     {draft && <div className="lms-alert">Un brouillon non enregistré est disponible sur cet appareil. {draft.revision !== revision && <strong>La version privée a changé : compare les données avant de sauvegarder.</strong>}<div><button className="button button--secondary" disabled={!ready || busy} onClick={() => { change(draft.state); setDraft(null); }}>Restaurer le brouillon</button><button className="button button--ghost" onClick={() => download('stage-cv-brouillon.json', JSON.stringify(draft.state, null, 2))}>Exporter le brouillon</button><button className="button button--ghost" onClick={() => { localStorage.removeItem(key); setDraft(null); }}>Garder la version privée</button></div></div>}
