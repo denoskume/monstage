@@ -31,12 +31,7 @@ export function MessagesPage() {
 
   return (
     <section className="page messages-page">
-      <div className="page-header">
-        <div>
-          <h1>Recruiter activity</h1>
-          <p>Responses and application events detected by MonStage.</p>
-        </div>
-      </div>
+      <h1 className="sr-only">Recruiter activity</h1>
 
       {activity.length === 0 ? (
         <EmptyState title="No recruiter activity yet." />

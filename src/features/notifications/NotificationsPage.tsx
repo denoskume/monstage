@@ -26,12 +26,7 @@ export function NotificationsPage() {
 
   return (
     <section className="page notifications-page">
-      <div className="page-header">
-        <div>
-          <h1>Notifications</h1>
-          <p>Important application updates, follow-ups and recruiter events.</p>
-        </div>
-      </div>
+      <h1 className="sr-only">Notifications</h1>
 
       {notifications.length === 0 ? (
         <EmptyState title="No notifications right now." />

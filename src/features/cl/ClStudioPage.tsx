@@ -224,8 +224,7 @@ export function ClStudioPage() {
     <section className="page cl-studio-page">
       <div className="page-header cl-studio-header">
         <div>
-          <h1>CL Studio</h1>
-          <p>Quatre paragraphes ciblés, modifiables et prêts à exporter en PDF.</p>
+          <h1 className="sr-only">CL Studio</h1>
         </div>
         <div className="cl-studio-actions">
           <div className="cl-language-toggle" aria-label="Cover letter language">
