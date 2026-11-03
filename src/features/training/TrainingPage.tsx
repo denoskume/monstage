@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { dailyLessons } from './daily';
 import { DailyLessonView } from './daily/DailyLessonView';
 import { dailyReviewReady } from './daily/review';
@@ -102,13 +103,16 @@ export function TrainingPage() {
     if (!file) return;
     try {
       if (file.size > 250000) throw new Error('Fichier trop volumineux.');
-      const next = validateTraining(JSON.parse(await file.text()));
+      const parsed = JSON.parse(await file.text());
+      if (parsed.course && parsed.course !== 'cv') throw new Error('Ce fichier appartient à un autre stage.');
+      const next = validateTraining(parsed);
       if (!window.confirm('Remplacer le suivi affiché par cette sauvegarde ? Le remplacement privé aura lieu seulement après Enregistrer.')) return;
       change(next); setError('');
     } catch (err) { setError(err instanceof Error ? err.message : 'Import impossible.'); }
     if (importRef.current) importRef.current.value = '';
   }
   return <div className="lms page">
+    <nav className="stage-course-nav" aria-label="Choisir un stage"><Link to="/stages">Tous les stages</Link><strong>Computer Vision et traitement d’image</strong><Link to="/stages/data-analysis">Stage Data Analysis</Link></nav>
     <h1 className="sr-only">Stage Computer Vision et traitement d’image</h1>
     <div className="lms-savebar"><span role="status">{busy ? 'Enregistrement…' : message}{dirty && ' •'}</span><div><button className="button button--ghost" onClick={() => download('stage-cv-progression.json', JSON.stringify(state, null, 2))}>Exporter le suivi</button><button className="button button--primary" disabled={!ready || busy || !dirty} onClick={save}>Enregistrer le suivi</button></div></div>
     {error && <div className="lms-alert" role="alert">{error} {!ready && <button onClick={() => window.location.reload()}>Réessayer le chargement</button>}</div>}

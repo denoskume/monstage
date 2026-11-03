@@ -1,3 +1,6 @@
+import { lazy, Suspense } from 'react';
+import { StagesPage } from '../features/training/StagesPage';
+const DataStagePage = lazy(() => import('../features/training/dataAnalysis/DataStagePage'));
 import { TrainingPage } from '../features/training/TrainingPage';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProspectionPage } from '../features/prospection/ProspectionPage';
@@ -18,6 +21,8 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppShell />}>
         <Route index element={<Navigate to="/offers" replace />} />
+        <Route path="/stages" element={<StagesPage />} />
+        <Route path="/stages/data-analysis" element={<Suspense fallback={<p role="status">Chargement du projet…</p>}><DataStagePage /></Suspense>} />
         <Route path="/stage-cv" element={<TrainingPage />} />
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/prospection" element={<ProspectionPage />} />

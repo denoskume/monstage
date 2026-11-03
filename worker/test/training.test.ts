@@ -32,3 +32,16 @@ describe('private training persistence', () => {
     expect(result).toEqual({ status: 200, payload: { revision: 'saved-sha', saved: true } });
   });
 });
+it('isolates Data Analysis storage from the historical CV archive', async () => {
+  const fetcher = vi.fn().mockResolvedValue(new Response('', {status:404}));
+  vi.stubGlobal('fetch',fetcher);
+  await handleTraining(env,{action:'load',course:'data-analysis'});
+  expect(fetcher.mock.calls[0][0]).toContain('/Formation_Data_Analysis/progression.json');
+  await handleTraining(env,{action:'load'});
+  expect(fetcher.mock.calls[1][0]).toContain('/Formation_CV/progression.json');
+});
+it('rejects unknown courses and mismatched saves before writing', async () => {
+  const fetcher = vi.fn(); vi.stubGlobal('fetch',fetcher);
+  expect((await handleTraining(env,{action:'load',course:'../../private'})).status).toBe(400);
+  expect(fetcher).not.toHaveBeenCalled();
+});

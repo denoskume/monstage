@@ -1,3 +1,4 @@
+import { MemoryRouter } from 'react-router-dom';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
@@ -7,7 +8,7 @@ import { trainingRequest } from './trainingApi';
 vi.mock('./trainingApi', () => ({ trainingRequest: vi.fn() }));
 const auth = { token: 'test', user: { email: 'owner@example.test' }, invalidateSession: vi.fn() } as unknown as AuthContextValue;
 beforeEach(() => { localStorage.clear(); vi.mocked(trainingRequest).mockReset().mockResolvedValue({ state: null, revision: null }); });
-function mount() { return render(<AuthContext.Provider value={auth}><TrainingPage /></AuthContext.Provider>); }
+function mount() { return render(<MemoryRouter><AuthContext.Provider value={auth}><TrainingPage /></AuthContext.Provider></MemoryRouter>); }
 test('lets the learner study, complete a task and retain progress after reopening', async () => {
   const user = userEvent.setup();
   const view = mount();

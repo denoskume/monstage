@@ -97,3 +97,4 @@
 .lms-review-link span { color:var(--accent); font-size:.85rem; }
 .lms-days small { overflow-wrap:anywhere; line-height:1.5; }
 @media(max-width:767px) { .lms-days[aria-label="Choisir la leçon du jour"] { display:flex; overflow-x:auto; } .lms-days[aria-label="Choisir la leçon du jour"] button { min-width:145px; } .lms-review-link { flex-direction:column; gap:5px; } }
+.stage-course-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.stage-course-grid p{line-height:1.8}.stage-index h1{margin-bottom:22px}.stage-course-nav{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:12px 0 20px;border-bottom:1px solid var(--border);margin-bottom:18px;font-size:.9rem}.stage-course-nav a{color:var(--accent);font-weight:700}.stage-course-nav strong{margin-right:auto}@media(max-width:700px){.stage-course-grid{grid-template-columns:1fr}}
