@@ -27,3 +27,13 @@ Les tâches cochées et la maîtrise sont deux indicateurs distincts. Réouvrir 
 ## Architecture
 
 `src/features/training/` : programme, leçons, quiz, état validé et interface. `POST /api/training` : lecture et écriture après la vérification habituelle du compte autorisé. Le Worker réutilise `GITHUB_ARCHIVE_TOKEN` côté serveur et stocke le suivi dans `Formation_CV/progression.json` du dépôt privé d’archives. Aucune nouvelle permission ni clé dans le client.
+
+## Séances quotidiennes détaillées
+
+Chaque journée dispose désormais de sa propre leçon : objectifs et prérequis, concepts utiles, démonstration Python commentée, observations attendues, exercice autonome, contraintes et livrables, correction avec code, vérifications, diagnostic des erreurs, variante et questions de revue avec points attendus. Le guide Markdown et les deux scripts Python sont téléchargeables par séance.
+
+40 séances, 80 blocs Python quotidiens, au moins 120 critères pratiques et 80 questions de revue, en plus des 24 questions hebdomadaires. Les fixtures synthétiques sont explicitement séparées des évaluations industrielles. Les données et artefacts préparés requis par certains scripts sont décrits.
+
+La revue quotidienne conserve les critères vérifiés, les explications écrites, une preuve, le niveau d’aide/retour et une décision. La maîtrise hebdomadaire exige désormais les cinq revues quotidiennes consignées, en plus des conditions précédentes. Ces décisions suivent une revue humaine ; le LMS n’exécute pas les scripts et n’évalue pas automatiquement le code ou la véracité des preuves.
+
+Les champs quotidiens sont optionnels dans le format v1 : les anciens suivis, journaux, tâches et sauvegardes restent lisibles. Réouvrir une tâche remet la revue correspondante en attente.

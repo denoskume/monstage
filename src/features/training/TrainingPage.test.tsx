@@ -14,7 +14,7 @@ test('lets the learner study, complete a task and retain progress after reopenin
   await screen.findByText('Suivi privé chargé');
   await user.click(screen.getByRole('tab', { name: 'Apprendre' }));
   expect(screen.getByText('Comprendre ce qui entre réellement dans ton pipeline')).toBeInTheDocument();
-  expect(screen.getByText(/from pathlib import Path/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Télécharger le guide complet' })).toBeInTheDocument();
   await user.click(screen.getByRole('tab', { name: 'Missions & journal' }));
   const task = screen.getAllByRole('checkbox')[0];
   await user.click(task);

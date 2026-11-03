@@ -48,3 +48,10 @@ it('does not count a mastery declaration after its evidence is removed', async (
   state.logs.w1d1.evidence = '';
   expect(masteryReady(state, 0)).toBe(false);
 });
+it('preserves legacy progress and accepts daily learning records', () => {
+  const original = { ...emptyTraining(), tasks: { w1d1t1: true } };
+  const state = { ...original, dailyStudy: { w1d1: true }, dailyReviews: { w1d1: { checks: [false,true,false], answers: ['', 'shape'], evidence: 'commit abc', feedback: 'À revoir', decision: 'pending' as const } } };
+  expect(validateTraining(JSON.parse(JSON.stringify(state)))).toEqual(state);
+  expect(validateTraining(original).tasks.w1d1t1).toBe(true);
+  expect(setTask({ ...state, dailyReviews: { w1d1: { ...state.dailyReviews.w1d1, decision: 'autonomous' } } }, 'w1d1t1', false).dailyReviews?.w1d1.decision).toBe('pending');
+});
