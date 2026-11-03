@@ -1,3 +1,4 @@
+import { targetCompany, isVisionMission, isTargetOffer } from '../../shared/searchScope';
 export interface ExternalOffer {
   id: string;
   company: string;
@@ -83,15 +84,9 @@ const SMART_SOURCES: SmartSource[] = [
   { companyId: 'Iliad-Free', company: 'Iliad-Free' },
 ];
 
-const WORKDAY_SEARCHES = ['stage'];
+const WORKDAY_SEARCHES = ['stage vision', 'stage image', 'intern vision', 'intern imaging'];
 
-const WORKDAY_FOCUSED_SEARCHES: Record<string, string[]> = {
-  Airbus: ['stage data', 'stage machine learning', 'stage vision'],
-  Thales: ['stage data', 'stage intelligence artificielle'],
-  'SNCF Connect & Tech': ['stage data'],
-  'Renault Group': ['stage data'],
-  'Air Liquide': ['stage data'],
-};
+const WORKDAY_FOCUSED_SEARCHES: Record<string, string[]> = {};
 
 const WORKDAY_GENERIC_PAGES: Record<string, number> = {
   Airbus: 5,
@@ -104,13 +99,6 @@ const WORKDAY_GENERIC_PAGES: Record<string, number> = {
   'Integral Ad Science': 1,
 };
 
-const TARGET_TERMS = [
-  'data', 'analytics', 'machine learning', 'deep learning',
-  'artificial intelligence', 'intelligence artificielle', 'computer vision',
-  'vision', 'image', 'signal', 'python', 'sql', 'data science',
-  'data scientist', 'data engineer', 'data analyst', 'business intelligence',
-  'digital', 'automation', 'optimisation', 'optimization',
-];
 
 function normalize(value: unknown): string {
   return String(value ?? '')
@@ -128,8 +116,7 @@ function isInternship(title: string): boolean {
 }
 
 function isRelevant(title: string): boolean {
-  const text = normalize(title);
-  return TARGET_TERMS.some((term) => text.includes(normalize(term)));
+  return isVisionMission({title});
 }
 
 function workdayPublishedAt(value: unknown): string | null {
@@ -281,7 +268,7 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
 }
 
 async function fetchSmart(source: SmartSource): Promise<ExternalOffer[]> {
-  const queries = ['stage'];
+  const queries = ['stage vision', 'stage image'];
   const seen = new Set<string>();
   const offers: ExternalOffer[] = [];
 
@@ -396,17 +383,17 @@ function dedupe(offers: ExternalOffer[]): ExternalOffer[] {
 
 export async function fetchExternalOffers(): Promise<ExternalOffer[]> {
   const [workday, smart, ashby, greenhouse] = await Promise.all([
-    Promise.all(WORKDAY_SOURCES.map(fetchWorkday)),
-    Promise.all(SMART_SOURCES.map(fetchSmart)),
-    Promise.all(ASHBY_SOURCES.map(fetchAshby)),
-    Promise.all(GREENHOUSE_SOURCES.map(fetchGreenhouse)),
+    Promise.all(WORKDAY_SOURCES.filter(source => targetCompany(source.company)).map(fetchWorkday)),
+    Promise.all(SMART_SOURCES.filter(source => targetCompany(source.company)).map(fetchSmart)),
+    Promise.all(ASHBY_SOURCES.filter(source => targetCompany(source.company)).map(fetchAshby)),
+    Promise.all(GREENHOUSE_SOURCES.filter(source => targetCompany(source.company)).map(fetchGreenhouse)),
   ]);
   return dedupe([
     ...workday.flat(),
     ...smart.flat(),
     ...ashby.flat(),
     ...greenhouse.flat(),
-  ]);
+  ]).filter(isTargetOffer);
 }
 
 export function mergeOffersPayload(basePayload: unknown, external: ExternalOffer[]): unknown {

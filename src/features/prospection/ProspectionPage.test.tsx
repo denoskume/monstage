@@ -9,7 +9,7 @@ describe('ProspectionPage', () => {
     render(<MemoryRouter><ProspectionPage /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button', { name: /nouvelle piste/i }));
     fireEvent.change(screen.getByPlaceholderText('Ex. Safran'), {target:{value:'Safran'}});
-    fireEvent.change(screen.getByPlaceholderText('Ex. Analyse de données industrielles'), {target:{value:'Vision industrielle'}});
+    fireEvent.change(screen.getByPlaceholderText('Ex. Computer Vision / traitement d’images'), {target:{value:'Vision industrielle'}});
     fireEvent.click(screen.getByRole('button', { name: /enregistrer la piste/i }));
     expect(screen.getByText('Safran')).toBeInTheDocument();
     expect(screen.getByText(/Vision industrielle/)).toBeInTheDocument();
@@ -18,13 +18,13 @@ describe('ProspectionPage', () => {
   it('imports Safran targets once without duplicates', () => {
     render(<MemoryRouter><ProspectionPage /></MemoryRouter>);
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
-    expect(screen.getByText('Safran Trusted 4D')).toBeInTheDocument();
+    expect(screen.queryByText('Safran Trusted 4D')).not.toBeInTheDocument();
     expect(screen.getByText('Safran.AI')).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer le CV dans Studio'})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer la lettre dans Studio'})).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(1);
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(1);
   });
   it('migrates existing three Safran targets to four without deleting data', () => {
     const names = ['Safran Trusted 4D', 'Safran Aircraft Engines', 'Safran Helicopter Engines'];

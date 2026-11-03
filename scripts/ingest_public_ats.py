@@ -10,11 +10,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-GREENHOUSE = ["shifttechnology", "artefactjobs", "mirakllabs", "mirakl"]
-SMARTRECRUITERS = [
-    "SopraSteria1", "BoschGroup", "Eurofins", "veoliaenvironnementsa",
-    "alten", "GTT", "Sia", "ASSYSTEM", "octotechnology", "Iliad-Free",
-]
+GREENHOUSE = []
+SMARTRECRUITERS = ["BoschGroup"]
 
 
 def read_json(url):
@@ -96,8 +93,8 @@ def main():
     print("ATS runner ingestion: accepted", accepted, "errors", len(errors))
     for error in errors:
         print("ATS source warning:", error)
-    if not accepted:
-        raise SystemExit("ATS runner ingestion found no verified relevant postings")
+    if errors and len(errors) == len(GREENHOUSE) + len(SMARTRECRUITERS):
+        raise SystemExit("All targeted ATS sources failed")
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import { isTargetOffer } from '../../../shared/searchScope';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { EmptyState } from '../../components/EmptyState';
@@ -87,7 +88,7 @@ export function ShortlistPage() {
   const allOffers = data?.offers ?? [];
   const savedOffers = useMemo(
     () => sortOffers(allOffers.filter((offer) =>
-      !actions.isHidden(offer.id) &&
+      isTargetOffer(offer) && !actions.isHidden(offer.id) &&
       actions.isSaved(offer.id, offer.shortlist) &&
       resolvedStage(offer) === null
     ), 'best'),
