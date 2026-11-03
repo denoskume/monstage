@@ -69,7 +69,7 @@ export function isDataAnalystMission(offer: ScopeOffer): boolean {
 }
 /** Priority is strict: A (historical 20 only), then B1, then B2. */
 /** Business-finance specialization is not aligned with the user's training. */
-const FINANCIAL_ROLE = /\\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\\b/;
+const FINANCIAL_ROLE = /\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/;
 export function isFinanceRole(offer: ScopeOffer): boolean {
   return FINANCIAL_ROLE.test(normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
 }
