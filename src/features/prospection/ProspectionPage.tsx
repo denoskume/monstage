@@ -8,12 +8,13 @@ type Status = 'À identifier' | 'À contacter' | 'Contacté' | 'Candidature envo
 type Lead = { id: string; company: string; site: string; team: string; role: string; contact: string; contactLink: string; channel: string; status: Status; date: string; followUp: string; notes: string; };
 function inScope(lead: Omit<Lead, 'id'>) { return isTargetOffer({company:lead.company,title:lead.role,domain:lead.team}); }
 const KEY = 'monstage.prospection.v1';
-const SAFRAN_REFUS_KEY = 'monstage:safranai:refusal-20261102:v1';
 const SAFRAN_REFUS_NOTE = 'Refus reçu par email Safran.AI le 02/11/2026 à 17 h 31 : aucune opportunité cohérente identifiée avec le profil. Candidature spontanée déposée le 25/10/2026. Pas de relance sur ce même dossier.';
 const SAFRAN_ORIGINAL_ROLE = 'Stage de fin d’études — Machine Learning et Computer Vision';
-function isSafranOriginalApplication(company: string, role: string) {
-  const c = company.trim().toLowerCase().replace(/[.\s]/g,'');
-  return c === 'safranai' && [SAFRAN_ORIGINAL_ROLE, 'Candidature spontanée — Stage Machine Learning & Computer Vision'].includes(role.trim());
+function isSafranOriginalApplication(company: string, role: string, date?: string) {
+  const c = company.trim().toLowerCase().replace(/[.\\s]/g,'');
+  return c === 'safranai'
+    && [SAFRAN_ORIGINAL_ROLE, 'Candidature spontanée — Stage Machine Learning & Computer Vision'].includes(role.trim())
+    && (!date || date === '2026-10-25' || date === '25/10/2026');
 }
 /** A lead may be saved before qualification; any attempted contact needs a clear business case. */
 function qualificationError(lead: Omit<Lead, 'id'>): string | null {
@@ -37,14 +38,12 @@ function load(): Lead[] {
     const value: unknown = JSON.parse(localStorage.getItem(KEY) || '[]');
     if (!Array.isArray(value)) return [];
     let saved = value.filter((v): v is Lead => Boolean(v && typeof v.id === 'string' && typeof v.company === 'string' && typeof v.role === 'string'));
-    // One-time, exact-role migration: close only the rejected spontaneous
-    // application, never other Safran positions or unrelated applications.
-    if (localStorage.getItem(SAFRAN_REFUS_KEY) !== '1') {
-      saved = saved.map(lead => isSafranOriginalApplication(lead.company, lead.role)
-        ? {...lead, status:'Refus' as Status, date:lead.date || '2026-10-25', followUp:'',
-            notes:[lead.notes, SAFRAN_REFUS_NOTE].filter(Boolean).join('\n\n')} : lead);
-      try { localStorage.setItem(SAFRAN_REFUS_KEY, '1'); } catch { /* Private mode */ }
-    }
+    // Idempotent repair on each read: a lead imported AFTER an earlier
+    // visit must also be closed. Never alter unrelated Safran applications.
+    saved = saved.map(lead => isSafranOriginalApplication(lead.company, lead.role, lead.date)
+      ? {...lead, status:'Refus' as Status, date:lead.date || '2026-10-25', followUp:'',
+          notes:lead.notes.includes(SAFRAN_REFUS_NOTE) ? lead.notes :
+            [lead.notes, SAFRAN_REFUS_NOTE].filter(Boolean).join('\n\n')} : lead);
     const originalSafran = targets.filter(t => t.company !== 'Safran.AI');
     const hasPreviousThree = originalSafran.every(t => saved.some(l => l.company === t.company && l.site === t.site));
     const alreadyHasAI = saved.some(l => l.company === 'Safran.AI');
@@ -116,7 +115,7 @@ export function ProspectionPage() {
     <label className="prospection__wide">Besoin ciblé et contribution concrète<textarea rows={3} value={draft.notes} onChange={e=>setDraft(d=>({...d,notes:e.target.value}))} placeholder="Pourquoi cette équipe ? Quelle contribution concrète ?"/></label>
     </div><div className="prospection__actions"><button type="button" onClick={()=>{setShowForm(false);setEditing(null);}}>Annuler</button><button className="prospection__primary" type="submit">Enregistrer la piste</button></div></form>}
     <div className="prospection__toolbar"><input aria-label="Rechercher une piste" placeholder="Rechercher une entreprise, équipe ou mission…" value={query} onChange={e=>setQuery(e.target.value)}/><select aria-label="Filtrer par plan" value={planFilter} onChange={e=>setPlanFilter(e.target.value as SearchPlan | 'all')}><option value="all">Tous les plans</option>{(['A','B'] as SearchPlan[]).map(p=><option key={p} value={p}>Plan {p} · {PLAN_LABELS[p]}</option>)}</select><select aria-label="Filtrer par statut" value={filter} onChange={e=>setFilter(e.target.value)}><option>Tous</option>{statuses.map(s=><option key={s}>{s}</option>)}</select></div>
-    {visible.length===0 ? <section className="prospection__empty"><h2>{leads.length?'Aucune piste pour ce filtre':'Vos opportunités ne se limitent pas aux offres publiées.'}</h2><p>{leads.length?'Modifiez la recherche ou le statut.':'Commencez par identifier une entreprise, un site et une mission que vous pourriez proposer à une équipe.'}</p></section> : <section className="prospection__list" aria-label="Pistes">{visible.map(l=><article className="prospection__card" key={l.id}><div className="prospection__cardtop"><div><h2>{l.company}</h2><p>{[l.site,l.team].filter(Boolean).join(' · ')||'Site et équipe à préciser'}</p></div><span className="prospection__status">{l.status}</span></div><p><strong>Mission :</strong> {l.role} <small>· Plan {getOfferPlan({company:l.company,title:l.role,domain:l.team})}</small></p>{isSafranOriginalApplication(l.company,l.role) && <div className="prospection__safran-panel"><div className="prospection__safran-panel-head"><strong>Candidature spontanée clôturée · Refus le 02/11/2026</strong><span>Dépôt du 25/10/2026 · aucune relance</span></div><p>Safran.AI n’a pas identifié d’opportunité cohérente avec le profil. Ne pas renvoyer cette même candidature. D’autres missions distinctes chez Safran peuvent être examinées individuellement.</p><Link className="button button--secondary" to="/workspace?offer=EXT-SAFRANAI-20261025">Consulter le dossier conservé</Link></div>}{l.contact&&<p><strong>Contact :</strong> {l.contact} {l.contactLink&&<a className="button button--secondary" href={l.contactLink} target="_blank" rel="noopener noreferrer">Voir le profil</a>}</p>}{l.channel&&<p><strong>Canal :</strong> {l.channel}</p>}{l.notes&&<p className="prospection__notes">{l.notes}</p>}<div className="prospection__cardbottom"><span>{l.date?'Démarche : '+l.date:'Démarche non datée'}{l.followUp?' · Relance : '+l.followUp:''}</span><div><button type="button" onClick={()=>edit(l)}>Modifier</button><button type="button" onClick={()=>{if(window.confirm('Supprimer cette piste ?'))setLeads(old=>old.filter(x=>x.id!==l.id));}}>Supprimer</button></div></div></article>)}</section>}
+    {visible.length===0 ? <section className="prospection__empty"><h2>{leads.length?'Aucune piste pour ce filtre':'Vos opportunités ne se limitent pas aux offres publiées.'}</h2><p>{leads.length?'Modifiez la recherche ou le statut.':'Commencez par identifier une entreprise, un site et une mission que vous pourriez proposer à une équipe.'}</p></section> : <section className="prospection__list" aria-label="Pistes">{visible.map(l=><article className="prospection__card" key={l.id}><div className="prospection__cardtop"><div><h2>{l.company}</h2><p>{[l.site,l.team].filter(Boolean).join(' · ')||'Site et équipe à préciser'}</p></div><span className="prospection__status">{l.status}</span></div><p><strong>Mission :</strong> {l.role} <small>· Plan {getOfferPlan({company:l.company,title:l.role,domain:l.team})}</small></p>{isSafranOriginalApplication(l.company,l.role,l.date) && <div className="prospection__safran-panel"><div className="prospection__safran-panel-head"><strong>Candidature spontanée clôturée · Refus le 02/11/2026</strong><span>Dépôt du 25/10/2026 · aucune relance</span></div><p>Safran.AI n’a pas identifié d’opportunité cohérente avec le profil. Ne pas renvoyer cette même candidature. D’autres missions distinctes chez Safran peuvent être examinées individuellement.</p><Link className="button button--secondary" to="/workspace?offer=EXT-SAFRANAI-20261025">Consulter le dossier conservé</Link></div>}{l.contact&&<p><strong>Contact :</strong> {l.contact} {l.contactLink&&<a className="button button--secondary" href={l.contactLink} target="_blank" rel="noopener noreferrer">Voir le profil</a>}</p>}{l.channel&&<p><strong>Canal :</strong> {l.channel}</p>}{l.notes&&<p className="prospection__notes">{l.notes}</p>}<div className="prospection__cardbottom"><span>{l.date?'Démarche : '+l.date:'Démarche non datée'}{l.followUp?' · Relance : '+l.followUp:''}</span><div><button type="button" onClick={()=>edit(l)}>Modifier</button><button type="button" onClick={()=>{if(window.confirm('Supprimer cette piste ?'))setLeads(old=>old.filter(x=>x.id!==l.id));}}>Supprimer</button></div></div></article>)}</section>}
     <p className="prospection__privacy">Sauvegarde dans ce navigateur.</p>
   </main>;
 }
