@@ -350,6 +350,7 @@ async function fetchGreenhouse(source: GreenhouseSource): Promise<ExternalOffer[
     .filter((job: any) => {
       const title = String(job?.title ?? '');
       const location = String(job?.location?.name ?? '');
+      const content = String(job?.content ?? '');
       return title &&
         isInternship(`${title} ${content}`) &&
         isRelevant(title, source.company) &&
