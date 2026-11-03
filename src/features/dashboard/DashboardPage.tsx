@@ -52,7 +52,7 @@ export function DashboardPage() {
   if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
   if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
   return <section className="page target-page">
-    <header className="target-header"><h1 className={sector ? undefined : 'sr-only'}>{sector?.name || 'Mes candidatures ciblées'}</h1><button className="button button--primary" onClick={() => setShowForm(true)}>Enregistrer un envoi</button></header>
+    <header className="target-header"><h1>{sector?.name || 'Vue d’ensemble'}</h1><button className="button button--primary" onClick={() => setShowForm(true)}>Enregistrer un envoi</button></header>
     <nav className="target-tabs" aria-label="Secteurs ciblés"><Link aria-current={!sector ? 'page' : undefined} to="/dashboard">Vue d’ensemble</Link>{sectors.map(s => <Link key={s.id} aria-current={sector?.id === s.id ? 'page' : undefined} to={'/dashboard/' + s.id}>{s.name}</Link>)}</nav>
     {error && <p role="alert">Actualisation indisponible. Les dernières données restent affichées. <button onClick={retry}>Réessayer</button></p>}
     <div className="kpi-grid">{[['Dossiers CV / images', offers.length], ['Candidatures envoyées', sent], ['Entretiens et suites', interviews], ['Relances à faire', due.length]].map(([label, value]) => <article className="kpi-card card" key={label}><span>{label}</span><strong>{value}</strong></article>)}</div>

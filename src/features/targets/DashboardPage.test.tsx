@@ -7,7 +7,7 @@ vi.mock('../../auth/useAuth', () => ({ useAuth: () => ({ token: 'test' }) }));
 describe('target dashboard navigation', () => {
   it('shows four linked sectors and zero real applications for an empty workspace', () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(screen.getByRole('heading', {name: 'Mes candidatures ciblées'})).toBeInTheDocument();
+    expect(screen.getByRole('heading', {name: 'Vue d’ensemble'})).toBeInTheDocument();
     expect(screen.getAllByText('5 entreprises')).toHaveLength(4);
     expect(screen.getByText('Candidatures envoyées').nextElementSibling).toHaveTextContent('0');
   });
