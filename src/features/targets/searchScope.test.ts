@@ -26,10 +26,12 @@ describe('three-track discovery scope', () => {
   });
   it('rejects Data Scientist roles in every plan and every group', () => {
     const titles = ['Stage Data Scientist', 'Stage Data Science', 'Data Scientist Maintenance Prédictive',
-      'Stage Data Science - anticipation des pannes', 'Stage Machine Learning Engineer - inspection visuelle'];
+      'Stage Data Science - anticipation des pannes'];
     for (const company of ['Airbus', 'Alstom', 'EDF', 'Veolia', 'Capgemini']) {
       for (const title of titles) expect(getOfferPlan({company, title, domain:'Computer Vision / Predictive Maintenance'})).toBeNull();
     }
+    expect(getOfferPlan({company:'Safran',title:'Stage Machine Learning Engineer - Computer Vision'})).toBe('A');
+    expect(getOfferPlan({company:'Alstom',title:'Stage Machine Learning Engineer - Maintenance prédictive'})).toBeNull();
     expect(getOfferPlan({company:'Alstom',title:'Stage Data Analyst - maintenance prédictive'})).toBe('B1');
     expect(getOfferPlan({company:'Orange',title:'Stage Data Analyst SQL & Power BI'})).toBe('B2');
   });
