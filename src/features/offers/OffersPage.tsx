@@ -252,11 +252,6 @@ export function OffersPage() {
 
   return (
     <section className="page offers-page">
-      <header className="jobs-page-heading">
-        <h1>Stages Computer Vision / traitement d’images</h1>
-        <p>Uniquement les 20 entreprises ciblées · 4 secteurs</p>
-      </header>
-
       <div className="jobs-search-shell">
         <div className="jobs-search-shell__controls">
           <SearchBar value={filters.query} onChange={(query) => setFilters({ ...filters, query })} placeholder="Job title, skill or company" />
