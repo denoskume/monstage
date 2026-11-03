@@ -244,9 +244,10 @@ function isInternshipPosting_(posting) {
 
 // Exclusive discovery scope; source archives are not deleted.
 var TARGET_COMPANY_GROUPS_ = [["Safran", "safran", "preligens"], ["Airbus", "airbus"], ["Thales", "thales"], ["Dassault Aviation", "dassault aviation"], ["RTX / Collins Aerospace", "rtx", "collins aerospace", "raytheon"], ["Alstom", "alstom"], ["SNCF", "sncf"], ["Siemens Mobility", "siemens mobility"], ["Hitachi Rail", "hitachi rail"], ["Wabtec", "wabtec"], ["Valeo", "valeo"], ["Renault Group", "renault", "ampere"], ["Stellantis", "stellantis", "psa"], ["Bosch", "bosch"], ["FORVIA HELLA", "forvia", "hella", "faurecia"], ["GE HealthCare", "ge healthcare", "gehealthcare"], ["Siemens Healthineers", "siemens healthineers"], ["Philips", "philips"], ["Canon Medical Systems", "canon medical", "olea medical"], ["Dassault Systèmes", "dassault systemes"]];
+var BACKUP_COMPANY_GROUPS_ = [["EDF / Enedis", "edf", "enedis"], ["ENGIE", "engie"], ["TotalEnergies", "totalenergies"], ["Schneider Electric", "schneider electric"], ["VINCI", "vinci"], ["Orange", "orange"], ["Capgemini", "capgemini"], ["AXA", "axa"], ["BNP Paribas", "bnp paribas"], ["Société Générale", "societe generale", "socgen"]];
 function strictCompany_(company) {
   var text = ' ' + String(company || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + ' ';
-  return TARGET_COMPANY_GROUPS_.some(function (group) { return group.slice(1).some(function (alias) { return text.indexOf(' ' + alias + ' ') !== -1; }); });
+  return TARGET_COMPANY_GROUPS_.concat(BACKUP_COMPANY_GROUPS_).some(function (group) { return group.slice(1).some(function (alias) { return text.indexOf(' ' + alias + ' ') !== -1; }); });
 }
 function strictVision_(title, context) {
   var norm = function (v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
@@ -254,8 +255,20 @@ function strictVision_(title, context) {
   return /\b(computer vision|vision par ordinateur|vision artificielle|vision industrielle|machine vision|vision 3d|image processing|traitement (d |des |de |d une |des donnees d )?images?|analyse (d |des |de )?images?|imagerie|imaging|recalage|image segmentation|segmentation (cardiaque|medicale|d images)|reconstruction (d |des )?images?)\b/.test(norm(title + ' ' + (context || '')));
 }
 
+function strictRelevant_(title, context) {
+  if (strictVision_(title, context)) return true;
+  var norm = function (v) { return String(v || '').normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+  var name = norm(title);
+  var full = norm(title + ' ' + (context || ''));
+  var predictive = /\\b(maintenance predictive|predictive maintenance|prediction de pannes?|anticipation des pannes?|analyse de fiabilite|fiabilite rams|reliability analytics|analyse des defaillances?|fault detection|failure prediction|remaining useful life|condition monitoring|industrial analytics)\\b/;
+  var industry = /\\b(maintenance|predictive|predictif|fiabilite|reliability|rams|pannes?|defaillances?|fault|failure|anomalies?|condition monitoring|inspection|industriel|industrielle|industrial|usine|production|manufacturing|equipements?|assets?|reseau electrique|railway|ferroviaire|fleet|infrastructures?)\\b/;
+  var data = /\\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analytics engineer|business intelligence|power bi|reporting|kpi|tableaux? de bord|dashboard|sql|data scientist|data science|ingenieur data|ingenieure data|analyse statistique)\\b/;
+  var analyst = /\\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analytics engineer|business intelligence|power bi|reporting automatise|reporting data|kpi|tableaux? de bord|dashboard|sql analyst|business analyst data|data insights)\\b/;
+  return predictive.test(name) || (industry.test(full) && (data.test(name) || /\\b(machine learning|modelisation predictive|analyse statistique)\\b/.test(name))) || analyst.test(name);
+}
+
 function targetSignalScore_(posting) {
-  if (!strictVision_(posting.text, posting.descriptionPlain)) return 0;
+  if (!strictRelevant_(posting.text, posting.descriptionPlain)) return 0;
   var title = normalizeComparable_(posting.text);
   var text = normalizeComparable_([
     posting.text,
@@ -464,7 +477,7 @@ function fetchLeverPostings_(source) {
 }
 
 function writeExternalOfferRows_(sheet, rows) {
-  rows = rows.filter(function (row) { return strictCompany_(row[1]) && strictVision_(row[2], row[3]); });
+  rows = rows.filter(function (row) { return strictCompany_(row[1]) && strictRelevant_(row[2], row[3]); });
   // Preserve the last good snapshot if a provider returns no postings.
   if (!rows.length && sheet.getLastRow() > 1) {
     console.warn('Provider returned zero jobs; preserving previous snapshot: ' + sheet.getName());
@@ -790,7 +803,7 @@ function smartRecruitersList_(source) {
   var jobs = [];
   var seen = {};
   var limit = 100;
-  var queries = ['stage vision', 'stage image', 'intern vision'];
+  var queries = ['stage vision', 'stage image', 'intern vision', 'stage data', 'stage analyst', 'stage maintenance', 'intern data'];
 
   queries.forEach(function (query) {
     var offset = 0;
@@ -977,7 +990,7 @@ function fetchWorkdayPage_(source, searchText, offset) {
 }
 
 function fetchWorkdayJobs_(source) {
-  var searches = ['stage vision', 'stage image', 'stage imagerie', 'intern vision', 'intern imaging', 'traitement images', 'image processing'];
+  var searches = ['stage vision', 'stage image', 'stage imagerie', 'intern vision', 'intern imaging', 'traitement images', 'image processing', 'stage data analyst', 'stage data', 'stage maintenance', 'intern data', 'power bi'];
 
   var seen = {};
   var jobs = [];
