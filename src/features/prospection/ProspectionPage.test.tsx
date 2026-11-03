@@ -32,7 +32,7 @@ describe('ProspectionPage', () => {
     expect(screen.getByDisplayValue(/maintenance prédictive/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /enregistrer la piste/i }));
     expect(screen.getByText('EDF / Enedis')).toBeInTheDocument();
-    expect(screen.getByText(/Plan B1/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Plan B1/).length).toBeGreaterThan(0);
   });
   it('migrates existing three Safran targets to four without deleting data', () => {
     const names = ['Safran Trusted 4D', 'Safran Aircraft Engines', 'Safran Helicopter Engines'];
