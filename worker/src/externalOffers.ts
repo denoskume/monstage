@@ -43,46 +43,14 @@ const WORKDAY_SOURCES: WorkdaySource[] = [
   { tenant: 'ag', host: 'wd3', site: 'Airbus', company: 'Airbus' },
   { tenant: 'thales', host: 'wd3', site: 'Careers', company: 'Thales' },
   { tenant: 'evoyageurs', host: 'wd3', site: 'jobs', company: 'SNCF Connect & Tech' },
-  { tenant: 'pernodricard', host: 'wd3', site: 'pernod-ricard', company: 'Pernod Ricard' },
-  { tenant: 'pfizer', host: 'wd1', site: 'PfizerCareers', company: 'Pfizer' },
-  { tenant: 'airliquidehr', host: 'wd3', site: 'AirLiquideExternalCareer', company: 'Air Liquide' },
   { tenant: 'alliancewd', host: 'wd3', site: 'renault-group-careers', company: 'Renault Group' },
-  { tenant: 'integralads', host: 'wd1', site: 'IAScareers', company: 'Integral Ad Science' },
 ];
 
-const ASHBY_SOURCES: AshbySource[] = [
-  { board: 'mistral.ai', company: 'Mistral AI' },
-  { board: 'owkin', company: 'Owkin' },
-  { board: 'hcompany', company: 'H Company' },
-  { board: 'maki', company: 'MakiPeople' },
-  { board: 'cohere', company: 'Cohere' },
-  { board: 'voodoo', company: 'Voodoo' },
-  { board: 'nabla', company: 'Nabla' },
-  { board: 'alpic', company: 'Alpic' },
-  { board: 'meetdavis', company: 'Davis AI' },
-  { board: 'illuin', company: 'ILLUIN Technology' },
-  { board: 'scoreplay', company: 'ScorePlay' },
-];
+const ASHBY_SOURCES: AshbySource[] = [];
 
-const GREENHOUSE_SOURCES: GreenhouseSource[] = [
-  { board: 'shifttechnology', company: 'Shift Technology' },
-  { board: 'artefactjobs', company: 'Artefact' },
-  { board: 'mirakllabs', company: 'Mirakl Labs' },
-  { board: 'mirakl', company: 'Mirakl' },
-];
+const GREENHOUSE_SOURCES: GreenhouseSource[] = [];
 
-const SMART_SOURCES: SmartSource[] = [
-  { companyId: 'SopraSteria1', company: 'Sopra Steria' },
-  { companyId: 'BoschGroup', company: 'Bosch Group' },
-  { companyId: 'Eurofins', company: 'Eurofins' },
-  { companyId: 'veoliaenvironnementsa', company: 'Veolia' },
-  { companyId: 'alten', company: 'ALTEN' },
-  { companyId: 'GTT', company: 'GTT' },
-  { companyId: 'Sia', company: 'Sia' },
-  { companyId: 'ASSYSTEM', company: 'Assystem' },
-  { companyId: 'octotechnology', company: 'OCTO Technology' },
-  { companyId: 'Iliad-Free', company: 'Iliad-Free' },
-];
+const SMART_SOURCES: SmartSource[] = [];
 
 const WORKDAY_SEARCHES = ['stage vision', 'stage image', 'intern vision', 'intern imaging', 'stage data analyst', 'stage maintenance', 'intern data', 'power bi'];
 
@@ -93,12 +61,7 @@ const WORKDAY_GENERIC_PAGES: Record<string, number> = {
   Thales: 2,
   'SNCF Connect & Tech': 2,
   'Renault Group': 2,
-  'Air Liquide': 2,
-  'Pernod Ricard': 1,
-  Pfizer: 1,
-  'Integral Ad Science': 1,
 };
-
 
 function normalize(value: unknown): string {
   return String(value ?? '')
