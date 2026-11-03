@@ -1,4 +1,5 @@
 import { restrictOffersPayload } from '../../shared/searchScope';
+import { handleTraining } from './training';
 import { AuthError, verifyAuthorizedUser } from './auth';
 import { handleGithubDocuments, moveGithubApplicationArchive } from './githubArchive';
 import { addExternalApplicationToAppsScript, fetchOffersFromAppsScript, submitApplicationToAppsScript, updateApplicationStatusInAppsScript } from './appsScript';
@@ -84,6 +85,7 @@ export async function handleRequest(
     return new Response(null, { status: 204, headers: responseHeaders(origin) });
   }
 
+  const isTrainingRoute = request.method === 'POST' && url.pathname === '/api/training';
   const isSessionRoute = request.method === 'GET' && url.pathname === '/api/session';
   const isOffersRoute = request.method === 'GET' && url.pathname === '/api/offers';
   const isSubmitRoute = request.method === 'POST' && url.pathname === '/api/applications/submit';
@@ -93,7 +95,7 @@ export async function handleRequest(
   const isCvPdfRoute = request.method === 'POST' && url.pathname === '/api/cv/pdf';
   const isClPdfRoute = request.method === 'POST' && url.pathname === '/api/cl/pdf';
 
-  if (!isSessionRoute && !isOffersRoute && !isSubmitRoute && !isExternalApplicationRoute && !isUpdateStatusRoute && !isDocumentRoute && !isCvPdfRoute && !isClPdfRoute) {
+  if (!isTrainingRoute && !isSessionRoute && !isOffersRoute && !isSubmitRoute && !isExternalApplicationRoute && !isUpdateStatusRoute && !isDocumentRoute && !isCvPdfRoute && !isClPdfRoute) {
     return jsonResponse({ error: 'NOT_FOUND' }, 404, origin);
   }
 
@@ -118,6 +120,14 @@ export async function handleRequest(
     user = await dependencies.verifyUser(token, env);
   } catch (error) {
     return authErrorResponse(error, origin);
+  }
+
+  if (isTrainingRoute) {
+    let body: unknown;
+    try { body = await request.json(); } catch { return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin); }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return jsonResponse({ error: 'INVALID_REQUEST' }, 400, origin);
+    const result = await handleTraining(env, body as Record<string, unknown>);
+    return jsonResponse(result.payload, result.status, origin);
   }
 
   if (isSessionRoute) return jsonResponse({ user }, 200, origin);

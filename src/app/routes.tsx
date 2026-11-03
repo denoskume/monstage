@@ -1,3 +1,4 @@
+import { TrainingPage } from '../features/training/TrainingPage';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProspectionPage } from '../features/prospection/ProspectionPage';
 import { OffersPage } from '../features/offers/OffersPage';
@@ -17,6 +18,7 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppShell />}>
         <Route index element={<Navigate to="/offers" replace />} />
+        <Route path="/stage-cv" element={<TrainingPage />} />
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/prospection" element={<ProspectionPage />} />
         <Route path="/shortlist" element={<ShortlistPage />} />

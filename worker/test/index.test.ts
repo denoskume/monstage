@@ -326,3 +326,8 @@ test('applies the exclusive scope even to cached historical offers', async () =>
   const response = await handleRequest(request('/api/offers', {token:'authorized-token'}), env, deps);
   expect((await response.json() as {offers:unknown[]}).offers).toEqual([eligible]);
 });
+
+test('training route requires authentication before reading the private archive', async () => {
+  const response = await handleRequest(new Request('https://monstage-auth.example/api/training', { method: 'POST', body: JSON.stringify({ action: 'load' }) }), env, dependencies());
+  expect(response.status).toBe(401);
+});
