@@ -1,4 +1,4 @@
-/** MonStage's three-track discovery policy. Source archives are never deleted. */
+/** Two-plan internship discovery: 15 transport groups in France, identical for A and B. */
 export interface ScopeOffer {
   company?: string | null;
   title?: string | null;
@@ -7,89 +7,76 @@ export interface ScopeOffer {
   applicationStatus?: string | null;
   appliedAt?: string | null;
 }
-export type SearchPlan = 'A' | 'B1' | 'B2';
+export type SearchPlan = 'A' | 'B';
 export const PLAN_LABELS: Record<SearchPlan, string> = {
   A: 'Computer Vision & traitement d’images',
-  B1: 'Data industrielle & maintenance prédictive',
-  B2: 'Data Analyst & Business Intelligence',
+  B: 'Data Analyst · Transport & opérations',
 };
 export function normalizeScope(value: string | null | undefined): string {
   return (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
-/** Historical twenty: the ONLY companies eligible for Plan A. */
+/** Five aviation, five rail / public transport, five automotive companies.
+ * Targeting shortlist, NOT an objective revenue ranking.
+ * Both plans use exactly these same fifteen groups.
+ */
 export const TARGET_COMPANIES = [
-  ['Safran', 'safran', 'preligens'], ['Airbus', 'airbus'], ['Thales', 'thales'],
-  ['Dassault Aviation', 'dassault aviation'], ['RTX / Collins Aerospace', 'rtx', 'collins aerospace', 'raytheon'],
-  ['Alstom', 'alstom'], ['SNCF', 'sncf'], ['Siemens Mobility', 'siemens mobility'],
-  ['Hitachi Rail', 'hitachi rail'], ['Wabtec', 'wabtec'], ['Valeo', 'valeo'],
-  ['Renault Group', 'renault', 'ampere'], ['Stellantis', 'stellantis', 'psa'], ['Bosch', 'bosch'],
-  ['FORVIA HELLA', 'forvia', 'hella', 'faurecia'], ['GE HealthCare', 'ge healthcare', 'gehealthcare'],
-  ['Siemens Healthineers', 'siemens healthineers'], ['Philips', 'philips'],
-  ['Canon Medical Systems', 'canon medical', 'olea medical'], ['Dassault Systèmes', 'dassault systemes'],
+  ['Airbus', 'airbus'], ['Safran', 'safran', 'preligens'], ['Thales', 'thales'],
+  ['Dassault Aviation', 'dassault aviation'], ['Air France-KLM', 'air france', 'air france klm'],
+  ['Alstom', 'alstom'], ['SNCF', 'sncf'], ['RATP', 'ratp'],
+  ['Siemens Mobility', 'siemens mobility'], ['Hitachi Rail', 'hitachi rail'],
+  ['Renault Group', 'renault', 'ampere'], ['Stellantis', 'stellantis', 'psa'],
+  ['Valeo', 'valeo'], ['FORVIA HELLA', 'forvia', 'hella', 'faurecia'], ['Michelin', 'michelin'],
 ] as const;
-/** Ten additional giants, eligible ONLY for the B1/B2 backup plans. */
-export const BACKUP_COMPANIES = [
-  ['EDF / Enedis', 'edf', 'enedis'], ['ENGIE', 'engie'], ['TotalEnergies', 'totalenergies'],
-  ['Schneider Electric', 'schneider electric'], ['VINCI', 'vinci'],
-  ['Orange', 'orange'], ['Capgemini', 'capgemini'], ['Air Liquide', 'air liquide'],
-  ['Veolia', 'veolia'], ['Michelin', 'michelin'],
-] as const;
-export const ALL_TARGET_COMPANIES = [...TARGET_COMPANIES, ...BACKUP_COMPANIES] as const;
 
-function findCompany(company: string | null | undefined, groups: ReadonlyArray<readonly string[]>): string | null {
+function matchingCompany(company: string | null | undefined): string | null {
   const text = ' ' + normalizeScope(company) + ' ';
-  return groups.find(([, ...aliases]) => aliases.some(alias => text.includes(' ' + normalizeScope(alias) + ' ')))?.[0] || null;
-}
-export function originalTargetCompany(company: string | null | undefined): string | null {
-  return findCompany(company, TARGET_COMPANIES);
+  return TARGET_COMPANIES.find(([, ...aliases]) => aliases.some(alias =>
+    text.includes(' ' + normalizeScope(alias) + ' ')))?.[0] || null;
 }
 export function targetCompany(company: string | null | undefined): string | null {
-  return findCompany(company, ALL_TARGET_COMPANIES);
+  return matchingCompany(company);
 }
-export function isVisionMission(offer: ScopeOffer): boolean {
-  const title = normalizeScope(offer.title);
-  if (/\b(marketing|communication|commercial|sales|juridique|finance|ressources humaines)\b/.test(title)) return false;
-  const text = normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' '));
-  return /\b(computer vision|vision par ordinateur|vision artificielle|vision industrielle|machine vision|vision 3d|image processing|traitement (d |des |de |d une |des donnees d )?images?|analyse (d |des |de )?images?|imagerie|imaging|recalage|image segmentation|segmentation (cardiaque|medicale|d images)|reconstruction (d |des )?images?)\b/.test(text);
+export function originalTargetCompany(company: string | null | undefined): string | null {
+  return matchingCompany(company);
 }
-const INDUSTRIAL = /\b(maintenance|predictive|predictif|predictive|fiabilite|reliability|rams|pannes?|defaillances?|fault|failure|anomalies?|condition monitoring|inspection|industriel|industrielle|industrial|industrialisation|moteurs?|turbomoteurs?|usine|production|manufacturing|equipements?|equipments?|assets?|reseau electrique|energy grid|power grid|railway|ferroviaire|fleet|flotte|infrastructures?|qualite industrielle)\b/;
-const DATA_ROLE = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analyse des mesures|analyse de mesures|analytics engineer|business intelligence|power bi|reporting|kpi|tableaux? de bord|dashboard|sql|statistical analysis|analyse statistique)\b/;
-const PREDICTIVE = /\b(maintenance predictive|predictive maintenance|prediction de pannes?|anticipation des pannes?|analyse de fiabilite|fiabilite rams|reliability analytics|analyse des defaillances?|fault detection|failure prediction|remaining useful life|condition monitoring|industrial analytics)\b/;
-const ANALYST = /\b(data analyst|analyste de donnees|analyste des donnees|analyse de donnees|analyse des donnees|data analytics|data analysis|analytics engineer|business intelligence|power bi|reporting automatise|reporting data|kpi|tableaux? de bord|dashboard|sql analyst|business analyst data|data insights)\b/;
-export function isIndustrialAnalyticsMission(offer: ScopeOffer): boolean {
-  const title = normalizeScope(offer.title);
-  const context = normalizeScope([offer.domain, offer.specialization].filter(Boolean).join(' '));
-  const full = [title, context].join(' ');
-  if (PREDICTIVE.test(title)) return true;
-  return INDUSTRIAL.test(full) && (DATA_ROLE.test(title) || /\b(modelisation predictive|analyses? statistiques?|data driven)\b/.test(title));
-}
-export function isDataAnalystMission(offer: ScopeOffer): boolean {
-  const title = normalizeScope(offer.title);
-  return ANALYST.test(title);
-}
-/** Priority is strict: A (historical 20 only), then B1, then B2. */
-/** Business-finance specialization is not aligned with the user's training. */
+
+const VISION_TITLE = /\b(computer vision|vision par ordinateur|vision artificielle|vision industrielle|machine vision|vision 3d|image processing|traitement (d |des |de |d une |des donnees d )?images?|analyse (d |des |de )?images?|imagerie|imaging|recalage|image segmentation|segmentation|reconstruction d images?)\b/;
 const FINANCIAL_ROLE = /\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/;
+const DATA_SCIENTIST_ROLE = /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/;
+const NON_ANALYST_ROLE = /\b(data engineer|data engineering|ingenieur data|ingenieure data|machine learning engineer|ml engineer|ingenieur machine learning|ingenieure machine learning|consultant strateg|consultante strateg|developpeur logiciel|software engineer)\b/;
+const ANALYST_ROLE = /\b(data analyst|analyste data|analyste de donnees|analyste des donnees|bi analyst|analyste bi|analyste business intelligence|business intelligence analyst|reporting analyst|analyste reporting|data analytics|data analysis|analyse de donnees|analyse des donnees|business intelligence|power bi|tableaux? de bord|data insights)\b/;
+const INDUSTRIAL_CONTEXT = /\b(maintenance|predictive|predictif|fiabilite|rams|defaillances?|pannes?|condition monitoring|inspection|industriel|industrielle|industrial|industrialisation|moteurs?|turbomoteurs?|usine|production|manufacturing|equipements?|ferroviaire|railway|transport|mobilite|mobilite durable|flotte|fleet|aeronautique|automobile|qualite industrielle)\b/;
 export function isFinanceRole(offer: ScopeOffer): boolean {
   return FINANCIAL_ROLE.test(normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
 }
-/** Entry-level backup scope: no Data Scientist or general Data Science positions. */
 export function isDataScientistRole(offer: ScopeOffer): boolean {
-  const title = normalizeScope(offer.title);
-  return /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/.test(title);
+  return DATA_SCIENTIST_ROLE.test(normalizeScope(offer.title));
 }
+export function isVisionMission(offer: ScopeOffer): boolean {
+  const title = normalizeScope(offer.title);
+  if (FINANCIAL_ROLE.test(title) || DATA_SCIENTIST_ROLE.test(title)) return false;
+  return VISION_TITLE.test(normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
+}
+/** Data Analyst remains entry-level: never promote Data Scientist / ML Engineer / engineering-heavy titles to Plan B. */
+export function isDataAnalystMission(offer: ScopeOffer): boolean {
+  const title = normalizeScope(offer.title);
+  return !FINANCIAL_ROLE.test(title) && !DATA_SCIENTIST_ROLE.test(title) && !NON_ANALYST_ROLE.test(title) && ANALYST_ROLE.test(title);
+}
+export function isIndustrialAnalyticsMission(offer: ScopeOffer): boolean {
+  return isDataAnalystMission(offer) && INDUSTRIAL_CONTEXT.test(
+    normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
+}
+/** Explicit Data Analyst role takes Plan B precedence even when the department mentions imaging. */
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
-  if (!targetCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
-  if (originalTargetCompany(offer.company) && isVisionMission(offer)) return 'A';
-  // Plan A keeps legitimate vision-oriented ML roles; backup plans remain analyst-led.
-  if (/\b(ingenieur machine learning|ingenieure machine learning|machine learning engineer|ml engineer)\b/.test(normalizeScope(offer.title))) return null;
-  if (isIndustrialAnalyticsMission(offer)) return 'B1';
-  if (isDataAnalystMission(offer)) return 'B2';
+  if (!matchingCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
+  if (isDataAnalystMission(offer)) return 'B';
+  if (isVisionMission(offer)) return 'A';
   return null;
 }
 export function isTargetOffer(offer: ScopeOffer): boolean {
   return getOfferPlan(offer) !== null;
 }
+/** Only hide records from discovery; never delete saved applications or archives. */
 export function restrictOffersPayload(payload: unknown): unknown {
   if (!payload || typeof payload !== 'object' || !Array.isArray((payload as {offers?: unknown}).offers)) return payload;
   const data = payload as {offers: ScopeOffer[]};
