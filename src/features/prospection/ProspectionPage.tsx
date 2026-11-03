@@ -11,7 +11,7 @@ const KEY = 'monstage.prospection.v1';
 const SAFRAN_REFUS_NOTE = 'Refus reçu par email Safran.AI le 02/11/2026 à 17 h 31 : aucune opportunité cohérente identifiée avec le profil. Candidature spontanée déposée le 25/10/2026. Pas de relance sur ce même dossier.';
 const SAFRAN_ORIGINAL_ROLE = 'Stage de fin d’études — Machine Learning et Computer Vision';
 function isSafranOriginalApplication(company: string, role: string, date?: string) {
-  const c = company.trim().toLowerCase().replace(/[.\\s]/g,'');
+  const c = company.trim().toLowerCase().replace(/[.\s]/g,'');
   return c === 'safranai'
     && [SAFRAN_ORIGINAL_ROLE, 'Candidature spontanée — Stage Machine Learning & Computer Vision'].includes(role.trim())
     && (!date || date === '2026-10-25' || date === '25/10/2026');
