@@ -16,10 +16,10 @@ export const backupSectors = [
     ['EDF / Enedis', 'edf.fr/edf-recrute', 'edf|enedis'], ['ENGIE', 'jobs.engie.com', 'engie'],
     ['TotalEnergies', 'careers.totalenergies.com', 'totalenergies'], ['Schneider Electric', 'careers.se.com', 'schneider electric'],
     ['VINCI', 'jobs.vinci.com', 'vinci'] ] },
-  { id: 'data-services', name: 'Data · Technologie & finance', companies: [
+  { id: 'data-services', name: 'Data · Technologie & industrie', companies: [
     ['Orange', 'orange.jobs', 'orange'], ['Capgemini', 'capgemini.com/fr-fr/carrieres', 'capgemini'],
-    ['AXA', 'careers.axa.com', 'axa'], ['BNP Paribas', 'group.bnpparibas/emploi-carriere', 'bnp paribas'],
-    ['Société Générale', 'careers.societegenerale.com', 'societe generale|société générale|socgen'] ] },
+    ['Air Liquide', 'careers.airliquide.com', 'air liquide'], ['Veolia', 'jobs.veolia.com', 'veolia'],
+    ['Michelin', 'jobs.michelin.com', 'michelin'] ] },
 ] as const;
 export const allSectors = [...sectors, ...backupSectors] as const;
 export function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
