@@ -31,8 +31,8 @@ export const TARGET_COMPANIES = [
 export const BACKUP_COMPANIES = [
   ['EDF / Enedis', 'edf', 'enedis'], ['ENGIE', 'engie'], ['TotalEnergies', 'totalenergies'],
   ['Schneider Electric', 'schneider electric'], ['VINCI', 'vinci'],
-  ['Orange', 'orange'], ['Capgemini', 'capgemini'], ['AXA', 'axa'],
-  ['BNP Paribas', 'bnp paribas'], ['Société Générale', 'societe generale', 'socgen'],
+  ['Orange', 'orange'], ['Capgemini', 'capgemini'], ['Air Liquide', 'air liquide'],
+  ['Veolia', 'veolia'], ['Michelin', 'michelin'],
 ] as const;
 export const ALL_TARGET_COMPANIES = [...TARGET_COMPANIES, ...BACKUP_COMPANIES] as const;
 
@@ -68,8 +68,13 @@ export function isDataAnalystMission(offer: ScopeOffer): boolean {
   return ANALYST.test(title);
 }
 /** Priority is strict: A (historical 20 only), then B1, then B2. */
+/** Business-finance specialization is not aligned with the user's training. */
+const FINANCIAL_ROLE = /\\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\\b/;
+export function isFinanceRole(offer: ScopeOffer): boolean {
+  return FINANCIAL_ROLE.test(normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
+}
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
-  if (!targetCompany(offer.company)) return null;
+  if (!targetCompany(offer.company) || isFinanceRole(offer)) return null;
   if (originalTargetCompany(offer.company) && isVisionMission(offer)) return 'A';
   if (isIndustrialAnalyticsMission(offer)) return 'B1';
   if (isDataAnalystMission(offer)) return 'B2';
