@@ -138,7 +138,7 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   await expect(page.locator('.offer-card').first().getByText(/% CV match|Adéquation à vérifier/)).toBeVisible();
   await page.getByRole('button', { name: /Machine Learning Intern/ }).click();
   await expect(page.locator('.offer-detail-pane').getByRole('heading', { name: 'Machine Learning Intern' })).toBeVisible();
-  const desktopApply = page.locator('.offer-detail-pane').getByRole('link', { name: 'Apply ↗' });
+  const desktopApply = page.locator('.offer-detail-pane').getByRole('link', { name: 'Apply' });
   await expect(desktopApply).toHaveAttribute('href', 'https://company.example/jobs/2');
   await expect(desktopApply).toHaveAttribute('target', '_blank');
 
@@ -190,11 +190,11 @@ test('mobile authenticated flow preserves navigation, detail, filters and no ove
 
   await expect(page.locator('.bottom-nav')).toBeVisible();
   await page.getByRole('button', { name: /Computer Vision Intern/ }).click();
-  await expect(page.getByRole('button', { name: '← Back to jobs' })).toBeVisible();
-  const mobileApply = page.getByRole('link', { name: 'Apply ↗' });
+  await expect(page.getByRole('button', { name: 'Back to jobs' })).toBeVisible();
+  const mobileApply = page.getByRole('link', { name: 'Apply' });
   await expect(mobileApply).toHaveAttribute('href', 'https://company.example/jobs/1');
   await expect(mobileApply).toHaveAttribute('target', '_blank');
-  await page.getByRole('button', { name: '← Back to jobs' }).click();
+  await page.getByRole('button', { name: 'Back to jobs' }).click();
   await page.getByRole('button', { name: /Filters/ }).click();
   await expect(page.getByRole('dialog', { name: 'Opportunity filters' })).toBeVisible();
   await page.getByRole('button', { name: 'Close filters' }).click();

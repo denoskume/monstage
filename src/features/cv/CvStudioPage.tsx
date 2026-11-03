@@ -267,7 +267,7 @@ export function CvStudioPage() {
           {offerParam ? <button className="button button--primary" type="button" disabled={!offersData?.offers.some(item => item.id === offerParam)} onClick={generateCv}>Générer CV</button> : null}
           <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistré' : 'Enregistrer'}</button>
-          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Dossier</button> : null}
+          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>Dossier</button> : null}
           {pdfReady && pdfBytes ? (
             <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPreparedPdf()} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
           ) : (

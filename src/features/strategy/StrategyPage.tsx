@@ -78,7 +78,7 @@ export function StrategyPage() {
             <p className="strategy-eyebrow">SKILL {skill.number} / 05</p>
             <h2>{skill.title}</h2>
             <p>{skill.subtitle}</p>
-            <Link className="strategy-primary-link" to={skill.href}>{skill.primary} <span aria-hidden="true">↗</span></Link>
+            <Link className="button button--primary strategy-primary-link" to={skill.href}>{skill.primary} </Link>
           </div>
 
           <div className="strategy-section">

@@ -32,9 +32,9 @@ function ApplicationRow({ offer }: { offer: InternshipOffer }) {
         <div><dt>Assistant</dt><dd>{followUp}</dd></div>
       </dl>
       <div className="application-row__actions">
-        <Link className="application-row__link" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier et documents →</Link>
-        <Link className="application-row__link" to={`/studio?offer=${encodeURIComponent(offer.id)}`}>Préparer CV et lettre →</Link>
-        {offer.applicationUrl ? <a className="application-row__link" href={offer.applicationUrl} target="_blank" rel="noreferrer">View job ↗</a> : null}
+        <Link className="button button--secondary application-row__link" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier et documents</Link>
+        <Link className="button button--secondary application-row__link" to={`/studio?offer=${encodeURIComponent(offer.id)}`}>Préparer CV et lettre</Link>
+        {offer.applicationUrl ? <a className="button button--secondary application-row__link" href={offer.applicationUrl} target="_blank" rel="noreferrer">View job</a> : null}
       </div>
     </article>
   );

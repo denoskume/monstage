@@ -234,7 +234,7 @@ export function ClStudioPage() {
           {job ? <button className="button button--primary" type="button" onClick={generateLetter}>Générer CL</button> : null}
           <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistrée' : 'Enregistrer'}</button>
-          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>← Dossier</button> : null}
+          {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>Dossier</button> : null}
           <button className="button button--primary cl-download-button" type="button" onClick={downloadPdf} aria-label="Download cover letter PDF" title="Download cover letter PDF">⇩</button>
         </div>
       </div>

@@ -47,7 +47,7 @@ export function InfoPage({ kind }: { kind: InfoKind }) {
   return (
     <section className="page info-page">
       <div className="info-page__header">
-        <Link to="/offers">← Back to Jobs</Link>
+        <Link className="button button--secondary" to="/offers">Back to Jobs</Link>
         <h1>{page.title}</h1>
         <p>{page.intro}</p>
       </div>

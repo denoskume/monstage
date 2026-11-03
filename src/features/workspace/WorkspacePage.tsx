@@ -45,7 +45,7 @@ function ApplicationDocuments({ offerId, company }: { offerId: string; company: 
   }
   return <section className="workspace-section">
     <div className="workspace-section__heading"><h3>Documents de candidature</h3><span>{documents.length} fichier{documents.length > 1 ? 's' : ''}</span></div>
-    {folderUrl ? <a href={folderUrl} target="_blank" rel="noreferrer">Ouvrir le dossier GitHub privé ↗</a> : null}
+    {folderUrl ? <a className="button button--secondary" href={folderUrl} target="_blank" rel="noreferrer">Ouvrir le dossier GitHub privé</a> : null}
     <div className="workspace-actions">
       {([['cv', '+ Joindre le CV envoyé'], ['letter', '+ Joindre la lettre envoyée'], ['other', '+ Autre document']] as const).map(([kind, label]) =>
         <label key={kind} className="button button--secondary" style={{ cursor: busy ? 'wait' : 'pointer' }}>
@@ -111,7 +111,7 @@ function WorkspaceCard({ offer, state, onUpdate }: {
         <div className="workspace-section__heading"><h3>3. Postuler et suivre</h3></div>
         <p className="workspace-note">Le clic sur le site de l'employeur n'enregistre pas une candidature envoyée. Confirme l'envoi uniquement après avoir réellement postulé.</p>
         <div className="workspace-actions" style={{ flexWrap: 'wrap' }}>
-          {offer.applicationUrl ? <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Ouvrir l'offre et postuler ↗</a> : null}
+          {offer.applicationUrl ? <a className="button button--primary" href={offer.applicationUrl} target="_blank" rel="noreferrer">Ouvrir l'offre et postuler</a> : null}
           <Link className="button button--secondary" to={`/studio?offer=${encodeURIComponent(offer.id)}`}>Confirmer l'envoi dans Studio</Link>
         </div>
         <div className="workspace-grid" style={{ marginTop: 18 }}>
@@ -137,7 +137,7 @@ export function WorkspacePage() {
     <section className="page workspace-page">
       <div className="page-header" style={{ maxWidth: 1080, margin: '0 auto 20px' }}>
         <h1 className="sr-only">Dossier de candidature</h1>
-        <Link className="button button--secondary" to="/offers">← Retour aux offres</Link>
+        <Link className="button button--secondary" to="/offers">Retour aux offres</Link>
       </div>
       {!selectedId ? (
         <div style={{ maxWidth: 1080, margin: '0 auto' }}><EmptyState title="Sélectionne une offre puis clique sur Préparer la candidature."/><Link className="button button--primary" to="/offers">Voir les offres</Link></div>
