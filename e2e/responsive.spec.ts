@@ -133,9 +133,9 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
 
   await expect(page.getByRole('button', { name: 'Account' })).toBeVisible();
   await expect(page.getByText('Excluded Computer Vision Intern')).toHaveCount(0);
-  // Switching to B2 must reveal the non-financial Data Analyst job, even
+  // Switching to B must reveal the non-financial Data Analyst job, even
   // when the old CV-only "Recommended for me" preference was active.
-  await page.getByRole('button', { name: /Plan B2/ }).click();
+  await page.getByRole('button', { name: /Plan B/ }).click();
   await expect(page.getByText('Data Analyst Intern').first()).toBeVisible();
   await page.getByRole('button', { name: /Tous les plans/ }).click();
   await expect(page.getByText('Computer Vision Intern').first()).toBeVisible();
