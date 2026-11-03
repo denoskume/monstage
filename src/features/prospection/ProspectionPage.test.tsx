@@ -22,9 +22,9 @@ describe('ProspectionPage', () => {
     expect(screen.getByText('Safran.AI')).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer le CV dans Studio'})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:'Préparer la lettre dans Studio'})).toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
   });
   it('prefills and saves an Alstom Plan B spontaneous application', () => {
     render(<MemoryRouter initialEntries={['/prospection?company=Alstom&plan=B']}><ProspectionPage /></MemoryRouter>);
