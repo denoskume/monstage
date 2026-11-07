@@ -863,7 +863,8 @@ function smartRecruitersList_(source) {
 
   queries.forEach(function (query) {
     var offset = 0;
-    for (var page = 0; page < 8; page += 1) {
+    // Newer postings are on the first matching page. Avoid slow, partial syncs.
+    for (var page = 0; page < 1; page += 1) {
       var url = 'https://api.smartrecruiters.com/v1/companies/' + encodeURIComponent(source.companyId) +
         '/postings?limit=' + limit + '&offset=' + offset + '&country=fr&q=' + encodeURIComponent(query);
       try {
@@ -1046,7 +1047,7 @@ function fetchWorkdayPage_(source, searchText, offset) {
 }
 
 function fetchWorkdayJobs_(source) {
-  var searches = ['stage vision', 'stage image', 'traitement images', 'image processing', 'stage data analyst', 'stage analyse de données', 'analyse de données', 'data analyse', 'stage data', 'stage maintenance', 'power bi', 'stage 2027', 'tableau de bord'];
+  var searches = ['stage vision', 'stage image', 'stage data analyst', 'analyse de données', 'data analyse', 'stage data', 'stage maintenance', 'power bi', 'stage 2027', 'tableau de bord'];
 
   var seen = {};
   var jobs = [];
