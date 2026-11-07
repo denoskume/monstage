@@ -1507,7 +1507,8 @@ function installPublicationAuditTrigger() {
 }
 
 function getOffers_() {
-  refreshExternalSourcesIfDue_();
+  // Read only: upstream ATS refreshes run in the independent scheduled workflow.
+  // Doing long Workday syncs inside each Jobs request caused gateway timeouts.
   var spreadsheet = getSpreadsheet_();
   var sheets = offerSourceSheets_(spreadsheet);
   if (!sheets.length) throw new Error('No offer source sheet found');
