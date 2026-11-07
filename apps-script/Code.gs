@@ -2298,7 +2298,7 @@ function ingestRunnerAtsPostings_(request) {
     } else if (provider === 'workday') {
       // Workday feeds are authenticated at the gateway and restricted to
       // configured tenants. Never accept arbitrary external source URLs.
-      if (!strictCompany_(source.company) || !/^\\/job\\//.test(String(job.externalPath || ''))) return;
+      if (!strictCompany_(source.company) || !String(job.externalPath || '').startsWith('/job/')) return;
       if (!isWorkdayInternship_(job)) return;
       counters.internship++;
       posting = workdayAsTargetPosting_(job, null);
