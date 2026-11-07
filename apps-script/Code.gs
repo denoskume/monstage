@@ -499,8 +499,13 @@ function writeExternalOfferRows_(sheet, rows) {
   rows = rows.filter(function (row) { return strictEligible_(row[1], row[2], row[3]); });
   // A failed provider must not delete its previously verified offers.
   if (!rows.length && sheet.getLastRow() > 1) {
-    console.warn('Provider returned zero jobs; preserving previous snapshot: ' + sheet.getName());
-    return sheet.getLastRow() - 1;
+    console.warn('Provider returned zero jobs; preserving unconfirmed snapshot: ' + sheet.getName());
+    var count = sheet.getLastRow() - 1;
+    sheet.getRange(2, 13, count, 1).setValues(
+      Array.from({length: count}, function () { return ['À vérifier']; }));
+    sheet.getRange(2, 24, count, 1).setValues(
+      Array.from({length: count}, function () { return ['Source à revérifier']; }));
+    return count;
   }
 
   var previous = {};
