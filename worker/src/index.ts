@@ -9,6 +9,7 @@ import type { AuthorizedUser, Env } from './env';
 import { buildCvPdfResponse } from './cvPdf';
 import { buildCoverLetterPdfResponse } from './clPdf';
 import { fetchExternalOffers, mergeOffersPayload } from './externalOffers';
+import { EXTERNAL_FRESHNESS_MS, readExternalOffersSnapshot, writeExternalOffersSnapshot } from './externalCache';
 
 const OFFERS_CACHE_FRESHNESS_MS = 5 * 60 * 1000;
 const OFFERS_CACHE_MAX_STALE_MS = 15 * 60 * 1000;
@@ -25,19 +26,40 @@ export interface WorkerDependencies {
   putCachedOffers: (payload: unknown, ttlSeconds: number) => Promise<void>;
 }
 
-async function fetchMergedOffers(env: Env): Promise<unknown> {
-  // The private Google Sheet is the authoritative source. Public ATS outages must
-  // never prevent previously collected internships from loading in Jobs.
-  const externalOffers = fetchExternalOffers()
+interface BackgroundContext {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
+async function fetchMergedOffers(env: Env, context?: BackgroundContext): Promise<unknown> {
+  // Spreadsheet offers are authoritative; ATS results are an optional,
+  // independently retained supplement.
+  const [basePayload, snapshot] = await Promise.all([
+    fetchOffersFromAppsScript(env),
+    readExternalOffersSnapshot(),
+  ]);
+
+  if (snapshot && Date.now() - snapshot.updatedAt < EXTERNAL_FRESHNESS_MS) {
+    return mergeOffersPayload(basePayload, snapshot.offers);
+  }
+
+  const refresh = fetchExternalOffers()
+    .then(async (offers) => {
+      if (offers.length) await writeExternalOffersSnapshot(offers);
+      return offers;
+    })
     .catch(() => [] as Awaited<ReturnType<typeof fetchExternalOffers>>);
-  const basePayload = await fetchOffersFromAppsScript(env);
-  const externalWithinBudget = await Promise.race([
-    externalOffers,
+
+  // Keep background refresh alive after the HTTP response on Cloudflare.
+  if (context) context.waitUntil(refresh.then(() => undefined));
+
+  const quick = await Promise.race([
+    refresh,
     new Promise<Awaited<ReturnType<typeof fetchExternalOffers>>>((resolve) =>
       setTimeout(() => resolve([]), 3000),
     ),
   ]);
-  return mergeOffersPayload(basePayload, externalWithinBudget);
+
+  return mergeOffersPayload(basePayload, quick.length ? quick : (snapshot?.offers ?? []));
 }
 
 const defaultDependencies: WorkerDependencies = {
@@ -84,6 +106,7 @@ export async function handleRequest(
   request: Request,
   env: Env,
   dependencies: WorkerDependencies = defaultDependencies,
+  context?: BackgroundContext,
 ): Promise<Response> {
   const origin = allowedOrigin(request, env);
   const url = new URL(request.url);
@@ -231,7 +254,9 @@ export async function handleRequest(
   if (cachedOffers && isFresh(cachedOffers)) return jsonResponse(restrictOffersPayload(cachedOffers.payload), 200, origin);
 
   try {
-    const offers = await dependencies.fetchOffers(env);
+    const offers = dependencies === defaultDependencies
+      ? await fetchMergedOffers(env, context)
+      : await dependencies.fetchOffers(env);
     await dependencies.putCachedOffers(offers, OFFERS_CACHE_RETENTION_SECONDS);
     return jsonResponse(restrictOffersPayload(offers), 200, origin);
   } catch {
@@ -241,7 +266,7 @@ export async function handleRequest(
 }
 
 export default {
-  fetch(request: Request, env: Env): Promise<Response> {
-    return handleRequest(request, env);
+  fetch(request: Request, env: Env, context: BackgroundContext): Promise<Response> {
+    return handleRequest(request, env, defaultDependencies, context);
   },
 };
