@@ -52,7 +52,12 @@ const GREENHOUSE_SOURCES: GreenhouseSource[] = [];
 
 const SMART_SOURCES: SmartSource[] = [];
 
-const WORKDAY_SEARCHES = ['stage vision', 'stage image', 'intern vision', 'intern imaging', 'stage data analyst', 'stage maintenance', 'intern data', 'power bi'];
+const WORKDAY_SEARCHES = [
+  'stage vision', 'stage image', 'intern vision', 'intern imaging',
+  'stage data analyst', 'stage analyse de données', 'analyse de données',
+  'data analyse', 'stage data', 'stage maintenance', 'intern data',
+  'power bi', 'tableau de bord', 'stage 2027',
+];
 
 const WORKDAY_FOCUSED_SEARCHES: Record<string, string[]> = {};
 
@@ -170,6 +175,8 @@ async function fetchJson(url: string, init?: RequestInit): Promise<any | null> {
   try {
     const response = await fetch(url, {
       ...init,
+      // One stalled ATS call must not indefinitely block its entire provider.
+      signal: init?.signal ?? AbortSignal.timeout(8000),
       headers: {
         Accept: 'application/json',
         ...(init?.headers ?? {}),
