@@ -10,6 +10,70 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+WORKDAY = [
+    ("ag", "wd3", "Airbus"),
+    ("thales", "wd3", "Careers"),
+    ("evoyageurs", "wd3", "jobs"),
+    ("alliancewd", "wd3", "renault-group-careers"),
+]
+WORKDAY_TERMS = (
+    "stage vision", "stage image", "stage data analyst",
+    "analyse de données", "stage data", "stage maintenance", "stage 2027",
+    "power bi",
+)
+
+
+def refresh_workday():
+    """Restore the independently verified Workday sheet from official ATS APIs."""
+    accepted = 0
+    failures = []
+    for tenant, host, site in WORKDAY:
+        endpoint = f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs"
+        jobs = {}
+        successes = 0
+        for phrase in WORKDAY_TERMS:
+            payload = json.dumps({
+                "appliedFacets": {}, "limit": 20, "offset": 0, "searchText": phrase
+            }).encode()
+            request = urllib.request.Request(endpoint, payload, {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0",
+            }, method="POST")
+            try:
+                with urllib.request.urlopen(request, timeout=20) as response:
+                    result = json.load(response)
+                successes += 1
+                for job in result.get("jobPostings", []):
+                    path = job.get("externalPath")
+                    if path and path.startswith("/job/"):
+                        jobs[path] = {
+                            "id": path,
+                            "externalPath": path,
+                            "title": job.get("title", ""),
+                            "locationsText": job.get("locationsText", ""),
+                            "postedOn": job.get("postedOn", ""),
+                        }
+            except (OSError, ValueError) as exc:
+                failures.append(f"{tenant}/{phrase}: {str(exc)[:90]}")
+        print("Workday", tenant, "successful searches", successes,
+              "unique job postings", len(jobs))
+        if not successes:
+            continue
+        # Never send an empty batch, and never overwrite other tenants.
+        if jobs:
+            try:
+                accepted += ingest("workday", tenant, list(jobs.values()))
+            except Exception as exc:
+                failures.append(f"{tenant}/ingestion: {str(exc)[:150]}")
+    print("Workday runner accepted", accepted, "warnings", len(failures))
+    for message in failures[:12]:
+        print("Workday warning:", message)
+    if not accepted:
+        raise RuntimeError("Workday runner recovered no eligible postings")
+    return accepted
+
+
 GREENHOUSE = []
 SMARTRECRUITERS = ["BoschGroup"]
 
@@ -49,6 +113,10 @@ def ingest(provider, source_id, jobs):
 def main():
     accepted = 0
     errors = []
+    try:
+        accepted += refresh_workday()
+    except Exception as exc:
+        errors.append("workday: " + str(exc)[:180])
     for board in GREENHOUSE:
         url = "https://boards-api.greenhouse.io/v1/boards/" + urllib.parse.quote(board) + "/jobs?content=true"
         try:
