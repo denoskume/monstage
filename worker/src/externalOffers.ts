@@ -219,13 +219,12 @@ async function fetchWorkday(source: WorkdaySource): Promise<ExternalOffer[]> {
     }
   }
 
-  for (const searchText of WORKDAY_SEARCHES) {
-    await collect(searchText, WORKDAY_GENERIC_PAGES[source.company] ?? 1);
-  }
-
-  for (const searchText of WORKDAY_FOCUSED_SEARCHES[source.company] ?? []) {
-    await collect(searchText, 1);
-  }
+  // Run independent search terms concurrently; otherwise 8 sequential Workday
+  // searches can outlive Cloudflare's background refresh window.
+  await Promise.all([
+    ...WORKDAY_SEARCHES.map(searchText => collect(searchText, WORKDAY_GENERIC_PAGES[source.company] ?? 1)),
+    ...(WORKDAY_FOCUSED_SEARCHES[source.company] ?? []).map(searchText => collect(searchText, 1)),
+  ]);
 
   return offers;
 }
