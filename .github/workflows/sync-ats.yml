@@ -1,0 +1,70 @@
+name: Refresh MonStage internship sources
+
+on:
+  schedule:
+    # Four independent refreshes per day; no browser visit required.
+    - cron: '17 5,11,17,23 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monstage-ats-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APPS_SCRIPT_URL: ${{ secrets.APPS_SCRIPT_URL }}
+      APPS_SCRIPT_GATEWAY_SECRET: ${{ secrets.APPS_SCRIPT_GATEWAY_SECRET }}
+    steps:
+      - name: Refresh official internship feeds and report source diagnostics
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import time
+          import urllib.error
+          import urllib.request
+
+          endpoint = os.getenv("APPS_SCRIPT_URL")
+          secret = os.getenv("APPS_SCRIPT_GATEWAY_SECRET")
+          if not endpoint or not secret:
+              raise SystemExit("Missing Apps Script URL or gateway secret; sources were not refreshed.")
+
+          payload = json.dumps({
+              "gatewaySecret": secret,
+              "action": "syncExternalSources",
+          }).encode("utf-8")
+          last_error = None
+          for attempt in range(1, 3):
+              try:
+                  request = urllib.request.Request(endpoint, payload, {
+                      "Content-Type": "application/json",
+                      "Accept": "application/json",
+                  }, method="POST")
+                  with urllib.request.urlopen(request, timeout=310) as response:
+                      body = json.load(response)
+                  sources = body.get("sync")
+                  if not isinstance(sources, dict):
+                      raise RuntimeError("Backend did not return synchronization diagnostics")
+                  print("Synchronization (source counts, no candidate data):")
+                  for name in ("lever", "greenhouse", "ashby", "smartRecruiters", "workday"):
+                      entry = sources.get(name) or {}
+                      print(name, "count=", entry.get("count"), "error=", str(entry.get("error") or "")[:160])
+                  if all((sources.get(name) or {}).get("error") for name in
+                         ("lever", "greenhouse", "ashby", "smartRecruiters", "workday")):
+                      raise RuntimeError("All ATS refresh providers reported errors")
+                  print("Source refresh completed.")
+                  break
+              except (OSError, ValueError, RuntimeError) as exc:
+                  last_error = str(exc)
+                  print("Source refresh attempt", attempt, "failed:", last_error[:200])
+                  if attempt == 1:
+                      time.sleep(10)
+          else:
+              raise SystemExit("Source refresh failed: " + str(last_error)[:200])
+          PY
