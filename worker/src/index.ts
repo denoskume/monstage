@@ -26,11 +26,18 @@ export interface WorkerDependencies {
 }
 
 async function fetchMergedOffers(env: Env): Promise<unknown> {
-  const [basePayload, externalOffers] = await Promise.all([
-    fetchOffersFromAppsScript(env),
-    fetchExternalOffers(),
+  // The private Google Sheet is the authoritative source. Public ATS outages must
+  // never prevent previously collected internships from loading in Jobs.
+  const externalOffers = fetchExternalOffers()
+    .catch(() => [] as Awaited<ReturnType<typeof fetchExternalOffers>>);
+  const basePayload = await fetchOffersFromAppsScript(env);
+  const externalWithinBudget = await Promise.race([
+    externalOffers,
+    new Promise<Awaited<ReturnType<typeof fetchExternalOffers>>>((resolve) =>
+      setTimeout(() => resolve([]), 3000),
+    ),
   ]);
-  return mergeOffersPayload(basePayload, externalOffers);
+  return mergeOffersPayload(basePayload, externalWithinBudget);
 }
 
 const defaultDependencies: WorkerDependencies = {
