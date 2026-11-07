@@ -43,10 +43,7 @@ async function fetchMergedOffers(env: Env, context?: BackgroundContext): Promise
   }
 
   const refresh = fetchExternalOffers()
-    .then(async (offers) => {
-      if (offers.length) await writeExternalOffersSnapshot(offers);
-      return offers;
-    })
+    .then(async (offers) => writeExternalOffersSnapshot(offers))
     .catch(() => [] as Awaited<ReturnType<typeof fetchExternalOffers>>);
 
   // Keep background refresh alive after the HTTP response on Cloudflare.
