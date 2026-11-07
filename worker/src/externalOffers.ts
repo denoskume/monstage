@@ -55,14 +55,19 @@ const SMART_SOURCES: SmartSource[] = [];
 // Keep the Cloudflare refresh under its subrequest budget. Each Workday
 // search fetches the newest page; older pages are not useful for freshness.
 const WORKDAY_SEARCHES = [
-  'stage vision', 'stage image', 'stage data analyst', 'analyse de données',
-  'data analyse', 'stage data', 'stage maintenance', 'power bi',
-  'stage 2027', 'tableau de bord',
+  'stage vision', 'stage image', 'intern vision',
+  'stage data analyst', 'analyse de données', 'stage data',
+  'stage maintenance', 'power bi', 'stage 2027',
 ];
 
 const WORKDAY_FOCUSED_SEARCHES: Record<string, string[]> = {};
 
-const WORKDAY_GENERIC_PAGES: Record<string, number> = {};
+// Two pages at Airbus restore coverage lost when pagination was reduced to one.
+// Nine search terms * (2 + 1 + 1 + 1) = 45 external requests maximum,
+// leaving room for Apps Script within the Cloudflare Worker request budget.
+const WORKDAY_GENERIC_PAGES: Record<string, number> = {
+  Airbus: 2,
+};
 
 function normalize(value: unknown): string {
   return String(value ?? '')
