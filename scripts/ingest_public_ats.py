@@ -4,6 +4,7 @@ The Apps Script backend validates location, internship status and relevance befo
 No job posting dates are inferred: only original ATS timestamps are passed through.
 """
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 import sys
 import urllib.error
@@ -23,45 +24,50 @@ WORKDAY_TERMS = (
 )
 
 
+def workday_search(tenant, host, site, phrase):
+    endpoint = f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs"
+    payload = json.dumps({
+        "appliedFacets": {}, "limit": 20, "offset": 0, "searchText": phrase
+    }).encode()
+    request = urllib.request.Request(endpoint, payload, {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0",
+    }, method="POST")
+    with urllib.request.urlopen(request, timeout=18) as response:
+        return json.load(response).get("jobPostings", [])
+
+
 def refresh_workday():
-    """Restore the independently verified Workday sheet from official ATS APIs."""
+    """Restore Workday offers from four allowlisted ATS feeds."""
     accepted = 0
     failures = []
     for tenant, host, site in WORKDAY:
-        endpoint = f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs"
         jobs = {}
         successes = 0
-        for phrase in WORKDAY_TERMS:
-            payload = json.dumps({
-                "appliedFacets": {}, "limit": 20, "offset": 0, "searchText": phrase
-            }).encode()
-            request = urllib.request.Request(endpoint, payload, {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "User-Agent": "Mozilla/5.0",
-            }, method="POST")
-            try:
-                with urllib.request.urlopen(request, timeout=20) as response:
-                    result = json.load(response)
-                successes += 1
-                for job in result.get("jobPostings", []):
-                    path = job.get("externalPath")
-                    if path and path.startswith("/job/"):
-                        jobs[path] = {
-                            "id": path,
-                            "externalPath": path,
-                            "title": job.get("title", ""),
-                            "locationsText": job.get("locationsText", ""),
-                            "postedOn": job.get("postedOn", ""),
-                        }
-            except (OSError, ValueError) as exc:
-                failures.append(f"{tenant}/{phrase}: {str(exc)[:90]}")
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            futures = {pool.submit(workday_search, tenant, host, site, phrase): phrase
+                       for phrase in WORKDAY_TERMS}
+            for future in as_completed(futures):
+                phrase = futures[future]
+                try:
+                    batch = future.result()
+                    successes += 1
+                    for job in batch:
+                        path = job.get("externalPath")
+                        if path and path.startswith("/job/"):
+                            jobs[path] = {
+                                "id": path,
+                                "externalPath": path,
+                                "title": job.get("title", ""),
+                                "locationsText": job.get("locationsText", ""),
+                                "postedOn": job.get("postedOn", ""),
+                            }
+                except (OSError, ValueError) as exc:
+                    failures.append(f"{tenant}/{phrase}: {str(exc)[:90]}")
         print("Workday", tenant, "successful searches", successes,
               "unique job postings", len(jobs))
-        if not successes:
-            continue
-        # Never send an empty batch, and never overwrite other tenants.
-        if jobs:
+        if successes and jobs:
             try:
                 accepted += ingest("workday", tenant, list(jobs.values()))
             except Exception as exc:
