@@ -1046,7 +1046,7 @@ function fetchWorkdayPage_(source, searchText, offset) {
 }
 
 function fetchWorkdayJobs_(source) {
-  var searches = ['stage vision', 'stage image', 'stage imagerie', 'intern vision', 'intern imaging', 'traitement images', 'image processing', 'stage data analyst', 'stage data', 'stage maintenance', 'intern data', 'power bi'];
+  var searches = ['stage vision', 'stage image', 'traitement images', 'image processing', 'stage data analyst', 'stage analyse de données', 'analyse de données', 'data analyse', 'stage data', 'stage maintenance', 'power bi', 'stage 2027', 'tableau de bord'];
 
   var seen = {};
   var jobs = [];
