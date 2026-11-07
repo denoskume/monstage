@@ -2265,20 +2265,22 @@ function ingestRunnerAtsPostings_(request) {
   var sourceId = normalizeText_(request.sourceId);
   var source = null;
   var sources = provider === 'greenhouse' ? GREENHOUSE_SOURCES_ :
-    provider === 'smartRecruiters' ? SMARTRECRUITERS_SOURCES_ : [];
+    provider === 'smartRecruiters' ? SMARTRECRUITERS_SOURCES_ :
+    provider === 'workday' ? WORKDAY_SOURCES_ : [];
   sources.forEach(function (candidate) {
-    if (String(provider === 'greenhouse' ? candidate.board : candidate.companyId) === sourceId) source = candidate;
+    if (String(provider === 'greenhouse' ? candidate.board : provider === 'workday' ? candidate.tenant : candidate.companyId) === sourceId) source = candidate;
   });
   if (!source) throw new Error('Unknown authorized ATS source');
   var jobs = request.jobs;
   if (!Array.isArray(jobs) || jobs.length > 200) throw new Error('Invalid ATS batch');
-  var sheetName = provider === 'greenhouse' ? 'Offres - Greenhouse' : 'Offres - SmartRecruiters';
+  var sheetName = provider === 'greenhouse' ? 'Offres - Greenhouse' :
+    provider === 'workday' ? 'Offres - Workday' : 'Offres - SmartRecruiters';
   var spreadsheet = getSpreadsheet_();
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
   var counters = { received: jobs.length, internship: 0, france: 0, relevant: 0 };
   jobs.forEach(function (job) {
-    if (!job || typeof job !== 'object' || !job.id) return;
+    if (!job || typeof job !== 'object' || !(job.id || job.externalPath)) return;
     var posting;
     var row;
     if (provider === 'greenhouse') {
@@ -2293,6 +2295,18 @@ function ingestRunnerAtsPostings_(request) {
       if (targetSignalScore_(posting) < 3) return;
       counters.relevant++;
       row = greenhouseJobToRow_(source, job);
+    } else if (provider === 'workday') {
+      // Workday feeds are authenticated at the gateway and restricted to
+      // configured tenants. Never accept arbitrary external source URLs.
+      if (!strictCompany_(source.company) || !/^\\/job\\//.test(String(job.externalPath || ''))) return;
+      if (!isWorkdayInternship_(job)) return;
+      counters.internship++;
+      posting = workdayAsTargetPosting_(job, null);
+      if (!isFranceLocation_(posting.categories.location)) return;
+      counters.france++;
+      if (targetSignalScore_(posting) < 3) return;
+      counters.relevant++;
+      row = workdayJobToRow_(source, job, null);
     } else {
       if (!smartRecruitersIsInternship_(job)) return;
       counters.internship++;
@@ -2309,7 +2323,8 @@ function ingestRunnerAtsPostings_(request) {
   if (jobs.length) {
     var old = sheet.getDataRange().getDisplayValues();
     var base = old.length > 1 ? old.slice(1).filter(function (row) {
-      var prefix = provider === 'greenhouse' ? 'greenhouse:' + sourceId + ':' : 'smartrecruiters:' + sourceId + ':';
+      var prefix = provider === 'greenhouse' ? 'greenhouse:' + sourceId + ':' :
+        provider === 'workday' ? 'workday:' + sourceId + ':' : 'smartrecruiters:' + sourceId + ':';
       return String(row[0] || '').indexOf(prefix) !== 0;
     }) : [];
     var combined = base.concat(rows);
