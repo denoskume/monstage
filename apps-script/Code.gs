@@ -497,26 +497,63 @@ function fetchLeverPostings_(source) {
 
 function writeExternalOfferRows_(sheet, rows) {
   rows = rows.filter(function (row) { return strictEligible_(row[1], row[2], row[3]); });
-  // Preserve the last good snapshot if a provider returns no postings.
+  // A failed provider must not delete its previously verified offers.
   if (!rows.length && sheet.getLastRow() > 1) {
     console.warn('Provider returned zero jobs; preserving previous snapshot: ' + sheet.getName());
     return sheet.getLastRow() - 1;
   }
-  // Dates reconciled from official pages must survive subsequent provider syncs.
-  var known = {};
+
+  var previous = {};
   if (sheet.getLastRow() > 1) {
-    var prior = sheet.getDataRange().getDisplayValues();
-    var headers = buildHeaderMap_(prior[0]);
-    prior.slice(1).forEach(function (row) {
-      var id = normalizeText_(valueByHeader_(row, headers, 'ID'));
-      var date = normalizeText_(valueByHeader_(row, headers, 'Publication'));
-      if (id && date && publicationDateScore_({publishedAt: date})) known[id] = date;
+    var oldValues = sheet.getDataRange().getDisplayValues();
+    var headers = buildHeaderMap_(oldValues[0]);
+    oldValues.slice(1).forEach(function (record) {
+      var id = normalizeText_(valueByHeader_(record, headers, 'ID'));
+      if (!id) return;
+      previous[id] = record;
     });
   }
+
+  var observed = {};
   rows.forEach(function (row) {
     var id = normalizeText_(row[0]);
-    if (id && !publicationDateScore_({publishedAt: row[11]}) && known[id]) row[11] = known[id];
+    if (!id) return;
+    observed[id] = true;
+    var old = previous[id];
+    if (!old) return;
+    // Preserve verified publication metadata when Workday returns only relative ages.
+    if (!publicationDateScore_({publishedAt: row[11]}) &&
+        publicationDateScore_({publishedAt: old[11]})) row[11] = old[11];
+    // A scheduled synchronization must never reset application tracking.
+    [13, 16, 17, 18].forEach(function (index) {
+      if (old[index] !== null && old[index] !== undefined && old[index] !== '' &&
+          (index !== 13 || old[index] !== 'À candidater')) row[index] = old[index];
+    });
   });
+
+  // Incomplete provider pagination or short outages must not silently remove
+  // recently verified offers. They remain visible but explicitly unconfirmed.
+  var retained = 0;
+  Object.keys(previous).forEach(function (id) {
+    if (observed[id]) return;
+    var old = previous[id];
+    if (!strictEligible_(old[1], old[2], old[3])) return;
+    var verifiedAt = Date.parse(String(old[24] || ''));
+    var recent = Number.isFinite(verifiedAt) &&
+      verifiedAt <= Date.now() && Date.now() - verifiedAt <= 14 * 86400000;
+    var tracked = Boolean(old[16] === 'TRUE' || old[16] === 'true' ||
+      (old[13] && old[13] !== 'À candidater') || old[17]);
+    if (!recent && !tracked) return;
+    var preserved = old.slice(0, EXTERNAL_SOURCE_HEADERS_.length);
+    while (preserved.length < EXTERNAL_SOURCE_HEADERS_.length) preserved.push('');
+    preserved[12] = 'À vérifier';
+    preserved[23] = 'Source à revérifier';
+    rows.push(preserved);
+    retained++;
+  });
+  if (retained) console.warn(sheet.getName() + ': ' + retained +
+    ' jobs temporarily missing from provider response; retained for verification');
+
   sheet.clearContents();
   sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
   sheet.setFrozenRows(1);
