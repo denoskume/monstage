@@ -52,21 +52,17 @@ const GREENHOUSE_SOURCES: GreenhouseSource[] = [];
 
 const SMART_SOURCES: SmartSource[] = [];
 
+// Keep the Cloudflare refresh under its subrequest budget. Each Workday
+// search fetches the newest page; older pages are not useful for freshness.
 const WORKDAY_SEARCHES = [
-  'stage vision', 'stage image', 'intern vision', 'intern imaging',
-  'stage data analyst', 'stage analyse de données', 'analyse de données',
-  'data analyse', 'stage data', 'stage maintenance', 'intern data',
-  'power bi', 'tableau de bord', 'stage 2027',
+  'stage vision', 'stage image', 'stage data analyst', 'analyse de données',
+  'data analyse', 'stage data', 'stage maintenance', 'power bi',
+  'stage 2027', 'tableau de bord',
 ];
 
 const WORKDAY_FOCUSED_SEARCHES: Record<string, string[]> = {};
 
-const WORKDAY_GENERIC_PAGES: Record<string, number> = {
-  Airbus: 5,
-  Thales: 2,
-  'SNCF Connect & Tech': 2,
-  'Renault Group': 2,
-};
+const WORKDAY_GENERIC_PAGES: Record<string, number> = {};
 
 function normalize(value: unknown): string {
   return String(value ?? '')
