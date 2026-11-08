@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
 import { CV_ACADEMIC_HEADLINE, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
@@ -84,6 +84,58 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       return (normalizeCvPdfText(isBold ? part.slice(2, -2) : part).match(/\s+|\S+/g) || [])
         .map((value) => ({ value, font }));
     });
+
+  // PDF URI link annotations make the header links usable in standard PDF readers.
+  const addLink = (x: number, baseline: number, width: number, size: number, uri: string) => {
+    if (!uri || !width) return;
+    const annotation = pdf.context.obj({
+      Type: 'Annot',
+      Subtype: 'Link',
+      Rect: [x, baseline - 2, x + width, baseline + size + 2],
+      Border: [0, 0, 0],
+      A: { Type: 'Action', S: 'URI', URI: PDFString.of(uri) },
+    });
+    page.node.addAnnot(pdf.context.register(annotation));
+  };
+
+  const portfolioUrl = (raw: string, service: 'linkedin' | 'github'): string | null => {
+    const input = raw.trim();
+    if (!input) return null;
+    const url = /^https?:\/\//i.test(input) ? input : 'https://' + input.replace(/^\/+/, '');
+    try {
+      const parsed = new URL(url);
+      const host = parsed.hostname.toLowerCase();
+      const allowed = service === 'linkedin'
+        ? (host === 'linkedin.com' || host === 'www.linkedin.com')
+        : (host === 'github.com' || host === 'www.github.com');
+      return parsed.protocol === 'https:' && allowed ? parsed.href : null;
+    } catch { return null; }
+  };
+
+  const drawCenteredLinkedParts = (items: { text: string; uri?: string | null }[], size: number) => {
+    const parts = items.filter(item => item.text.trim());
+    if (!parts.length) return;
+    const separator = ' | ';
+    const rawWidths = parts.map(item => regular.widthOfTextAtSize(normalizeCvPdfText(item.text), size));
+    const delimiterWidth = regular.widthOfTextAtSize(separator, size);
+    const total = rawWidths.reduce((sum, width) => sum + width, 0) + delimiterWidth * (parts.length - 1);
+    const fitted = total > usableWidth ? size * usableWidth / total : size;
+    const widths = parts.map(item => regular.widthOfTextAtSize(normalizeCvPdfText(item.text), fitted));
+    const gapWidth = regular.widthOfTextAtSize(separator, fitted);
+    const fittedTotal = widths.reduce((sum, width) => sum + width, 0) + gapWidth * (parts.length - 1);
+    let x = (A4_WIDTH - fittedTotal) / 2;
+    parts.forEach((item, index) => {
+      const value = normalizeCvPdfText(item.text);
+      page.drawText(value, { x, y, size: fitted, font: regular, color: textColor });
+      if (item.uri) addLink(x, y, widths[index], fitted, item.uri);
+      x += widths[index];
+      if (index < parts.length - 1) {
+        page.drawText(separator, { x, y, size: fitted, font: regular, color: textColor });
+        x += gapWidth;
+      }
+    });
+    y -= size + (compact ? 2 : 5);
+  };
 
   const drawRichSingleLine = (raw: string, x: number, baseSize: number, maxWidth: number, defaultFont = regular) => {
     const tokens = richTokens(raw, defaultFont);
@@ -193,8 +245,15 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   drawCentered(draft.name, 18, bold);
   drawCentered(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE, 9.5, regular);
   drawCentered(draft.headline, 10.5, bold);
-  drawCentered([draft.location, draft.email, draft.phone].filter(Boolean).join(' | '), 8.5, regular);
-  drawCentered([draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
+  drawCenteredLinkedParts([
+    { text: draft.location },
+    { text: draft.email, uri: draft.email.trim() ? 'mailto:' + draft.email.trim() : null },
+    { text: draft.phone, uri: draft.phone.trim() ? 'tel:' + draft.phone.replace(/[^+\d]/g, '') : null },
+  ], 8.5);
+  drawCenteredLinkedParts([
+    { text: draft.linkedin, uri: portfolioUrl(draft.linkedin, 'linkedin') },
+    { text: draft.github, uri: portfolioUrl(draft.github, 'github') },
+  ], 8.5);
   // No separator beneath the centered header: give the profile breathing room.
   y -= compact ? 15 : 20;
 
