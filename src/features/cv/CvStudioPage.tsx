@@ -33,13 +33,22 @@ function sectionLabel(section: CvSectionKey, language: CvLanguage): string {
   return language === 'FR' ? labels[section][0] : labels[section][1];
 }
 
+function renderCvBold(value: string) {
+  return value.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+    part.startsWith('**') && part.endsWith('**')
+      ? <strong key={index}>{part.slice(2, -2)}</strong>
+      : <span key={index}>{part}</span>
+  );
+}
+
 function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: CvDraft }) {
   if (section === 'education') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
       {draft.education.map((item) => <div className="cv-entry" key={item.id}>
-        <div className="cv-entry__top"><strong>{item.school}</strong><span>{item.period}</span></div>
-        <div className="cv-entry__top"><span>{item.degree}</span><span>{item.location}</span></div>
-        {item.bullets?.some(Boolean) ? <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul> : item.details ? <p>{item.details}</p> : null}
+        <div className="cv-entry__top"><strong>{renderCvBold(item.school)}</strong><span>{renderCvBold(item.period)}</span></div>
+        <div className="cv-entry__top"><span>{renderCvBold(item.degree)}</span><span>{renderCvBold(item.location)}</span></div>
+        {item.bullets?.some(Boolean) ? <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : item.details ? <p>{renderCvBold(item.details)}</p> : null}
+        {item.keyCourses?.trim() ? <p><strong>{draft.language === 'FR' ? 'Cours clés :' : 'Key courses:'}</strong> {renderCvBold(item.keyCourses)}</p> : null}
       </div>)}
     </section>
   );
@@ -47,7 +56,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
   if (section === 'projects') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
       {draft.projects.map((item) => <div className="cv-entry" key={item.id}>
-        <div className="cv-entry__top"><strong>{item.name}</strong><span>{item.period}</span></div>
+        <div className="cv-entry__top"><strong>{renderCvBold(item.name)}</strong><span>{renderCvBold(item.period)}</span></div>
         <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
       </div>)}
     </section>
@@ -56,8 +65,8 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
   if (section === 'experience') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
       {draft.experience.map((item) => <div className="cv-entry" key={item.id}>
-        <div className="cv-entry__top"><strong>{item.role} — {item.company}</strong><span>{item.period}</span></div>
-        <div className="cv-entry__top"><span>{item.location}</span><span /></div>
+        <div className="cv-entry__top"><strong>{renderCvBold(item.role)} — {renderCvBold(item.company)}</strong><span>{renderCvBold(item.period)}</span></div>
+        <div className="cv-entry__top"><span>{renderCvBold(item.location)}</span><span /></div>
         <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
       </div>)}
     </section>
@@ -77,16 +86,16 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
 
   if (section === 'skills') {
     if (!draft.skills.trim()) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2>{draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => { const match = line.match(/^\*\*(.+?)\*\*(.*)$/); return <p key={index}>{match ? <><strong>{match[1]}</strong>{match[2]}</> : line}</p>; })}</section>;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2>{draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => <p key={index}>{renderCvBold(line)}</p>)}</section>;
   }
 
   if (section === 'languages') {
     if (!draft.languages.trim()) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{draft.languages.split(/(\*\*[^*]+\*\*)/g).map((part, index) => part.startsWith('**') && part.endsWith('**') ? <strong key={index}>{part.slice(2, -2)}</strong> : <span key={index}>{part}</span>)}</p></section>;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{renderCvBold(draft.languages)}</p></section>;
   }
 
   if (!draft.interests.trim()) return null;
-  return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{draft.interests}</p></section>;
+  return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{renderCvBold(draft.interests)}</p></section>;
 }
 
 function AtsScore({ draft }: { draft: CvDraft }) {
@@ -313,6 +322,7 @@ export function CvStudioPage() {
 
           <section className="cv-editor-section">
             <h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2>
+            <p className="cv-editor-hint">{draft.language === 'FR' ? 'Utilisez **texte** pour afficher du gras dans le CV.' : 'Use **text** to show bold in the CV.'}</p>
             <textarea rows={4} value={draft.summary} onChange={(e) => patch('summary', e.target.value)} />
           </section>
 
@@ -330,6 +340,9 @@ export function CvStudioPage() {
                   <label>Period<input value={item.period} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, period: e.target.value }))} /></label>
                 </div>
                 <label>{draft.language === 'FR' ? 'Description (si aucune puce)' : 'Description (if no bullets)'}<textarea rows={2} value={item.details} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, details: e.target.value }))} /></label>
+                <label>{draft.language === 'FR' ? 'Cours clés' : 'Key courses'}
+                  <textarea rows={2} value={item.keyCourses ?? ''} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, keyCourses: e.target.value }))} />
+                </label>
                 {(item.bullets ?? []).map((bullet, bulletIndex) => (
                   <div className="cv-bullet-row" key={bulletIndex}>
                     <label>{draft.language === 'FR' ? 'Puce' : 'Bullet'} {bulletIndex + 1}
