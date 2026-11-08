@@ -251,8 +251,8 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     { text: draft.phone, uri: draft.phone.trim() ? 'tel:' + draft.phone.replace(/[^+\d]/g, '') : null },
   ], 8.5);
   drawCenteredLinkedParts([
-    { text: draft.linkedin, uri: portfolioUrl(draft.linkedin, 'linkedin') },
-    { text: draft.github, uri: portfolioUrl(draft.github, 'github') },
+    { text: draft.linkedin.trim() ? 'LinkedIn' : '', uri: portfolioUrl(draft.linkedin, 'linkedin') },
+    { text: draft.github.trim() ? 'GitHub' : '', uri: portfolioUrl(draft.github, 'github') },
   ], 8.5);
   // No separator beneath the centered header: give the profile breathing room.
   y -= compact ? 15 : 20;
