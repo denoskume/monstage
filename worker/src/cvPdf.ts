@@ -10,7 +10,7 @@ type CvDraft = {
   linkedin?: string;
   github?: string;
   summary?: string;
-  education?: Array<{ school?: string; degree?: string; location?: string; period?: string; details?: string }>;
+  education?: Array<{ school?: string; degree?: string; location?: string; period?: string; details?: string; keyCourses?: string; bullets?: string[] }>;
   experience?: Array<{ role?: string; company?: string; location?: string; period?: string; bullets?: string[] }>;
   projects?: Array<{ name?: string; period?: string; bullets?: string[] }>;
   leadership?: Array<{ role?: string; organization?: string; period?: string; bullets?: string[] }>;
@@ -81,14 +81,47 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
     page.drawText(t, { x: Math.max(MX, (WIDTH - width) / 2), y, size, font, color: text });
     y -= size + 5;
   };
+  const richTokens = (raw: string, defaultFont = regular) =>
+    raw.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).flatMap((part) => {
+      const emphasized = part.startsWith('**') && part.endsWith('**');
+      const font = emphasized ? bold : defaultFont;
+      return (safeText(emphasized ? part.slice(2, -2) : part).match(/\s+|\S+/g) || [])
+        .map((value) => ({ value, font }));
+    });
+  const richSingle = (raw: string, left: number, baseSize: number, widthLimit: number, defaultFont = regular) => {
+    const tokens = richTokens(raw, defaultFont);
+    const width = tokens.reduce((n, p) => n + p.font.widthOfTextAtSize(p.value, baseSize), 0);
+    const size = width > widthLimit ? baseSize * widthLimit / width : baseSize;
+    let x = left;
+    for (const part of tokens) {
+      page.drawText(part.value, { x, y, size, font: part.font, color: text });
+      x += part.font.widthOfTextAtSize(part.value, size);
+    }
+  };
   const lines = (value: string, size = 9.5, font = regular, indent = 0, leading = size + 3) => {
-    const wrapped = wrap(value, usable - indent, font, size);
-    ensure(wrapped.length * leading + 4);
-    for (const line of wrapped) {
-      page.drawText(line, { x: MX + indent, y, size, font, color: text });
+    for (const [index, paragraph] of value.split('\n').filter(Boolean).entries()) {
+      if (index) y -= leading / 2;
+      let x = MX + indent;
+      let started = false;
+      ensure(leading + 4);
+      for (const part of richTokens(paragraph, font)) {
+        if (!started && !part.value.trim()) continue;
+        const width = part.font.widthOfTextAtSize(part.value, size);
+        if (started && x + width > MX + usable) {
+          y -= leading;
+          ensure(leading + 4);
+          x = MX + indent;
+          started = false;
+          if (!part.value.trim()) continue;
+        }
+        page.drawText(part.value, { x, y, size, font: part.font, color: text });
+        x += width;
+        started = true;
+      }
       y -= leading;
     }
   };
+
   const section = (title: string) => {
     ensure(24);
     y -= 4;
@@ -103,31 +136,22 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
   };
   const entry = (left: string, r: string) => {
     ensure(18);
-    page.drawText(safeText(left), { x: MX, y, size: 9.5, font: bold, color: text });
+    richSingle(left, MX, 9.5, usable - (r ? 100 : 0), bold);
     if (r) right(r, y);
     y -= 13;
   };
   const bullet = (value: string) => {
-    const wrapped = wrap(value, usable - 12, regular, 9.2);
-    ensure(wrapped.length * 12 + 3);
+    ensure(16);
     page.drawCircle({ x: MX + 2.4, y: y + 3.4, size: 1.7, color: text });
-    for (const line of wrapped) {
-      page.drawText(line, { x: MX + 12, y, size: 9.2, font: regular, color: text });
-      y -= 12;
-    }
+    lines(value, 9.2, regular, 12, 12);
   };
 
   // Experience entries must occupy exactly one line per bullet, without dropping text.
   const experienceBullet = (value: string) => {
-    const safe = safeText(value).replace(/\s+/g, ' ').trim();
-    if (!safe) return;
-    const maxWidth = usable - 12;
-    const baseSize = 9.2;
-    const measured = regular.widthOfTextAtSize(safe, baseSize);
-    const size = measured > maxWidth ? baseSize * maxWidth / measured : baseSize;
+    if (!value.trim()) return;
     ensure(15);
     page.drawCircle({ x: MX + 2.4, y: y + 3.4, size: 1.7, color: text });
-    page.drawText(safe, { x: MX + 12, y, size, font: regular, color: text });
+    richSingle(value, MX + 12, 9.2, usable - 12);
     y -= 12;
   };
 
@@ -150,6 +174,7 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
         entry(item.school || '', item.period || '');
         entry(item.degree || '', item.location || '');
         if (item.details?.trim()) lines(item.details, 9.2);
+        if (item.keyCourses?.trim()) lines((draft.language === 'FR' ? '**Cours clés :** ' : '**Key courses:** ') + item.keyCourses.trim(), 9.2);
         y -= 4;
       }
     }
@@ -184,41 +209,12 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
 
     if (sectionKey === 'skills' && draft.skills?.trim()) {
       section(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter((v) => v.trim())) {
-        const match = line.trim().match(/^\*\*(.+?)\*\*(.*)$/);
-        if (!match) { lines(line, 9.5); continue; }
-        const label = safeText(match[1]);
-        const rest = safeText(match[2]).trim().split(/\s+/).filter(Boolean);
-        const width = bold.widthOfTextAtSize(label, 9.5);
-        const first = [];
-        while (rest.length && width + regular.widthOfTextAtSize(' ' + first.concat(rest[0]).join(' '), 9.5) < usable) first.push(rest.shift()!);
-        const more = rest.length ? wrap(rest.join(' '), usable, regular, 9.5) : [];
-        ensure((more.length + 1) * 12.5 + 4);
-        page.drawText(label, { x: MX, y, size: 9.5, font: bold, color: text });
-        if (first.length) page.drawText(' ' + first.join(' '), { x: MX + width, y, size: 9.5, font: regular, color: text });
-        y -= 12.5;
-        for (const part of more) { page.drawText(part, { x: MX, y, size: 9.5, font: regular, color: text }); y -= 12.5; }
-      }
+      for (const line of draft.skills.split('\n').filter((v) => v.trim())) lines(line, 9.5);
     }
 
     if (sectionKey === 'languages' && draft.languages?.trim()) {
       section(draft.language === 'FR' ? 'Langues' : 'Languages');
-      const size = 9.5;
-      let x = MX;
-      ensure(size + 4);
-      for (const part of draft.languages.split(/(\*\*[^*]+\*\*)/g).filter(Boolean)) {
-        const strong = part.startsWith('**') && part.endsWith('**');
-        const font = strong ? bold : regular;
-        const value = safeText(strong ? part.slice(2, -2) : part);
-        for (const token of value.match(/\s+|\S+/g) || []) {
-          const width = font.widthOfTextAtSize(token, size);
-          if (x > MX && x + width > MX + usable) { y -= 12.5; x = MX; ensure(16); }
-          if (x === MX && !token.trim()) continue;
-          page.drawText(token, { x, y, size, font, color: text });
-          x += width;
-        }
-      }
-      y -= 12.5;
+      lines(draft.languages);
     }
 
     if (sectionKey === 'interests' && draft.interests?.trim()) {
