@@ -76,9 +76,13 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
     }
   };
   const centered = (value: string, size: number, font: any) => {
-    const t = safeText(value);
-    const width = font.widthOfTextAtSize(t, size);
-    page.drawText(t, { x: Math.max(MX, (WIDTH - width) / 2), y, size, font, color: text });
+    const tokens = richTokens(value, font);
+    const width = tokens.reduce((n, part) => n + part.font.widthOfTextAtSize(part.value, size), 0);
+    let x = Math.max(MX, (WIDTH - width) / 2);
+    for (const part of tokens) {
+      page.drawText(part.value, { x, y, size, font: part.font, color: text });
+      x += part.font.widthOfTextAtSize(part.value, size);
+    }
     y -= size + 5;
   };
   const richTokens = (raw: string, defaultFont = regular) =>
@@ -131,8 +135,13 @@ export async function buildCvPdfResponse(draft: CvDraft, origin: string | null):
     y -= 12;
   };
   const right = (value: string, yValue: number, size = 9.5, font = regular) => {
-    const t = safeText(value);
-    page.drawText(t, { x: WIDTH - MX - font.widthOfTextAtSize(t, size), y: yValue, size, font, color: text });
+    const tokens = richTokens(value, font);
+    const width = tokens.reduce((n, part) => n + part.font.widthOfTextAtSize(part.value, size), 0);
+    let x = WIDTH - MX - width;
+    for (const part of tokens) {
+      page.drawText(part.value, { x, y: yValue, size, font: part.font, color: text });
+      x += part.font.widthOfTextAtSize(part.value, size);
+    }
   };
   const entry = (left: string, r: string) => {
     ensure(18);
