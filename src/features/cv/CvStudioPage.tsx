@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -101,13 +101,15 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
 function AtsScore({ draft }: { draft: CvDraft }) {
   const checks = useMemo(() => {
     const hasContact = Boolean(draft.email && draft.location);
+    const hasAcademicHeading = Boolean((draft.academicHeadline ?? CV_ACADEMIC_HEADLINE).trim() && draft.headline.trim());
     const hasSummary = draft.summary.trim().length >= 60;
     const hasSkills = draft.skills.split(',').filter(Boolean).length >= 6;
     const hasExperienceBullets = draft.experience.every((item) => item.bullets.filter(Boolean).length >= 2);
-    const hasProjectBullets = draft.projects.length <= 2 && draft.projects.every((item) => item.bullets.filter(Boolean).length === 4);
+    const hasProjectBullets = draft.projects.length <= 2 && draft.projects.every((item) => item.bullets.filter(Boolean).length === 3);
     const onePageFriendly = draft.projects.length <= 2 && draft.experience.length <= 3;
     return [
       ['Contact details', hasContact],
+      ['Degree and target roles', hasAcademicHeading],
       ['Focused profile', hasSummary],
       ['Keyword-rich skills', hasSkills],
       ['Experience bullets', hasExperienceBullets],
@@ -310,7 +312,8 @@ export function CvStudioPage() {
           <section className="cv-editor-section">
             <h2>Header</h2>
             <label>Name<input value={draft.name} onChange={(e) => patch('name', e.target.value)} /></label>
-            <label>Headline<input value={draft.headline} onChange={(e) => patch('headline', e.target.value)} /></label>
+            <label>{draft.language === 'FR' ? 'Formation (sous le nom)' : 'Degree heading (under name)'}<input value={draft.academicHeadline ?? CV_ACADEMIC_HEADLINE} onChange={(e) => patch('academicHeadline', e.target.value)} /></label>
+            <label>{draft.language === 'FR' ? 'Postes visés (Plan A ou B)' : 'Target roles (Plan A or B)'}<input value={draft.headline} onChange={(e) => patch('headline', e.target.value)} /></label>
             <div className="cv-editor-grid">
               <label>Location<input value={draft.location} onChange={(e) => patch('location', e.target.value)} /></label>
               <label>Email<input value={draft.email} onChange={(e) => patch('email', e.target.value)} /></label>
@@ -505,6 +508,7 @@ export function CvStudioPage() {
         <article className="cv-preview" id="cv-print-area">
           <header className="cv-preview__header">
             <h1>{renderCvBold(draft.name)}</h1>
+            <p className="cv-preview__headline">{renderCvBold(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE)}</p>
             <p className="cv-preview__headline">{renderCvBold(draft.headline)}</p>
             <p className="cv-preview__contact">{renderCvBold([draft.location, draft.email, draft.phone].filter(Boolean).join(' | '))}</p>
             <p className="cv-preview__contact cv-preview__contact--links">{renderCvBold([draft.linkedin, draft.github].filter(Boolean).join(' | '))}</p>
