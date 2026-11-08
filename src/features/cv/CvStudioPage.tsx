@@ -533,9 +533,9 @@ export function CvStudioPage() {
               {draft.phone ? <a href={`tel:${draft.phone.replace(/[^+\d]/g, '')}`}>{renderCvBold(draft.phone)}</a> : null}
             </p>
             <p className="cv-preview__contact cv-preview__contact--links">
-              {draft.linkedin ? (cvExternalUrl(draft.linkedin, 'linkedin') ? <a href={cvExternalUrl(draft.linkedin, 'linkedin')!} target="_blank" rel="noopener noreferrer">{renderCvBold(draft.linkedin)}</a> : renderCvBold(draft.linkedin)) : null}
+              {draft.linkedin ? (cvExternalUrl(draft.linkedin, 'linkedin') ? <a href={cvExternalUrl(draft.linkedin, 'linkedin')!} target="_blank" rel="noopener noreferrer">LinkedIn</a> : renderCvBold(draft.linkedin)) : null}
               {draft.linkedin && draft.github ? ' | ' : null}
-              {draft.github ? (cvExternalUrl(draft.github, 'github') ? <a href={cvExternalUrl(draft.github, 'github')!} target="_blank" rel="noopener noreferrer">{renderCvBold(draft.github)}</a> : renderCvBold(draft.github)) : null}
+              {draft.github ? (cvExternalUrl(draft.github, 'github') ? <a href={cvExternalUrl(draft.github, 'github')!} target="_blank" rel="noopener noreferrer">GitHub</a> : renderCvBold(draft.github)) : null}
             </p>
           </header>
 
