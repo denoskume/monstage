@@ -63,7 +63,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
     <section><h2>{sectionLabel(section, draft.language)}</h2>
       {draft.education.map((item) => <div className="cv-entry cv-education-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{renderCvBold(item.school)}</strong><span>{renderCvBold(item.period)}</span></div>
-        <div className="cv-entry__top"><span>{renderCvBold(item.degree)}</span><span>{renderCvBold(item.location)}</span></div>
+        {(item.degree.trim() || item.location.trim()) ? <div className="cv-entry__top"><span>{renderCvBold(item.degree)}</span><span>{renderCvBold(item.location)}</span></div> : null}
         {item.bullets?.some(Boolean) ? <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : item.details ? <p>{renderCvBold(item.details)}</p> : null}
         {item.keyCourses?.trim() ? <p><strong>{draft.language === 'FR' ? 'Cours clés :' : 'Key courses:'}</strong> {renderCvBold(item.keyCourses)}</p> : null}
       </div>)}
