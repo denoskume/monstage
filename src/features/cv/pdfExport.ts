@@ -273,15 +273,19 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   for (const sectionKey of sectionOrder) {
     if (sectionKey === 'education' && draft.education.length) {
       drawSectionTitle(draft.language === 'FR' ? 'Formation' : 'Education');
-      for (const item of draft.education) {
+      for (const [index, item] of draft.education.entries()) {
+        // Air between qualifications, and a smaller gap before programme details.
+        // Preserve a compact one-page layout for longer targeted CVs.
+        if (index > 0) y -= compact ? 8 : 11;
         drawEntryHeader(item.school, item.period);
         drawEntryHeader(item.degree, item.location, regular);
+        if (!compact && (item.details.trim() || item.bullets?.some(value => value.trim()))) y -= 3;
         if (item.bullets?.some(value => value.trim())) {
           for (const bullet of item.bullets.filter(value => value.trim())) drawEducationBullet(bullet.trim());
         } else if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
         if (item.keyCourses?.trim()) drawLines((draft.language === 'FR' ? '**Cours clés :** ' : '**Key courses:** ') + item.keyCourses.trim(), compact ? 8.7 : 9.2);
-        y -= compact ? 6 : 4;
       }
+      y -= compact ? 3 : 5;
     }
 
     if (sectionKey === 'projects' && draft.projects.length) {
