@@ -49,16 +49,16 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   let page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
   const compact = draft.email === 'kamenan.kume@eleves.ec-nantes.fr' && /Computer Vision/i.test(draft.headline);
-  let y = A4_HEIGHT - MARGIN_TOP;
+  let y = A4_HEIGHT - (compact ? 28 : MARGIN_TOP);
 
   const textColor = rgb(0.07, 0.07, 0.07);
   const ruleColor = rgb(0.25, 0.25, 0.25);
   const usableWidth = A4_WIDTH - (MARGIN_X * 2);
 
   const ensureSpace = (height: number) => {
-    if (y - height < MARGIN_BOTTOM) {
+    if (y - height < (compact ? 22 : MARGIN_BOTTOM)) {
       page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
-      y = A4_HEIGHT - MARGIN_TOP;
+      y = A4_HEIGHT - (compact ? 28 : MARGIN_TOP);
     }
   };
 
@@ -259,7 +259,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     { text: draft.github.trim() ? 'GitHub' : '', uri: portfolioUrl(draft.github, 'github') },
   ], 8.5);
   // No separator beneath the centered header: give the profile breathing room.
-  y -= compact ? 15 : 20;
+  y -= compact ? 10 : 20;
 
   if (draft.summary.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Profile');
