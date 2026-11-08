@@ -41,6 +41,23 @@ function renderCvBold(value: string) {
   );
 }
 
+
+function cvExternalUrl(value: string, service: 'linkedin' | 'github'): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const url = /^https?:\/\//i.test(trimmed) ? trimmed : 'https://' + trimmed.replace(/^\/+/, '');
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const valid = service === 'linkedin'
+      ? (host === 'linkedin.com' || host === 'www.linkedin.com')
+      : (host === 'github.com' || host === 'www.github.com');
+    return parsed.protocol === 'https:' && valid ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
 function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: CvDraft }) {
   if (section === 'education') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
@@ -510,8 +527,16 @@ export function CvStudioPage() {
             <h1>{renderCvBold(draft.name)}</h1>
             <p className="cv-preview__headline">{renderCvBold(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE)}</p>
             <p className="cv-preview__headline">{renderCvBold(draft.headline)}</p>
-            <p className="cv-preview__contact">{renderCvBold([draft.location, draft.email, draft.phone].filter(Boolean).join(' | '))}</p>
-            <p className="cv-preview__contact cv-preview__contact--links">{renderCvBold([draft.linkedin, draft.github].filter(Boolean).join(' | '))}</p>
+            <p className="cv-preview__contact">
+              {draft.location ? <>{renderCvBold(draft.location)}{' | '}</> : null}
+              {draft.email ? <><a href={`mailto:${draft.email.trim()}`}>{renderCvBold(draft.email)}</a>{draft.phone ? ' | ' : ''}</> : null}
+              {draft.phone ? <a href={`tel:${draft.phone.replace(/[^+\d]/g, '')}`}>{renderCvBold(draft.phone)}</a> : null}
+            </p>
+            <p className="cv-preview__contact cv-preview__contact--links">
+              {draft.linkedin ? (cvExternalUrl(draft.linkedin, 'linkedin') ? <a href={cvExternalUrl(draft.linkedin, 'linkedin')!} target="_blank" rel="noopener noreferrer">{renderCvBold(draft.linkedin)}</a> : renderCvBold(draft.linkedin)) : null}
+              {draft.linkedin && draft.github ? ' | ' : null}
+              {draft.github ? (cvExternalUrl(draft.github, 'github') ? <a href={cvExternalUrl(draft.github, 'github')!} target="_blank" rel="noopener noreferrer">{renderCvBold(draft.github)}</a> : renderCvBold(draft.github)) : null}
+            </p>
           </header>
 
           <section><h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2><p>{renderCvBold(draft.summary)}</p></section>
