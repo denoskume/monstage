@@ -217,6 +217,34 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     y -= compact ? 13 : 13;
   };
 
+  // Education titles keep a consistent 9.5 pt size. Long titles wrap
+  // naturally instead of being shrunk, while dates stay on the first line.
+  const drawEducationHeader = (title: string, period: string) => {
+    const size = 9.5;
+    const lineHeight = 12.5;
+    const rightReserve = period.trim() ? 86 : 0;
+    const rightEdge = MARGIN_X + usableWidth - rightReserve;
+    const tokens = richTokens(title, bold);
+    let cursor = MARGIN_X;
+    let lineCount = 1;
+    ensureSpace(40);
+    if (period.trim()) drawRightAligned(formatPeriod(period), y, size, regular);
+    for (const token of tokens) {
+      if (!token.value.trim() && cursor === MARGIN_X) continue;
+      const width = token.font.widthOfTextAtSize(token.value, size);
+      if (cursor > MARGIN_X && cursor + width > rightEdge) {
+        y -= lineHeight;
+        cursor = MARGIN_X;
+        lineCount += 1;
+        if (!token.value.trim()) continue;
+      }
+      page.drawText(token.value, { x: cursor, y, size, font: token.font, color: textColor });
+      cursor += width;
+    }
+    y -= lineHeight;
+    return lineCount;
+  };
+
   // Project bullets are measured and kept on one line, matching experience
   // bullets and preserving the original content in compact one-page CVs.
   const drawBullet = (value: string) => {
@@ -277,8 +305,12 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         // Air between qualifications, and a smaller gap before programme details.
         // Preserve a compact one-page layout for longer targeted CVs.
         if (index > 0) y -= compact ? 8 : 11;
-        drawEntryHeader(item.school, item.period);
-        drawEntryHeader(item.degree, item.location, regular);
+        drawEducationHeader(item.school, item.period);
+        // Some records already contain the complete diploma in the first line.
+        // Never reserve a second line for an absent degree or location.
+        if (item.degree.trim() || item.location.trim()) {
+          drawEntryHeader(item.degree, item.location, regular);
+        }
         if (!compact && (item.details.trim() || item.bullets?.some(value => value.trim()))) y -= 3;
         if (item.bullets?.some(value => value.trim())) {
           for (const bullet of item.bullets.filter(value => value.trim())) drawEducationBullet(bullet.trim());
