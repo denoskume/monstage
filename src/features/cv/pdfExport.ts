@@ -69,13 +69,49 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     y -= size + (compact ? 2 : 5);
   };
 
-  const drawLines = (text: string, size = 9.5, font = regular, indent = 0, leading = size + 3) => {
-    const paragraphs = text.split(/\n/).filter(Boolean);
-    const lines = paragraphs.flatMap((paragraph, index) => [ ...(index ? [''] : []), ...wrapText(paragraph, usableWidth - indent, font, size) ]);
-    ensureSpace(lines.length * leading + 4);
-    for (const line of lines) {
-      if (line) page.drawText(line, { x: MARGIN_X + indent, y, size, font, color: textColor });
-      y -= line ? leading : Math.max(3, leading * 0.5);
+
+  // Treat **...** as bold spans, not visible Markdown punctuation.
+  const richTokens = (raw: string, defaultFont = regular) =>
+    raw.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).flatMap((part) => {
+      const isBold = part.startsWith('**') && part.endsWith('**');
+      const font = isBold ? bold : defaultFont;
+      return (normalizeCvPdfText(isBold ? part.slice(2, -2) : part).match(/\s+|\S+/g) || [])
+        .map((value) => ({ value, font }));
+    });
+
+  const drawRichSingleLine = (raw: string, x: number, baseSize: number, maxWidth: number, defaultFont = regular) => {
+    const tokens = richTokens(raw, defaultFont);
+    const naturalWidth = tokens.reduce((sum, token) => sum + token.font.widthOfTextAtSize(token.value, baseSize), 0);
+    const size = naturalWidth > maxWidth ? baseSize * maxWidth / naturalWidth : baseSize;
+    let cursor = x;
+    for (const token of tokens) {
+      page.drawText(token.value, { x: cursor, y, size, font: token.font, color: textColor });
+      cursor += token.font.widthOfTextAtSize(token.value, size);
+    }
+  };
+
+  const drawLines = (value: string, size = 9.5, font = regular, indent = 0, leading = size + 3) => {
+    const paragraphs = value.split('\n').filter(Boolean);
+    for (const [paragraphIndex, paragraph] of paragraphs.entries()) {
+      if (paragraphIndex) y -= Math.max(3, leading * 0.5);
+      let x = MARGIN_X + indent;
+      let started = false;
+      ensureSpace(leading + 4);
+      for (const token of richTokens(paragraph, font)) {
+        if (!started && !token.value.trim()) continue;
+        const width = token.font.widthOfTextAtSize(token.value, size);
+        if (started && x + width > MARGIN_X + usableWidth) {
+          y -= leading;
+          ensureSpace(leading + 4);
+          x = MARGIN_X + indent;
+          started = false;
+          if (!token.value.trim()) continue;
+        }
+        page.drawText(token.value, { x, y, size, font: token.font, color: textColor });
+        x += width;
+        started = true;
+      }
+      y -= leading;
     }
   };
 
@@ -114,50 +150,33 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   const drawEntryHeader = (left: string, right: string, font = bold) => {
     ensureSpace(18);
-    page.drawText(normalizeCvPdfText(left), { x: MARGIN_X, y, size: 9.5, font, color: textColor });
+    drawRichSingleLine(left, MARGIN_X, 9.5, usableWidth - (right ? 100 : 0), font);
     if (right) drawRightAligned(formatPeriod(right), y, 9.5, regular);
     y -= compact ? 13 : 13;
   };
 
-  const drawBullet = (text: string) => {
-    const bulletIndent = 12;
-    const lines = wrapText(text, usableWidth - bulletIndent, regular, compact ? 9.1 : 9.2);
-    ensureSpace(lines.length * (compact ? 11.7 : 12) + 3);
+  const drawBullet = (value: string) => {
+    ensureSpace(16);
     page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
-    lines.forEach((line, index) => {
-      page.drawText(line, { x: MARGIN_X + bulletIndent, y, size: compact ? 9.1 : 9.2, font: regular, color: textColor });
-      y -= compact ? 11.7 : 12;
-    });
+    drawLines(value, compact ? 9.1 : 9.2, regular, 12, compact ? 11.7 : 12);
   };
 
   // Preserve each experience bullet on one line in the exported CV.
-  const drawExperienceBullet = (text: string) => {
-    const safe = normalizeCvPdfText(text).replace(/\s+/g, ' ').trim();
-    if (!safe) return;
-    const indent = 12;
-    const baseSize = compact ? 9.1 : 9.2;
-    const maxWidth = usableWidth - indent;
-    const width = regular.widthOfTextAtSize(safe, baseSize);
-    const size = width > maxWidth ? baseSize * maxWidth / width : baseSize;
+  const drawExperienceBullet = (value: string) => {
+    if (!value.trim()) return;
     ensureSpace(15);
     page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
-    page.drawText(safe, { x: MARGIN_X + indent, y, size, font: regular, color: textColor });
+    drawRichSingleLine(value, MARGIN_X + 12, compact ? 9.1 : 9.2, usableWidth - 12);
     y -= compact ? 11.7 : 12;
   };
 
   // Education bullets use a measured, single-line font size so PDF matches the
   // Studio preview instead of silently wrapping and pushing sections to page 2.
-  const drawEducationBullet = (text: string) => {
-    const safe = normalizeCvPdfText(text).trim();
-    if (!safe) return;
-    const indent = 12;
-    const maxWidth = usableWidth - indent;
-    const baseSize = compact ? 9.1 : 9.2;
-    const naturalWidth = regular.widthOfTextAtSize(safe, baseSize);
-    const size = naturalWidth > maxWidth ? baseSize * maxWidth / naturalWidth : baseSize;
+  const drawEducationBullet = (value: string) => {
+    if (!value.trim()) return;
     ensureSpace(compact ? 11.7 : 12);
     page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
-    page.drawText(safe, { x: MARGIN_X + indent, y, size, font: regular, color: textColor });
+    drawRichSingleLine(value, MARGIN_X + 12, compact ? 9.1 : 9.2, usableWidth - 12);
     y -= compact ? 11.7 : 12;
   };
 
@@ -186,6 +205,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         if (item.bullets?.some(value => value.trim())) {
           for (const bullet of item.bullets.filter(value => value.trim())) drawEducationBullet(bullet.trim());
         } else if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
+        if (item.keyCourses?.trim()) drawLines((draft.language === 'FR' ? '**Cours clés :** ' : '**Key courses:** ') + item.keyCourses.trim(), compact ? 8.7 : 9.2);
         y -= compact ? 6 : 4;
       }
     }
@@ -220,45 +240,12 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
     if (sectionKey === 'skills' && draft.skills.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter((value) => value.trim())) {
-        const match = line.trim().match(/^\*\*(.+?)\*\*(.*)$/);
-        const size = compact ? 9.1 : 9.5;
-        if (!match) { drawLines(line.trim(), size); continue; }
-        const label = normalizeCvPdfText(match[1]);
-        const rest = normalizeCvPdfText(match[2]);
-        const labelWidth = bold.widthOfTextAtSize(label, size);
-        const firstWords = rest.trim().split(/\s+/).filter(Boolean);
-        const firstLine = [];
-        while (firstWords.length && labelWidth + regular.widthOfTextAtSize(firstLine.concat(firstWords[0]).join(' '), size) + 4 < usableWidth) firstLine.push(firstWords.shift()!);
-        const remaining = firstWords.join(' ');
-        const extra = remaining ? wrapText(remaining, usableWidth, regular, size) : [];
-        ensureSpace((1 + extra.length) * (size + 3) + 4);
-        page.drawText(label, { x: MARGIN_X, y, size, font: bold, color: textColor });
-        if (firstLine.length) page.drawText(' ' + firstLine.join(' '), { x: MARGIN_X + labelWidth, y, size, font: regular, color: textColor });
-        y -= size + 3;
-        for (const part of extra) { page.drawText(part, { x: MARGIN_X, y, size, font: regular, color: textColor }); y -= size + 3; }
-      }
+      for (const line of draft.skills.split('\n').filter(value => value.trim())) drawLines(line.trim(), compact ? 9.1 : 9.5);
     }
 
     if (sectionKey === 'languages' && draft.languages.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Langues' : 'Languages');
-      const size = 9.5;
-      const parts = draft.languages.trim().split(/(\*\*[^*]+\*\*)/g).filter(Boolean);
-      let x = MARGIN_X;
-      ensureSpace(size + 4);
-      for (const part of parts) {
-        const strong = part.startsWith('**') && part.endsWith('**');
-        const font = strong ? bold : regular;
-        const value = normalizeCvPdfText(strong ? part.slice(2, -2) : part);
-        for (const token of value.match(/\s+|\S+/g) || []) {
-          const width = font.widthOfTextAtSize(token, size);
-          if (x > MARGIN_X && x + width > MARGIN_X + usableWidth) { y -= size + 3; x = MARGIN_X; ensureSpace(size + 4); }
-          if (x === MARGIN_X && !token.trim()) continue;
-          page.drawText(token, { x, y, size, font, color: textColor });
-          x += width;
-        }
-      }
-      y -= size + 3;
+      drawLines(draft.languages.trim());
     }
 
     if (sectionKey === 'interests' && draft.interests.trim()) {
