@@ -41,6 +41,7 @@ export interface CvDraft {
   language: CvLanguage;
   name: string;
   headline: string;
+  academicHeadline?: string;
   location: string;
   email: string;
   phone: string;
@@ -61,9 +62,12 @@ const KEY_PREFIX = 'monstage:cv-studio:v12:';
 const PREVIOUS_KEY_PREFIX = 'monstage:cv-studio:v11:';
 const LEGACY_KEY = 'monstage:cv-studio:v1';
 
+export const CV_ACADEMIC_HEADLINE = "Master's student in Control and Robotics | Data Science, Signal and Image Processing";
+
 export const defaultCvEn: CvDraft = {
   language: 'EN',
   name: 'Denos Kume',
+  academicHeadline: CV_ACADEMIC_HEADLINE,
   headline: 'Data Science | Applied Machine Learning | Computer Vision | Image Processing',
   location: 'Nantes, France',
   email: 'kamenan.kume@eleves.ec-nantes.fr',
@@ -124,6 +128,7 @@ export const defaultCvEn: CvDraft = {
 export const defaultCvFr: CvDraft = {
   language: 'FR',
   name: 'Denos Kume',
+  academicHeadline: CV_ACADEMIC_HEADLINE,
   headline: 'Data Science & IA appliquées | Automatisation & optimisation de processus',
   location: 'Nantes, France',
   email: 'kamenan.kume@eleves.ec-nantes.fr',
@@ -189,7 +194,7 @@ export function freshCvDraft(language: CvLanguage): CvDraft {
 
 function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft {
   const defaults = freshCvDraft(language);
-  const migrated = { ...defaults, ...saved, language };
+  const migrated = { ...defaults, ...saved, language, academicHeadline: saved.academicHeadline ?? defaults.academicHeadline };
 
   // Keep the user's saved CV content, but refresh the built-in education records
   // when MonStage ships an updated official degree title or programme description.
