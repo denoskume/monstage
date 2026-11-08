@@ -57,7 +57,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
     <section><h2>{sectionLabel(section, draft.language)}</h2>
       {draft.projects.map((item) => <div className="cv-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{renderCvBold(item.name)}</strong><span>{renderCvBold(item.period)}</span></div>
-        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
+        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
       </div>)}
     </section>
   );
@@ -67,7 +67,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
       {draft.experience.map((item) => <div className="cv-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{renderCvBold(item.role)} — {renderCvBold(item.company)}</strong><span>{renderCvBold(item.period)}</span></div>
         <div className="cv-entry__top"><span>{renderCvBold(item.location)}</span><span /></div>
-        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
+        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
       </div>)}
     </section>
   );
@@ -78,7 +78,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
       <section><h2>{sectionLabel(section, draft.language)}</h2>
         {draft.leadership.map((item) => <div className="cv-entry" key={item.id}>
           <div className="cv-entry__top"><strong>{item.role}{item.organization ? ` — ${item.organization}` : ''}</strong><span>{item.period}</span></div>
-          <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{bullet}</li>)}</ul>
+          <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
         </div>)}
       </section>
     );
@@ -504,13 +504,13 @@ export function CvStudioPage() {
 
         <article className="cv-preview" id="cv-print-area">
           <header className="cv-preview__header">
-            <h1>{draft.name}</h1>
-            <p className="cv-preview__headline">{draft.headline}</p>
-            <p className="cv-preview__contact">{[draft.location, draft.email, draft.phone].filter(Boolean).join(' | ')}</p>
-            <p className="cv-preview__contact cv-preview__contact--links">{[draft.linkedin, draft.github].filter(Boolean).join(' | ')}</p>
+            <h1>{renderCvBold(draft.name)}</h1>
+            <p className="cv-preview__headline">{renderCvBold(draft.headline)}</p>
+            <p className="cv-preview__contact">{renderCvBold([draft.location, draft.email, draft.phone].filter(Boolean).join(' | '))}</p>
+            <p className="cv-preview__contact cv-preview__contact--links">{renderCvBold([draft.linkedin, draft.github].filter(Boolean).join(' | '))}</p>
           </header>
 
-          <section><h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2><p>{draft.summary}</p></section>
+          <section><h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2><p>{renderCvBold(draft.summary)}</p></section>
 
           {draft.sectionOrder.map((section) => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>
