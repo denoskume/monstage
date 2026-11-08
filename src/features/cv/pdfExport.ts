@@ -62,10 +62,14 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     }
   };
 
-  const drawCentered = (text: string, size: number, font: any) => {
-    const safe = normalizeCvPdfText(text);
-    const width = font.widthOfTextAtSize(safe, size);
-    page.drawText(safe, { x: Math.max(MARGIN_X, (A4_WIDTH - width) / 2), y, size, font, color: textColor });
+  const drawCentered = (value: string, size: number, font: any) => {
+    const tokens = richTokens(value, font);
+    const width = tokens.reduce((sum, part) => sum + part.font.widthOfTextAtSize(part.value, size), 0);
+    let x = Math.max(MARGIN_X, (A4_WIDTH - width) / 2);
+    for (const part of tokens) {
+      page.drawText(part.value, { x, y, size, font: part.font, color: textColor });
+      x += part.font.widthOfTextAtSize(part.value, size);
+    }
     y -= size + (compact ? 2 : 5);
   };
 
@@ -142,10 +146,14 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     }
   };
 
-  const drawRightAligned = (text: string, yValue: number, size = 9.5, font = regular) => {
-    const safe = normalizeCvPdfText(text);
-    const width = font.widthOfTextAtSize(safe, size);
-    page.drawText(safe, { x: A4_WIDTH - MARGIN_X - width, y: yValue, size, font, color: textColor });
+  const drawRightAligned = (value: string, yValue: number, size = 9.5, font = regular) => {
+    const tokens = richTokens(value, font);
+    const width = tokens.reduce((sum, part) => sum + part.font.widthOfTextAtSize(part.value, size), 0);
+    let x = A4_WIDTH - MARGIN_X - width;
+    for (const part of tokens) {
+      page.drawText(part.value, { x, y: yValue, size, font: part.font, color: textColor });
+      x += part.font.widthOfTextAtSize(part.value, size);
+    }
   };
 
   const drawEntryHeader = (left: string, right: string, font = bold) => {
