@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import type { CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -64,11 +64,13 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   const drawCentered = (value: string, size: number, font: any) => {
     const tokens = richTokens(value, font);
-    const width = tokens.reduce((sum, part) => sum + part.font.widthOfTextAtSize(part.value, size), 0);
-    let x = Math.max(MARGIN_X, (A4_WIDTH - width) / 2);
+    const naturalWidth = tokens.reduce((sum, part) => sum + part.font.widthOfTextAtSize(part.value, size), 0);
+    const fittedSize = naturalWidth > usableWidth ? size * usableWidth / naturalWidth : size;
+    const width = tokens.reduce((sum, part) => sum + part.font.widthOfTextAtSize(part.value, fittedSize), 0);
+    let x = (A4_WIDTH - width) / 2;
     for (const part of tokens) {
-      page.drawText(part.value, { x, y, size, font: part.font, color: textColor });
-      x += part.font.widthOfTextAtSize(part.value, size);
+      page.drawText(part.value, { x, y, size: fittedSize, font: part.font, color: textColor });
+      x += part.font.widthOfTextAtSize(part.value, fittedSize);
     }
     y -= size + (compact ? 2 : 5);
   };
@@ -189,6 +191,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   };
 
   drawCentered(draft.name, 18, bold);
+  drawCentered(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE, 9.5, regular);
   drawCentered(draft.headline, 10.5, bold);
   drawCentered([draft.location, draft.email, draft.phone].filter(Boolean).join(' | '), 8.5, regular);
   drawCentered([draft.linkedin, draft.github].filter(Boolean).join(' | '), 8.5, regular);
