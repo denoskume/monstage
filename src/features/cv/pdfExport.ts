@@ -217,10 +217,14 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     y -= compact ? 13 : 13;
   };
 
+  // Project bullets are measured and kept on one line, matching experience
+  // bullets and preserving the original content in compact one-page CVs.
   const drawBullet = (value: string) => {
-    ensureSpace(16);
+    if (!value.trim()) return;
+    ensureSpace(15);
     page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
-    drawLines(value, compact ? 9.1 : 9.2, regular, 12, compact ? 11.7 : 12);
+    drawRichSingleLine(value, MARGIN_X + 12, compact ? 9.1 : 9.2, usableWidth - 12);
+    y -= compact ? 11.7 : 12;
   };
 
   // Preserve each experience bullet on one line in the exported CV.
