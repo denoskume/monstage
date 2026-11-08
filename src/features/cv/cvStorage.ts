@@ -18,6 +18,7 @@ export interface CvEducation {
   location: string;
   period: string;
   details: string;
+  keyCourses?: string;
   bullets?: string[];
 }
 
