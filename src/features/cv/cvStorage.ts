@@ -420,7 +420,7 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
   ];
   draft.projects = [
     { id: 'nova', name: fr ? 'Nova Distribution — Analyse de rentabilité (cas pratique simulé)' : 'Nova Distribution — Profitability Analysis (simulated case)',
-      period: '', description: fr
+      period: fr ? 'mars–juin 2025' : 'Mar–Jun 2025', description: fr
         ? 'Diagnostic d’une baisse de rentabilité à partir de données financières fictives.'
         : 'Profitability diagnosis based on a simulated business dataset.',
       bullets: fr
@@ -430,7 +430,7 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
         : ['Investigated a 12% revenue increase alongside an 8% operating profit decline.',
           'Calculated an operating margin decrease from 20% to 16.43%.',
           'Reconciled expenses with Python and Pandas, identifying a €1.4M scenario discrepancy.'] },
-    { id: 'monstage', name: 'MonStage — Internship Application Tracker', period: '2026',
+    { id: 'monstage', name: 'MonStage — Internship Application Tracker', period: fr ? 'juin–octobre 2026' : 'Jun–Oct 2026',
       description: fr ? 'Application personnelle de suivi des offres et candidatures.' : 'Personal application to track internship offers and applications.',
       bullets: fr
         ? ['Développé une application centralisant les offres de stage et le suivi des candidatures.',
@@ -520,12 +520,14 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
 export function normalizePlanBDraft(draft: CvDraft): CvDraft {
   if (draft.plan !== 'B') return draft;
   const projects = draft.projects.map(project => {
-    if (project.id === 'nova' && /^mars\s*[-–]\s*jun\s+2025$/i.test(project.period.trim())) {
-      // No verified date for this simulated exercise.
-      return { ...project, period: '' };
+    // Restore the user's confirmed reference periods in previously saved Plan B drafts.
+    // Leave other manually edited dates untouched.
+    const period = project.period.trim();
+    if (project.id === 'nova' && (!period || /^mars\s*[-–]\s*ju(?:n|in)\s+2025$/i.test(period))) {
+      return { ...project, period: draft.language === 'FR' ? 'mars–juin 2025' : 'Mar–Jun 2025' };
     }
-    if (project.id === 'monstage' && /^jul\s*[-–]\s*oct\s+2026$/i.test(project.period.trim())) {
-      return { ...project, period: '2026' };
+    if (project.id === 'monstage' && (/^2026$/.test(period) || /^jul\s*[-–]\s*oct\s+2026$/i.test(period))) {
+      return { ...project, period: draft.language === 'FR' ? 'juin–octobre 2026' : 'Jun–Oct 2026' };
     }
     return project;
   });
