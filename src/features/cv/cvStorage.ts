@@ -4,7 +4,7 @@ export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords';
 export type CvPageColor = 'white' | 'soft-gray' | 'soft-blue';
 export const cvPageColorOptions: { id: CvPageColor; fr: string; en: string; hex: string }[] = [
   { id: 'white', fr: 'Blanc', en: 'White', hex: '#FFFFFF' },
-  { id: 'soft-gray', fr: 'Gris clair', en: 'Soft gray', hex: '#EEF0F2' },
+  { id: 'soft-gray', fr: 'Gris clair', en: 'Soft gray', hex: '#FBFBFB' },
   { id: 'soft-blue', fr: 'Bleu très pâle', en: 'Soft blue', hex: '#F4F7FB' },
 ];
 export function cvPageColorHex(color?: CvPageColor): string {
