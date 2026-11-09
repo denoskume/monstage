@@ -394,7 +394,7 @@ export function CvStudioPage() {
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
           <AtsScore draft={draft} />
-          <CvEvidencePicker draft={draft} offerId={offerParam} onChange={(next) => { setDraft(next); setSaved(false); }} />
+          <CvEvidencePicker key={`${draft.language}:${plan}:${offerParam ?? 'master'}`} draft={draft} offerId={offerParam} onChange={(next) => { setDraft(next); setSaved(false); }} />
 
           {draft.template === 'keywords' ? (
             <section className="cv-editor-section">
