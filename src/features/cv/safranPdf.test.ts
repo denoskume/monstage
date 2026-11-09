@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, defaultCvFr, cvTemplateOptions } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, defaultCvFr, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -26,8 +26,11 @@ describe('Safran.AI one-page CV export', () => {
     for (const template of cvTemplateOptions) {
       draft.template = template.id;
       if (template.id === 'keywords') draft.keySkills = 'Python · OpenCV · Segmentation · PyTorch · Machine Learning';
-      const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
-      expect(pdf.getPageCount(), template.id).toBe(1);
+      for (const color of cvPageColorOptions) {
+        draft.pageColor = color.id;
+        const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
+        expect(pdf.getPageCount(), template.id + '/' + color.id).toBe(1);
+      }
     }
   });
 });
@@ -112,5 +115,14 @@ describe('ATS key skills template', () => {
     expect(cvKeySkillsForDisplay(draft)).toBe('Python · OpenCV · Segmentation');
     draft.keySkills = '';
     expect(cvKeySkillsForDisplay(draft)).toBe('');
+  });
+});
+
+describe('CV page-color choices', () => {
+  it('keeps the three page colors available independent of template', () => {
+    expect(cvPageColorOptions.map(option => option.id)).toEqual(['white', 'soft-gray', 'soft-blue']);
+    expect(cvPageColorHex()).toBe('#FFFFFF');
+    expect(cvPageColorHex('soft-gray')).toBe('#FCFCFC');
+    expect(cvPageColorHex('soft-blue')).toBe('#F4F7FB');
   });
 });
