@@ -48,6 +48,11 @@ describe('thirty target groups · A/B only', () => {
     expect(targetCompany('Air France Industries')).toBe('Air France-KLM');
   });
 
+  it('includes Danone data-driven maintenance without accepting generic maintenance work', () => {
+    expect(getOfferPlan({company:'Danone — Volvic Fruits',title:'STAGE - Ingénieur Maintenance Industrielle - Février 2027',domain:'Plan B — Data Analyst / Maintenance industrielle / KPI'})).toBe('B');
+    expect(getOfferPlan({company:'Danone',title:'Stage technicien maintenance mécanique',domain:'Maintenance mécanique'})).toBeNull();
+  });
+
   it('rejects finance and Data Scientist; only vision-centric ML remains eligible for A', () => {
     expect(isTargetOffer({company:'Michelin',title:'Stage Data Analyst Finance'})).toBe(false);
     expect(isTargetOffer({company:'Renault Group',title:'Stage Data Scientist maintenance prédictive'})).toBe(false);
