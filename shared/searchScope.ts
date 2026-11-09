@@ -90,9 +90,21 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
 export function isTargetOffer(offer: ScopeOffer): boolean {
   return getOfferPlan(offer) !== null;
 }
-/** Only hide records from discovery; never delete saved applications or archives. */
+/** Preserve already-tracked applications even outside the 30-company discovery scope.
+ * This affects the applications/interviews archive, not new-offer discovery.
+ */
+export function isTrackedApplication(offer: ScopeOffer): boolean {
+  const status = normalizeScope(offer.applicationStatus);
+  return Boolean(offer.appliedAt?.trim())
+    || ['candidature envoyee', 'relance', 'reponse recruteur', 'entretien',
+      'test technique', 'offre recue', 'refus', 'abandonne'].includes(status);
+}
+export function isTargetOrTrackedOffer(offer: ScopeOffer): boolean {
+  return isTargetOffer(offer) || isTrackedApplication(offer);
+}
+/** Filter new-offer discovery but retain historical candidatures and interviews. */
 export function restrictOffersPayload(payload: unknown): unknown {
   if (!payload || typeof payload !== 'object' || !Array.isArray((payload as {offers?: unknown}).offers)) return payload;
   const data = payload as {offers: ScopeOffer[]};
-  return {...data, offers: data.offers.filter(isTargetOffer)};
+  return {...data, offers: data.offers.filter(isTargetOrTrackedOffer)};
 }
