@@ -1,4 +1,4 @@
-/** Two-plan internship discovery: 15 transport groups in France, identical for A and B. */
+/** Two-plan internship discovery: 30 target groups in France, identical for A and B. */
 export interface ScopeOffer {
   company?: string | null;
   title?: string | null;
@@ -10,14 +10,14 @@ export interface ScopeOffer {
 export type SearchPlan = 'A' | 'B';
 export const PLAN_LABELS: Record<SearchPlan, string> = {
   A: 'Computer Vision & traitement d’images',
-  B: 'Data Analyst · Transport & opérations',
+  B: 'Data Analyst · Industrie & opérations',
 };
 export function normalizeScope(value: string | null | undefined): string {
   return (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
-/** Five aviation, five rail / public transport, five automotive companies.
+/** Fifteen original transport groups plus fifteen industrial, medical, energy and consumer groups.
  * Targeting shortlist, NOT an objective revenue ranking.
- * Both plans use exactly these same fifteen groups.
+ * Both plans use exactly these same thirty groups.
  */
 export const TARGET_COMPANIES = [
   ['Airbus', 'airbus'], ['Safran', 'safran', 'preligens'], ['Thales', 'thales'],
@@ -26,6 +26,12 @@ export const TARGET_COMPANIES = [
   ['Siemens Mobility', 'siemens mobility'], ['Hitachi Rail', 'hitachi rail'],
   ['Renault Group', 'renault', 'ampere'], ['Stellantis', 'stellantis', 'psa'],
   ['Valeo', 'valeo'], ['FORVIA HELLA', 'forvia', 'hella', 'faurecia'], ['Michelin', 'michelin'],
+  ['Danone', 'danone', 'volvic'], ['Nestlé', 'nestle', 'nestle france'], ['Lactalis', 'lactalis'], ['Bel Group', 'bel group', 'groupe bel'],
+  ['GE HealthCare', 'ge healthcare', 'gehealthcare'], ['EssilorLuxottica', 'essilorluxottica', 'essilor', 'luxottica'],
+  ['Sanofi', 'sanofi'], ['Siemens Healthineers', 'siemens healthineers'],
+  ['Schneider Electric', 'schneider electric'], ['Saint-Gobain', 'saint gobain'],
+  ['Veolia', 'veolia'], ['Air Liquide', 'air liquide'],
+  ['EDF', 'edf'], ['ENGIE', 'engie', 'grdf'], ['L’Oréal', 'l oreal', 'loreal'],
 ] as const;
 
 function matchingCompany(company: string | null | undefined): string | null {
