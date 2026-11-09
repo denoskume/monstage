@@ -295,6 +295,28 @@ export function CvStudioPage() {
           <h1 className="sr-only">CV Studio</h1>
         </div>
         <div className="cv-studio-actions">
+          <div className="cv-header-selectors">
+            <label className="cv-header-select">
+              <span>{draft.language === 'FR' ? 'Modèle' : 'Template'}</span>
+              <select aria-label={draft.language === 'FR' ? 'Modèle de CV' : 'CV template'}
+                value={draft.template ?? 'classic'}
+                onChange={(event) => patch('template', event.target.value as CvTemplate)}>
+                {cvTemplateOptions.map(({ id, fr, en }) =>
+                  <option key={id} value={id}>{draft.language === 'FR' ? fr : en}</option>
+                )}
+              </select>
+            </label>
+            <label className="cv-header-select">
+              <span>{draft.language === 'FR' ? 'Couleur' : 'Color'}</span>
+              <select aria-label={draft.language === 'FR' ? 'Couleur de page' : 'Page color'}
+                value={draft.pageColor ?? 'white'}
+                onChange={(event) => patch('pageColor', event.target.value as CvPageColor)}>
+                {cvPageColorOptions.map(({ id, fr, en }) =>
+                  <option key={id} value={id}>{draft.language === 'FR' ? fr : en}</option>
+                )}
+              </select>
+            </label>
+          </div>
           <div className="cl-language-toggle" aria-label="CV language">
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
@@ -313,31 +335,6 @@ export function CvStudioPage() {
 
       {(() => { try { const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null'); return review?.state === 'awaiting_review' && review?.language === draft.language ? <p role="status" className="workspace-note"><strong>CV pour {review.company} — {review.title}.</strong> Vérifie le contenu et l’en-tête centré avant toute validation. Aucun envoi sans ton OK.</p> : null; } catch { return null; } })()}
       {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
-
-      <div className="cv-template-chooser" role="group" aria-label={draft.language === 'FR' ? 'Modèle de CV' : 'CV template'}>
-        <span className="cv-template-chooser__label">{draft.language === 'FR' ? 'Modèle de CV' : 'CV template'}</span>
-        {cvTemplateOptions.map(({ id, fr, en }) => (
-          <button key={id} type="button"
-            className={'cv-template-chooser__choice' + ((draft.template ?? 'classic') === id ? ' is-active' : '')}
-            aria-pressed={(draft.template ?? 'classic') === id}
-            onClick={() => patch('template', id as CvTemplate)}>
-            {draft.language === 'FR' ? fr : en}
-          </button>
-        ))}
-        <span className="cv-template-chooser__hint">{draft.language === 'FR' ? 'Même contenu · Compatible ATS' : 'Same content · ATS-friendly'}</span>
-        <div className="cv-color-chooser" role="group" aria-label={draft.language === 'FR' ? 'Couleur de page' : 'Page color'}>
-          <span className="cv-template-chooser__label">{draft.language === 'FR' ? 'Couleur de page' : 'Page color'}</span>
-          {cvPageColorOptions.map(({ id, fr, en, hex }) => (
-            <button key={id} type="button"
-              className={'cv-color-chooser__choice' + ((draft.pageColor ?? 'white') === id ? ' is-active' : '')}
-              aria-pressed={(draft.pageColor ?? 'white') === id}
-              onClick={() => patch('pageColor', id as CvPageColor)}>
-              <span className="cv-color-chooser__swatch" style={{ backgroundColor: hex }} aria-hidden="true" />
-              {draft.language === 'FR' ? fr : en}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
