@@ -165,29 +165,48 @@ function AtsScore({ draft }: { draft: CvDraft }) {
 export function CvStudioPage() {
   const { token } = useAuth();
   const { data: offersData } = useOffers();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
   const offerParam = params.get('offer');
   const [plan, setPlan] = useState<CvPlan>(() => params.get('plan') === 'B' ? 'B' : 'A');
   const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft(languageParam, params.get('plan') === 'B' ? 'B' : 'A'));
-  useEffect(() => {
-    if (!offerParam) {
-      setDraft(loadCvDraft(languageParam, plan));
-      return;
-    }
-    if (offerParam === EDF_EOD_DOSSIER_ID) {
-      setDraft(prepareEdfEodDossier(languageParam).cv);
-      setSaved(false);
-      return;
-    }
-    const offer = offersData?.offers.find(item => item.id === offerParam);
-    if (!offer) return;
-    const dossier = loadApplicationDossier(offer.id, languageParam) ?? prepareApplicationDossier(offer, languageParam);
-    setDraft(dossier.cv);
-    setSaved(false);
-  }, [offerParam, languageParam, offersData, plan]);
+  // A feed refresh must never rehydrate an already-open CV and overwrite typing.
+  // The identity changes only when the user opens another CV or switches language/plan.
+  const viewKey = offerParam ? 'offer:' + offerParam + ':' + languageParam : 'master:' + languageParam + ':' + plan;
+  const [loadedViewKey, setLoadedViewKey] = useState('');
+  const selectedOffer = offersData?.offers.find(item => item.id === offerParam);
+  const selectedOfferId = selectedOffer?.id;
   const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    if (loadedViewKey === viewKey) return;
+    let next: CvDraft;
+    if (!offerParam) {
+      next = loadCvDraft(languageParam, plan);
+    } else if (offerParam === EDF_EOD_DOSSIER_ID) {
+      next = prepareEdfEodDossier(languageParam).cv;
+    } else {
+      // For a new offer, hydrate once after its metadata becomes available.
+      if (!selectedOffer) return;
+      next = (loadApplicationDossier(selectedOffer.id, languageParam) ??
+        prepareApplicationDossier(selectedOffer, languageParam)).cv;
+    }
+    setDraft(next);
+    setLoadedViewKey(viewKey);
+    setSaved(true);
+  }, [viewKey, loadedViewKey, selectedOfferId]);
+
+  // Save editable CV content independently of PDF/GitHub archiving.
+  // A manual change survives an offer-feed refresh, navigation and page reload.
+  useEffect(() => {
+    if (loadedViewKey !== viewKey || draft.language !== languageParam) return;
+    const timer = window.setTimeout(() => {
+      if (offerParam) updateApplicationCv(offerParam, draft.language, draft);
+      else saveCvDraft(draft);
+      setSaved(true);
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [draft, loadedViewKey, viewKey, languageParam, offerParam]);
   const [certificateToAdd, setCertificateToAdd] = useState('');
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
@@ -211,7 +230,7 @@ export function CvStudioPage() {
   }
 
   function save() {
-    if (offerParam === EDF_EOD_DOSSIER_ID) updateApplicationCv(EDF_EOD_DOSSIER_ID, draft.language, draft);
+    if (offerParam) updateApplicationCv(offerParam, draft.language, draft);
     else saveCvDraft(draft);
     setSaved(true);
   }
@@ -225,16 +244,13 @@ export function CvStudioPage() {
   }
 
   function switchLanguage(language: CvLanguage) {
+    if (draft.language === language) return;
     save();
-    if (offerParam === EDF_EOD_DOSSIER_ID) {
-      setDraft(prepareEdfEodDossier(language).cv);
-      setSaved(false);
-      return;
-    }
-    const offer = offersData?.offers.find(item => item.id === offerParam);
-    const tailored = offer ? (loadApplicationDossier(offer.id, language) ?? prepareApplicationDossier(offer, language)).cv : loadCvDraft(language, plan);
-    setDraft(tailored);
-    setSaved(false);
+    // Keep the URL language synchronized with the open draft. Previously a
+    // feed refresh could silently switch back to the language in the old URL.
+    const nextParams = new URLSearchParams(params);
+    nextParams.set('language', language);
+    setParams(nextParams, { replace: true });
   }
 
   function generateCv() {
