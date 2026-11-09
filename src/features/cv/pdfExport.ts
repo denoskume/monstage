@@ -48,7 +48,10 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
   let page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
-  const compact = draft.email === 'kamenan.kume@eleves.ec-nantes.fr' && /Computer Vision/i.test(draft.headline);
+  // A targeted CV with project summaries and mission labels must still fit A4.
+  // Match French and English titles; never rely on a particular language to compact.
+  const compact = draft.email === 'kamenan.kume@eleves.ec-nantes.fr'
+    && /Computer Vision|Vision par ordinateur|Image Processing|Traitement d.images|Data Analysis|Analyse de données/i.test(draft.headline);
   let y = A4_HEIGHT - (compact ? 28 : MARGIN_TOP);
 
   const textColor = rgb(0.07, 0.07, 0.07);
@@ -309,7 +312,13 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         // Some records already contain the complete diploma in the first line.
         // Never reserve a second line for an absent degree or location.
         if (item.degree.trim() || item.location.trim()) {
-          drawEntryHeader(item.degree, item.location, regular);
+          // Do not print the institution city twice when it already appears
+          // in the diploma header. Keep the Bachelor programme ("Parcours").
+          const name = normalizeCvPdfText(item.school).toLowerCase();
+          const location = normalizeCvPdfText(item.location.trim());
+          const duplicateLocation = location && (name.includes(location.toLowerCase())
+            || name.includes(location.split(',')[0].trim().toLowerCase()));
+          if (item.degree.trim() || !duplicateLocation) drawEntryHeader(item.degree, duplicateLocation ? '' : item.location, regular);
         }
         if (!compact && (item.details.trim() || item.bullets?.some(value => value.trim()))) y -= 3;
         if (item.bullets?.some(value => value.trim())) {
@@ -360,7 +369,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
     if (sectionKey === 'skills' && draft.skills.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter(value => value.trim())) drawLines(line.trim(), compact ? 9.1 : 9.5);
+      for (const line of draft.skills.split('\n').filter(value => value.trim())) drawLines(line.trim(), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
     }
 
     if (sectionKey === 'languages' && draft.languages.trim()) {
