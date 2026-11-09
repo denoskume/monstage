@@ -50,6 +50,8 @@ describe('Single-line education bullet PDF export', () => {
       if (!entry) throw new Error('Missing project ' + id);
       return { ...entry.cv.FR, bullets: [...entry.cv.FR.bullets] };
     });
+    draft.experience = draft.experience.map(item => ({ ...item, bullets: item.bullets.slice(0, 3) }));
+    draft.projects = draft.projects.map(item => ({ ...item, bullets: item.bullets.slice(0, 3) }));
     draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'languages', 'interests'];
     draft.skills = 'Python & données : Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles, analyse d’erreurs\nComputer Vision & signal : OpenCV, scikit-image, segmentation, filtrage spatial et fréquentiel\nOutils : Git, GitHub, Linux, VS Code';
     draft.interests = 'Vision par ordinateur et imagerie industrielle | Cuisine';
