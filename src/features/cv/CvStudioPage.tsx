@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvTemplateOptions, type CvTemplate } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -314,6 +314,19 @@ export function CvStudioPage() {
       {(() => { try { const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null'); return review?.state === 'awaiting_review' && review?.language === draft.language ? <p role="status" className="workspace-note"><strong>CV pour {review.company} — {review.title}.</strong> Vérifie le contenu et l’en-tête centré avant toute validation. Aucun envoi sans ton OK.</p> : null; } catch { return null; } })()}
       {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
 
+      <div className="cv-template-chooser" role="group" aria-label={draft.language === 'FR' ? 'Modèle de CV' : 'CV template'}>
+        <span className="cv-template-chooser__label">{draft.language === 'FR' ? 'Modèle de CV' : 'CV template'}</span>
+        {cvTemplateOptions.map(({ id, fr, en }) => (
+          <button key={id} type="button"
+            className={'cv-template-chooser__choice' + ((draft.template ?? 'classic') === id ? ' is-active' : '')}
+            aria-pressed={(draft.template ?? 'classic') === id}
+            onClick={() => patch('template', id as CvTemplate)}>
+            {draft.language === 'FR' ? fr : en}
+          </button>
+        ))}
+        <span className="cv-template-chooser__hint">{draft.language === 'FR' ? 'Même contenu · Compatible ATS' : 'Same content · ATS-friendly'}</span>
+      </div>
+
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
           <AtsScore draft={draft} />
@@ -535,7 +548,7 @@ export function CvStudioPage() {
           </section>
         </aside>
 
-        <article className="cv-preview" id="cv-print-area">
+        <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} id="cv-print-area">
           <header className="cv-preview__header">
             <h1>{renderCvBold(draft.name)}</h1>
             <p className="cv-preview__headline">{renderCvBold(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE)}</p>
