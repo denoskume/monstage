@@ -226,6 +226,8 @@ export interface CvDraft {
   plan?: CvPlan;
   template?: CvTemplate;
   pageColor?: CvPageColor;
+  // False hides the extra 'Missions' line in selected targeted CVs.
+  showMissionLabels?: boolean;
   name: string;
   headline: string;
   academicHeadline?: string;
