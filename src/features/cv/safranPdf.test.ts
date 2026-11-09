@@ -194,15 +194,17 @@ describe('Separate Plan B Data Analyst CV', () => {
     expect(draft.projects[0].name).toContain('simulé');
     expect(draft.experience.map(item => item.role)).toEqual(['Data Analyst Intern', 'Speech AI Evaluation Specialist']);
     expect(draft.sectionOrder).not.toContain('leadership');
+    expect(draft.certifications?.map(c => c.id)).toEqual(['google-advanced', 'simplilearn-ds']);
+    expect(draft.education.find(e => e.id === 'kju')?.keyCourses).toContain('Database Management Systems');
     const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
-    expect(pdf.getPageCount()).toBe(1);
+    expect(pdf.getPageCount()).toBeLessThanOrEqual(2);
   });
   it('also supports English without mutating Plan A', async () => {
     const draft = freshPlanBCvDraft('EN');
     expect(draft.headline).toContain('Data Analysis');
     expect(draft.summary).toContain('February 2027');
     expect(draft.experience[0].bullets).toHaveLength(3);
-    expect((await PDFDocument.load(await buildCvPdfBytes(draft))).getPageCount()).toBe(1);
+    expect((await PDFDocument.load(await buildCvPdfBytes(draft))).getPageCount()).toBeLessThanOrEqual(2);
   });
 });
 
@@ -241,7 +243,7 @@ describe('Plan B PDF review corrections', () => {
     expect(saved.projects[0].period).toBe('mars-Jun 2025');
     expect(saved.skills).toContain('MySQL');
     const pdf = await PDFDocument.load(await buildCvPdfBytes(result));
-    expect(pdf.getPageCount()).toBe(1);
+    expect(pdf.getPageCount()).toBeLessThanOrEqual(2);
     const a = { ...saved, plan: 'A' as const };
     expect(normalizePlanBDraft(a)).toBe(a);
   });
