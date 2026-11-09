@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvTemplateOptions, type CvTemplate } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvTemplateOptions, type CvTemplate } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -331,6 +331,19 @@ export function CvStudioPage() {
         <aside className="cv-editor card">
           <AtsScore draft={draft} />
 
+          {draft.template === 'keywords' ? (
+            <section className="cv-editor-section">
+              <h2>{draft.language === 'FR' ? 'Compétences clés pour cette offre' : 'Key skills for this role'}</h2>
+              <label>{draft.language === 'FR' ? 'Mots-clés vérifiables (séparés par ·)' : 'Verified skills (separated by ·)'}
+                <textarea rows={2} value={cvKeySkillsForDisplay(draft)}
+                  onChange={(event) => patch('keySkills', event.target.value)} />
+              </label>
+              <p className="cv-template-field-note">{draft.language === 'FR'
+                ? 'Choisis uniquement des compétences réellement maîtrisées, adaptées aux mots-clés de l’offre.'
+                : 'Use only skills you can demonstrate, tailored to the job description.'}</p>
+            </section>
+          ) : null}
+
           <section className="cv-editor-section">
             <div className="cv-editor-section__header">
               <h2>{draft.language === 'FR' ? 'Ordre des sections' : 'Section order'}</h2>
@@ -565,7 +578,12 @@ export function CvStudioPage() {
             </p>
           </header>
 
-          <section><h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2><p>{renderCvBold(draft.summary)}</p></section>
+          <section><h2>{draft.template === 'keywords' ? (draft.language === 'FR' ? 'Résumé' : 'Summary') : (draft.language === 'FR' ? 'Profil' : 'Profile')}</h2><p>{renderCvBold(draft.summary)}</p></section>
+          {draft.template === 'keywords' && cvKeySkillsForDisplay(draft) ? (
+            <section className="cv-keyskills"><h2>{draft.language === 'FR' ? 'Compétences clés' : 'Key Skills'}</h2>
+              <p>{renderCvBold(cvKeySkillsForDisplay(draft))}</p>
+            </section>
+          ) : null}
 
           {draft.sectionOrder.map((section) => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>
