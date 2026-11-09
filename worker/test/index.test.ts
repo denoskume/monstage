@@ -319,12 +319,14 @@ describe('Apps Script proxy', () => {
   });
 });
 
-test('applies the exclusive scope even to cached historical offers', async () => {
+test('preserves tracked interviews from cached historical offers without reopening general discovery', async () => {
   const deps = dependencies();
   const eligible = {id:'eligible',company:'Alstom',title:'Stage Computer Vision'};
-  deps.getCachedOffers = vi.fn(async () => ({cachedAt:Date.now(),payload:{...offersPayload,offers:[eligible,{id:'old',company:'Other',title:'ML Intern',applicationStatus:'Candidature envoyée'}]}}));
+  const tracked = {id:'old',company:'Inspemon',title:'Robotics & Computer Vision Engineer',applicationStatus:'Entretien'};
+  const unrelated = {id:'unrelated',company:'Other',title:'ML Intern'};
+  deps.getCachedOffers = vi.fn(async () => ({cachedAt:Date.now(),payload:{...offersPayload,offers:[eligible,tracked,unrelated]}}));
   const response = await handleRequest(request('/api/offers', {token:'authorized-token'}), env, deps);
-  expect((await response.json() as {offers:unknown[]}).offers).toEqual([eligible]);
+  expect((await response.json() as {offers:unknown[]}).offers).toEqual([eligible,tracked]);
 });
 
 test('training route requires authentication before reading the private archive', async () => {
