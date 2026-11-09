@@ -136,17 +136,19 @@ export function buildEdfEodLetter(language: CvLanguage = 'FR'): CoverLetterDraft
   letter.internshipTitle = EDF_EOD_TITLE + ' — Réf. 2026-185820';
   letter.greeting = fr ? 'Madame, Monsieur,' : 'Dear Hiring Team,';
   letter.paragraphs = fr ? [
-    'Actuellement en dernière année du MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je vous adresse ma candidature pour le stage de prévision de la consommation France au sein de l’Équilibre Offre-Demande Moyen Terme (réf. 2026-185820).',
-    'Ce qui m’attire dans cette mission, c’est le lien direct entre les données, les modèles et les décisions opérationnelles. Anticiper l’évolution de la consommation électrique sur plusieurs années, dans un contexte de transformation des usages, est un sujet que je souhaite découvrir. Le travail de votre équipe sur l’intégration de nouvelles données et l’amélioration des outils Python correspond à ce que je recherche.',
-    'Ma formation m’apporte des bases en analyse de données, machine learning, méthodes stochastiques et optimisation. Lors de mon stage en analyse de données, j’ai travaillé sur le nettoyage, l’exploration et la visualisation de jeux de données avec Python. Dans un projet personnel de modélisation prédictive, j’ai comparé des modèles de régression et évalué leurs résultats. MonStage m’a également permis de développer des flux de données automatisés. Je n’ai pas encore d’expérience en prévision de la demande électrique, mais je souhaite apprendre vos méthodes et contribuer avec rigueur.',
-    'Je serais heureux de rejoindre l’équipe SoDATA, de travailler aux côtés des référents métier et d’échanger avec les ingénieurs-chercheurs de la R&D. Je vous remercie pour l’attention portée à ma candidature et serais ravi de présenter plus en détail ma motivation lors d’un entretien.',
+    "Actuellement en dernière année du MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Votre offre de stage consacrée à la prévision de la consommation électrique en France a particulièrement retenu mon attention.",
+    "Prévoir l’évolution de la consommation à moyen terme pour contribuer à l’équilibre entre l’offre et la demande représente un sujet concret qui m’intéresse. Le travail sur les données de consommation, l’amélioration des traitements et le développement d’outils de prévision en Python correspondent aux missions que j’aimerais découvrir au sein de votre équipe SoDATA.",
+    "Ma formation, complétée par un BSc en informatique et électronique, m’a apporté des bases en programmation, statistiques, analyse de données et modélisation. Lors de mon stage Data Analyst, j’ai travaillé sur la préparation, l’analyse et la visualisation de données avec Python. J’ai également comparé des modèles de régression dans une étude de cas sur les coûts hospitaliers et développé MonStage, une plateforme personnelle qui automatise la collecte et le suivi de données. Ces expériences m’ont appris à vérifier mes résultats et à documenter mon travail.",
+    "Curieux, rigoureux et conscient des compétences qu’il me reste à développer, je serais heureux de rejoindre votre équipe, d’apprendre vos méthodes de prévision et de contribuer à vos travaux. Je reste disponible pour échanger avec vous sur ma candidature et sur les possibilités de stage au sein d’EDF.",
   ] : [
-    'I am in the final year of my MSc Control and Robotics at Centrale Nantes, specializing in Data Science, Signal & Image Processing, and seeking a six-month internship from February 2027. I am applying for the EDF medium-term electricity consumption forecasting internship (ref. 2026-185820).',
-    'I am drawn to the close connection between data, models and operational decisions. Forecasting electricity demand over several years as consumption patterns change is exactly the kind of real-world problem I would like to learn about. I am particularly interested in your team’s work on integrating new data and improving Python tools.',
-    'My studies cover data analysis, machine learning, stochastic methods and numerical optimization. In my Data Analyst internship I cleaned, explored and visualized datasets using Python. I have also evaluated regression models on a predictive modeling project, and automated data workflows through MonStage. While I have not yet worked on electricity demand forecasting, I am eager to learn your methods and contribute carefully.',
-    'I would welcome the opportunity to join SoDATA, work alongside operational specialists and interact with R&D engineers. Thank you for considering my application. I would be happy to discuss my motivation in an interview.',
+    "I am currently completing my MSc Control and Robotics, specializing in Data Science, Signal & Image Processing at Centrale Nantes. I am looking for a six-month final-year internship starting in February 2027. Your internship focused on forecasting electricity consumption in France particularly caught my attention.",
+    "Forecasting medium-term consumption to support the balance between electricity supply and demand is a practical challenge I would like to explore. Working with consumption data, improving data-processing workflows, and developing forecasting tools in Python are closely aligned with what I hope to learn within your SoDATA team.",
+    "My studies, alongside a BSc in Computer Science & Electronics, have given me foundations in programming, statistics, data analysis and modeling. During my Data Analyst internship I worked on data preparation, analysis and visualization with Python. I also compared regression models in a hospital-cost case study and built MonStage, a personal platform that automates data collection and tracking. These experiences taught me to check my results carefully and document my work.",
+    "I am curious, thorough and aware that I still have much to learn. I would be pleased to join your team, learn your forecasting methods and contribute to your work. I would welcome the opportunity to discuss my application with you.",
   ];
-  letter.closing = fr ? 'Bien cordialement,' : 'Kind regards,';
+  letter.closing = fr
+    ? 'Je vous prie d’agréer, Madame, Monsieur, l’expression de mes salutations distinguées.'
+    : 'Yours sincerely,';
   return letter;
 }
 
@@ -214,12 +216,36 @@ function compactExistingEdfCv(cv: CvDraft): CvDraft {
   return next;
 }
 
+// Upgrade only letters still containing the exact original generated text.
+// A hand-edited letter must never be overwritten when MonStage reloads.
+const legacyEdfLetterParagraphs: Record<CvLanguage, string[]> = {
+  FR: [
+    "Actuellement en dernière année du MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je vous adresse ma candidature pour le stage de prévision de la consommation France au sein de l’Équilibre Offre-Demande Moyen Terme (réf. 2026-185820).",
+    "Ce qui m’attire dans cette mission, c’est le lien direct entre les données, les modèles et les décisions opérationnelles. Anticiper l’évolution de la consommation électrique sur plusieurs années, dans un contexte de transformation des usages, est un sujet que je souhaite découvrir. Le travail de votre équipe sur l’intégration de nouvelles données et l’amélioration des outils Python correspond à ce que je recherche.",
+    "Ma formation m’apporte des bases en analyse de données, machine learning, méthodes stochastiques et optimisation. Lors de mon stage en analyse de données, j’ai travaillé sur le nettoyage, l’exploration et la visualisation de jeux de données avec Python. Dans un projet personnel de modélisation prédictive, j’ai comparé des modèles de régression et évalué leurs résultats. MonStage m’a également permis de développer des flux de données automatisés. Je n’ai pas encore d’expérience en prévision de la demande électrique, mais je souhaite apprendre vos méthodes et contribuer avec rigueur.",
+    "Je serais heureux de rejoindre l’équipe SoDATA, de travailler aux côtés des référents métier et d’échanger avec les ingénieurs-chercheurs de la R&D. Je vous remercie pour l’attention portée à ma candidature et serais ravi de présenter plus en détail ma motivation lors d’un entretien.",
+  ],
+  EN: [
+    "I am in the final year of my MSc Control and Robotics at Centrale Nantes, specializing in Data Science, Signal & Image Processing, and seeking a six-month internship from February 2027. I am applying for the EDF medium-term electricity consumption forecasting internship (ref. 2026-185820).",
+    "I am drawn to the close connection between data, models and operational decisions. Forecasting electricity demand over several years as consumption patterns change is exactly the kind of real-world problem I would like to learn about. I am particularly interested in your team’s work on integrating new data and improving Python tools.",
+    "My studies cover data analysis, machine learning, stochastic methods and numerical optimization. In my Data Analyst internship I cleaned, explored and visualized datasets using Python. I have also evaluated regression models on a predictive modeling project, and automated data workflows through MonStage. While I have not yet worked on electricity demand forecasting, I am eager to learn your methods and contribute carefully.",
+    "I would welcome the opportunity to join SoDATA, work alongside operational specialists and interact with R&D engineers. Thank you for considering my application. I would be happy to discuss my motivation in an interview.",
+  ],
+};
+function refreshOldEdfLetter(letter: CoverLetterDraft): CoverLetterDraft {
+  const known = legacyEdfLetterParagraphs[letter.language];
+  if (letter.paragraphs.length !== known.length || !letter.paragraphs.every((p, i) => p === known[i])) return letter;
+  const adapted = buildEdfEodLetter(letter.language);
+  return { ...letter, paragraphs: adapted.paragraphs, closing: adapted.closing };
+}
+
 export function prepareEdfEodDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(EDF_EOD_DOSSIER_ID, language);
   if (existing) {
     const nextCv = compactExistingEdfCv(existing.cv);
-    if (JSON.stringify(nextCv) !== JSON.stringify(existing.cv)) {
-      const updated = { ...existing, cv: nextCv };
+    const nextLetter = refreshOldEdfLetter(existing.letter);
+    if (JSON.stringify(nextCv) !== JSON.stringify(existing.cv) || JSON.stringify(nextLetter) !== JSON.stringify(existing.letter)) {
+      const updated = { ...existing, cv: nextCv, letter: nextLetter };
       saveApplicationDossier(updated);
       return updated;
     }
