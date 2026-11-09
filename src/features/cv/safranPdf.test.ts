@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -155,5 +155,32 @@ describe('CV summary section heading', () => {
       expect(pdf.getPageCount()).toBeGreaterThanOrEqual(1);
       expect(draft.summary).toBe(original);
     }
+  });
+});
+
+describe('French CV formatting corrections', () => {
+  it('normalizes city spelling and the Remote comma without changing the saved text', () => {
+    expect(cvExperienceLocationForDisplay('Stage • Bengalore, Inde')).toBe('Stage • Bengaluru, Inde');
+    expect(cvExperienceLocationForDisplay('Freelance • Remote , France')).toBe('Freelance • Remote, France');
+  });
+  it('keeps per-language labels without a redundant leading heading', () => {
+    const source = 'Langues : **Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)';
+    expect(cvLanguagesForDisplay(source)).toBe('**Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)');
+  });
+  it('uses French category names while preserving all technical skill values', () => {
+    const source = [
+      '**Programming:** Python, NumPy, MATLAB',
+      '**Computer Vision & Image Processing:** OpenCV, image filtering, segmentation',
+      '**Machine Learning:** PyTorch, classification, model evaluation',
+      '**Tools & Visualization:** Jupyter Notebook, Matplotlib, Git, GitHub',
+      '**Outils :** Jupyter, Linux, Excel',
+    ].join('\n');
+    const fr = cvSkillsForDisplay(source, 'FR');
+    expect(fr).toHaveLength(4);
+    expect(fr[0]).toBe('**Programmation :** Python, NumPy, MATLAB');
+    expect(fr[1]).toBe('**Vision par ordinateur & traitement d’images :** OpenCV, image filtering, segmentation');
+    expect(fr[2]).toContain('PyTorch');
+    expect(fr[3]).toBe('**Outils & visualisation :** Jupyter Notebook, Matplotlib, Git, GitHub, Linux, Excel');
+    expect(cvSkillsForDisplay(source, 'EN')[0]).toBe('**Programming:** Python, NumPy, MATLAB');
   });
 });
