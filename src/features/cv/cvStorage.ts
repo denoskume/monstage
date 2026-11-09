@@ -139,10 +139,33 @@ function cvSkillCategoryForDisplay(line: string, language: CvLanguage): string {
   return '**' + translated + ' :** ' + content;
 }
 
+// Four distinct Plan B categories. Upgrade only the original, unedited
+// four-line Plan B skills block when rendering previously saved drafts.
+export function cvPlanBSkills(language: CvLanguage): string[] {
+  return language === 'FR' ? [
+    '**Programmation & préparation :** Python, Pandas, NumPy, nettoyage, EDA',
+    '**Bases de données :** SQL, SQL Server (SSMS), jointures, agrégations',
+    '**BI & reporting :** Power BI, DAX, tableaux de bord interactifs, KPI',
+    '**Outils :** Matplotlib, Jupyter Notebook, Git',
+  ] : [
+    '**Programming & Preparation:** Python, Pandas, NumPy, data cleaning, EDA',
+    '**Databases:** SQL, SQL Server (SSMS), joins, aggregations',
+    '**BI & Reporting:** Power BI, DAX, interactive dashboards, KPIs',
+    '**Tools:** Matplotlib, Jupyter Notebook, Git',
+  ];
+}
+
 // Merge only duplicate tool rows; keep every distinct skill and its category.
 // This is a display helper, so previously saved CV drafts are never overwritten.
 export function cvSkillsForDisplay(skills: string, language: CvLanguage): string[] {
   const lines = skills.split('\n').map(line => line.trim()).filter(Boolean);
+  const oldPlanB = language === 'FR'
+    ? ['Programmation & analyse', 'Bases de données', 'Business Intelligence', 'Outils & reporting']
+    : ['Programming & Analytics', 'Databases', 'Business Intelligence', 'Reporting & Tools'];
+  const categories = lines.map(line => line.split(':')[0].replace(/\*\*/g, '').trim());
+  if (categories.length === 4 && oldPlanB.every((category, i) => categories[i] === category)) {
+    return cvPlanBSkills(language);
+  }
   // The user may have bolded the entire tool list in saved CV data.
   // Remove bold markers only from this merged presentation, not the saved data.
   const toolCategory = /^(?:Tools\s*&\s*Visualization|Outils(?:\s*&\s*visualisation)?)\s*:/i;
@@ -415,15 +438,7 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
           'Organized records using multi-criteria filters and application statuses.',
           'Created a dashboard to visualize opportunities and monitor their evolution.'] },
   ];
-  draft.skills = (fr
-    ? ['**Programmation & analyse :** Python, Pandas, NumPy, nettoyage de données, EDA',
-       '**Bases de données :** SQL, SQL Server, SSMS, jointures, agrégations',
-       '**Business Intelligence :** Power BI, DAX, tableaux de bord interactifs',
-       '**Outils & reporting :** KPI, Matplotlib, Jupyter Notebook, Git']
-    : ['**Programming & Analytics:** Python, Pandas, NumPy, data cleaning, EDA',
-       '**Databases:** SQL, SQL Server, SSMS, joins, aggregations',
-       '**Business Intelligence:** Power BI, DAX, interactive dashboards',
-       '**Reporting & Tools:** KPI reporting, Matplotlib, Jupyter Notebook, Git']).join('\n');
+  draft.skills = cvPlanBSkills(language).join('\n');
   draft.languages = fr ? '**Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)' : '**French:** Native | **English:** C1 (4+ years of higher education in English)';
   draft.interests = fr ? 'Négociation • Échanges interculturels • Cuisine' : 'Negotiation • Intercultural exchange • Cooking';
   draft.leadership = [];
