@@ -1,6 +1,6 @@
 import { isVisionMission, getOfferPlan, type SearchPlan } from '../../../shared/searchScope';
 import type { InternshipOffer } from '../../api/contract';
-/** Fifteen large transport employers in France. Both A and B share this roster. */
+/** Thirty large employers in France. Both A and B share the same roster. */
 export const sectors = [
   { id: 'aeronautique', name: 'Transport aérien & aéronautique', companies: [
     ['Airbus', 'airbus.com/en/careers', 'airbus'],
@@ -20,6 +20,26 @@ export const sectors = [
     ['Valeo', 'valeo.com/fr/carrieres', 'valeo'],
     ['FORVIA HELLA', 'forvia.com/en/careers', 'forvia|hella|faurecia'],
     ['Michelin', 'jobs.michelin.com', 'michelin'] ] },
+  { id: 'agroalimentaire', name: 'Agroalimentaire', companies: [
+    ['Danone', 'careers.danone.com', 'danone|volvic'],
+    ['Nestlé', 'www.nestle.com/jobs', 'nestle'],
+    ['Lactalis', 'www.lactalis.fr', 'lactalis'],
+    ['Bel Group', 'www.groupe-bel.com', 'bel group|groupe bel'] ] },
+  { id: 'sante', name: 'Santé & technologies médicales', companies: [
+    ['GE HealthCare', 'careers.gehealthcare.com', 'ge healthcare|gehealthcare'],
+    ['EssilorLuxottica', 'careers.essilorluxottica.com', 'essilorluxottica|essilor|luxottica'],
+    ['Sanofi', 'jobs.sanofi.com', 'sanofi'],
+    ['Siemens Healthineers', 'jobs.siemens-healthineers.com', 'siemens healthineers'] ] },
+  { id: 'industrie', name: 'Industrie & environnement', companies: [
+    ['Schneider Electric', 'careers.se.com', 'schneider electric'],
+    ['Saint-Gobain', 'joinus.saint-gobain.com', 'saint gobain|saint-gobain'],
+    ['Veolia', 'jobs.veolia.com', 'veolia'],
+    ['Air Liquide', 'careers.airliquide.com', 'air liquide'] ] },
+  { id: 'energie', name: 'Énergie', companies: [
+    ['EDF', 'www.edf.fr/edf-recrute', 'edf'],
+    ['ENGIE', 'jobs.engie.com', 'engie|grdf'] ] },
+  { id: 'cosmetique', name: 'Cosmétique', companies: [
+    ['L’Oréal', 'careers.loreal.com', 'loreal|l oreal'] ] },
 ] as const;
 export const allSectors = sectors;
 
