@@ -1,3 +1,5 @@
+import { cvPresets, selectedCertifications } from './cvEvidenceCatalog';
+
 // Application-specific drafts are kept separately from CV master.
 export type CvLanguage = 'FR' | 'EN';
 export type CvPlan = 'A' | 'B';
@@ -24,7 +26,14 @@ export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
   { id: 'minimal', fr: '3 · Épuré', en: '3 · Minimal' },
   { id: 'keywords', fr: '4 · ATS / Compétences clés', en: '4 · ATS / Key Skills' },
 ];
-export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'languages' | 'interests';
+export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'certifications' | 'languages' | 'interests';
+export interface CvCertification {
+  id: string;
+  title: string;
+  issuer: string;
+  date: string;
+  credentialId?: string;
+}
 
 export interface CvExperience {
   id: string;
@@ -231,6 +240,7 @@ export interface CvDraft {
   education: CvEducation[];
   experience: CvExperience[];
   projects: CvProject[];
+  certifications?: CvCertification[];
   leadership: CvLeadership[];
   skills: string;
   languages: string;
@@ -302,7 +312,8 @@ export const defaultCvEn: CvDraft = {
   skills: '**Programming:** Python, NumPy, pandas, SciPy, SQL\n**Computer Vision:** OpenCV, segmentation, camera calibration, feature tracking\n**Machine Learning:** scikit-learn, PyTorch, classification, regression\n**Signal & Tools:** signal processing, Jupyter, Matplotlib, Git, Linux',
   languages: '**French:** Native | **English:** C1 (4+ years of higher education in English)',
   interests: 'Artificial Intelligence & Technology | Football',
-  sectionOrder: ['education', 'projects', 'experience', 'skills', 'languages', 'leadership', 'interests'],
+  certifications: selectedCertifications(cvPresets.A.certificates),
+  sectionOrder: ['education', 'projects', 'experience', 'skills', 'certifications', 'languages', 'leadership', 'interests'],
 };
 
 export const defaultCvFr: CvDraft = {
@@ -365,7 +376,8 @@ export const defaultCvFr: CvDraft = {
   skills: '**Programmation :** Python, NumPy, pandas, SciPy, SQL\n**Vision & Image :** OpenCV, segmentation, calibration caméra, suivi de points\n**Machine Learning :** scikit-learn, PyTorch, classification, régression\n**Signal & Outils :** traitement du signal, Jupyter, Matplotlib, Git, Linux',
   languages: '**Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)',
   interests: 'Intelligence artificielle & nouvelles technologies | Cuisine',
-  sectionOrder: ['education', 'experience', 'projects', 'skills', 'leadership', 'languages', 'interests'],
+  certifications: selectedCertifications(cvPresets.A.certificates),
+  sectionOrder: ['education', 'experience', 'projects', 'skills', 'certifications', 'leadership', 'languages', 'interests'],
 };
 
 // Separate, focused Data Analysis master. Never mutate or overwrite Plan A.
@@ -387,10 +399,10 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
   draft.education = [
     { id: 'ecn', school: 'Master of Science - Control and Robotics, Centrale Nantes', degree: 'Parcours: Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027',
       details: fr ? 'Formation axée sur les méthodes avancées d’analyse de données, d’apprentissage automatique et de traitement d’images.' : 'Advanced methods in data analysis, machine learning, and image processing.',
-      keyCourses: 'Data Analysis · Machine Learning · Stochastic Methods · Numerical Optimization · Algorithmics' },
+      keyCourses: cvPresets.B.ecn.join(' · ') },
     { id: 'kju', school: 'Bachelor of Science - Computer Science & Electronics, Kristu Jayanti University', degree: 'Parcours: Informatique et Électronique', location: 'Bengaluru, Inde', period: '2021–2025',
       details: fr ? 'Programme établissant des bases solides en programmation, développement logiciel, systèmes numériques et électronique.' : 'Foundations in programming, software development, digital systems, and electronics.',
-      keyCourses: 'Database Management · Data Structures · Python Programming · Software Engineering · Computer Graphics' },
+      keyCourses: cvPresets.B.kju.join(' · ') },
   ];
   draft.experience = [
     { id: 'unified', role: 'Data Analyst Intern', company: 'Unified Mentor Pvt. Ltd.', period: fr ? 'Sept.–Déc. 2024' : 'Sep–Dec 2024',
@@ -440,18 +452,32 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
           'Organized records using multi-criteria filters and application statuses.',
           'Created a dashboard to visualize opportunities and monitor their evolution.'] },
   ];
-  draft.skills = cvPlanBSkills(language).join('\n');
+  draft.skills = (fr ? [
+    '**Programmation & analyse :** Python, pandas, NumPy, SciPy, analyse exploratoire',
+    '**Bases de données :** SQL, jointures, agrégations, sous-requêtes, bases relationnelles',
+    '**Modélisation & statistiques :** régression, classification, scikit-learn, évaluation de modèles',
+    '**Outils & visualisation :** Matplotlib, Power BI, Jupyter, Git',
+  ] : [
+    '**Programming & analysis:** Python, pandas, NumPy, SciPy, exploratory analysis',
+    '**Databases:** SQL, joins, aggregations, subqueries, relational databases',
+    '**Modeling & statistics:** regression, classification, scikit-learn, model evaluation',
+    '**Tools & visualization:** Matplotlib, Power BI, Jupyter, Git',
+  ]).join('\n');
   draft.languages = fr ? '**Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)' : '**French:** Native | **English:** C1 (4+ years of higher education in English)';
   draft.interests = fr ? 'Négociation • Échanges interculturels • Cuisine' : 'Negotiation • Intercultural exchange • Cooking';
   draft.leadership = [];
-  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'languages', 'interests'];
+  draft.certifications = selectedCertifications(cvPresets.B.certificates);
+  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'certifications', 'languages', 'interests'];
   draft.template = 'modern';
   draft.pageColor = 'white';
   return draft;
 }
 
 export function freshCvDraft(language: CvLanguage, plan: CvPlan = 'A'): CvDraft {
-  return plan === 'B' ? freshPlanBCvDraft(language) : structuredClone(language === 'FR' ? defaultCvFr : defaultCvEn);
+  if (plan === 'B') return freshPlanBCvDraft(language);
+  const base = structuredClone(language === 'FR' ? defaultCvFr : defaultCvEn);
+  base.education = base.education.map(item => item.id === 'ecn' ? { ...item, keyCourses: cvPresets.A.ecn.join(' · ') } : item.id === 'kju' ? { ...item, keyCourses: cvPresets.A.kju.join(' · ') } : item);
+  return base;
 }
 
 function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft {
@@ -508,7 +534,7 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
     migrated.sectionOrder = defaults.sectionOrder;
   }
 
-  const validSections: CvSectionKey[] = ['education', 'projects', 'experience', 'leadership', 'skills', 'languages', 'interests'];
+  const validSections: CvSectionKey[] = ['education', 'projects', 'experience', 'leadership', 'skills', 'certifications', 'languages', 'interests'];
   const savedOrder = Array.isArray(saved.sectionOrder) ? saved.sectionOrder.filter((key): key is CvSectionKey => validSections.includes(key as CvSectionKey)) : [];
   migrated.sectionOrder = [...savedOrder, ...defaults.sectionOrder.filter((key) => !savedOrder.includes(key))];
 
@@ -538,7 +564,12 @@ export function normalizePlanBDraft(draft: CvDraft): CvDraft {
     // Keep any other skills explicitly added by the user.
     return line.replace(/\bMySQL\s*,\s*SQL Server\s*\(SSMS\)/i, 'SQL, SQL Server (SSMS)');
   }).join('\n');
-  return { ...draft, projects, skills };
+  const sectionOrder = draft.sectionOrder.includes('certifications')
+    ? draft.sectionOrder
+    : [...draft.sectionOrder.slice(0, draft.sectionOrder.indexOf('languages') >= 0 ? draft.sectionOrder.indexOf('languages') : draft.sectionOrder.length),
+       'certifications' as const,
+       ...draft.sectionOrder.slice(draft.sectionOrder.indexOf('languages') >= 0 ? draft.sectionOrder.indexOf('languages') : draft.sectionOrder.length)];
+  return { ...draft, projects, skills, sectionOrder };
 }
 
 export function loadCvDraft(language: CvLanguage = 'EN', plan: CvPlan = 'A'): CvDraft {
