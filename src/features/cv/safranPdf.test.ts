@@ -110,7 +110,7 @@ describe('Saved bold tool lists', () => {
       '**Programming:** Python, NumPy, MATLAB',
       '**Tools & Visualization:** **Jupyter Notebook, Matplotlib, Git, GitHub**',
       '**Outils :** Jupyter, Linux, Excel',
-    ].join('\\n');
+    ].join('\n');
     const rows = cvSkillsForDisplay(source, 'FR');
     expect(rows).toHaveLength(2);
     expect(rows[1]).toBe('**Outils & visualisation :** Jupyter Notebook, Matplotlib, Git, GitHub, Linux, Excel');
