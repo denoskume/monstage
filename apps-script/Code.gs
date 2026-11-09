@@ -286,7 +286,12 @@ function strictAnalyst_(title) {
 function strictRelevant_(title, context) {
   var full = scopeNorm_(title + ' ' + (context || ''));
   if (SCOPE_FINANCE_.test(full) || SCOPE_SCIENTIST_.test(scopeNorm_(title))) return false;
-  return strictAnalyst_(title) || strictVision_(title, context);
+  var name = scopeNorm_(title);
+  var analyticalContext = scopeNorm_(context);
+  var dataDrivenMaintenance = !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
+    /\b(maintenance|performance industrielle|maintenance predictive)\b/.test(name) &&
+    SCOPE_ANALYST_.test(analyticalContext);
+  return strictAnalyst_(title) || strictVision_(title, context) || dataDrivenMaintenance;
 }
 function strictEligible_(company, title, context) {
   return strictCompany_(company) && strictRelevant_(title, context);
