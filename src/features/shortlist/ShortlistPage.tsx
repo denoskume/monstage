@@ -54,7 +54,8 @@ function TrackingList({
           </div>
 
           <div className="my-jobs-saved-row__actions">
-            <Link className="button button--primary my-jobs-apply" to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier</Link>
+            {stage === 'interview' ? <Link className="button button--primary my-jobs-apply" to={`/interview-prep?offer=${encodeURIComponent(offer.id)}`}>Préparer l’entretien</Link> : null}
+            <Link className={stage === 'interview' ? 'button button--secondary' : 'button button--primary my-jobs-apply'} to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier</Link>
             <select aria-label={`Statut de ${offer.company}`} value={offer.applicationStatus === 'Test technique' ? 'Test technique' : stage === 'refused' ? 'Refus' : stage === 'interview' ? 'Entretien' : stage === 'archived' ? 'Abandonné' : offer.applicationStatus === 'Relance' ? 'Relance' : 'Candidature envoyée'} disabled={saving === offer.id} onChange={(event) => onStatus(offer, event.target.value)} className="button button--secondary">
               <option value="Candidature envoyée">En cours — sans réponse</option>
               <option value="Relance">Relance effectuée</option>
