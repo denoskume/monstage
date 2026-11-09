@@ -201,8 +201,8 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
       ? 'Data Analysis | Python | KPI & Reporting | Maintenance industrielle'
       : 'Data Analysis | Python | KPI & Reporting | Industrial Maintenance';
     base.summary = language === 'FR'
-      ? "Disponible dès février 2027 pour un stage de fin d’études de six mois, je souhaite mettre en pratique mes acquis en analyse de données et en Python pour suivre les indicateurs de maintenance, identifier des pistes d’amélioration et apprendre au contact des équipes terrain chez Danone."
-      : 'Available from February 2027 for a six-month final-year internship, I aim to apply my data analysis and Python skills to monitor maintenance KPIs, identify opportunities for improvement and learn alongside Danone’s on-site teams.';
+      ? "Je recherche un stage de fin d’études de six mois à partir de février 2027. Je souhaite utiliser mes compétences en Python et en analyse de données pour améliorer le suivi de la maintenance et apprendre auprès des équipes terrain."
+      : 'I am seeking a six-month final-year internship starting in February 2027. I would like to use my Python and data analysis skills to support maintenance performance tracking and learn from on-site teams.';
     base.projects = danoneMaintenanceProjects(language).map(item => item.project);
     base.skills = (language === 'FR' ? [
       '**Analyse de données :** Python, pandas, NumPy, SQL, nettoyage et contrôle qualité',
