@@ -195,7 +195,7 @@ function compactExistingEdfCv(cv: CvDraft): CvDraft {
     next.skills = '**Python & données :** Python, pandas, NumPy, SQL, jointures, agrégations, sous-requêtes\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch';
   }
   if (next.interests === 'Négociation • Échanges interculturels • Cuisine') next.interests = '';
-  if (!next.certifications?.length) next.certifications = selectedCertifications(cvPresets.EDF.certificates);
+  if (next.certifications === undefined) next.certifications = selectedCertifications(cvPresets.EDF.certificates);
   if (!next.sectionOrder.includes('certifications')) {
     const idx = next.sectionOrder.indexOf('languages');
     next.sectionOrder = [...next.sectionOrder.slice(0, idx < 0 ? next.sectionOrder.length : idx),
