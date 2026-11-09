@@ -50,6 +50,7 @@ function TrackingList({
             <span>{offer.city ?? 'City not specified'}</span>
             <small>{offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus) ? displayValue(offer.applicationStatus) : stage === 'application' ? 'Postulé' : stage === 'interview' ? 'Entretien' : stage === 'refused' ? 'Refus' : 'Archivé'}{offer.appliedAt ? ' · ' + offer.appliedAt : ''}</small>
             {stage === 'application' ? <small>Suivi automatique : {getFollowUpAdvice(offer, getWorkspaceState(offer.id).followUpDate || undefined)}</small> : null}
+            {stage === 'interview' && offer.nextAction ? <small>Prochaine étape : {offer.nextAction}</small> : null}
           </div>
 
           <div className="my-jobs-saved-row__actions">
@@ -85,7 +86,10 @@ export function ShortlistPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState<MyJobsTab>(() => searchParams.get('tab') === 'saved' ? 'saved' : 'applications');
+  const [tab, setTab] = useState<MyJobsTab>(() => {
+    const selected = searchParams.get('tab');
+    return selected === 'saved' || selected === 'interviews' || selected === 'applications' || selected === 'refused' || selected === 'archived' ? selected : 'applications';
+  });
   const [externalFormOpen, setExternalFormOpen] = useState(false);
 
   // EDF is a manually saved application; it must remain visible even when not
