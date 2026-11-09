@@ -415,9 +415,15 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
           'Organized records using multi-criteria filters and application statuses.',
           'Created a dashboard to visualize opportunities and monitor their evolution.'] },
   ];
-  draft.skills = fr
-    ? '**Programmation & analyse :** Python, Pandas, NumPy, nettoyage de données, EDA\n**Bases de données :** SQL, SQL Server, SSMS, jointures, agrégations\n**Business Intelligence :** Power BI, DAX, tableaux de bord interactifs\n**Outils & reporting :** KPI, Matplotlib, Jupyter Notebook, Git'
-    : '**Programming & Analytics:** Python, Pandas, NumPy, data cleaning, EDA\n**Databases:** SQL, SQL Server, SSMS, joins, aggregations\n**Business Intelligence:** Power BI, DAX, interactive dashboards\n**Reporting & Tools:** KPI reporting, Matplotlib, Jupyter Notebook, Git';
+  draft.skills = (fr
+    ? ['**Programmation & analyse :** Python, Pandas, NumPy, nettoyage de données, EDA',
+       '**Bases de données :** SQL, SQL Server, SSMS, jointures, agrégations',
+       '**Business Intelligence :** Power BI, DAX, tableaux de bord interactifs',
+       '**Outils & reporting :** KPI, Matplotlib, Jupyter Notebook, Git']
+    : ['**Programming & Analytics:** Python, Pandas, NumPy, data cleaning, EDA',
+       '**Databases:** SQL, SQL Server, SSMS, joins, aggregations',
+       '**Business Intelligence:** Power BI, DAX, interactive dashboards',
+       '**Reporting & Tools:** KPI reporting, Matplotlib, Jupyter Notebook, Git']).join('\n');
   draft.languages = fr ? '**Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)' : '**French:** Native | **English:** C1 (4+ years of higher education in English)';
   draft.interests = fr ? 'Négociation • Échanges interculturels • Cuisine' : 'Negotiation • Intercultural exchange • Cooking';
   draft.leadership = [];
