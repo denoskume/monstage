@@ -74,7 +74,7 @@ function alstomReqProjects(language: CvLanguage) {
 
 const isDanoneVolvicMaintenance = (offer: InternshipOffer) =>
   offer.id === 'OFFRE-DANONE-VOLVIC-MAINT-29048' ||
-  (/danone/i.test(offer.company) && /maintenance industrielle/i.test(offer.title) && /volvic/i.test(offer.city));
+  (/danone/i.test(offer.company) && /maintenance industrielle/i.test(offer.title) && /volvic/i.test(offer.city || ''));
 
 function danoneMaintenanceProjects(language: CvLanguage) {
   const projects = language === 'FR' ? [
