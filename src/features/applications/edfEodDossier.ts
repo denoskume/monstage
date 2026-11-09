@@ -3,6 +3,7 @@ import { defaultCvFr, freshPlanBCvDraft, loadCvDraft } from '../cv/cvStorage';
 import type { CoverLetterDraft } from '../cl/clStorage';
 import { freshCoverLetter } from '../cl/clStorage';
 import { loadApplicationDossier, saveApplicationDossier } from './applicationDossiers';
+import { cvPresets, selectedCertifications } from '../cv/cvEvidenceCatalog';
 
 // EDF 2026-185820 is a one-off targeted application: outside the 30-company feed.
 // Its drafts are kept in an application dossier, never in either master CV.
@@ -37,8 +38,8 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
       : (fr ? 'Bases en programmation Python, systèmes de bases de données, algorithmique et développement logiciel.'
         : 'Foundations in Python, database systems, algorithms and software development.'),
     keyCourses: entry.id === 'ecn'
-      ? 'Data Analysis · Machine Learning · Stochastic Methods · Numerical Optimization'
-      : 'Python Programming · Database Management Systems · Data Structures',
+      ? cvPresets.EDF.ecn.join(' · ')
+      : cvPresets.EDF.kju.join(' · '),
   }));
 
   // Only substantiated contributions: no claim of electricity forecasting or
@@ -46,7 +47,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
   draft.projects = fr ? [
     {
       id: 'insurance',
-      name: 'Modélisation prédictive — Analyse de coûts hospitaliers',
+      name: 'Étude de cas — Modélisation prédictive de coûts hospitaliers',
       period: '2026',
       description: '',
       bullets: [
@@ -70,7 +71,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     },
   ] : [
     {
-      id: 'insurance', name: 'Predictive Modeling — Hospital Cost Analysis', period: '2026',
+      id: 'insurance', name: 'Case Study — Predictive Hospital Cost Modeling', period: '2026',
       description: '',
       bullets: [
         'Prepared data with patient-separated training and test sets.',
@@ -122,9 +123,10 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     ? '**Python & données :** Python, pandas, NumPy, SQL (bases)\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch'
     : '**Python & data:** Python, pandas, NumPy, SQL (fundamentals)\n**Modeling & ML:** statistics, regression, scikit-learn, model evaluation\n**Visualization & tools:** Matplotlib, Jupyter, Git, Linux, PyTorch';
   draft.leadership = [];
+  draft.certifications = selectedCertifications(cvPresets.EDF.certificates);
   draft.interests = '';
   draft.education = draft.education.map(item => item.id === 'kju' ? { ...item, details: '' } : item);
-  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'languages', 'interests'];
+  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'certifications', 'languages', 'interests'];
   return draft;
 }
 
@@ -199,6 +201,22 @@ function compactExistingEdfCv(cv: CvDraft): CvDraft {
     next.skills = '**Python & données :** Python, pandas, NumPy, SQL (bases)\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch';
   }
   if (next.interests === 'Négociation • Échanges interculturels • Cuisine') next.interests = '';
+  if (!next.certifications?.length) next.certifications = selectedCertifications(cvPresets.EDF.certificates);
+  if (!next.sectionOrder.includes('certifications')) {
+    const idx = next.sectionOrder.indexOf('languages');
+    next.sectionOrder = [...next.sectionOrder.slice(0, idx < 0 ? next.sectionOrder.length : idx),
+      'certifications', ...next.sectionOrder.slice(idx < 0 ? next.sectionOrder.length : idx)];
+  }
+  next.education = next.education.map(e => {
+    const known = e.id === 'ecn' ? cvPresets.EDF.ecn : e.id === 'kju' ? cvPresets.EDF.kju : null;
+    if (!known) return e;
+    const oldEcn = 'Data Analysis · Machine Learning · Stochastic Methods · Numerical Optimization';
+    const oldKju = 'Python Programming · Database Management Systems · Data Structures';
+    return e.keyCourses === (e.id === 'ecn' ? oldEcn : oldKju) ? {...e,keyCourses:known.join(' · ')} : e;
+  });
+  next.skills = next.skills.replace(/SQL \(bases\)/g, 'SQL, jointures, agrégations, sous-requêtes');
+  next.projects = next.projects.map(project => project.id === 'insurance' && project.name === 'Modélisation prédictive — Analyse de coûts hospitaliers'
+    ? {...project,name:'Étude de cas — Modélisation prédictive de coûts hospitaliers'} : project);
   return next;
 }
 
