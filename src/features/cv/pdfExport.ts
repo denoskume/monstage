@@ -1,5 +1,5 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
-import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, type CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -58,6 +58,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   const leftHeader = template === 'minimal';
   const modern = template === 'modern';
   const minimal = template === 'minimal';
+  const keywordsTemplate = template === 'keywords';
   const textColor = rgb(0.07, 0.07, 0.07);
   const headingColor = modern ? rgb(0.14, 0.30, 0.44) : textColor;
   const ruleColor = modern ? rgb(0.65, 0.76, 0.84) : rgb(0.25, 0.25, 0.25);
@@ -183,11 +184,11 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   const drawSectionTitle = (title: string) => {
     ensureSpace(24);
-    y -= compact ? (minimal ? 4 : 7) : 4;
+    y -= compact ? (minimal || keywordsTemplate ? 4 : 7) : 4;
     page.drawText(normalizeCvPdfText(title.toUpperCase()), { x: MARGIN_X, y, size: modern ? 10.2 : 10.5, font: bold, color: headingColor });
     y -= 5;
     page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: modern ? 0.65 : 0.8, color: ruleColor });
-    y -= compact ? (minimal ? 8 : 11) : 12;
+    y -= compact ? (minimal || keywordsTemplate ? 8 : 11) : 12;
   };
 
   // Helvetica's built-in encoding cannot display an en dash; use consistently spaced dates.
@@ -295,11 +296,16 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     { text: draft.github.trim() ? 'GitHub' : '', uri: portfolioUrl(draft.github, 'github') },
   ], 8.5);
   // Header spacing is intentionally tighter in the modern/minimal templates.
-  y -= compact ? (minimal ? 5 : modern ? 7 : 10) : (minimal ? 8 : modern ? 12 : 20);
+  y -= compact ? (minimal || keywordsTemplate ? 5 : modern ? 7 : 10) : (minimal || keywordsTemplate ? 8 : modern ? 12 : 20);
 
   if (draft.summary.trim()) {
-    drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Profile');
+    drawSectionTitle(keywordsTemplate ? (draft.language === 'FR' ? 'Résumé' : 'Summary') : (draft.language === 'FR' ? 'Profil' : 'Profile'));
     drawLines(draft.summary.trim(), compact ? 9.3 : 9.5);
+  }
+  if (keywordsTemplate && cvKeySkillsForDisplay(draft)) {
+    // Compact, selectable text directly after Summary: ATS can read every term.
+    drawSectionTitle(draft.language === 'FR' ? 'Compétences clés' : 'Key Skills');
+    drawLines(cvKeySkillsForDisplay(draft), compact ? 8.9 : 9.3, regular, 0, compact ? 10.5 : 12);
   }
 
   const sectionOrder = draft.sectionOrder?.length
