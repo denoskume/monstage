@@ -1,4 +1,4 @@
-import { isTargetOffer } from '../../shared/searchScope';
+import { isTargetOrTrackedOffer } from '../../shared/searchScope';
 import type { OffersApiResponse } from './contract';
 import { ApiAuthError, apiBaseUrl } from './authClient';
 
@@ -28,5 +28,5 @@ export async function fetchOffers(token?: string | null): Promise<OffersApiRespo
     throw new Error('MonStage API returned an invalid payload');
   }
 
-  return {...data, offers: data.offers.filter(isTargetOffer)};
+  return {...data, offers: data.offers.filter(isTargetOrTrackedOffer)};
 }
