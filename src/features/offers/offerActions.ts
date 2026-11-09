@@ -20,6 +20,7 @@ const curatedSavedOffers = new Set([
   'OFFRE-AIRBUS-NANTES-MAINT-10437797',
   'OFFRE-ALSTOM-RAM-531476',
   'OFFRE-DANONE-VOLVIC-MAINT-29048',
+  'external:edf:eod:2026-185820',
 ]);
 
 const KEY = 'monstage:offer-actions:v1';
