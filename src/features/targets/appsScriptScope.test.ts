@@ -28,6 +28,7 @@ it('keeps Apps Script ingestion aligned with the same 30-company A/B scope', () 
     ['Bosch','Stage Computer Vision',false],
     ['EDF','Stage Data Analyst',true],
     ['Siemens Healthineers','Stage traitement images',true],
+    ['Danone','Stage Ingénieur Maintenance Industrielle',false],
   ] as const;
   for(const [company,title,expected] of cases){
     expect(ctx.eligible(company,title,'')).toBe(expected);
