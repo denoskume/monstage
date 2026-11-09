@@ -1,5 +1,5 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
-import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, type CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -369,7 +369,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
     if (sectionKey === 'skills' && draft.skills.trim()) {
       drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
-      for (const line of draft.skills.split('\n').filter(value => value.trim())) drawLines(line.trim(), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
+      for (const line of cvSkillsForDisplay(draft.skills, draft.language)) drawLines(line, compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
     }
 
     // One heading and two clearly labeled lines instead of two separate sections.
