@@ -78,7 +78,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
       {draft.projects.map((item) => <div className="cv-entry cv-project-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{renderCvBold(item.name)}</strong><span>{renderCvBold(item.period)}</span></div>
         {cvProjectDescription(item, draft.language).trim() ? <p className="cv-project-description">{renderCvBold(cvProjectDescription(item, draft.language))}</p> : null}
-        {item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-project-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
+        {draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-project-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
         <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
       </div>)}
     </section>
@@ -90,7 +90,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
         <div className="cv-entry__top"><strong>{renderCvBold(item.role)} — {renderCvBold(item.company)}</strong><span>{renderCvBold(item.period)}</span></div>
         {item.location.trim() ? <div className="cv-entry__top"><span>{renderCvBold(cvExperienceLocationForDisplay(item.location))}</span><span /></div> : null}
         {cvExperienceDescription(item, draft.language).trim() ? <p className="cv-experience-description">{renderCvBold(cvExperienceDescription(item, draft.language))}</p> : null}
-        {item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-experience-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
+        {draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-experience-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
         <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
       </div>)}
     </section>
