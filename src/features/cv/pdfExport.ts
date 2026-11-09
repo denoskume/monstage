@@ -1,5 +1,5 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
-import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, cvPageColorHex, type CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, cvPageColorHex, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -372,7 +372,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       drawSectionTitle(draft.language === 'FR' ? 'Expérience' : 'Experience');
       for (const item of draft.experience) {
         drawEntryHeader(item.role + ' — ' + item.company, item.period);
-        if (item.location.trim()) drawLines(item.location, compact ? 8.6 : 9.2, regular, 0, compact ? 10.5 : 12);
+        if (item.location.trim()) drawLines(cvExperienceLocationForDisplay(item.location), compact ? 8.6 : 9.2, regular, 0, compact ? 10.5 : 12);
         const description = cvExperienceDescription(item, draft.language).trim();
         if (description) drawLines(description, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
         if (item.bullets.some((value) => value.trim())) {
@@ -402,7 +402,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       && sectionKey === sectionOrder.find(key => key === 'languages' || key === 'interests')
       && (draft.languages.trim() || draft.interests.trim())) {
       drawSectionTitle(draft.language === 'FR' ? 'Langues et centres d’intérêt' : 'Languages & Interests');
-      if (draft.languages.trim()) drawLines((draft.language === 'FR' ? '**Langues :** ' : '**Languages:** ') + draft.languages.trim(), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
+      if (draft.languages.trim()) drawLines((draft.language === 'FR' ? '' : '**Languages:** ') + cvLanguagesForDisplay(draft.languages), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
       if (draft.interests.trim()) drawLines((draft.language === 'FR' ? '**Centres d’intérêt :** ' : '**Interests:** ') + draft.interests.trim(), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
     }
   }
