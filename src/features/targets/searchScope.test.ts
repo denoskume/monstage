@@ -1,15 +1,26 @@
 import { describe, it, expect } from 'vitest';
 import { TARGET_COMPANIES, targetCompany, getOfferPlan, isTargetOffer, restrictOffersPayload } from '../../../shared/searchScope';
 
-describe('transport fifteen · A/B only', () => {
-  it('targets exactly fifteen groups in three transport sectors', () => {
-    expect(TARGET_COMPANIES).toHaveLength(15);
-    expect(new Set(TARGET_COMPANIES.map(group => group[0])).size).toBe(15);
+describe('thirty target groups · A/B only', () => {
+  it('targets exactly thirty groups in eight sectors', () => {
+    expect(TARGET_COMPANIES).toHaveLength(30);
+    expect(new Set(TARGET_COMPANIES.map(group => group[0])).size).toBe(30);
     for (const [company] of TARGET_COMPANIES) {
       expect(targetCompany(company)).toBe(company);
       expect(getOfferPlan({company,title:'Stage Computer Vision / traitement d’images'})).toBe('A');
       expect(getOfferPlan({company,title:'Stage Data Analyst Power BI'})).toBe('B');
     }
+  });
+
+  it('includes all fifteen new companies in both career plans', () => {
+    for (const company of ['Danone','Nestlé','Lactalis','Bel Group','GE HealthCare','EssilorLuxottica','Sanofi','Siemens Healthineers','Schneider Electric','Saint-Gobain','Veolia','Air Liquide','EDF','ENGIE','L’Oréal']) {
+      expect(targetCompany(company)).not.toBeNull();
+      expect(getOfferPlan({company,title:'Stage Computer Vision / traitement d’images'})).toBe('A');
+      expect(getOfferPlan({company,title:'Stage Data Analyst Power BI'})).toBe('B');
+    }
+    expect(targetCompany('GRDF')).toBe('ENGIE');
+    expect(targetCompany('Siemens Mobility France')).toBe('Siemens Mobility');
+    expect(targetCompany('Siemens Healthineers France')).toBe('Siemens Healthineers');
   });
 
   it('permits distinct A and B applications at the same employer', () => {
@@ -24,14 +35,14 @@ describe('transport fifteen · A/B only', () => {
     expect((restrictOffersPayload({offers}) as {offers:typeof offers}).offers).toHaveLength(5);
   });
 
-  it('excludes companies outside the fifteen, even if the title matches', () => {
-    for (const company of ['EDF', 'ENGIE', 'Orange', 'Capgemini', 'GE HealthCare', 'Wabtec', 'Bosch', 'RTX', 'Air Liquide']) {
+  it('excludes companies outside the thirty, even if the title matches', () => {
+    for (const company of ['Orange', 'Capgemini', 'Wabtec', 'Bosch', 'RTX', 'KPMG']) {
       expect(targetCompany(company)).toBeNull();
       expect(isTargetOffer({company,title:'Stage Computer Vision'})).toBe(false);
       expect(isTargetOffer({company,title:'Stage Data Analyst'})).toBe(false);
     }
     expect(targetCompany('Siemens')).toBeNull();
-    expect(targetCompany('Siemens Healthineers')).toBeNull();
+    expect(targetCompany('Siemens Healthineers')).toBe('Siemens Healthineers');
     expect(targetCompany('Siemens Mobility France')).toBe('Siemens Mobility');
     expect(targetCompany('SNCF Connect & Tech')).toBe('SNCF');
     expect(targetCompany('Air France Industries')).toBe('Air France-KLM');
@@ -53,7 +64,7 @@ describe('transport fifteen · A/B only', () => {
       {company:'Alstom',title:'Stage Computer Vision'},
       {company:'Alstom',title:'Stage Data Analyst'},
     ];
-    expect((restrictOffersPayload({offers}) as {offers:unknown[]}).offers).toHaveLength(2);
+    expect((restrictOffersPayload({offers}) as {offers:unknown[]}).offers).toHaveLength(3);
     expect(offers).toHaveLength(3);
   });
 });
