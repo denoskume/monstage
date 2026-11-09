@@ -212,7 +212,7 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
       };
       if (education.id === 'kju') return {
         ...education,
-        keyCourses: 'Database Management Systems • Data Analysis using Spreadsheets • Programming (C, Java, PHP, Python) • Software Engineering • Instrumentation Systems',
+        keyCourses: 'Python Programming • Database Management Systems • Data Analysis using Spreadsheets • Instrumentation Systems',
       };
       return education;
     });
