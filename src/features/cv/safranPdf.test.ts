@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, freshPlanBCvDraft, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -182,5 +182,26 @@ describe('French CV formatting corrections', () => {
     expect(fr[2]).toContain('PyTorch');
     expect(fr[3]).toBe('**Outils & visualisation :** Jupyter Notebook, Matplotlib, Git, GitHub, Linux, Excel');
     expect(cvSkillsForDisplay(source, 'EN')[0]).toBe('**Programming:** Python, NumPy, MATLAB');
+  });
+});
+
+describe('Separate Plan B Data Analyst CV', () => {
+  it('has verified target roles and does not reuse CV A projects', async () => {
+    const draft = freshPlanBCvDraft('FR');
+    expect(draft.plan).toBe('B');
+    expect(draft.headline).toContain('Business Intelligence');
+    expect(draft.projects.map(project => project.id)).toEqual(['nova', 'monstage']);
+    expect(draft.projects[0].name).toContain('simulé');
+    expect(draft.experience.map(item => item.role)).toEqual(['Data Analyst Intern', 'Speech AI Evaluation Specialist']);
+    expect(draft.sectionOrder).not.toContain('leadership');
+    const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
+    expect(pdf.getPageCount()).toBe(1);
+  });
+  it('also supports English without mutating Plan A', async () => {
+    const draft = freshPlanBCvDraft('EN');
+    expect(draft.headline).toContain('Data Analysis');
+    expect(draft.summary).toContain('February 2027');
+    expect(draft.experience[0].bullets).toHaveLength(3);
+    expect((await PDFDocument.load(await buildCvPdfBytes(draft))).getPageCount()).toBe(1);
   });
 });
