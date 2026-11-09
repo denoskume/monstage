@@ -78,31 +78,35 @@ const isDanoneVolvicMaintenance = (offer: InternshipOffer) =>
 
 function danoneMaintenanceProjects(language: CvLanguage) {
   const projects = language === 'FR' ? [
-    { id: 'monstage', name: 'MonStage — Plateforme de suivi et d’analyse de données', period: '2026', bullets: [
-      'Développé une application de suivi structurée autour de données et de statuts de candidatures.',
-      'Relié une interface React/TypeScript à une source Google Sheets et à une API.',
-      'Mis en place des filtres et des indicateurs pour faciliter le suivi et la priorisation.',
-      'Vérifié la cohérence des données et amélioré les parcours à partir des retours d’utilisation.'
-    ] },
-    { id: 'clap', name: 'CLAP — Évaluation quantitative de modèles IA', period: '2026', bullets: [
-      'Analysé 2 000 extraits audio répartis en 50 catégories du jeu ESC-50.',
-      'Comparé dix stratégies de descriptions textuelles et mesuré leurs performances.',
-      'Amélioré la précision Top-1 de 83,05 % à 91,15 %, soit un gain de 8,10 points.',
-      'Examiné les prédictions erronées et synthétisé les résultats pour orienter les choix.'
-    ] }
+    { id: 'monstage', name: 'MonStage — Suivi et analyse des données', period: '2026',
+      description: 'Application de veille et de suivi des candidatures avec données centralisées.',
+      bullets: [
+        'Développé un outil de suivi avec filtres et statuts de candidature.',
+        'Connecté React/TypeScript, API et Google Sheets pour centraliser les données.',
+        'Amélioré la fiabilité du suivi et la priorisation des offres.'
+      ] },
+    { id: 'clap', name: 'CLAP — Classification audio zero-shot', period: 'Juin 2026',
+      description: 'Évaluation de LAION-CLAP sur ESC-50, sans réentraînement du modèle.',
+      bullets: [
+        'Testé 10 prompts sur 2 000 extraits audio répartis en 50 classes.',
+        'Utilisé des embeddings audio-texte et la similarité cosinus.',
+        'Amélioré le Top-1 de 83,05 % à 91,15 % ; Top-5 à 99 %.'
+      ] }
   ] : [
-    { id: 'monstage', name: 'MonStage — Data Tracking & Analytics Platform', period: '2026', bullets: [
-      'Developed an application to track structured records and application statuses.',
-      'Connected a React/TypeScript interface to Google Sheets and an API.',
-      'Implemented filters and indicators to support tracking and prioritization.',
-      'Checked data consistency and improved workflows based on user feedback.'
-    ] },
-    { id: 'clap', name: 'CLAP — Quantitative AI Model Evaluation', period: '2026', bullets: [
-      'Analyzed 2,000 audio clips across 50 ESC-50 categories.',
-      'Compared ten text-prompt strategies and measured their performance.',
-      'Improved Top-1 accuracy from 83.05% to 91.15%, an 8.10-point gain.',
-      'Reviewed misclassifications and summarized results to inform decisions.'
-    ] }
+    { id: 'monstage', name: 'MonStage — Data Tracking Platform', period: '2026',
+      description: 'Application for tracking internship opportunities and application records.',
+      bullets: [
+        'Built a tracking tool with filters and application statuses.',
+        'Connected React/TypeScript, an API and Google Sheets.',
+        'Improved data consistency and offer prioritization.'
+      ] },
+    { id: 'clap', name: 'CLAP — Zero-Shot Audio Classification', period: 'Jun 2026',
+      description: 'LAION-CLAP evaluation on ESC-50 without model retraining.',
+      bullets: [
+        'Tested 10 prompts on 2,000 audio clips across 50 classes.',
+        'Used audio-text embeddings and cosine similarity.',
+        'Improved Top-1 from 83.05% to 91.15%; reached 99% Top-5.'
+      ] }
   ];
   return projects.map(project => ({ project, score: 100, sourceUrl: '', reason: 'Analyse, fiabilité des données et amélioration continue' }));
 }
