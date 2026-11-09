@@ -2,6 +2,7 @@ import { useAuth } from '../../auth/useAuth';
 import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
 import { tailorCvForOffer } from '../applications/tailoredPackage';
+import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv } from '../applications/edfEodDossier';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
@@ -166,6 +167,11 @@ export function CvStudioPage() {
       setDraft(loadCvDraft(languageParam, plan));
       return;
     }
+    if (offerParam === EDF_EOD_DOSSIER_ID) {
+      setDraft(prepareEdfEodDossier(languageParam).cv);
+      setSaved(false);
+      return;
+    }
     const offer = offersData?.offers.find(item => item.id === offerParam);
     if (!offer) return;
     const dossier = loadApplicationDossier(offer.id, languageParam) ?? prepareApplicationDossier(offer, languageParam);
@@ -195,7 +201,8 @@ export function CvStudioPage() {
   }
 
   function save() {
-    saveCvDraft(draft);
+    if (offerParam === EDF_EOD_DOSSIER_ID) updateApplicationCv(EDF_EOD_DOSSIER_ID, draft.language, draft);
+    else saveCvDraft(draft);
     setSaved(true);
   }
 
@@ -208,7 +215,12 @@ export function CvStudioPage() {
   }
 
   function switchLanguage(language: CvLanguage) {
-    saveCvDraft(draft);
+    save();
+    if (offerParam === EDF_EOD_DOSSIER_ID) {
+      setDraft(prepareEdfEodDossier(language).cv);
+      setSaved(false);
+      return;
+    }
     const offer = offersData?.offers.find(item => item.id === offerParam);
     const tailored = offer ? (loadApplicationDossier(offer.id, language) ?? prepareApplicationDossier(offer, language)).cv : loadCvDraft(language, plan);
     setDraft(tailored);
@@ -216,6 +228,14 @@ export function CvStudioPage() {
   }
 
   function generateCv() {
+    if (offerParam === EDF_EOD_DOSSIER_ID) {
+      if (!window.confirm('Régénérer le CV EDF ? Les modifications manuelles du CV EDF seront remplacées, pas celles de la lettre.')) return;
+      const next = buildEdfEodCv(draft.language);
+      updateApplicationCv(EDF_EOD_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+      setSaved(true);
+      return;
+    }
     const offer = offersData?.offers.find(item => item.id === offerParam);
     if (!offer || !window.confirm('Régénérer le CV pour cette offre ? Les modifications manuelles de ce CV seront remplacées, pas celles de la lettre.')) return;
     prepareApplicationDossier(offer, draft.language);
@@ -226,6 +246,13 @@ export function CvStudioPage() {
   }
 
   function reset() {
+    if (offerParam === EDF_EOD_DOSSIER_ID) {
+      const next = buildEdfEodCv(draft.language);
+      updateApplicationCv(EDF_EOD_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+      setSaved(false);
+      return;
+    }
     const next = resetCvDraft(draft.language, plan);
     setDraft(next);
     setSaved(false);
@@ -340,7 +367,7 @@ export function CvStudioPage() {
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
           </div>
-          {offerParam ? <button className="button button--primary" type="button" disabled={!offersData?.offers.some(item => item.id === offerParam)} onClick={generateCv}>Générer CV</button> : null}
+          {offerParam ? <button className="button button--primary" type="button" disabled={offerParam !== EDF_EOD_DOSSIER_ID && !offersData?.offers.some(item => item.id === offerParam)} onClick={generateCv}>Générer CV</button> : null}
           <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistré' : 'Enregistrer'}</button>
           {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>Dossier</button> : null}
