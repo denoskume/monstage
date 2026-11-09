@@ -26,7 +26,27 @@ export interface CvProject {
   id: string;
   name: string;
   period: string;
+  description?: string;
   bullets: string[];
+}
+
+// Provide short descriptions for the two M1 academic projects in existing saved CVs.
+// An explicitly edited description (including an empty string) always wins.
+export function cvProjectDescription(project: CvProject, language: CvLanguage): string {
+  if (project.description !== undefined) return project.description;
+  const id = project.id.toLowerCase();
+  const name = project.name.toLowerCase();
+  if (id === 'background' || name.includes('background subtraction') || name.includes('soustraction de fond')) {
+    return language === 'FR'
+      ? 'Segmentation d’images fluoroscopiques pour mettre en évidence des instruments médicaux.'
+      : 'Fluoroscopic image segmentation to highlight medical instruments.';
+  }
+  if (id === 'clap' || name.includes('clap')) {
+    return language === 'FR'
+      ? 'Classification de sons environnementaux à partir de descriptions textuelles, sans réentraînement.'
+      : 'Environmental sound classification from text descriptions without model retraining.';
+  }
+  return '';
 }
 
 export interface CvLeadership {
