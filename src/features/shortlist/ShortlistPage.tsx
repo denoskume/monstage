@@ -1,6 +1,6 @@
 import { isTargetOffer } from '../../../shared/searchScope';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
@@ -14,6 +14,8 @@ import { saveApplicationStatus } from '../../api/applications';
 import { useAuth } from '../../auth/useAuth';
 import { getWorkspaceState } from '../workspace/workspaceStorage';
 import { getFollowUpAdvice } from '../workspace/intelligence';
+import { EDF_EOD_DOSSIER_ID } from '../applications/edfEodDossier';
+import { withSavedEdfOffer } from '../applications/edfSavedOffer';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'refused' | 'archived';
 
@@ -82,13 +84,16 @@ export function ShortlistPage() {
   const { token } = useAuth();
   const [savingId, setSavingId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [tab, setTab] = useState<MyJobsTab>('applications');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState<MyJobsTab>(() => searchParams.get('tab') === 'saved' ? 'saved' : 'applications');
   const [externalFormOpen, setExternalFormOpen] = useState(false);
 
-  const allOffers = data?.offers ?? [];
+  // EDF is a manually saved application; it must remain visible even when not
+  // included in the automated offer feed.
+  const allOffers = withSavedEdfOffer(data?.offers ?? []);
   const savedOffers = useMemo(
     () => sortOffers(allOffers.filter((offer) =>
-      isTargetOffer(offer) && !actions.isHidden(offer.id) &&
+      (isTargetOffer(offer) || offer.id === EDF_EOD_DOSSIER_ID) && !actions.isHidden(offer.id) &&
       actions.isSaved(offer.id, offer.shortlist) &&
       resolvedStage(offer) === null
     ), 'best'),
@@ -145,9 +150,9 @@ export function ShortlistPage() {
     if (next === 'archived' && offer.applicationStatus === 'Refus') { actions.setStage(offer.id, 'archived'); return; }
     setSavingId(offer.id);
     try {
-      await saveApplicationStatus(token, offer.id, status);
+      if (offer.id !== EDF_EOD_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
       actions.setStage(offer.id, next);
-      setNotice('Statut enregistré et synchronisé.');
+      setNotice(offer.id === EDF_EOD_DOSSIER_ID ? 'Statut EDF enregistré localement.' : 'Statut enregistré et synchronisé.');
       retry();
     } catch (error) {
       setNotice(error instanceof Error ? 'Enregistrement impossible : ' + error.message : 'Enregistrement impossible.');
@@ -160,9 +165,9 @@ export function ShortlistPage() {
     if (savingId) return;
     setSavingId(offer.id);
     try {
-      await saveApplicationStatus(token, offer.id, status);
+      if (offer.id !== EDF_EOD_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
       actions.setStage(offer.id, status === 'Entretien' || status === 'Test technique' ? 'interview' : status === 'Abandonné' ? 'archived' : status === 'Refus' ? null : 'application');
-      setNotice('Statut actualisé et enregistré.');
+      setNotice(offer.id === EDF_EOD_DOSSIER_ID ? 'Statut EDF enregistré localement.' : 'Statut actualisé et enregistré.');
       retry();
     } catch (error) {
       setNotice(error instanceof Error ? 'Modification impossible : ' + error.message : 'Modification impossible.');
@@ -184,8 +189,8 @@ export function ShortlistPage() {
     }
   }
 
-  if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
-  if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
+  if (loading && !data && tab !== 'saved') return <section className="page"><LoadingSkeleton /></section>;
+  if (error && !data && tab !== 'saved') return <section className="page"><ErrorState onRetry={retry} /></section>;
 
   const tabs: Array<[MyJobsTab, string, number]> = [
     ['saved', 'Enregistrées', savedOffers.length],
