@@ -433,8 +433,8 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
   return draft;
 }
 
-export function freshCvDraft(language: CvLanguage): CvDraft {
-  return structuredClone(language === 'FR' ? defaultCvFr : defaultCvEn);
+export function freshCvDraft(language: CvLanguage, plan: CvPlan = 'A'): CvDraft {
+  return plan === 'B' ? freshPlanBCvDraft(language) : structuredClone(language === 'FR' ? defaultCvFr : defaultCvEn);
 }
 
 function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft {
@@ -498,7 +498,7 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
   return migrated;
 }
 
-export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
+export function loadCvDraft(language: CvLanguage = 'EN', plan: CvPlan = 'A'): CvDraft {
   // Keep application drafts separate from the generic CV.
   try {
     const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null');
@@ -510,8 +510,11 @@ export function loadCvDraft(language: CvLanguage = 'EN'): CvDraft {
     }
   } catch { /* use master CV when there is no valid application dossier */ }
   try {
-    const raw = localStorage.getItem(KEY_PREFIX + language);
-    if (raw) return { ...freshCvDraft(language), ...JSON.parse(raw), language };
+    // Plan B has its own keys. Plan A stays under the original names.
+    const storageKey = KEY_PREFIX + language + (plan === 'B' ? ':B' : '');
+    const raw = localStorage.getItem(storageKey);
+    if (raw) return { ...freshCvDraft(language, plan), ...JSON.parse(raw), language, plan }; 
+    if (plan === 'B') return freshCvDraft(language, 'B');
 
     const previous = localStorage.getItem(PREVIOUS_KEY_PREFIX + language);
     if (previous) {
@@ -547,10 +550,10 @@ export function saveCvDraft(draft: CvDraft): void {
       }
     }
   } catch { /* fall back to master save */ }
-  localStorage.setItem(KEY_PREFIX + draft.language, JSON.stringify(draft));
+  localStorage.setItem(KEY_PREFIX + draft.language + (draft.plan === 'B' ? ':B' : ''), JSON.stringify(draft));
 }
 
-export function resetCvDraft(language: CvLanguage): CvDraft {
-  localStorage.removeItem(KEY_PREFIX + language);
-  return freshCvDraft(language);
+export function resetCvDraft(language: CvLanguage, plan: CvPlan = 'A'): CvDraft {
+  localStorage.removeItem(KEY_PREFIX + language + (plan === 'B' ? ':B' : ''));
+  return freshCvDraft(language, plan);
 }
