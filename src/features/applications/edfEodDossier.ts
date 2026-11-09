@@ -23,8 +23,8 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     ? 'Data Science | Prévision & modélisation | Python'
     : 'Data Science | Forecasting & Modeling | Python';
   draft.summary = fr
-    ? 'Étudiant en dernière année du MSc Control and Robotics à Centrale Nantes, parcours Data Science, Signal & Image Processing, je recherche un stage de six mois dès février 2027 pour contribuer avec Python à l’exploitation des données, à la modélisation et à la prévision de consommation électrique.'
-    : 'Final-year MSc Control and Robotics student at Centrale Nantes (Data Science, Signal & Image Processing), seeking a six-month internship from February 2027 to contribute to data processing, modeling and electricity consumption forecasting with Python.';
+    ? 'La prévision de la consommation électrique à moyen terme m’intéresse particulièrement, notamment à travers l’analyse de nouvelles données, l’optimisation des flux de traitement et le développement d’outils Python utiles aux équipes opérationnelles. Je souhaite contribuer à ces travaux d’Équilibre Offre-Demande dans le cadre d’un stage de fin d’études de six mois dès février 2027.'
+    : 'Medium-term electricity consumption forecasting interests me particularly, from analyzing new data and improving data-processing flows to building Python tools for operational teams. I would like to contribute to this supply-demand balancing work through a six-month final-year internship starting in February 2027.';
   draft.keySkills = fr
     ? 'Python · Analyse de données · Modélisation · SQL · Visualisation'
     : 'Python · Data Analysis · Modeling · SQL · Visualization';
@@ -161,7 +161,13 @@ export function buildEdfEodLetter(language: CvLanguage = 'FR'): CoverLetterDraft
 function compactExistingEdfCv(cv: CvDraft): CvDraft {
   const next = structuredClone(cv);
   const oldSummary = 'Étudiant en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite appliquer Python, l’analyse de données et la modélisation à la prévision de consommation électrique, tout en développant mes compétences auprès d’une équipe opérationnelle.';
-  if (next.summary === oldSummary) next.summary = 'Étudiant en dernière année du MSc Control and Robotics à Centrale Nantes, parcours Data Science, Signal & Image Processing, je recherche un stage de six mois dès février 2027 pour contribuer avec Python à l’exploitation des données, à la modélisation et à la prévision de consommation électrique.';
+  // Refresh previous generated EDF profiles only; keep manually edited profiles.
+  const previousGeneratedProfiles = [oldSummary, 'Étudiant en dernière année du MSc Control and Robotics à Centrale Nantes, parcours Data Science, Signal & Image Processing, je recherche un stage de six mois dès février 2027 pour contribuer avec Python à l’exploitation des données, à la modélisation et à la prévision de consommation électrique.', 'Final-year MSc Control and Robotics student at Centrale Nantes (Data Science, Signal & Image Processing), seeking a six-month internship from February 2027 to contribute to data processing, modeling and electricity consumption forecasting with Python.'];
+  if (previousGeneratedProfiles.includes(next.summary)) {
+    next.summary = next.language === 'FR'
+      ? 'La prévision de la consommation électrique à moyen terme m’intéresse particulièrement, notamment à travers l’analyse de nouvelles données, l’optimisation des flux de traitement et le développement d’outils Python utiles aux équipes opérationnelles. Je souhaite contribuer à ces travaux d’Équilibre Offre-Demande dans le cadre d’un stage de fin d’études de six mois dès février 2027.'
+      : 'Medium-term electricity consumption forecasting interests me particularly, from analyzing new data and improving data-processing flows to building Python tools for operational teams. I would like to contribute to this supply-demand balancing work through a six-month final-year internship starting in February 2027.';
+  }
   const descriptions = new Set([
     'Modèles de régression et de classification sur des données structurées.',
     'Plateforme personnelle de collecte et de suivi d’offres de stage.',
