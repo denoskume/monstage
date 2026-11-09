@@ -19,6 +19,7 @@ const curatedSavedOffers = new Set([
   'OFFRE-SAFRAN-VIBRATIONS-188517',
   'OFFRE-AIRBUS-NANTES-MAINT-10437797',
   'OFFRE-ALSTOM-RAM-531476',
+  'OFFRE-DANONE-VOLVIC-MAINT-29048',
 ]);
 
 const KEY = 'monstage:offer-actions:v1';
