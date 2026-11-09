@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -85,7 +85,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
     <section><h2>{sectionLabel(section, draft.language)}</h2>
       {draft.experience.map((item) => <div className="cv-entry cv-experience-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{renderCvBold(item.role)} — {renderCvBold(item.company)}</strong><span>{renderCvBold(item.period)}</span></div>
-        {item.location.trim() ? <div className="cv-entry__top"><span>{renderCvBold(item.location)}</span><span /></div> : null}
+        {item.location.trim() ? <div className="cv-entry__top"><span>{renderCvBold(cvExperienceLocationForDisplay(item.location))}</span><span /></div> : null}
         {cvExperienceDescription(item, draft.language).trim() ? <p className="cv-experience-description">{renderCvBold(cvExperienceDescription(item, draft.language))}</p> : null}
         {item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-experience-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
         <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
@@ -115,7 +115,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
     if (section !== first || (!draft.languages.trim() && !draft.interests.trim())) return null;
     return <section>
       <h2>{draft.language === 'FR' ? 'Langues et centres d’intérêt' : 'Languages & Interests'}</h2>
-      {draft.languages.trim() ? <p><strong>{draft.language === 'FR' ? 'Langues :' : 'Languages:'}</strong> {renderCvBold(draft.languages)}</p> : null}
+      {draft.languages.trim() ? <p>{draft.language === 'EN' ? <strong>Languages: </strong> : null}{renderCvBold(cvLanguagesForDisplay(draft.languages))}</p> : null}
       {draft.interests.trim() ? <p><strong>{draft.language === 'FR' ? 'Centres d’intérêt :' : 'Interests:'}</strong> {renderCvBold(draft.interests)}</p> : null}
     </section>;
   }
