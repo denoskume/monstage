@@ -72,10 +72,18 @@ export function isIndustrialAnalyticsMission(offer: ScopeOffer): boolean {
   return isDataAnalystMission(offer) && INDUSTRIAL_CONTEXT.test(
     normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
 }
+/** Maintenance titles are Plan B only if their verified domain carries data/BI work. */
+export function isDataDrivenMaintenanceMission(offer: ScopeOffer): boolean {
+  const title = normalizeScope(offer.title);
+  const context = normalizeScope([offer.domain, offer.specialization].filter(Boolean).join(' '));
+  return !FINANCIAL_ROLE.test(title) && !DATA_SCIENTIST_ROLE.test(title)
+    && /\b(maintenance|performance industrielle|maintenance predictive)\b/.test(title)
+    && ANALYST_ROLE.test(context);
+}
 /** Explicit Data Analyst role takes Plan B precedence even when the department mentions imaging. */
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   if (!matchingCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
-  if (isDataAnalystMission(offer)) return 'B';
+  if (isDataAnalystMission(offer) || isDataDrivenMaintenanceMission(offer)) return 'B';
   if (isVisionMission(offer)) return 'A';
   return null;
 }
