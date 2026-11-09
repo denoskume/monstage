@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
 import { sectors, allSectors, targetOffers, followUpDue, dateKey, editableStatuses } from './targets';
 const offer = (company: string, title: string, extra = {}) => ({company,title,skills:[],...extra}) as unknown as InternshipOffer;
-describe('fifteen transport groups shared by both career plans', () => {
-  it('uses exactly fifteen companies across three sectors', () => {
-    expect(sectors).toHaveLength(3);
+describe('thirty employers shared by both career plans', () => {
+  it('uses exactly thirty companies across eight sectors', () => {
+    expect(sectors).toHaveLength(8);
     expect(allSectors).toBe(sectors);
-    expect(sectors.map(s=>s.companies.length)).toEqual([5,5,5]);
-    expect(new Set(sectors.flatMap(s => s.companies.map(c => c[0]))).size).toBe(15);
+    expect(sectors.map(s=>s.companies.length)).toEqual([5,5,5,4,4,4,2,1]);
+    expect(new Set(sectors.flatMap(s => s.companies.map(c => c[0]))).size).toBe(30);
   });
   it('allows both plans for the same employer and multiple B applications', () => {
     const offers = [
@@ -23,6 +23,7 @@ describe('fifteen transport groups shared by both career plans', () => {
   it('separates Siemens divisions and excludes unrelated roles', () => {
     const offers = [offer('Siemens Healthineers','Medical imaging'),offer('Siemens Mobility','Computer Vision'),offer('Alstom','Mechanical design'),offer('Alstom','Traitement d’images')];
     expect(targetOffers(offers,sectors[1]).map(o=>o.company)).toEqual(['Siemens Mobility','Alstom']);
+    expect(targetOffers(offers,sectors[4]).map(o=>o.company)).toEqual(['Siemens Healthineers']);
   });
   it('matches subsidiaries without expanding the company roster', () => {
     expect(targetOffers([offer('Safran.AI','Computer Vision'),offer('Air France Industries','Data Analyst')],sectors[0],'A')).toHaveLength(1);
