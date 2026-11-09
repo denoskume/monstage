@@ -250,7 +250,13 @@ var TARGET_COMPANY_GROUPS_ = [
   ["Alstom", "alstom"], ["SNCF", "sncf"], ["RATP", "ratp"],
   ["Siemens Mobility", "siemens mobility"], ["Hitachi Rail", "hitachi rail"],
   ["Renault Group", "renault", "ampere"], ["Stellantis", "stellantis", "psa"],
-  ["Valeo", "valeo"], ["FORVIA HELLA", "forvia", "hella", "faurecia"], ["Michelin", "michelin"]
+  ["Valeo", "valeo"], ["FORVIA HELLA", "forvia", "hella", "faurecia"], ["Michelin", "michelin"],
+  ["Danone", "danone", "volvic"], ["Nestlé", "nestle", "nestle france"], ["Lactalis", "lactalis"], ["Bel Group", "bel group", "groupe bel"],
+  ["GE HealthCare", "ge healthcare", "gehealthcare"], ["EssilorLuxottica", "essilorluxottica", "essilor", "luxottica"],
+  ["Sanofi", "sanofi"], ["Siemens Healthineers", "siemens healthineers"],
+  ["Schneider Electric", "schneider electric"], ["Saint-Gobain", "saint gobain"],
+  ["Veolia", "veolia"], ["Air Liquide", "air liquide"],
+  ["EDF", "edf"], ["ENGIE", "engie", "grdf"], ["L’Oréal", "l oreal", "loreal"]
 ];
 function scopeNorm_(value) {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
