@@ -1117,7 +1117,19 @@ h1, h2, h3 { color: var(--text); }
 
 /* CV Studio */
 .cv-studio-page { max-width: 1500px; margin: 0 auto; }
-.cv-studio-header { align-items: flex-start; gap: 24px; }
+.cv-studio-header { display: block; width: 100%; }
+.cv-studio-header > div:first-child { position: absolute; }
+.cv-studio-header .cv-studio-actions { justify-content: flex-start; flex-wrap: nowrap; width: 100%; }
+.cv-studio-header .cv-header-selectors { margin-right: 8px; flex-wrap: nowrap; flex-shrink: 0; }
+.cv-studio-header .cv-header-select select { width: 170px; }
+.cv-studio-header .cv-header-select:last-child select { width: 133px; }
+.cv-studio-header .cv-studio-actions > .button,
+.cv-studio-header .cv-studio-actions > .cl-language-toggle { flex-shrink: 0; }
+@media (max-width: 1150px) {
+  .cv-studio-header .cv-studio-actions { flex-wrap: wrap; }
+  .cv-studio-header .cv-header-selectors { flex-wrap: wrap; }
+}
+
 .cv-studio-header p { margin: 6px 0 0; color: var(--muted); }
 .cv-studio-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: flex-end; width: 100%; }
 .cv-header-selectors { display: flex; gap: 8px; align-items: center; margin-right: auto; flex-wrap: wrap; }
