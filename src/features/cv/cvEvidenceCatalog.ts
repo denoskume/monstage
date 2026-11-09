@@ -5,10 +5,14 @@ import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 // during offer tailoring. Course names mirror the candidate's LinkedIn records
 // supplied on 9 November 2026; public projects link to their actual repositories.
 export interface CourseGroup { title: string; courses: string[] }
-export interface SchoolCurriculum { educationId: string; groups: CourseGroup[] }
+export interface SchoolCurriculum { educationId: string; description: Record<CvLanguage,string>; groups: CourseGroup[] }
 export const curricula: SchoolCurriculum[] = [
   {
     educationId: 'ecn',
+    description: {
+      FR: 'Formation aux méthodes avancées d’analyse de données, machine learning et traitement du signal et de l’image, associant théorie et travaux pratiques.',
+      EN: 'Advanced methods in data analysis, machine learning and signal & image processing, combining theoretical foundations with practical applications.',
+    },
     groups: [
       { title: 'Data Science & Machine Learning', courses: [
         'Machine Learning', 'Stochastic Methods', 'Artificial Intelligence',
@@ -27,6 +31,10 @@ export const curricula: SchoolCurriculum[] = [
   },
   {
     educationId: 'kju',
+    description: {
+      FR: 'Double cursus informatique et électronique, combinant bases théoriques et applications pratiques en programmation et systèmes numériques.',
+      EN: 'Dual-major program combining computer science and electronics with theoretical foundations and practical work in programming and digital systems.',
+    },
     groups: [
       { title: 'Computer Science & Programming', courses: [
         'Data Structures', 'Computer Graphics', 'Internet Technology',
@@ -56,7 +64,6 @@ export const certificateCatalog: EvidenceCertification[] = [
     title: 'Advanced Data Analytics',
     issuer: 'Google',
     date: 'Déc. 2024',
-    credentialId: '5ZOKXCS6B7RR',
     category: 'certificate',
     evidence: 'Capture LinkedIn fournie le 9 novembre 2026',
     notes: 'Statistiques, Python, régression et machine learning ; ne pas confondre avec Google Data Analytics.',
@@ -66,7 +73,6 @@ export const certificateCatalog: EvidenceCertification[] = [
     title: 'Data Scientist Master\'s Program',
     issuer: 'Simplilearn',
     date: 'Août 2025',
-    credentialId: '158352542',
     category: 'certificate',
     evidence: 'Capture LinkedIn fournie le 9 novembre 2026',
     notes: 'Formation annoncée de 11 mois. Le curriculum officiel comprend notamment Python, SQL et machine learning.',
