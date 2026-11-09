@@ -1,7 +1,7 @@
 import type { InternshipOffer } from '../../api/contract';
 import { loadCvDraft, type CvDraft, type CvLanguage } from '../cv/cvStorage';
 import { loadCoverLetter, type CoverLetterDraft } from '../cl/clStorage';
-import { publicProjectCatalog } from './publicProjectCatalog';
+import { cvPresets, cvProjectLibrary, selectedCertifications } from '../cv/cvEvidenceCatalog';
 
 const normalized = (value: string) => value.toLocaleLowerCase('fr-FR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -116,9 +116,9 @@ export function projectSelectionForOffer(offer: InternshipOffer, language: CvLan
   if (isDanoneVolvicMaintenance(offer)) return danoneMaintenanceProjects(language);
   if (isAlstomReqAi(offer)) return alstomReqProjects(language);
   const current = loadCvDraft(language).projects;
-  const verifiedIds = new Set(publicProjectCatalog.map(entry => entry.id));
+  const verifiedIds = new Set(cvProjectLibrary.map(entry => entry.id));
   const profiles = [
-    ...publicProjectCatalog.map(entry => ({ project: entry.cv[language], tags: entry.tags, url: entry.url })),
+    ...cvProjectLibrary.map(entry => ({ project: entry.cv[language], tags: entry.tags, url: entry.sourceUrl ?? '' })),
     ...current.filter(project => !verifiedIds.has(project.id) && project.bullets.filter(Boolean).length >= 4).map(project => ({
       project, tags: normalized([project.name, ...project.bullets].join(' ')).split(/[^a-z0-9]+/).filter(x => x.length > 3),
       url: '',
@@ -154,7 +154,22 @@ export function projectSelectionForOffer(offer: InternshipOffer, language: CvLan
 }
 
 export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): CvDraft {
-  const base = structuredClone(loadCvDraft(language));
+  const jobText = normalized([offer.title, offer.specialization, offer.domain, ...offer.skills].filter(Boolean).join(' '));
+  const dataOrForecasting = /data analyst|data analysis|analyse de donnees|prevision|forecast|modelisation|business intelligence|data engineer|statistique|sql|predictive/.test(jobText);
+  const selectedPlan = dataOrForecasting ? 'B' : 'A';
+  const base = structuredClone(loadCvDraft(language, selectedPlan));
+  const preset = cvPresets[selectedPlan];
+  base.education = base.education.map(e => ({
+    ...e,
+    keyCourses: e.id === 'ecn' ? preset.ecn.join(' · ')
+      : e.id === 'kju' ? preset.kju.join(' · ') : e.keyCourses,
+  }));
+  base.certifications = selectedCertifications(preset.certificates);
+  if (!base.sectionOrder.includes('certifications')) {
+    const ix = base.sectionOrder.indexOf('languages');
+    base.sectionOrder = [...base.sectionOrder.slice(0, ix < 0 ? base.sectionOrder.length : ix),
+      'certifications', ...base.sectionOrder.slice(ix < 0 ? base.sectionOrder.length : ix)];
+  }
   if (isAlstomVision(offer)) {
     base.headline = 'Computer Vision | Image Processing | Python | Software Development';
     base.summary = language === 'FR'
