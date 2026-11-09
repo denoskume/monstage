@@ -515,6 +515,30 @@ function migrateCvDraft(language: CvLanguage, saved: Partial<CvDraft>): CvDraft 
   return migrated;
 }
 
+// Apply narrowly scoped corrections to the Plan B master only.
+// Keep user-authored text, project metrics and all Plan A records unchanged.
+export function normalizePlanBDraft(draft: CvDraft): CvDraft {
+  if (draft.plan !== 'B') return draft;
+  const projects = draft.projects.map(project => {
+    if (project.id === 'nova' && /^mars\s*[-–]\s*jun\s+2025$/i.test(project.period.trim())) {
+      // No verified date for this simulated exercise.
+      return { ...project, period: '' };
+    }
+    if (project.id === 'monstage' && /^jul\s*[-–]\s*oct\s+2026$/i.test(project.period.trim())) {
+      return { ...project, period: '2026' };
+    }
+    return project;
+  });
+  const skills = draft.skills.split('\n').map(line => {
+    const category = line.split(':')[0].replace(/\*\*/g, '').trim().toLowerCase();
+    if (category !== 'bases de données' && category !== 'databases') return line;
+    // Fix the mistaken MySQL substitution in the exact database-skills row.
+    // Keep any other skills explicitly added by the user.
+    return line.replace(/\bMySQL\s*,\s*SQL Server\s*\(SSMS\)/i, 'SQL, SQL Server (SSMS)');
+  }).join('\n');
+  return { ...draft, projects, skills };
+}
+
 export function loadCvDraft(language: CvLanguage = 'EN', plan: CvPlan = 'A'): CvDraft {
   // Keep application drafts separate from the generic CV.
   try {
@@ -530,7 +554,7 @@ export function loadCvDraft(language: CvLanguage = 'EN', plan: CvPlan = 'A'): Cv
     // Plan B has its own keys. Plan A stays under the original names.
     const storageKey = KEY_PREFIX + language + (plan === 'B' ? ':B' : '');
     const raw = localStorage.getItem(storageKey);
-    if (raw) return { ...freshCvDraft(language, plan), ...JSON.parse(raw), language, plan }; 
+    if (raw) return normalizePlanBDraft({ ...freshCvDraft(language, plan), ...JSON.parse(raw), language, plan }); 
     if (plan === 'B') return freshCvDraft(language, 'B');
 
     const previous = localStorage.getItem(PREVIOUS_KEY_PREFIX + language);
