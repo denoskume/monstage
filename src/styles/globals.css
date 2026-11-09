@@ -1148,6 +1148,27 @@ h1, h2, h3 { color: var(--text); }
 .cv-preview section h2 { margin: 0 0 7px; padding-bottom: 3px; border-bottom: 1px solid #444; font-size: 12px; text-transform: uppercase; letter-spacing: .7px; }
 .cv-preview p { margin: 3px 0; font-size: 10.5px; }
 .cv-entry { margin: 0 0 10px; font-size: 10.5px; break-inside: avoid; }
+/* ATS-compatible CV templates: same reading order, no columns, graphics or icons. */
+.cv-template-chooser { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 14px; margin: 0 0 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.cv-template-chooser__label { font-size: .86rem; font-weight: 700; margin-right: 6px; }
+.cv-template-chooser__choice { padding: 7px 13px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: var(--surface); cursor: pointer; font-size: .84rem; font-weight: 600; }
+.cv-template-chooser__choice.is-active { border-color: #31557d; background: #e9f0f7; color: #203e62; }
+.cv-template-chooser__hint { font-size: .76rem; color: var(--muted); margin-left: auto; }
+.cv-preview--modern { padding: 34px 44px; line-height: 1.29; }
+.cv-preview--modern .cv-preview__header { text-align: left; border-bottom: 1.5px solid #234c70; padding-bottom: 10px; margin-bottom: 9px; }
+.cv-preview--modern .cv-preview__header h1 { color: #234c70; font-size: 26px; letter-spacing: .35px; }
+.cv-preview--modern .cv-preview__headline { margin: 2px 0; }
+.cv-preview--modern section { margin-top: 11px; }
+.cv-preview--modern section h2 { color: #234c70; border-bottom-color: #b7c8d8; font-size: 11px; letter-spacing: 1px; }
+.cv-preview--modern .cv-entry { margin-bottom: 8px; }
+.cv-preview--minimal { padding: 32px 44px; line-height: 1.27; }
+.cv-preview--minimal .cv-preview__header { text-align: left; border-bottom: 0; padding-bottom: 5px; margin-bottom: 9px; }
+.cv-preview--minimal .cv-preview__header h1 { font-size: 24px; letter-spacing: 0; }
+.cv-preview--minimal .cv-preview__headline { margin: 2px 0; }
+.cv-preview--minimal section { margin-top: 10px; }
+.cv-preview--minimal section h2 { color: #111; border-bottom-color: #999; font-size: 11px; letter-spacing: .3px; }
+.cv-preview--minimal .cv-entry { margin-bottom: 7px; }
+@media print { .cv-template-chooser { display: none !important; } }
 /* Keep education sections easy to scan without modifying saved CV content. */
 .cv-preview .cv-education-entry { margin-bottom: 15px; }
 .cv-preview .cv-education-entry + .cv-education-entry { margin-top: 12px; }
