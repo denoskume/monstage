@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, freshPlanBCvDraft, cvPlanBSkills, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, freshPlanBCvDraft, normalizePlanBDraft, cvPlanBSkills, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -223,5 +223,31 @@ describe('Plan B skills without repeated categories', () => {
     ].join('\n');
     expect(cvSkillsForDisplay(old, 'FR')).toEqual(cvPlanBSkills('FR'));
     expect(old).toContain('Outils & reporting');
+  });
+});
+
+describe('Plan B PDF review corrections', () => {
+  it('normalizes the specific incorrect periods and database row without modifying Plan A', async () => {
+    const original = freshPlanBCvDraft('FR');
+    const saved = {
+      ...original,
+      projects: original.projects.map(item => ({...item, period: item.id === 'nova' ? 'mars-Jun 2025' : 'Jul-Oct 2026'})),
+      skills: original.skills.replace('SQL, SQL Server (SSMS)', 'MySQL, SQL Server (SSMS)'),
+    };
+    const result = normalizePlanBDraft(saved);
+    expect(result.projects.map(item => item.period)).toEqual(['', '2026']);
+    expect(result.skills).toContain('**Bases de données :** SQL, SQL Server (SSMS), jointures, agrégations');
+    expect(saved.projects[0].period).toBe('mars-Jun 2025');
+    expect(saved.skills).toContain('MySQL');
+    const pdf = await PDFDocument.load(await buildCvPdfBytes(result));
+    expect(pdf.getPageCount()).toBe(1);
+    const a = { ...saved, plan: 'A' as const };
+    expect(normalizePlanBDraft(a)).toBe(a);
+  });
+  it('does not erase dates entered in a different valid format', () => {
+    const current = freshPlanBCvDraft('FR');
+    current.projects[0].period = '2026';
+    current.projects[1].period = '2026 – en cours';
+    expect(normalizePlanBDraft(current).projects.map(item => item.period)).toEqual(['2026', '2026 – en cours']);
   });
 });
