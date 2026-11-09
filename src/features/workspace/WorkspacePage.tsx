@@ -109,6 +109,13 @@ function WorkspaceCard({ offer, state, onUpdate }: {
         <ApplicationDocuments offerId={offer.id} company={offer.company}/>
       </section>
 
+      {['Entretien', 'Test technique'].includes(offer.applicationStatus ?? '') ? <section className="workspace-section">
+        <div className="workspace-section__heading"><h3>Préparer l’entretien</h3></div>
+        <p className="workspace-note">Séances guidées, questions probables, réponses à personnaliser, répétition et simulation. La progression est conservée pour cette candidature.</p>
+        <div className="workspace-actions"><Link className="button button--primary" to={`/interview-prep?offer=${encodeURIComponent(offer.id)}`}>Ouvrir mes séances de préparation</Link></div>
+        <label className="workspace-check"><input type="checkbox" checked={state.interviewPrepReady} onChange={event => onUpdate({ interviewPrepReady: event.target.checked })}/><span>Préparation terminée</span></label>
+      </section> : null}
+
       <section className="workspace-section">
         <div className="workspace-section__heading"><h3>3. Postuler et suivre</h3></div>
         <p className="workspace-note">Le clic sur le site de l'employeur n'enregistre pas une candidature envoyée. Confirme l'envoi uniquement après avoir réellement postulé.</p>
