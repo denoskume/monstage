@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, freshPlanBCvDraft, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, freshPlanBCvDraft, cvPlanBSkills, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -203,5 +203,25 @@ describe('Separate Plan B Data Analyst CV', () => {
     expect(draft.summary).toContain('February 2027');
     expect(draft.experience[0].bullets).toHaveLength(3);
     expect((await PDFDocument.load(await buildCvPdfBytes(draft))).getPageCount()).toBe(1);
+  });
+});
+
+describe('Plan B skills without repeated categories', () => {
+  it('shows four distinct sections for new French and English drafts', () => {
+    for (const language of ['FR', 'EN'] as const) {
+      const draft = freshPlanBCvDraft(language);
+      expect(cvSkillsForDisplay(draft.skills, language)).toEqual(cvPlanBSkills(language));
+      expect(cvPlanBSkills(language)).toHaveLength(4);
+    }
+  });
+  it('upgrades the original saved Plan B skills at display time without overwriting saved data', () => {
+    const old = [
+      '**Programmation & analyse :** Python, Pandas, NumPy, nettoyage de données, EDA',
+      '**Bases de données :** SQL, SQL Server, SSMS, jointures, agrégations',
+      '**Business Intelligence :** Power BI, DAX, tableaux de bord interactifs',
+      '**Outils & reporting :** KPI, Matplotlib, Jupyter Notebook, Git',
+    ].join('\n');
+    expect(cvSkillsForDisplay(old, 'FR')).toEqual(cvPlanBSkills('FR'));
+    expect(old).toContain('Outils & reporting');
   });
 });
