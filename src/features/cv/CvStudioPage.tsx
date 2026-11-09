@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvTemplateOptions, type CvTemplate } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvTemplateOptions, type CvTemplate } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -107,7 +107,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
 
   if (section === 'skills') {
     if (!draft.skills.trim()) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2>{draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => <p key={index}>{renderCvBold(line)}</p>)}</section>;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2>{cvSkillsForDisplay(draft.skills, draft.language).map((line, index) => <p key={index}>{renderCvBold(line)}</p>)}</section>;
   }
 
   if (section === 'languages' || section === 'interests') {
