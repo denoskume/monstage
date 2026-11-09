@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { StagesPage } from '../features/training/StagesPage';
 const DataStagePage = lazy(() => import('../features/training/dataAnalysis/DataStagePage'));
 import { TrainingPage } from '../features/training/TrainingPage';
+const InterviewPrepPage = lazy(() => import('../features/interviews/InterviewPrepPage').then(module => ({ default: module.InterviewPrepPage })));
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { ProspectionPage } from '../features/prospection/ProspectionPage';
 import { OffersPage } from '../features/offers/OffersPage';
@@ -27,6 +28,7 @@ export function AppRoutes() {
         <Route path="/offers" element={<OffersPage />} />
         <Route path="/prospection" element={<ProspectionPage />} />
         <Route path="/shortlist" element={<ShortlistPage />} />
+        <Route path="/interview-prep" element={<Suspense fallback={<p role="status">Chargement des séances…</p>}><InterviewPrepPage /></Suspense>} />
         <Route path="/applications" element={<Navigate to="/shortlist" replace />} />
         <Route path="/messages" element={<MessagesPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
