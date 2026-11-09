@@ -1,5 +1,5 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
-import { CV_ACADEMIC_HEADLINE, cvProjectDescription, type CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -338,9 +338,14 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       drawSectionTitle(draft.language === 'FR' ? 'Expérience' : 'Experience');
       for (const item of draft.experience) {
         drawEntryHeader(item.role + ' — ' + item.company, item.period);
-        if (item.location) drawLines(item.location, 9.2);
+        if (item.location.trim()) drawLines(item.location, compact ? 8.6 : 9.2, regular, 0, compact ? 10.5 : 12);
+        const description = cvExperienceDescription(item, draft.language).trim();
+        if (description) drawLines(description, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
+        if (item.bullets.some((value) => value.trim())) {
+          drawLines(draft.language === 'FR' ? '**Missions :**' : '**Tasks:**', compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
+        }
         for (const bullet of item.bullets.filter((value) => value.trim())) drawExperienceBullet(bullet.trim());
-        y -= 4;
+        y -= compact ? 3 : 5;
       }
     }
 
