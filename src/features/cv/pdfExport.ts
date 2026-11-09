@@ -360,7 +360,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         drawEntryHeader(item.name, item.period || '');
         const description = cvProjectDescription(item, draft.language).trim();
         if (description) drawLines(description, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
-        if (item.bullets.some((value) => value.trim())) {
+        if (draft.showMissionLabels !== false && item.bullets.some((value) => value.trim())) {
           drawLines(draft.language === 'FR' ? '**Missions :**' : '**Tasks:**', compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
         }
         for (const bullet of item.bullets.filter((value) => value.trim())) drawBullet(bullet.trim());
@@ -375,7 +375,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         if (item.location.trim()) drawLines(cvExperienceLocationForDisplay(item.location), compact ? 8.6 : 9.2, regular, 0, compact ? 10.5 : 12);
         const description = cvExperienceDescription(item, draft.language).trim();
         if (description) drawLines(description, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
-        if (item.bullets.some((value) => value.trim())) {
+        if (draft.showMissionLabels !== false && item.bullets.some((value) => value.trim())) {
           drawLines(draft.language === 'FR' ? '**Missions :**' : '**Tasks:**', compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
         }
         for (const bullet of item.bullets.filter((value) => value.trim())) drawExperienceBullet(bullet.trim());
