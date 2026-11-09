@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { defaultCvFr } from './cvStorage';
+import { cvEducationDisplay, defaultCvFr } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -56,5 +56,25 @@ describe('Single-line education bullet PDF export', () => {
     draft.skills = 'Python & données : Python, NumPy, pandas, SciPy, Jupyter, Matplotlib\nMachine Learning : scikit-learn, PyTorch, classification, évaluation de modèles, analyse d’erreurs\nComputer Vision & signal : OpenCV, scikit-image, segmentation, filtrage spatial et fréquentiel\nOutils : Git, GitHub, Linux, VS Code';
     draft.interests = 'Vision par ordinateur et imagerie industrielle | Cuisine';
     expect((await PDFDocument.load(await buildCvPdfBytes(draft))).getPageCount()).toBe(1);
+  });
+});
+
+describe('Education display parity between preview and PDF', () => {
+  it('keeps Master location and removes only duplicated Bachelor city in the title', () => {
+    const master = cvEducationDisplay({
+      id: 'ecn', school: 'Master of Science (MSc) - Control and Robotics, Centrale Nantes',
+      degree: 'Parcours: Data Science, Signal & Image Processing', location: 'Nantes, France',
+      period: '2025–2027', details: '',
+    });
+    expect(master.school).toContain('Centrale Nantes');
+    expect(master.location).toBe('Nantes, France');
+
+    const bachelor = cvEducationDisplay({
+      id: 'kju', school: 'Bachelor of Science (BSc) - Computer Science & Electronics, Kristu Jayanti University. Bengaluru, Inde',
+      degree: 'Parcours: Informatique et Électronique', location: 'Bangalore, Inde',
+      period: '2021–2025', details: '',
+    });
+    expect(bachelor.school).toBe('Bachelor of Science (BSc) - Computer Science & Electronics, Kristu Jayanti University');
+    expect(bachelor.location).toBe('Bengaluru, Inde');
   });
 });
