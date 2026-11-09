@@ -6,10 +6,15 @@ import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import type { CvLanguage } from '../cv/cvStorage';
 import { useAuth } from '../../auth/useAuth';
 import { saveApplicationStatus } from '../../api/applications';
+import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv, buildEdfEodLetter } from '../applications/edfEodDossier';
+import { edfSavedOffer } from '../applications/edfSavedOffer';
+import { useOfferActions } from '../offers/offerActions';
+import { saveApplicationDossier } from '../applications/applicationDossiers';
 
 export function StudioPage() {
   const [params] = useSearchParams();
   const { token } = useAuth();
+  const actions = useOfferActions();
   const [statusBusy, setStatusBusy] = useState(false);
   const [statusNotice, setStatusNotice] = useState('');
   const offerId = params.get('offer');
@@ -17,13 +22,16 @@ export function StudioPage() {
   const [language, setLanguage] = useState<CvLanguage>('FR');
   const [preparedId, setPreparedId] = useState<string | null>(null);
   const [chosenOfferId, setChosenOfferId] = useState('');
-  const offer = (offerId || chosenOfferId) ? data?.offers.find(item => item.id === (offerId || chosenOfferId)) : undefined;
+  const activeOfferId = offerId || chosenOfferId;
+  const offer = activeOfferId === EDF_EOD_DOSSIER_ID ? edfSavedOffer
+    : activeOfferId ? data?.offers.find(item => item.id === activeOfferId) : undefined;
   const selectedOfferId = offerId || chosenOfferId;
 
   // Each offer and language has its own saved, reviewable dossier.
   useEffect(() => {
     if (!offer) return;
-    prepareApplicationDossier(offer, language);
+    if (offer.id === EDF_EOD_DOSSIER_ID) prepareEdfEodDossier(language);
+    else prepareApplicationDossier(offer, language);
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title,
       language, state: 'awaiting_review', documentsVersion: 5,
@@ -35,7 +43,10 @@ export function StudioPage() {
   function prepare() {
     if (!offer) return;
     // Explicit regeneration only: preserve existing edited dossiers on normal navigation.
-    prepareApplicationDossier(offer, language, true);
+    if (offer.id === EDF_EOD_DOSSIER_ID) {
+      const dossier = prepareEdfEodDossier(language);
+      saveApplicationDossier({ ...dossier, cv: buildEdfEodCv(language), letter: buildEdfEodLetter(language) });
+    } else prepareApplicationDossier(offer, language, true);
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title,
       language, state: 'awaiting_review', documentsVersion: 5,
@@ -52,9 +63,14 @@ export function StudioPage() {
     setStatusBusy(true);
     setStatusNotice('');
     try {
-      await saveApplicationStatus(token, offer.id, 'Candidature envoyée');
-      retry();
-      setStatusNotice('Candidature envoyée enregistrée dans la base. Consultez « Mes offres, rubrique Envoyées » pour le suivi.');
+      if (offer.id === EDF_EOD_DOSSIER_ID) {
+        actions.setStage(offer.id, 'application');
+        setStatusNotice('Candidature EDF marquée envoyée dans le suivi local de MonStage.');
+      } else {
+        await saveApplicationStatus(token, offer.id, 'Candidature envoyée');
+        retry();
+        setStatusNotice('Candidature envoyée enregistrée dans la base. Consultez « Mes offres, rubrique Envoyées » pour le suivi.');
+      }
     } catch (error) {
       setStatusNotice(error instanceof Error ? 'Statut non enregistré : ' + error.message : 'Statut non enregistré.');
     } finally { setStatusBusy(false); }
