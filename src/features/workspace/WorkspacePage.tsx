@@ -10,6 +10,8 @@ import { LoadingSkeleton } from '../../components/LoadingSkeleton';
 import { useOffers } from '../../hooks/useOffers';
 import { displayValue } from '../../i18n/display';
 import { getFollowUpAdvice } from './intelligence';
+import { EDF_EOD_DOSSIER_ID } from '../applications/edfEodDossier';
+import { edfSavedOffer } from '../applications/edfSavedOffer';
 import {
   getWorkspaceState,
   loadWorkspace,
@@ -129,10 +131,10 @@ export function WorkspacePage() {
   const selectedId = searchParams.get('offer');
   const [store, setStore] = useState<WorkspaceStore>(() => loadWorkspace());
 
-  if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
-  if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
+  if (loading && !data && selectedId !== EDF_EOD_DOSSIER_ID) return <section className="page"><LoadingSkeleton /></section>;
+  if (error && !data && selectedId !== EDF_EOD_DOSSIER_ID) return <section className="page"><ErrorState onRetry={retry} /></section>;
 
-  const offer = selectedId ? data?.offers.find(item => item.id === selectedId) : undefined;
+  const offer = selectedId === EDF_EOD_DOSSIER_ID ? edfSavedOffer : selectedId ? data?.offers.find(item => item.id === selectedId) : undefined;
   return (
     <section className="page workspace-page">
       <div className="page-header" style={{ maxWidth: 1080, margin: '0 auto 20px' }}>
