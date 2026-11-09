@@ -235,8 +235,9 @@ describe('Plan B PDF review corrections', () => {
       skills: original.skills.replace('SQL, SQL Server (SSMS)', 'MySQL, SQL Server (SSMS)'),
     };
     const result = normalizePlanBDraft(saved);
-    expect(result.projects.map(item => item.period)).toEqual(['', '2026']);
+    expect(result.projects.map(item => item.period)).toEqual(['mars–juin 2025', 'juin–octobre 2026']);
     expect(result.skills).toContain('**Bases de données :** SQL, SQL Server (SSMS), jointures, agrégations');
+    expect(original.projects.map(item => item.period)).toEqual(['mars–juin 2025', 'juin–octobre 2026']);
     expect(saved.projects[0].period).toBe('mars-Jun 2025');
     expect(saved.skills).toContain('MySQL');
     const pdf = await PDFDocument.load(await buildCvPdfBytes(result));
