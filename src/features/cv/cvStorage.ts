@@ -95,8 +95,8 @@ export interface CvLeadership {
 // Merge only duplicate tool rows; keep every distinct skill and its category.
 // This is a display helper, so previously saved CV drafts are never overwritten.
 export function cvSkillsForDisplay(skills: string, language: CvLanguage): string[] {
-  const lines = skills.split('\\n').map(line => line.trim()).filter(Boolean);
-  const toolsLabels = /^(?:\\*\\*)?(?:Tools\\s*&\\s*Visualization|Outils(?:\\s*&\\s*visualisation)?)(?:\\*\\*)?\\s*:/i;
+  const lines = skills.split('\n').map(line => line.trim()).filter(Boolean);
+  const toolsLabels = /^(?:\*\*)?(?:Tools\s*&\s*Visualization|Outils(?:\s*&\s*visualisation)?)(?:\*\*)?\s*:/i;
   const toolRows = lines.filter(line => toolsLabels.test(line));
   if (toolRows.length < 2) return lines;
 
