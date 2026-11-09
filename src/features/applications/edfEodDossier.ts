@@ -53,6 +53,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
         'Préparé les données et constitué des jeux d’entraînement et de test séparés par patient.',
         'Développé et comparé des modèles de prédiction de coûts et de détection des coûts élevés avec scikit-learn.',
         'Évalué les résultats avec MAE, RMSE, R² et PR-AUC ; obtenu R² = 0,926 sur le test de régression.',
+        'Comparé les résultats sur les jeux de test pour vérifier la généralisation des modèles.',
       ],
     },
     {
@@ -64,6 +65,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
         'Centralisé des données issues de plusieurs sources dans un outil de suivi structuré.',
         'Développé des filtres multicritères et des contrôles pour améliorer la cohérence des informations.',
         'Automatisé le suivi des candidatures et la préparation de documents grâce à React/TypeScript et Google Sheets.',
+        'Ajouté des statuts et des vues de suivi pour faciliter la priorisation des offres.',
       ],
     },
   ] : [
@@ -74,6 +76,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
         'Prepared data with patient-separated training and test sets.',
         'Built and compared cost regression and high-cost classification models using scikit-learn.',
         'Evaluated MAE, RMSE, R² and PR-AUC; obtained R² = 0.926 on the regression test set.',
+        'Compared held-out test results to assess model generalization.',
       ],
     },
     {
@@ -83,6 +86,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
         'Centralized multi-source data in a structured tracking application.',
         'Implemented multi-criteria filtering and data consistency checks.',
         'Automated application tracking and document preparation with React/TypeScript and Google Sheets.',
+        'Added application statuses and monitoring views to help prioritize offers.',
       ],
     },
   ];
@@ -94,7 +98,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
       ...structuredClone(item),
       period: item.id === 'rws' ? 'Août 2026' : item.period,
       description: '',
-      bullets: item.bullets.slice(0, 3),
+      bullets: item.bullets.slice(0, 4),
     }));
   } else {
     draft.experience = reference.experience.map(item => ({
@@ -103,10 +107,12 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
         'Cleaned and structured datasets using Python and pandas.',
         'Performed exploratory analysis to identify trends and anomalies.',
         'Created visualizations and clear reports to communicate findings.',
+        'Summarized results for interpretation and decision-making.',
       ] : [
         'Evaluated model responses using consistent quality criteria.',
         'Identified errors and recurring limitations across outputs.',
         'Documented judgments with concise, evidence-based explanations.',
+        'Applied consistent assessment criteria for reproducible evaluations.',
       ],
       period: item.id === 'rws' ? 'Aug 2026' : item.period,
       description: '',
@@ -164,8 +170,30 @@ function compactExistingEdfCv(cv: CvDraft): CvDraft {
     'Data preparation, exploratory analysis and visualization.',
     'Structured evaluation of AI model outputs.',
   ]);
-  next.projects = next.projects.map(p => descriptions.has(p.description ?? '') ? { ...p, description: '' } : p);
-  next.experience = next.experience.map(e => descriptions.has(e.description ?? '') ? { ...e, description: '' } : e);
+  next.projects = next.projects.map(p => {
+    const fourth = next.language === 'FR'
+      ? p.id === 'insurance' ? 'Comparé les résultats sur les jeux de test pour vérifier la généralisation des modèles.'
+        : p.id === 'monstage' ? 'Ajouté des statuts et des vues de suivi pour faciliter la priorisation des offres.' : null
+      : p.id === 'insurance' ? 'Compared held-out test results to assess model generalization.'
+        : p.id === 'monstage' ? 'Added application statuses and monitoring views to help prioritize offers.' : null;
+    return {
+      ...p,
+      description: descriptions.has(p.description ?? '') ? '' : p.description,
+      bullets: fourth && p.bullets.length === 3 ? [...p.bullets, fourth] : p.bullets,
+    };
+  });
+  next.experience = next.experience.map(e => {
+    const fourth = next.language === 'FR'
+      ? e.id === 'unified' ? 'Synthétisé les analyses pour faciliter leur interprétation et la prise de décision.'
+        : e.id === 'rws' ? 'Appliqué des critères constants pour maintenir des évaluations reproductibles.' : null
+      : e.id === 'unified' ? 'Summarized results for interpretation and decision-making.'
+        : e.id === 'rws' ? 'Applied consistent assessment criteria for reproducible evaluations.' : null;
+    return {
+      ...e,
+      description: descriptions.has(e.description ?? '') ? '' : e.description,
+      bullets: fourth && e.bullets.length === 3 ? [...e.bullets, fourth] : e.bullets,
+    };
+  });
   next.education = next.education.map(e => e.id === 'kju' && /^(Bases en programmation Python, systèmes de bases de données, algorithmique et développement logiciel\\.|Foundations in Python, database systems, algorithms and software development\\.)$/.test(e.details) ? { ...e, details: '' } : e);
   if (next.skills === '**Programmation & données :** Python, pandas, NumPy, SQL (bases)\n**Analyse & modélisation :** statistiques, régression, évaluation de modèles\n**Machine Learning :** scikit-learn, PyTorch\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux') {
     next.skills = '**Python & données :** Python, pandas, NumPy, SQL (bases)\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch';
