@@ -1,5 +1,5 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
-import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, type CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -308,17 +308,12 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         // Air between qualifications, and a smaller gap before programme details.
         // Preserve a compact one-page layout for longer targeted CVs.
         if (index > 0) y -= compact ? 8 : 11;
-        drawEducationHeader(item.school, item.period);
-        // Some records already contain the complete diploma in the first line.
-        // Never reserve a second line for an absent degree or location.
-        if (item.degree.trim() || item.location.trim()) {
-          // Do not print the institution city twice when it already appears
-          // in the diploma header. Keep the Bachelor programme ("Parcours").
-          const name = normalizeCvPdfText(item.school).toLowerCase();
-          const location = normalizeCvPdfText(item.location.trim());
-          const duplicateLocation = location && (name.includes(location.toLowerCase())
-            || name.includes(location.split(',')[0].trim().toLowerCase()));
-          if (item.degree.trim() || !duplicateLocation) drawEntryHeader(item.degree, duplicateLocation ? '' : item.location, regular);
+        const educationDisplay = cvEducationDisplay(item);
+        drawEducationHeader(educationDisplay.school, item.period);
+        // Keep city/country right-aligned beside Parcours in both preview and PDF.
+        // In particular, "Centrale Nantes" does not mean "Nantes, France" is redundant.
+        if (item.degree.trim() || educationDisplay.location) {
+          drawEntryHeader(item.degree, educationDisplay.location, regular);
         }
         if (!compact && (item.details.trim() || item.bullets?.some(value => value.trim()))) y -= 3;
         if (item.bullets?.some(value => value.trim())) {
