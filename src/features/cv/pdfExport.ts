@@ -396,9 +396,9 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       drawSectionTitle(draft.language === 'FR' ? 'Compétences techniques' : 'Technical Skills');
       for (const line of cvSkillsForDisplay(draft.skills, draft.language)) drawLines(line, compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
     }
-    if (sectionKey === 'certifications' && draft.certifications?.length) {
+    if (sectionKey === 'certifications' && draft.certifications?.some(cert => cert.visible !== false && cert.title.trim())) {
       drawSectionTitle(draft.language === 'FR' ? 'Certifications & formations' : 'Certifications & Training');
-      for (const certificate of draft.certifications) {
+      for (const certificate of draft.certifications.filter(cert => cert.visible !== false && cert.title.trim())) {
         const issuer = certificate.issuer ? ' — ' + certificate.issuer : '';
         const date = certificate.date ? ' | ' + certificate.date : '';
         drawLines('**' + certificate.title + '**' + issuer + date, compact ? 8.9 : 9.2, regular, 0, compact ? 10.6 : 12);
