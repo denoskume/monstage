@@ -1,10 +1,11 @@
 // Application-specific drafts are kept separately from CV master.
 export type CvLanguage = 'FR' | 'EN';
-export type CvTemplate = 'classic' | 'modern' | 'minimal';
+export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords';
 export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
   { id: 'classic', fr: '1 · Classique', en: '1 · Classic' },
   { id: 'modern', fr: '2 · Moderne', en: '2 · Modern' },
   { id: 'minimal', fr: '3 · Épuré', en: '3 · Minimal' },
+  { id: 'keywords', fr: '4 · ATS / Compétences clés', en: '4 · ATS / Key Skills' },
 ];
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'languages' | 'interests';
 
@@ -117,6 +118,25 @@ export function cvSkillsForDisplay(skills: string, language: CvLanguage): string
     : toolsLabels.test(line) ? [] : [line]);
 }
 
+// Key Skills are a short, editable shortlist of demonstrable skills, not
+// invented keywords from an offer. Existing local drafts get a safe fallback.
+export function cvKeySkillsForDisplay(draft: CvDraft): string {
+  if (draft.keySkills !== undefined) return draft.keySkills.trim();
+  const terms: string[] = [];
+  const seen = new Set<string>();
+  for (const line of cvSkillsForDisplay(draft.skills, draft.language)) {
+    const category = line.replace(/^\\*\\*|\\*\\*$/g, '').split(':')[0].toLowerCase();
+    if (/tools|outils|visualization|visualisation/.test(category)) continue;
+    const entries = line.slice(line.indexOf(':') + 1).split(',').map(part => part.trim()).filter(Boolean);
+    for (const entry of entries.slice(0, 2)) {
+      const key = entry.toLowerCase();
+      if (!seen.has(key)) { terms.push(entry); seen.add(key); }
+      if (terms.length >= 6) return terms.join(' · ');
+    }
+  }
+  return terms.join(' · ');
+}
+
 export interface CvDraft {
   language: CvLanguage;
   template?: CvTemplate;
@@ -129,6 +149,7 @@ export interface CvDraft {
   linkedin: string;
   github: string;
   summary: string;
+  keySkills?: string;
   education: CvEducation[];
   experience: CvExperience[];
   projects: CvProject[];
