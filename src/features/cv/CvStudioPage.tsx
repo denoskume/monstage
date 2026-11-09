@@ -7,7 +7,7 @@ import { CvEvidencePicker } from './CvEvidencePicker';
 import { certificateCatalog, selectedCertifications } from './cvEvidenceCatalog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, type CvCertification, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
