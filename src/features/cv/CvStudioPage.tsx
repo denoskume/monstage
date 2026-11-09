@@ -291,10 +291,8 @@ export function CvStudioPage() {
   return (
     <section className="page cv-studio-page">
       <div className="page-header cv-studio-header">
-        <div>
-          <h1 className="sr-only">CV Studio</h1>
-        </div>
-        <div className="cv-studio-actions">
+        <h1 className="sr-only">CV Studio</h1>
+        <div className="cv-studio-toolbar">
           <div className="cv-header-selectors">
             <label className="cv-header-select">
               <span>{draft.language === 'FR' ? 'Modèle' : 'Template'}</span>
@@ -317,6 +315,7 @@ export function CvStudioPage() {
               </select>
             </label>
           </div>
+          <div className="cv-studio-action-group">
           <div className="cl-language-toggle" aria-label="CV language">
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
@@ -330,6 +329,7 @@ export function CvStudioPage() {
           ) : (
             <button className="button button--primary cv-download-button" type="button" disabled aria-label="Preparing CV PDF" title="Preparing CV PDF">…</button>
           )}
+          </div>
         </div>
       </div>
 
