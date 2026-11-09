@@ -29,9 +29,9 @@ export function CompanyBriefs({ offers, sectorId }: { offers: InternshipOffer[];
       return next;
     });
   }
-  return <section className="company-portfolio" aria-label="Fiches des 15 entreprises ciblées">
+  return <section className="company-portfolio" aria-label="Fiches des 30 entreprises ciblées">
     <div className="company-portfolio__intro">
-      <h2>{sectorId ? 'Fiches entreprises' : '15 entreprises · deux plans'}</h2>
+      <h2>{sectorId ? 'Fiches entreprises' : '30 entreprises · deux plans'}</h2>
       <p>Une entreprise à connaître, plusieurs candidatures A / B possibles. Les notes servent à identifier immédiatement un appel de recruteur.</p>
     </div>
     <div className="company-portfolio__grid">
