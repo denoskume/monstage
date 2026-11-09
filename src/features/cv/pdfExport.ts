@@ -64,9 +64,20 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   const ruleColor = modern ? rgb(0.65, 0.76, 0.84) : rgb(0.25, 0.25, 0.25);
   const usableWidth = A4_WIDTH - (MARGIN_X * 2);
 
+  // Template 4 uses the exact #FCFCFC background supplied by the user.
+  // Draw it on every page, behind selectable text and links.
+  const paintPageBackground = () => {
+    if (keywordsTemplate) page.drawRectangle({
+      x: 0, y: 0, width: A4_WIDTH, height: A4_HEIGHT,
+      color: rgb(252 / 255, 252 / 255, 252 / 255),
+    });
+  };
+  paintPageBackground();
+
   const ensureSpace = (height: number) => {
     if (y - height < (compact ? 22 : MARGIN_BOTTOM)) {
       page = pdf.addPage([A4_WIDTH, A4_HEIGHT]);
+      paintPageBackground();
       y = A4_HEIGHT - (compact ? 28 : MARGIN_TOP);
     }
   };
