@@ -1,5 +1,6 @@
 // Application-specific drafts are kept separately from CV master.
 export type CvLanguage = 'FR' | 'EN';
+export type CvPlan = 'A' | 'B';
 export type CvSummaryHeading = 'profile' | 'objective';
 export function cvSummaryTitle(heading: CvSummaryHeading | undefined, language: CvLanguage): string {
   return heading === 'objective' ? (language === 'FR' ? 'Objectif professionnel' : 'Career Objective')
@@ -188,6 +189,7 @@ export function cvKeySkillsForDisplay(draft: CvDraft): string {
 
 export interface CvDraft {
   language: CvLanguage;
+  plan?: CvPlan;
   template?: CvTemplate;
   pageColor?: CvPageColor;
   name: string;
@@ -340,6 +342,90 @@ export const defaultCvFr: CvDraft = {
   interests: 'Intelligence artificielle & nouvelles technologies | Cuisine',
   sectionOrder: ['education', 'experience', 'projects', 'skills', 'leadership', 'languages', 'interests'],
 };
+
+// Separate, focused Data Analysis master. Never mutate or overwrite Plan A.
+export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
+  const fr = language === 'FR';
+  const draft = structuredClone(fr ? defaultCvFr : defaultCvEn);
+  draft.plan = 'B';
+  draft.name = 'Denos KUME';
+  draft.academicHeadline = fr
+    ? 'Étudiant en Master 2 Control and Robotics | Data Science, Signal and Image Processing'
+    : 'Master’s student in Control and Robotics | Data Science, Signal and Image Processing';
+  draft.headline = fr
+    ? 'Analyse de données | Business Intelligence | Analyse de données industrielles'
+    : 'Data Analysis | Business Intelligence | Industrial Analytics';
+  draft.summaryHeading = 'objective';
+  draft.summary = fr
+    ? 'À la recherche d’un **stage de fin d’études de 6 mois dès février 2027** en analyse de données, avec un intérêt particulier pour les applications industrielles. Je souhaite mettre à profit mes compétences en Python, SQL et analyse de données pour contribuer à l’exploitation des données et à la prise de décision, tout en renforçant mon expérience au sein d’une équipe expérimentée.'
+    : 'Seeking a **6-month final-year internship starting in February 2027** in Data Analysis, with a particular interest in industrial applications. I aim to apply my skills in Python, SQL, and data analysis to support data-driven decision-making and contribute to meaningful projects while gaining practical experience alongside an experienced team.';
+  draft.education = [
+    { id: 'ecn', school: 'Master of Science - Control and Robotics, Centrale Nantes', degree: 'Parcours: Data Science, Signal & Image Processing', location: 'Nantes, France', period: '2025–2027',
+      details: fr ? 'Formation axée sur les méthodes avancées d’analyse de données, d’apprentissage automatique et de traitement d’images.' : 'Advanced methods in data analysis, machine learning, and image processing.',
+      keyCourses: 'Data Analysis · Machine Learning · Stochastic Methods · Numerical Optimization · Algorithmics' },
+    { id: 'kju', school: 'Bachelor of Science - Computer Science & Electronics, Kristu Jayanti University', degree: 'Parcours: Informatique et Électronique', location: 'Bengaluru, Inde', period: '2021–2025',
+      details: fr ? 'Programme établissant des bases solides en programmation, développement logiciel, systèmes numériques et électronique.' : 'Foundations in programming, software development, digital systems, and electronics.',
+      keyCourses: 'Database Management · Data Structures · Python Programming · Software Engineering · Computer Graphics' },
+  ];
+  draft.experience = [
+    { id: 'unified', role: 'Data Analyst Intern', company: 'Unified Mentor Pvt. Ltd.', period: fr ? 'Sept.–Déc. 2024' : 'Sep–Dec 2024',
+      location: fr ? 'Stage • Bengaluru, Inde' : 'Internship • Bengaluru, India',
+      description: fr
+        ? 'Nettoyage des données avec Python et création de tableaux de bord interactifs avec Power BI pour l’aide à la décision.'
+        : 'Data cleaning with Python and development of interactive Power BI dashboards for decision-making.',
+      bullets: fr
+        ? ['Nettoyé les données avec Python et Pandas : valeurs manquantes, doublons et formats.',
+          'Effectué des requêtes et jointures SQL, puis calculé des indicateurs métier avec DAX.',
+          'Conçu des tableaux de bord Power BI interactifs pour visualiser les KPI et faciliter les décisions.']
+        : ['Cleaned data with Python and Pandas, handling missing values, duplicates, and formats.',
+          'Performed SQL queries and joins, and calculated business KPIs using DAX measures.',
+          'Built interactive Power BI dashboards to visualize KPIs and support business decisions.'] },
+    { id: 'rws', role: 'Speech AI Evaluation Specialist', company: 'RWS Moravia', period: fr ? 'Août–Oct. 2026' : 'Aug–Oct 2026',
+      location: fr ? 'Freelance • Remote, France' : 'Freelance • Remote, France',
+      description: fr
+        ? 'Évaluation et comparaison des réponses de modèles d’IA (texte, audio et images) selon leur qualité, leur pertinence et leur précision.'
+        : 'Evaluation and comparison of AI model responses (text, audio, and images) based on quality, relevance, and accuracy.',
+      bullets: fr
+        ? ['Évalué la pertinence, la précision et la qualité linguistique des réponses d’IA aux requêtes.',
+          'Vérifié la qualité des images générées : netteté, luminosité, contraste et résolution.',
+          'Comparé les résultats des modèles sur des tests textuels, visuels et audio, avec des évaluations justifiées.']
+        : ['Evaluated the relevance, accuracy, and linguistic quality of AI responses to user prompts.',
+          'Assessed generated image quality, including sharpness, brightness, contrast, and resolution.',
+          'Compared model outputs across text, image, and audio tasks, with evidence-based ratings.'] },
+  ];
+  draft.projects = [
+    { id: 'nova', name: fr ? 'Nova Distribution — Analyse de rentabilité (cas pratique simulé)' : 'Nova Distribution — Profitability Analysis (simulated case)',
+      period: '', description: fr
+        ? 'Diagnostic d’une baisse de rentabilité à partir de données financières fictives.'
+        : 'Profitability diagnosis based on a simulated business dataset.',
+      bullets: fr
+        ? ['Examiné une hausse de 12 % du chiffre d’affaires malgré une baisse de 8 % du bénéfice opérationnel.',
+          'Calculé une marge opérationnelle passée de 20 % à 16,43 % sur les deux périodes.',
+          'Rapproché les charges avec Python et Pandas pour relever un écart de 1,4 M€ dans le scénario.']
+        : ['Investigated a 12% revenue increase alongside an 8% operating profit decline.',
+          'Calculated an operating margin decrease from 20% to 16.43%.',
+          'Reconciled expenses with Python and Pandas, identifying a €1.4M scenario discrepancy.'] },
+    { id: 'monstage', name: 'MonStage — Internship Application Tracker', period: '2026',
+      description: fr ? 'Application personnelle de suivi des offres et candidatures.' : 'Personal application to track internship offers and applications.',
+      bullets: fr
+        ? ['Développé une application centralisant les offres de stage et le suivi des candidatures.',
+          'Structuré les données à l’aide de filtres multicritères et de statuts de candidature.',
+          'Créé un tableau de bord pour visualiser les opportunités et suivre leur évolution.']
+        : ['Built an application centralizing internship offers and application tracking.',
+          'Organized records using multi-criteria filters and application statuses.',
+          'Created a dashboard to visualize opportunities and monitor their evolution.'] },
+  ];
+  draft.skills = fr
+    ? '**Programmation & analyse :** Python, Pandas, NumPy, nettoyage de données, EDA\n**Bases de données :** SQL, SQL Server, SSMS, jointures, agrégations\n**Business Intelligence :** Power BI, DAX, tableaux de bord interactifs\n**Outils & reporting :** KPI, Matplotlib, Jupyter Notebook, Git'
+    : '**Programming & Analytics:** Python, Pandas, NumPy, data cleaning, EDA\n**Databases:** SQL, SQL Server, SSMS, joins, aggregations\n**Business Intelligence:** Power BI, DAX, interactive dashboards\n**Reporting & Tools:** KPI reporting, Matplotlib, Jupyter Notebook, Git';
+  draft.languages = fr ? '**Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)' : '**French:** Native | **English:** C1 (4+ years of higher education in English)';
+  draft.interests = fr ? 'Négociation • Échanges interculturels • Cuisine' : 'Negotiation • Intercultural exchange • Cooking';
+  draft.leadership = [];
+  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'languages', 'interests'];
+  draft.template = 'modern';
+  draft.pageColor = 'white';
+  return draft;
+}
 
 export function freshCvDraft(language: CvLanguage): CvDraft {
   return structuredClone(language === 'FR' ? defaultCvFr : defaultCvEn);
