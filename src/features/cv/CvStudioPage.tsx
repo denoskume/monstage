@@ -110,13 +110,16 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
     return <section><h2>{sectionLabel(section, draft.language)}</h2>{draft.skills.split('\n').filter((line) => line.trim()).map((line, index) => <p key={index}>{renderCvBold(line)}</p>)}</section>;
   }
 
-  if (section === 'languages') {
-    if (!draft.languages.trim()) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{renderCvBold(draft.languages)}</p></section>;
+  if (section === 'languages' || section === 'interests') {
+    const first = draft.sectionOrder.find((key) => key === 'languages' || key === 'interests');
+    if (section !== first || (!draft.languages.trim() && !draft.interests.trim())) return null;
+    return <section>
+      <h2>{draft.language === 'FR' ? 'Langues et centres d’intérêt' : 'Languages & Interests'}</h2>
+      {draft.languages.trim() ? <p><strong>{draft.language === 'FR' ? 'Langues :' : 'Languages:'}</strong> {renderCvBold(draft.languages)}</p> : null}
+      {draft.interests.trim() ? <p><strong>{draft.language === 'FR' ? 'Centres d’intérêt :' : 'Interests:'}</strong> {renderCvBold(draft.interests)}</p> : null}
+    </section>;
   }
-
-  if (!draft.interests.trim()) return null;
-  return <section><h2>{sectionLabel(section, draft.language)}</h2><p>{renderCvBold(draft.interests)}</p></section>;
+  return null;
 }
 
 function AtsScore({ draft }: { draft: CvDraft }) {
