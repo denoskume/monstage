@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -72,8 +72,10 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
 
   if (section === 'projects') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
-      {draft.projects.map((item) => <div className="cv-entry" key={item.id}>
+      {draft.projects.map((item) => <div className="cv-entry cv-project-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{renderCvBold(item.name)}</strong><span>{renderCvBold(item.period)}</span></div>
+        {cvProjectDescription(item, draft.language).trim() ? <p className="cv-project-description">{renderCvBold(cvProjectDescription(item, draft.language))}</p> : null}
+        {item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-project-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
         <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
       </div>)}
     </section>
@@ -421,6 +423,9 @@ export function CvStudioPage() {
               <div className="cv-editor-block" key={item.id}>
                 <label>Project<input value={item.name} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, name: e.target.value }))} /></label>
                 <label>{draft.language === 'FR' ? 'Période' : 'Period'}<input value={item.period} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, period: e.target.value }))} /></label>
+                <label>{draft.language === 'FR' ? 'Description courte du projet' : 'Short project description'}
+                  <textarea rows={2} value={cvProjectDescription(item, draft.language)} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, description: e.target.value }))} />
+                </label>
                 {item.bullets.map((bullet, bulletIndex) => (
                   <div className="cv-bullet-row" key={bulletIndex}>
                     <label>Bullet {bulletIndex + 1}
