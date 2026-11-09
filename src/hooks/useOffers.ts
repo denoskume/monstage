@@ -22,6 +22,22 @@ export function useOffers(): UseOffersState {
     setRefreshNonce((value: number) => value + 1);
   }, []);
 
+  // Reload the private opportunity feed while MonStage is open. Previously,
+  // offers were refreshed only on mount or after a manual Retry.
+  useEffect(() => {
+    if (status !== 'authenticated' || !token) return;
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') retry();
+    };
+    const timer = window.setInterval(refreshIfVisible, 10 * 60 * 1000);
+    // Catch up immediately when the user returns to the tab.
+    document.addEventListener('visibilitychange', refreshIfVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshIfVisible);
+    };
+  }, [status, token, retry]);
+
   useEffect(() => {
     if (status !== 'authenticated' || !token) {
       setData(null);
