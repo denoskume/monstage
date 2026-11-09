@@ -152,15 +152,15 @@ function cvSkillCategoryForDisplay(line: string, language: CvLanguage): string {
 // four-line Plan B skills block when rendering previously saved drafts.
 export function cvPlanBSkills(language: CvLanguage): string[] {
   return language === 'FR' ? [
-    '**Programmation & préparation :** Python, Pandas, NumPy, nettoyage, EDA',
-    '**Bases de données :** SQL, SQL Server (SSMS), jointures, agrégations',
-    '**BI & reporting :** Power BI, DAX, tableaux de bord interactifs, KPI',
-    '**Outils :** Matplotlib, Jupyter Notebook, Git',
+    '**Programmation & analyse :** Python, pandas, NumPy, SciPy, nettoyage et analyse exploratoire',
+    '**Bases de données :** SQL, SQL Server (SSMS), jointures, agrégations, sous-requêtes',
+    '**Modélisation & statistiques :** régression, classification, scikit-learn, évaluation de modèles',
+    '**Outils & visualisation :** Power BI, Matplotlib, Jupyter, Git',
   ] : [
-    '**Programming & Preparation:** Python, Pandas, NumPy, data cleaning, EDA',
-    '**Databases:** SQL, SQL Server (SSMS), joins, aggregations',
-    '**BI & Reporting:** Power BI, DAX, interactive dashboards, KPIs',
-    '**Tools:** Matplotlib, Jupyter Notebook, Git',
+    '**Programming & Analysis:** Python, pandas, NumPy, SciPy, data cleaning and exploratory analysis',
+    '**Databases:** SQL, SQL Server (SSMS), joins, aggregations, subqueries',
+    '**Modeling & Statistics:** regression, classification, scikit-learn, model evaluation',
+    '**Tools & Visualization:** Power BI, Matplotlib, Jupyter, Git',
   ];
 }
 
@@ -452,17 +452,7 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
           'Organized records using multi-criteria filters and application statuses.',
           'Created a dashboard to visualize opportunities and monitor their evolution.'] },
   ];
-  draft.skills = (fr ? [
-    '**Programmation & analyse :** Python, pandas, NumPy, SciPy, analyse exploratoire',
-    '**Bases de données :** SQL, jointures, agrégations, sous-requêtes, bases relationnelles',
-    '**Modélisation & statistiques :** régression, classification, scikit-learn, évaluation de modèles',
-    '**Outils & visualisation :** Matplotlib, Power BI, Jupyter, Git',
-  ] : [
-    '**Programming & analysis:** Python, pandas, NumPy, SciPy, exploratory analysis',
-    '**Databases:** SQL, joins, aggregations, subqueries, relational databases',
-    '**Modeling & statistics:** regression, classification, scikit-learn, model evaluation',
-    '**Tools & visualization:** Matplotlib, Power BI, Jupyter, Git',
-  ]).join('\n');
+  draft.skills = cvPlanBSkills(language).join('\n');
   draft.languages = fr ? '**Français :** Langue maternelle | **Anglais :** C1 (plus de 4 ans d’études supérieures en anglais)' : '**French:** Native | **English:** C1 (4+ years of higher education in English)';
   draft.interests = fr ? 'Négociation • Échanges interculturels • Cuisine' : 'Negotiation • Intercultural exchange • Cooking';
   draft.leadership = [];
