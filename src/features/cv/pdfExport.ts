@@ -372,14 +372,13 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       for (const line of draft.skills.split('\n').filter(value => value.trim())) drawLines(line.trim(), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
     }
 
-    if (sectionKey === 'languages' && draft.languages.trim()) {
-      drawSectionTitle(draft.language === 'FR' ? 'Langues' : 'Languages');
-      drawLines(draft.languages.trim());
-    }
-
-    if (sectionKey === 'interests' && draft.interests.trim()) {
-      drawSectionTitle(draft.language === 'FR' ? 'Centres d’intérêt' : 'Interests');
-      drawLines(draft.interests.trim(), 9.5);
+    // One heading and two clearly labeled lines instead of two separate sections.
+    if ((sectionKey === 'languages' || sectionKey === 'interests')
+      && sectionKey === sectionOrder.find(key => key === 'languages' || key === 'interests')
+      && (draft.languages.trim() || draft.interests.trim())) {
+      drawSectionTitle(draft.language === 'FR' ? 'Langues et centres d’intérêt' : 'Languages & Interests');
+      if (draft.languages.trim()) drawLines((draft.language === 'FR' ? '**Langues :** ' : '**Languages:** ') + draft.languages.trim(), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
+      if (draft.interests.trim()) drawLines((draft.language === 'FR' ? '**Centres d’intérêt :** ' : '**Interests:** ') + draft.interests.trim(), compact ? 9.1 : 9.5, regular, 0, compact ? 10.6 : 12);
     }
   }
 
