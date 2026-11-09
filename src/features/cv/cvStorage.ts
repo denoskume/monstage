@@ -1,5 +1,11 @@
 // Application-specific drafts are kept separately from CV master.
 export type CvLanguage = 'FR' | 'EN';
+export type CvTemplate = 'classic' | 'modern' | 'minimal';
+export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
+  { id: 'classic', fr: '1 · Classique', en: '1 · Classic' },
+  { id: 'modern', fr: '2 · Moderne', en: '2 · Modern' },
+  { id: 'minimal', fr: '3 · Épuré', en: '3 · Minimal' },
+];
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'languages' | 'interests';
 
 export interface CvExperience {
@@ -88,6 +94,7 @@ export interface CvLeadership {
 
 export interface CvDraft {
   language: CvLanguage;
+  template?: CvTemplate;
   name: string;
   headline: string;
   academicHeadline?: string;
