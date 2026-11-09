@@ -335,7 +335,8 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
       for (const [index, item] of draft.education.entries()) {
         // Air between qualifications, and a smaller gap before programme details.
         // Preserve a compact one-page layout for longer targeted CVs.
-        if (index > 0) y -= compact ? 8 : 11;
+        // Match Studio preview: visibly separate the qualifications.
+        if (index > 0) y -= compact ? 12 : 14;
         const educationDisplay = cvEducationDisplay(item);
         drawEducationHeader(educationDisplay.school, item.period);
         // Keep city/country right-aligned beside Parcours in both preview and PDF.
@@ -343,7 +344,8 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         if (item.degree.trim() || educationDisplay.location) {
           drawEntryHeader(item.degree, educationDisplay.location, regular);
         }
-        if (!compact && (item.details.trim() || item.bullets?.some(value => value.trim()))) y -= 3;
+        // Preview shows breathing room between Parcours/location and description.
+        if (item.details.trim() || item.bullets?.some(value => value.trim())) y -= compact ? 3 : 4;
         if (item.bullets?.some(value => value.trim())) {
           for (const bullet of item.bullets.filter(value => value.trim())) drawEducationBullet(bullet.trim());
         } else if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
