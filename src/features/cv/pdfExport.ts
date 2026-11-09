@@ -349,7 +349,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         if (item.bullets?.some(value => value.trim())) {
           for (const bullet of item.bullets.filter(value => value.trim())) drawEducationBullet(bullet.trim());
         } else if (item.details.trim()) drawEducationDetails(item.details.trim(), compact ? 8.7 : 9.2);
-        if (item.keyCourses?.trim()) drawLines((draft.language === 'FR' ? '**Cours clés :** ' : '**Key courses:** ') + item.keyCourses.trim(), compact ? 8.7 : 9.2);
+        if (item.keyCourses?.trim()) drawLines((draft.language === 'FR' ? '**Cours pertinents :** ' : '**Relevant courses:** ') + item.keyCourses.trim(), compact ? 8.7 : 9.2);
       }
       y -= compact ? 3 : 5;
     }
