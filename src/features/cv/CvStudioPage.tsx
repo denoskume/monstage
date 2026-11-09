@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -383,7 +383,13 @@ export function CvStudioPage() {
           </section>
 
           <section className="cv-editor-section">
-            <h2>{draft.language === 'FR' ? 'Profil' : 'Profile'}</h2>
+            <h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2>
+            <label>{draft.language === 'FR' ? 'Titre de la section' : 'Section heading'}
+              <select value={draft.summaryHeading ?? 'profile'} onChange={(e) => patch('summaryHeading', e.target.value as CvSummaryHeading)}>
+                <option value="profile">{draft.language === 'FR' ? 'Profil' : 'Profile'}</option>
+                <option value="objective">{draft.language === 'FR' ? 'Objectif professionnel' : 'Career Objective'}</option>
+              </select>
+            </label>
             <p className="cv-editor-hint">{draft.language === 'FR' ? 'Utilisez **texte** pour afficher du gras dans le CV.' : 'Use **text** to show bold in the CV.'}</p>
             <textarea rows={4} value={draft.summary} onChange={(e) => patch('summary', e.target.value)} />
           </section>
@@ -587,7 +593,7 @@ export function CvStudioPage() {
             </p>
           </header>
 
-          <section><h2>{draft.template === 'keywords' ? (draft.language === 'FR' ? 'Résumé' : 'Summary') : (draft.language === 'FR' ? 'Profil' : 'Profile')}</h2><p>{renderCvBold(draft.summary)}</p></section>
+          <section><h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2><p>{renderCvBold(draft.summary)}</p></section>
           {draft.template === 'keywords' && cvKeySkillsForDisplay(draft) ? (
             <section className="cv-keyskills"><h2>{draft.language === 'FR' ? 'Compétences clés' : 'Key Skills'}</h2>
               <p>{renderCvBold(cvKeySkillsForDisplay(draft))}</p>
