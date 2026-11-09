@@ -1,0 +1,53 @@
+.interview-prep-page{max-width:1240px;margin:0 auto;padding-bottom:44px}
+.interview-prep-top{padding:10px 0 22px}
+.interview-prep-back{font-size:.9rem;color:var(--accent);font-weight:700;text-decoration:none;display:inline-block;margin-bottom:20px}
+.interview-prep-label,.interview-prep-eyebrow{font-size:.72rem;color:var(--accent);font-weight:800;letter-spacing:.11em}
+.interview-prep-top h1{font-size:clamp(1.8rem,3vw,2.6rem);letter-spacing:-.045em;margin:7px 0}
+.interview-prep-role{font-weight:700;font-size:1.03rem;margin:0 0 9px}
+.interview-prep-subtitle{color:var(--text-muted);line-height:1.6;max-width:760px;margin:0}
+.interview-prep-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+.interview-prep-overview{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:15px;margin:0 0 20px;align-items:stretch}
+.interview-prep-progress,.interview-prep-meeting{padding:20px;min-width:0}
+.interview-prep-progress-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.interview-prep-progress-head span{font-weight:650}.interview-prep-progress-head strong{font-size:1.8rem;letter-spacing:-.04em}
+.interview-prep-progressbar{height:10px;background:var(--surface-muted);border-radius:999px;overflow:hidden;margin-bottom:14px;border:1px solid var(--border)}
+.interview-prep-progressbar>div{height:100%;background:var(--accent);border-radius:inherit;transition:width .2s}
+.interview-prep-overview small{color:var(--text-muted);font-size:.78rem;line-height:1.5}
+.interview-prep-meeting h2{font-size:1rem;margin:0 0 12px}
+.interview-prep-meeting-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:8px}
+.interview-prep-meeting-fields label{display:grid;gap:5px;font-size:.78rem;font-weight:650;color:var(--text-muted)}
+.interview-prep-meeting-fields input,.interview-prep-meeting-fields select{min-width:0;width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:8px;min-height:38px;padding:7px 9px;font:inherit}
+.interview-prep-layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start}
+.interview-prep-session-list{padding:18px 12px;position:sticky;top:95px}
+.interview-prep-session-list h2{font-size:1rem;margin:3px 9px 16px}
+.interview-prep-session{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--text);width:100%;padding:13px 9px;text-align:left;cursor:pointer;margin-bottom:5px}
+.interview-prep-session:hover{background:var(--surface-muted)}
+.interview-prep-session.is-current{border-color:var(--accent);background:var(--surface-muted)}
+.interview-prep-session strong{display:block;font-size:.84rem;margin:0 0 4px;line-height:1.35}
+.interview-prep-session small{display:block;font-size:.75rem;color:var(--text-muted)}
+.interview-prep-index{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);display:grid;place-items:center;font-size:.8rem;font-weight:750}
+.interview-prep-session.is-current .interview-prep-index{background:var(--accent);color:#fff;border-color:var(--accent)}
+.interview-prep-footnote{font-size:.76rem;line-height:1.55;color:var(--text-muted);padding:11px 9px 0;border-top:1px solid var(--border);margin:13px 0 0}
+.interview-prep-main{display:grid;gap:14px;min-width:0}
+.interview-prep-intro,.interview-prep-question,.interview-prep-notes,.interview-prep-mock{padding:24px;min-width:0}
+.interview-prep-intro h2,.interview-prep-mock h2{font-size:1.6rem;letter-spacing:-.025em;margin:9px 0}
+.interview-prep-intro p,.interview-prep-mock p{line-height:1.7;margin:0 0 11px}
+.interview-prep-directions{font-size:.9rem;color:var(--text-muted)}
+.interview-prep-question-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;color:var(--text-muted);font-size:.76rem;font-weight:750;letter-spacing:.03em}
+.interview-prep-question h3{font-size:1.07rem;line-height:1.48;margin:14px 0 21px}
+.interview-prep-response,.interview-prep-notes label,.interview-prep-mock-review>label:first-child{display:grid;gap:7px;font-size:.88rem;font-weight:700;margin-bottom:14px}
+.interview-prep-response textarea,.interview-prep-notes textarea,.interview-prep-mock-review textarea{width:100%;border:1px solid var(--border-strong);background:var(--surface);color:var(--text);border-radius:9px;padding:12px 13px;font:inherit;font-weight:400;line-height:1.6;resize:vertical}
+.interview-prep-example{border-left:3px solid var(--accent);background:var(--surface-muted);border-radius:0 9px 9px 0;padding:16px 19px;margin:14px 0;line-height:1.65;font-size:.88rem}
+.interview-prep-example>strong{display:block;margin:0 0 7px}
+.interview-prep-example p{margin:0 0 11px}.interview-prep-example p:last-child{margin-bottom:0}
+.interview-prep-reviewed{display:flex;align-items:flex-start;gap:10px;font-size:.86rem;font-weight:650;line-height:1.5;margin-top:17px;cursor:pointer}
+.interview-prep-reviewed input{width:18px;height:18px;flex:none;accent-color:var(--accent);margin:2px 0 0}
+.interview-prep-mock ol{padding-left:23px;margin:18px 0 24px}.interview-prep-mock li{margin-bottom:10px;line-height:1.55}
+.interview-prep-mock-review{border-top:1px solid var(--border);padding-top:19px}
+.interview-prep-next{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.interview-prep-next button:disabled{opacity:.45;cursor:not-allowed}
+.interview-prep-footerhint{font-size:.78rem;color:var(--text-muted);line-height:1.6;margin:0}
+.interview-prep-empty{padding:30px;max-width:680px;margin:35px auto}.interview-prep-empty p{line-height:1.7;margin:13px 0 19px}
+@media(max-width:1050px){.interview-prep-meeting-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:780px){.interview-prep-overview,.interview-prep-layout{grid-template-columns:1fr}.interview-prep-session-list{position:static}.interview-prep-session-list h2{margin-bottom:12px}.interview-prep-session-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}.interview-prep-session-list h2,.interview-prep-footnote{grid-column:1/-1}.interview-prep-meeting-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.interview-prep-intro,.interview-prep-question,.interview-prep-notes,.interview-prep-mock{padding:18px}}
+@media(max-width:480px){.interview-prep-session-list{display:block}.interview-prep-actions .button{width:100%;text-align:center}.interview-prep-next .button{flex:1}.interview-prep-meeting-fields{grid-template-columns:1fr 1fr}}
