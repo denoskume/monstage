@@ -54,8 +54,13 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     && /Computer Vision|Vision par ordinateur|Image Processing|Traitement d.images|Data Analysis|Analyse de données/i.test(draft.headline);
   let y = A4_HEIGHT - (compact ? 28 : MARGIN_TOP);
 
+  const template = draft.template ?? 'classic';
+  const leftHeader = template !== 'classic';
+  const modern = template === 'modern';
+  const minimal = template === 'minimal';
   const textColor = rgb(0.07, 0.07, 0.07);
-  const ruleColor = rgb(0.25, 0.25, 0.25);
+  const headingColor = modern ? rgb(0.14, 0.30, 0.44) : textColor;
+  const ruleColor = modern ? rgb(0.65, 0.76, 0.84) : rgb(0.25, 0.25, 0.25);
   const usableWidth = A4_WIDTH - (MARGIN_X * 2);
 
   const ensureSpace = (height: number) => {
@@ -70,9 +75,9 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     const naturalWidth = tokens.reduce((sum, part) => sum + part.font.widthOfTextAtSize(part.value, size), 0);
     const fittedSize = naturalWidth > usableWidth ? size * usableWidth / naturalWidth : size;
     const width = tokens.reduce((sum, part) => sum + part.font.widthOfTextAtSize(part.value, fittedSize), 0);
-    let x = (A4_WIDTH - width) / 2;
+    let x = leftHeader ? MARGIN_X : (A4_WIDTH - width) / 2;
     for (const part of tokens) {
-      page.drawText(part.value, { x, y, size: fittedSize, font: part.font, color: textColor });
+      page.drawText(part.value, { x, y, size: fittedSize, font: part.font, color: modern ? headingColor : textColor });
       x += part.font.widthOfTextAtSize(part.value, fittedSize);
     }
     y -= size + (compact ? 2 : 5);
@@ -126,7 +131,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     const widths = parts.map(item => regular.widthOfTextAtSize(normalizeCvPdfText(item.text), fitted));
     const gapWidth = regular.widthOfTextAtSize(separator, fitted);
     const fittedTotal = widths.reduce((sum, width) => sum + width, 0) + gapWidth * (parts.length - 1);
-    let x = (A4_WIDTH - fittedTotal) / 2;
+    let x = leftHeader ? MARGIN_X : (A4_WIDTH - fittedTotal) / 2;
     parts.forEach((item, index) => {
       const value = normalizeCvPdfText(item.text);
       page.drawText(value, { x, y, size: fitted, font: regular, color: textColor });
@@ -178,11 +183,11 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
 
   const drawSectionTitle = (title: string) => {
     ensureSpace(24);
-    y -= compact ? 7 : 4;
-    page.drawText(normalizeCvPdfText(title.toUpperCase()), { x: MARGIN_X, y, size: 10.5, font: bold, color: textColor });
+    y -= compact ? (minimal ? 4 : 7) : 4;
+    page.drawText(normalizeCvPdfText(title.toUpperCase()), { x: MARGIN_X, y, size: modern ? 10.2 : 10.5, font: bold, color: headingColor });
     y -= 5;
-    page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: 0.8, color: ruleColor });
-    y -= compact ? 11 : 12;
+    page.drawLine({ start: { x: MARGIN_X, y }, end: { x: A4_WIDTH - MARGIN_X, y }, thickness: modern ? 0.65 : 0.8, color: ruleColor });
+    y -= compact ? (minimal ? 8 : 11) : 12;
   };
 
   // Helvetica's built-in encoding cannot display an en dash; use consistently spaced dates.
@@ -277,7 +282,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     y -= compact ? 11.7 : 12;
   };
 
-  drawCentered(draft.name, 18, bold);
+  drawCentered(draft.name, modern ? 19 : minimal ? 17 : 18, bold);
   drawCentered(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE, 9.5, regular);
   drawCentered(draft.headline, 10.5, bold);
   drawCenteredLinkedParts([
@@ -289,8 +294,8 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     { text: draft.linkedin.trim() ? 'LinkedIn' : '', uri: portfolioUrl(draft.linkedin, 'linkedin') },
     { text: draft.github.trim() ? 'GitHub' : '', uri: portfolioUrl(draft.github, 'github') },
   ], 8.5);
-  // No separator beneath the centered header: give the profile breathing room.
-  y -= compact ? 10 : 20;
+  // Header spacing is intentionally tighter in the modern/minimal templates.
+  y -= compact ? (minimal ? 5 : modern ? 7 : 10) : (minimal ? 8 : modern ? 12 : 20);
 
   if (draft.summary.trim()) {
     drawSectionTitle(draft.language === 'FR' ? 'Profil' : 'Profile');
