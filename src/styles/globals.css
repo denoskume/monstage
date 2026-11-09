@@ -1157,6 +1157,10 @@ h1, h2, h3 { color: var(--text); }
 .cv-preview .cv-education-entry > .cv-entry__top + .cv-entry__top + ul { margin-top: 7px; }
 .cv-preview .cv-education-entry > p:last-child { margin-top: 4px; }
 
+/* Project summary -> missions -> achievements: compact, readable hierarchy. */
+.cv-preview .cv-project-entry .cv-project-description { margin-top: 5px; margin-bottom: 2px; }
+.cv-preview .cv-project-entry .cv-project-missions { margin-top: 2px; margin-bottom: 1px; }
+.cv-preview .cv-project-entry ul { margin-top: 1px; }
 .cv-entry__top { display: flex; justify-content: space-between; gap: 18px; }
 .cv-entry ul { margin: 4px 0 0 16px; padding: 0; }
 .cv-entry li { margin-bottom: 2px; font-size: 10.5px; }
