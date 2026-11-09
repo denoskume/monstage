@@ -1,5 +1,5 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
-import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvPageColorHex, type CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, cvPageColorHex, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -316,7 +316,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   y -= compact ? (minimal || keywordsTemplate ? 5 : modern ? 7 : 10) : (minimal || keywordsTemplate ? 8 : modern ? 12 : 20);
 
   if (draft.summary.trim()) {
-    drawSectionTitle(keywordsTemplate ? (draft.language === 'FR' ? 'Résumé' : 'Summary') : (draft.language === 'FR' ? 'Profil' : 'Profile'));
+    drawSectionTitle(cvSummaryTitle(draft.summaryHeading, draft.language));
     drawLines(draft.summary.trim(), compact ? 9.3 : 9.5);
   }
   if (keywordsTemplate && cvKeySkillsForDisplay(draft)) {
