@@ -1,5 +1,6 @@
 import { useAuth } from '../../auth/useAuth';
 import { SAFRAN_AI_DOSSIER_ID, prepareSafranAiDossier } from '../applications/safranAiDossier';
+import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodLetter } from '../applications/edfEodDossier';
 import { useEffect, useRef } from 'react';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
 import { useOffers } from '../../hooks/useOffers';
@@ -38,6 +39,7 @@ export function ClStudioPage() {
   const { data, loading: offersLoading } = useOffers();
   const job = offerParam ? data?.offers.find(item => item.id === offerParam) : undefined;
   const isSafranSpontaneous = offerParam === SAFRAN_AI_DOSSIER_ID;
+  const isEdfEod = offerParam === EDF_EOD_DOSSIER_ID;
   const [draft, setDraft] = useState<CoverLetterDraft>(() => loadCoverLetter());
   const [saved, setSaved] = useState(false);
   const [downloadError, setDownloadError] = useState('');
@@ -45,6 +47,11 @@ export function ClStudioPage() {
 
   useEffect(() => {
     if (!offerParam) return;
+    if (isEdfEod) {
+      setDraft(prepareEdfEodDossier(languageParam).letter);
+      setDownloadError('');
+      return;
+    }
     if (isSafranSpontaneous) {
       setDraft(prepareSafranAiDossier(languageParam).letter);
       setDownloadError('');
@@ -89,7 +96,7 @@ export function ClStudioPage() {
     setDraft(prepared);
     setDownloadError('');
     setSaved(false);
-  }, [job?.id, offerParam, languageParam, offersLoading, isSafranSpontaneous]);
+  }, [job?.id, offerParam, languageParam, offersLoading, isSafranSpontaneous, isEdfEod]);
 
   function patch<K extends keyof CoverLetterDraft>(key: K, value: CoverLetterDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -97,7 +104,7 @@ export function ClStudioPage() {
   }
 
   function switchLanguage(language: CoverLetterLanguage) {
-    const next = isSafranSpontaneous ? prepareSafranAiDossier(language).letter : job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
+    const next = isEdfEod ? prepareEdfEodDossier(language).letter : isSafranSpontaneous ? prepareSafranAiDossier(language).letter : job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
     setDraft(next);
     if (job) {
       saveCoverLetter(next);
@@ -111,13 +118,22 @@ export function ClStudioPage() {
   }
 
   function save() {
-    if (isSafranSpontaneous) updateApplicationLetter(SAFRAN_AI_DOSSIER_ID, draft.language, draft);
+    if (isEdfEod) updateApplicationLetter(EDF_EOD_DOSSIER_ID, draft.language, draft);
+    else if (isSafranSpontaneous) updateApplicationLetter(SAFRAN_AI_DOSSIER_ID, draft.language, draft);
     else if (job) updateApplicationLetter(job.id, draft.language, draft);
     else saveCoverLetter(draft);
     setSaved(true);
   }
 
   function generateLetter() {
+    if (isEdfEod) {
+      if (!window.confirm('Régénérer la lettre EDF ? Les modifications manuelles de la lettre seront remplacées, pas celles du CV.')) return;
+      const next = buildEdfEodLetter(draft.language);
+      updateApplicationLetter(EDF_EOD_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+      setSaved(true);
+      return;
+    }
     if (!job || !window.confirm('Régénérer la lettre pour cette offre ? Les modifications manuelles de cette lettre seront remplacées, pas celles du CV.')) return;
     prepareApplicationDossier(job, draft.language);
     const next = tailorLetterForOffer(job, draft.language);
@@ -128,7 +144,11 @@ export function ClStudioPage() {
   }
 
   function reset() {
-    if (isSafranSpontaneous) {
+    if (isEdfEod) {
+      const next = buildEdfEodLetter(draft.language);
+      updateApplicationLetter(EDF_EOD_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+    } else if (isSafranSpontaneous) {
       setDraft(prepareSafranAiDossier(draft.language).letter);
     } else if (job) {
       const next = tailorLetterForOffer(job, draft.language);
@@ -174,7 +194,7 @@ export function ClStudioPage() {
 
   // Persist a stable tailored letter PDF automatically, without marking it as submitted.
   useEffect(() => {
-    if (!offerParam || !token || (!job && !isSafranSpontaneous)) return;
+    if (!offerParam || !token || (!job && !isSafranSpontaneous && !isEdfEod)) return;
     if (job && (draft.company !== job.company || draft.internshipTitle !== job.title)) return;
     const snapshot = JSON.stringify(draft);
     const key = 'monstage:github-autosave:letter:' + offerParam + ':' + draft.language;
@@ -191,7 +211,7 @@ export function ClStudioPage() {
         .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique GitHub privé impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
     }, 3000);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [offerParam, token, job?.id, isSafranSpontaneous, draft]);
+  }, [offerParam, token, job?.id, isSafranSpontaneous, isEdfEod, draft]);
 
   async function downloadPdf() {
     try {
@@ -231,7 +251,7 @@ export function ClStudioPage() {
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
           </div>
-          {job ? <button className="button button--primary" type="button" onClick={generateLetter}>Générer CL</button> : null}
+          {job || isEdfEod ? <button className="button button--primary" type="button" onClick={generateLetter}>Générer CL</button> : null}
           <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistrée' : 'Enregistrer'}</button>
           {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>Dossier</button> : null}
