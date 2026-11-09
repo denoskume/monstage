@@ -104,6 +104,20 @@ describe('CV technical skill deduplication', () => {
   });
 });
 
+describe('Saved bold tool lists', () => {
+  it('removes bold-markup artifacts and duplicate Jupyter in the final display', () => {
+    const source = [
+      '**Programming:** Python, NumPy, MATLAB',
+      '**Tools & Visualization:** **Jupyter Notebook, Matplotlib, Git, GitHub**',
+      '**Outils :** Jupyter, Linux, Excel',
+    ].join('\\n');
+    const rows = cvSkillsForDisplay(source, 'FR');
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toBe('**Outils & visualisation :** Jupyter Notebook, Matplotlib, Git, GitHub, Linux, Excel');
+    expect(rows[1].match(/Jupyter/g)).toHaveLength(1);
+  });
+});
+
 describe('ATS key skills template', () => {
   it('derives only displayed existing skills and keeps explicit role-specific edits', () => {
     const draft = structuredClone(defaultCvFr);
