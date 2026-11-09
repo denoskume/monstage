@@ -55,7 +55,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   let y = A4_HEIGHT - (compact ? 28 : MARGIN_TOP);
 
   const template = draft.template ?? 'classic';
-  const leftHeader = template !== 'classic';
+  const leftHeader = template === 'minimal';
   const modern = template === 'modern';
   const minimal = template === 'minimal';
   const textColor = rgb(0.07, 0.07, 0.07);
