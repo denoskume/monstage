@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, defaultCvFr, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, defaultCvFr, cvTemplateOptions, cvPageColorOptions, cvPageColorHex } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -138,5 +138,22 @@ describe('CV page-color choices', () => {
     expect(cvPageColorHex()).toBe('#FFFFFF');
     expect(cvPageColorHex('soft-gray')).toBe('#FBFBFB');
     expect(cvPageColorHex('soft-blue')).toBe('#F4F7FB');
+  });
+});
+
+describe('CV summary section heading', () => {
+  it('switches labels without changing profile content or other sections', async () => {
+    const draft = structuredClone(defaultCvFr);
+    const original = draft.summary;
+    expect(cvSummaryTitle(undefined, 'FR')).toBe('Profil');
+    expect(cvSummaryTitle('objective', 'FR')).toBe('Objectif professionnel');
+    expect(cvSummaryTitle('profile', 'EN')).toBe('Profile');
+    expect(cvSummaryTitle('objective', 'EN')).toBe('Career Objective');
+    for (const summaryHeading of ['profile', 'objective'] as const) {
+      draft.summaryHeading = summaryHeading;
+      const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
+      expect(pdf.getPageCount()).toBeGreaterThanOrEqual(1);
+      expect(draft.summary).toBe(original);
+    }
   });
 });
