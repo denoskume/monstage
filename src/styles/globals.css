@@ -1154,6 +1154,10 @@ h1, h2, h3 { color: var(--text); }
 .cv-template-chooser__choice { padding: 7px 13px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: var(--surface); cursor: pointer; font-size: .84rem; font-weight: 600; }
 .cv-template-chooser__choice.is-active { border-color: #31557d; background: #e9f0f7; color: #203e62; }
 .cv-template-chooser__hint { font-size: .76rem; color: var(--muted); margin-left: auto; }
+.cv-color-chooser { display: flex; align-items: center; flex-wrap: wrap; flex-basis: 100%; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 2px; }
+.cv-color-chooser__choice { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); padding: 6px 11px; font-size: .82rem; font-weight: 600; cursor: pointer; }
+.cv-color-chooser__choice.is-active { border-color: #31557d; box-shadow: 0 0 0 1px #31557d; }
+.cv-color-chooser__swatch { display: inline-block; width: 17px; height: 17px; border: 1px solid #c9cfd5; border-radius: 4px; flex: none; }
 .cv-preview--modern { padding: 34px 44px; line-height: 1.29; }
 .cv-preview--modern .cv-preview__header { text-align: center; border-bottom: 1.5px solid #234c70; padding-bottom: 10px; margin-bottom: 9px; }
 .cv-preview--modern .cv-preview__header h1 { color: #234c70; font-size: 26px; letter-spacing: .35px; }
@@ -1162,7 +1166,7 @@ h1, h2, h3 { color: var(--text); }
 .cv-preview--modern section h2 { color: #234c70; border-bottom-color: #b7c8d8; font-size: 11px; letter-spacing: 1px; }
 .cv-preview--modern .cv-entry { margin-bottom: 8px; }
 .cv-template-field-note { font-size: .76rem; color: var(--muted); margin: 2px 0 0; }
-.cv-preview--keywords { padding: 30px 43px; line-height: 1.23; background: #fcfcfc; }
+.cv-preview--keywords { padding: 30px 43px; line-height: 1.23; }
 .cv-preview--keywords .cv-preview__header { text-align: center; border-bottom: 1px solid #252525; padding-bottom: 6px; margin-bottom: 7px; }
 .cv-preview--keywords .cv-preview__header h1 { font-size: 24px; }
 .cv-preview--keywords .cv-preview__headline { margin: 2px 0; }
