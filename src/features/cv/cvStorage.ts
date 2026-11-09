@@ -41,6 +41,16 @@ export interface CvEducation {
   bullets?: string[];
 }
 
+// Shared presentation rule for Studio preview and exported PDF.
+// Preserve the diploma and its programme ("Parcours") exactly as entered.
+// Only remove an already repeated city/country at the END of the school line.
+export function cvEducationDisplay(education: CvEducation): { school: string; location: string } {
+  const location = education.location.trim()
+    .replace(/^Bangalore(?=\s*,\s*Inde\b)/i, 'Bengaluru');
+  const school = education.school.trim().replace(/[.,]\s*(?:Bengaluru|Bangalore)\s*,\s*Inde\s*$/i, '').trim();
+  return { school, location };
+}
+
 export interface CvProject {
   id: string;
   name: string;
