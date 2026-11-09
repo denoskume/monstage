@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -62,8 +62,8 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
   if (section === 'education') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
       {draft.education.map((item) => <div className="cv-entry cv-education-entry" key={item.id}>
-        <div className="cv-entry__top"><strong>{renderCvBold(item.school)}</strong><span>{renderCvBold(item.period)}</span></div>
-        {(item.degree.trim() || item.location.trim()) ? <div className="cv-entry__top"><span>{renderCvBold(item.degree)}</span><span>{renderCvBold(item.location)}</span></div> : null}
+        <div className="cv-entry__top"><strong>{renderCvBold(cvEducationDisplay(item).school)}</strong><span>{renderCvBold(item.period)}</span></div>
+        {(item.degree.trim() || cvEducationDisplay(item).location) ? <div className="cv-entry__top"><span>{renderCvBold(item.degree)}</span><span>{renderCvBold(cvEducationDisplay(item).location)}</span></div> : null}
         {item.bullets?.some(Boolean) ? <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : item.details ? <p>{renderCvBold(item.details)}</p> : null}
         {item.keyCourses?.trim() ? <p><strong>{draft.language === 'FR' ? 'Cours clés :' : 'Key courses:'}</strong> {renderCvBold(item.keyCourses)}</p> : null}
       </div>)}
