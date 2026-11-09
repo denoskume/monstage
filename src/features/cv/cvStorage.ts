@@ -109,6 +109,33 @@ export interface CvLeadership {
   bullets: string[];
 }
 
+// Display-only normalization: keeps original saved CV text unchanged.
+export function cvExperienceLocationForDisplay(location: string): string {
+  return location
+    .replace(/\bBengalore\b|\bBangalore\b/gi, 'Bengaluru')
+    .replace(/\s+,/g, ',')
+    .trim();
+}
+
+export function cvLanguagesForDisplay(languages: string): string {
+  return languages.trim().replace(/^(?:\*\*)?Langues\s*:(?:\*\*)?\s*/i, '');
+}
+
+function cvSkillCategoryForDisplay(line: string, language: CvLanguage): string {
+  if (language !== 'FR') return line;
+  const categories: Record<string, string> = {
+    'programming': 'Programmation',
+    'computer vision & image processing': 'Vision par ordinateur & traitement d’images',
+    'machine learning': 'Machine Learning',
+    'tools & visualization': 'Outils & visualisation',
+  };
+  return line.replace(/^(\s*)(\*\*)?([^:\n]+?)(\*\*)?\s*:\s*/, (match, initial: string, boldStart: string | undefined, label: string, boldEnd: string | undefined) => {
+    const translation = categories[label.trim().toLowerCase()];
+    if (!translation) return match;
+    return initial + (boldStart || '') + translation + ' :' + (boldEnd || '') + ' ';
+  });
+}
+
 // Merge only duplicate tool rows; keep every distinct skill and its category.
 // This is a display helper, so previously saved CV drafts are never overwritten.
 export function cvSkillsForDisplay(skills: string, language: CvLanguage): string[] {
@@ -118,7 +145,7 @@ export function cvSkillsForDisplay(skills: string, language: CvLanguage): string
   const toolCategory = /^(?:Tools\s*&\s*Visualization|Outils(?:\s*&\s*visualisation)?)\s*:/i;
   const isTools = (line: string) => toolCategory.test(line.replace(/\*\*/g, '').trim());
   const toolRows = lines.filter(isTools);
-  if (!toolRows.length) return lines;
+  if (!toolRows.length) return lines.map(line => cvSkillCategoryForDisplay(line, language));
 
   const firstIndex = lines.findIndex(isTools);
   const seen = new Set<string>();
@@ -135,7 +162,7 @@ export function cvSkillsForDisplay(skills: string, language: CvLanguage): string
   const heading = language === 'FR' ? '**Outils & visualisation :** ' : '**Tools & Visualization:** ';
   return lines.flatMap((line, index) => index === firstIndex
     ? [heading + values.join(', ')]
-    : isTools(line) ? [] : [line]);
+    : isTools(line) ? [] : [cvSkillCategoryForDisplay(line, language)]);
 }
 
 // Key Skills are a short, editable shortlist of demonstrable skills, not
