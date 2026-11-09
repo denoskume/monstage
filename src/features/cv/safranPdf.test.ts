@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, defaultCvFr } from './cvStorage';
+import { cvEducationDisplay, defaultCvFr, cvTemplateOptions } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -23,8 +23,11 @@ describe('Safran.AI one-page CV export', () => {
     draft.sectionOrder = ['education','projects','experience','skills','languages','interests'];
     expect(draft.projects.every(p => p.bullets.length === 3)).toBe(true);
     expect(draft.experience.every(e => e.bullets.length === 3)).toBe(true);
-    const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
-    expect(pdf.getPageCount()).toBe(1);
+    for (const template of cvTemplateOptions) {
+      draft.template = template.id;
+      const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
+      expect(pdf.getPageCount(), template.id).toBe(1);
+    }
   });
 });
 
