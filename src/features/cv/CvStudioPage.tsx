@@ -196,16 +196,13 @@ export function CvStudioPage() {
     setSaved(true);
   }, [viewKey, loadedViewKey, selectedOfferId]);
 
-  // Save editable CV content independently of PDF/GitHub archiving.
-  // A manual change survives an offer-feed refresh, navigation and page reload.
+  // Persist the latest editable CV immediately, not only an exported PDF.
+  // There is no debounce to lose the last keystrokes on a quick navigation.
   useEffect(() => {
     if (loadedViewKey !== viewKey || draft.language !== languageParam) return;
-    const timer = window.setTimeout(() => {
-      if (offerParam) updateApplicationCv(offerParam, draft.language, draft);
-      else saveCvDraft(draft);
-      setSaved(true);
-    }, 650);
-    return () => window.clearTimeout(timer);
+    if (offerParam) updateApplicationCv(offerParam, draft.language, draft);
+    else saveCvDraft(draft);
+    setSaved(true);
   }, [draft, loadedViewKey, viewKey, languageParam, offerParam]);
   const [certificateToAdd, setCertificateToAdd] = useState('');
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
@@ -349,6 +346,13 @@ export function CvStudioPage() {
     }, 2500);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [offerParam, token, draft, pdfReady, pdfBytes]);
+
+  // Never show an unrelated master CV while a requested offer is loading.
+  if (loadedViewKey !== viewKey) {
+    return <section className="page cv-studio-page" role="status">
+      {languageParam === 'FR' ? 'Chargement du CV sélectionné…' : 'Loading the selected CV…'}
+    </section>;
+  }
 
   return (
     <section className="page cv-studio-page">
