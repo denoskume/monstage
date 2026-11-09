@@ -1,6 +1,16 @@
 // Application-specific drafts are kept separately from CV master.
 export type CvLanguage = 'FR' | 'EN';
 export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords';
+export type CvPageColor = 'white' | 'soft-gray' | 'soft-blue';
+export const cvPageColorOptions: { id: CvPageColor; fr: string; en: string; hex: string }[] = [
+  { id: 'white', fr: 'Blanc', en: 'White', hex: '#FFFFFF' },
+  { id: 'soft-gray', fr: 'Gris clair', en: 'Soft gray', hex: '#FCFCFC' },
+  { id: 'soft-blue', fr: 'Bleu très pâle', en: 'Soft blue', hex: '#F4F7FB' },
+];
+export function cvPageColorHex(color?: CvPageColor): string {
+  return cvPageColorOptions.find(option => option.id === color)?.hex ?? '#FFFFFF';
+}
+
 export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
   { id: 'classic', fr: '1 · Classique', en: '1 · Classic' },
   { id: 'modern', fr: '2 · Moderne', en: '2 · Modern' },
@@ -140,6 +150,7 @@ export function cvKeySkillsForDisplay(draft: CvDraft): string {
 export interface CvDraft {
   language: CvLanguage;
   template?: CvTemplate;
+  pageColor?: CvPageColor;
   name: string;
   headline: string;
   academicHeadline?: string;
