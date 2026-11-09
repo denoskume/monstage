@@ -113,8 +113,8 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     }));
   }
   draft.skills = fr
-    ? '**Programmation & données :** Python, pandas, NumPy, SQL (bases)\n**Analyse & modélisation :** statistiques, régression, évaluation de modèles\n**Machine Learning :** scikit-learn, PyTorch\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux'
-    : '**Programming & data:** Python, pandas, NumPy, SQL (fundamentals)\n**Analysis & modeling:** statistics, regression, model evaluation\n**Machine Learning:** scikit-learn, PyTorch\n**Visualization & tools:** Matplotlib, Jupyter, Git, Linux';
+    ? '**Python & données :** Python, pandas, NumPy, SQL (bases)\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch'
+    : '**Python & data:** Python, pandas, NumPy, SQL (fundamentals)\n**Modeling & ML:** statistics, regression, scikit-learn, model evaluation\n**Visualization & tools:** Matplotlib, Jupyter, Git, Linux, PyTorch';
   draft.leadership = [];
   draft.interests = '';
   draft.education = draft.education.map(item => item.id === 'kju' ? { ...item, details: '' } : item);
@@ -167,8 +167,8 @@ function compactExistingEdfCv(cv: CvDraft): CvDraft {
   next.projects = next.projects.map(p => descriptions.has(p.description ?? '') ? { ...p, description: '' } : p);
   next.experience = next.experience.map(e => descriptions.has(e.description ?? '') ? { ...e, description: '' } : e);
   next.education = next.education.map(e => e.id === 'kju' && /^(Bases en programmation Python, systèmes de bases de données, algorithmique et développement logiciel\\.|Foundations in Python, database systems, algorithms and software development\\.)$/.test(e.details) ? { ...e, details: '' } : e);
-  if (next.skills === '**Programmation & données :** Python, pandas, NumPy, SQL (bases)\\n**Analyse & modélisation :** statistiques, régression, évaluation de modèles\\n**Machine Learning :** scikit-learn, PyTorch\\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux') {
-    next.skills = '**Python & données :** Python, pandas, NumPy, SQL (bases)\\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch';
+  if (next.skills === '**Programmation & données :** Python, pandas, NumPy, SQL (bases)\n**Analyse & modélisation :** statistiques, régression, évaluation de modèles\n**Machine Learning :** scikit-learn, PyTorch\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux') {
+    next.skills = '**Python & données :** Python, pandas, NumPy, SQL (bases)\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch';
   }
   if (next.interests === 'Négociation • Échanges interculturels • Cuisine') next.interests = '';
   return next;
