@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, cvSkillsForDisplay, defaultCvFr, cvTemplateOptions } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, defaultCvFr, cvTemplateOptions } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -25,6 +25,7 @@ describe('Safran.AI one-page CV export', () => {
     expect(draft.experience.every(e => e.bullets.length === 3)).toBe(true);
     for (const template of cvTemplateOptions) {
       draft.template = template.id;
+      if (template.id === 'keywords') draft.keySkills = 'Python · OpenCV · Segmentation · PyTorch · Machine Learning';
       const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
       expect(pdf.getPageCount(), template.id).toBe(1);
     }
@@ -97,5 +98,19 @@ describe('CV technical skill deduplication', () => {
     expect(result[0]).toContain('Python');
     expect(result[1]).toContain('OpenCV');
     expect(result[2]).toContain('PyTorch');
+  });
+});
+
+describe('ATS key skills template', () => {
+  it('derives only displayed existing skills and keeps explicit role-specific edits', () => {
+    const draft = structuredClone(defaultCvFr);
+    draft.template = 'keywords';
+    const derived = cvKeySkillsForDisplay(draft);
+    expect(derived).toContain('Python');
+    expect(derived).not.toContain('Quantum');
+    draft.keySkills = 'Python · OpenCV · Segmentation';
+    expect(cvKeySkillsForDisplay(draft)).toBe('Python · OpenCV · Segmentation');
+    draft.keySkills = '';
+    expect(cvKeySkillsForDisplay(draft)).toBe('');
   });
 });
