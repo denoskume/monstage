@@ -1,5 +1,5 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
-import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, type CvDraft } from './cvStorage';
+import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvPageColorHex, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
 const A4_HEIGHT = 841.89;
@@ -64,12 +64,18 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   const ruleColor = modern ? rgb(0.65, 0.76, 0.84) : rgb(0.25, 0.25, 0.25);
   const usableWidth = A4_WIDTH - (MARGIN_X * 2);
 
-  // Template 4 uses the exact #FCFCFC background supplied by the user.
-  // Draw it on every page, behind selectable text and links.
+  // Page background is independent of the selected template.
+  // Draw it behind selectable ATS text and links on every PDF page.
   const paintPageBackground = () => {
-    if (keywordsTemplate) page.drawRectangle({
+    const hex = cvPageColorHex(draft.pageColor);
+    if (hex === '#FFFFFF') return;
+    page.drawRectangle({
       x: 0, y: 0, width: A4_WIDTH, height: A4_HEIGHT,
-      color: rgb(252 / 255, 252 / 255, 252 / 255),
+      color: rgb(
+        parseInt(hex.slice(1, 3), 16) / 255,
+        parseInt(hex.slice(3, 5), 16) / 255,
+        parseInt(hex.slice(5, 7), 16) / 255,
+      ),
     });
   };
   paintPageBackground();
