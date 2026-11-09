@@ -65,7 +65,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
         <div className="cv-entry__top"><strong>{renderCvBold(cvEducationDisplay(item).school)}</strong><span>{renderCvBold(item.period)}</span></div>
         {(item.degree.trim() || cvEducationDisplay(item).location) ? <div className="cv-entry__top"><span>{renderCvBold(item.degree)}</span><span>{renderCvBold(cvEducationDisplay(item).location)}</span></div> : null}
         {item.bullets?.some(Boolean) ? <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : item.details ? <p>{renderCvBold(item.details)}</p> : null}
-        {item.keyCourses?.trim() ? <p><strong>{draft.language === 'FR' ? 'Cours clés :' : 'Key courses:'}</strong> {renderCvBold(item.keyCourses)}</p> : null}
+        {item.keyCourses?.trim() ? <p><strong>{draft.language === 'FR' ? 'Cours pertinents :' : 'Relevant courses:'}</strong> {renderCvBold(item.keyCourses)}</p> : null}
       </div>)}
     </section>
   );
@@ -428,7 +428,7 @@ export function CvStudioPage() {
                   <label>Period<input value={item.period} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, period: e.target.value }))} /></label>
                 </div>
                 <label>{draft.language === 'FR' ? 'Description (si aucune puce)' : 'Description (if no bullets)'}<textarea rows={2} value={item.details} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, details: e.target.value }))} /></label>
-                <label>{draft.language === 'FR' ? 'Cours clés' : 'Key courses'}
+                <label>{draft.language === 'FR' ? 'Cours pertinents' : 'Relevant courses'}
                   <textarea rows={2} value={item.keyCourses ?? ''} onChange={(e) => patch('education', updateAt(draft.education, index, { ...item, keyCourses: e.target.value }))} />
                 </label>
                 {(item.bullets ?? []).map((bullet, bulletIndex) => (
