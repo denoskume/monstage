@@ -4,7 +4,7 @@ import { runInNewContext } from 'node:vm';
 import { it, expect } from 'vitest';
 import { TARGET_COMPANIES, targetCompany, isVisionMission, isTargetOffer } from '../../../shared/searchScope';
 
-it('keeps Apps Script ingestion aligned with the same 15-company A/B scope', () => {
+it('keeps Apps Script ingestion aligned with the same 30-company A/B scope', () => {
   const source = readFileSync(resolve(process.cwd(),'apps-script/Code.gs'),'utf8');
   const helper = source.slice(source.indexOf('var TARGET_COMPANY_GROUPS_'),source.indexOf('function targetSignalScore_'));
   const ctx = runInNewContext(helper + ';({groups:TARGET_COMPANY_GROUPS_,company:strictCompany_,vision:strictVision_,relevant:strictRelevant_,eligible:strictEligible_})');
@@ -26,8 +26,8 @@ it('keeps Apps Script ingestion aligned with the same 15-company A/B scope', () 
     ['Michelin','Stage Data Analyst Finance',false],
     ['Safran','Stage Machine Learning Engineer Computer Vision',true],
     ['Bosch','Stage Computer Vision',false],
-    ['EDF','Stage Data Analyst',false],
-    ['Siemens Healthineers','Stage traitement images',false],
+    ['EDF','Stage Data Analyst',true],
+    ['Siemens Healthineers','Stage traitement images',true],
   ] as const;
   for(const [company,title,expected] of cases){
     expect(ctx.eligible(company,title,'')).toBe(expected);
