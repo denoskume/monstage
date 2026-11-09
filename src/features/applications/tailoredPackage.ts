@@ -71,8 +71,45 @@ function alstomReqProjects(language: CvLanguage) {
   ];
   return projects.map(project => ({project,score:100,sourceUrl:'',reason:fr?'Évaluation de modèles IA':'AI model evaluation'}));
 }
+
+const isDanoneVolvicMaintenance = (offer: InternshipOffer) =>
+  offer.id === 'OFFRE-DANONE-VOLVIC-MAINT-29048' ||
+  (/danone/i.test(offer.company) && /maintenance industrielle/i.test(offer.title) && /volvic/i.test(offer.city));
+
+function danoneMaintenanceProjects(language: CvLanguage) {
+  const projects = language === 'FR' ? [
+    { id: 'monstage', name: 'MonStage — Plateforme de suivi et d’analyse de données', period: '2026', bullets: [
+      'Développé une application de suivi structurée autour de données et de statuts de candidatures.',
+      'Relié une interface React/TypeScript à une source Google Sheets et à une API.',
+      'Mis en place des filtres et des indicateurs pour faciliter le suivi et la priorisation.',
+      'Vérifié la cohérence des données et amélioré les parcours à partir des retours d’utilisation.'
+    ] },
+    { id: 'clap', name: 'CLAP — Évaluation quantitative de modèles IA', period: '2026', bullets: [
+      'Analysé 2 000 extraits audio répartis en 50 catégories du jeu ESC-50.',
+      'Comparé dix stratégies de descriptions textuelles et mesuré leurs performances.',
+      'Amélioré la précision Top-1 de 83,05 % à 91,15 %, soit un gain de 8,10 points.',
+      'Examiné les prédictions erronées et synthétisé les résultats pour orienter les choix.'
+    ] }
+  ] : [
+    { id: 'monstage', name: 'MonStage — Data Tracking & Analytics Platform', period: '2026', bullets: [
+      'Developed an application to track structured records and application statuses.',
+      'Connected a React/TypeScript interface to Google Sheets and an API.',
+      'Implemented filters and indicators to support tracking and prioritization.',
+      'Checked data consistency and improved workflows based on user feedback.'
+    ] },
+    { id: 'clap', name: 'CLAP — Quantitative AI Model Evaluation', period: '2026', bullets: [
+      'Analyzed 2,000 audio clips across 50 ESC-50 categories.',
+      'Compared ten text-prompt strategies and measured their performance.',
+      'Improved Top-1 accuracy from 83.05% to 91.15%, an 8.10-point gain.',
+      'Reviewed misclassifications and summarized results to inform decisions.'
+    ] }
+  ];
+  return projects.map(project => ({ project, score: 100, sourceUrl: '', reason: 'Analyse, fiabilité des données et amélioration continue' }));
+}
+
 export function projectSelectionForOffer(offer: InternshipOffer, language: CvLanguage) {
   if (isAlstomVision(offer)) return alstomProjects(language);
+  if (isDanoneVolvicMaintenance(offer)) return danoneMaintenanceProjects(language);
   if (isAlstomReqAi(offer)) return alstomReqProjects(language);
   const current = loadCvDraft(language).projects;
   const verifiedIds = new Set(publicProjectCatalog.map(entry => entry.id));
@@ -155,6 +192,30 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
       '**Machine Learning:** scikit-learn, PyTorch, classification, performance metrics',
       '**Data analysis:** cleaning, statistics, visualization, Matplotlib',
       '**Tools:** Jupyter, Git, GitHub, Linux, Excel'
+    ]).join('\\n'.replace('\\n', '\n'));
+    return base;
+  }
+
+  if (isDanoneVolvicMaintenance(offer)) {
+    base.headline = language === 'FR'
+      ? 'Data Analysis | Python | KPI & Reporting | Maintenance industrielle'
+      : 'Data Analysis | Python | KPI & Reporting | Industrial Maintenance';
+    base.summary = language === 'FR'
+      ? "Étudiant en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de six mois dès février 2027. Je souhaite contribuer au suivi des KPI, à l'analyse des données de maintenance et à l'amélioration de la performance industrielle chez Danone."
+      : 'Final-year MSc Control and Robotics student in Data Science, Signal & Image Processing at Centrale Nantes, seeking a six-month internship from February 2027 to contribute to maintenance data analysis, KPI tracking and industrial performance improvement at Danone.';
+    base.projects = danoneMaintenanceProjects(language).map(item => item.project);
+    base.skills = (language === 'FR' ? [
+      '**Analyse de données :** Python, pandas, NumPy, SQL, nettoyage et contrôle qualité',
+      '**KPI & reporting :** statistiques, visualisation, tableaux de bord, Power BI',
+      '**Machine Learning :** scikit-learn, classification, évaluation de modèles',
+      '**Programmation & automatisation :** Python, Git, React, TypeScript',
+      '**Outils :** Excel, Jupyter, Matplotlib, Linux'
+    ] : [
+      '**Data analysis:** Python, pandas, NumPy, SQL, cleaning and data quality',
+      '**KPI & reporting:** statistics, visualization, dashboards, Power BI',
+      '**Machine Learning:** scikit-learn, classification, model evaluation',
+      '**Programming & automation:** Python, Git, React, TypeScript',
+      '**Tools:** Excel, Jupyter, Matplotlib, Linux'
     ]).join('\\n'.replace('\\n', '\n'));
     return base;
   }
