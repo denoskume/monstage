@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -159,10 +159,11 @@ export function CvStudioPage() {
   const navigate = useNavigate();
   const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
   const offerParam = params.get('offer');
-  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft(languageParam));
+  const [plan, setPlan] = useState<CvPlan>(() => params.get('plan') === 'B' ? 'B' : 'A');
+  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft(languageParam, params.get('plan') === 'B' ? 'B' : 'A'));
   useEffect(() => {
     if (!offerParam) {
-      setDraft(loadCvDraft(languageParam));
+      setDraft(loadCvDraft(languageParam, plan));
       return;
     }
     const offer = offersData?.offers.find(item => item.id === offerParam);
@@ -170,7 +171,7 @@ export function CvStudioPage() {
     const dossier = loadApplicationDossier(offer.id, languageParam) ?? prepareApplicationDossier(offer, languageParam);
     setDraft(dossier.cv);
     setSaved(false);
-  }, [offerParam, languageParam, offersData]);
+  }, [offerParam, languageParam, offersData, plan]);
   const [saved, setSaved] = useState(false);
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
@@ -198,10 +199,18 @@ export function CvStudioPage() {
     setSaved(true);
   }
 
+  function switchPlan(nextPlan: CvPlan) {
+    if (nextPlan === plan || offerParam) return;
+    saveCvDraft(draft);
+    setPlan(nextPlan);
+    setDraft(loadCvDraft(draft.language, nextPlan));
+    setSaved(false);
+  }
+
   function switchLanguage(language: CvLanguage) {
     saveCvDraft(draft);
     const offer = offersData?.offers.find(item => item.id === offerParam);
-    const tailored = offer ? (loadApplicationDossier(offer.id, language) ?? prepareApplicationDossier(offer, language)).cv : loadCvDraft(language);
+    const tailored = offer ? (loadApplicationDossier(offer.id, language) ?? prepareApplicationDossier(offer, language)).cv : loadCvDraft(language, plan);
     setDraft(tailored);
     setSaved(false);
   }
@@ -217,7 +226,7 @@ export function CvStudioPage() {
   }
 
   function reset() {
-    const next = resetCvDraft(draft.language);
+    const next = resetCvDraft(draft.language, plan);
     setDraft(next);
     setSaved(false);
   }
@@ -294,6 +303,17 @@ export function CvStudioPage() {
         <h1 className="sr-only">CV Studio</h1>
         <div className="cv-studio-toolbar">
           <div className="cv-header-selectors">
+            {!offerParam ? (
+              <label className="cv-header-select">
+                <span>CV</span>
+                <select aria-label={draft.language === 'FR' ? 'Orientation du CV' : 'CV track'}
+                  value={plan}
+                  onChange={(event) => switchPlan(event.target.value as CvPlan)}>
+                  <option value="A">A · Computer Vision</option>
+                  <option value="B">B · Data Analyst</option>
+                </select>
+              </label>
+            ) : null}
             <label className="cv-header-select">
               <span>{draft.language === 'FR' ? 'Modèle' : 'Template'}</span>
               <select aria-label={draft.language === 'FR' ? 'Modèle de CV' : 'CV template'}
