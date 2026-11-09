@@ -4,7 +4,7 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvTemplateOptions, type CvTemplate } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvKeySkillsForDisplay, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -325,6 +325,18 @@ export function CvStudioPage() {
           </button>
         ))}
         <span className="cv-template-chooser__hint">{draft.language === 'FR' ? 'Même contenu · Compatible ATS' : 'Same content · ATS-friendly'}</span>
+        <div className="cv-color-chooser" role="group" aria-label={draft.language === 'FR' ? 'Couleur de page' : 'Page color'}>
+          <span className="cv-template-chooser__label">{draft.language === 'FR' ? 'Couleur de page' : 'Page color'}</span>
+          {cvPageColorOptions.map(({ id, fr, en, hex }) => (
+            <button key={id} type="button"
+              className={'cv-color-chooser__choice' + ((draft.pageColor ?? 'white') === id ? ' is-active' : '')}
+              aria-pressed={(draft.pageColor ?? 'white') === id}
+              onClick={() => patch('pageColor', id as CvPageColor)}>
+              <span className="cv-color-chooser__swatch" style={{ backgroundColor: hex }} aria-hidden="true" />
+              {draft.language === 'FR' ? fr : en}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="cv-studio-layout">
@@ -561,7 +573,7 @@ export function CvStudioPage() {
           </section>
         </aside>
 
-        <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} id="cv-print-area">
+        <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }} id="cv-print-area">
           <header className="cv-preview__header">
             <h1>{renderCvBold(draft.name)}</h1>
             <p className="cv-preview__headline">{renderCvBold(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE)}</p>
