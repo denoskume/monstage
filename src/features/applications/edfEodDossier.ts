@@ -19,6 +19,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
   draft.template = draft.template ?? 'modern';
   draft.pageColor = 'white';
   draft.summaryHeading = 'profile';
+  draft.showMissionLabels = false;
   draft.headline = fr
     ? 'Data Science | Prévision & modélisation | Python'
     : 'Data Science | Forecasting & Modeling | Python';
@@ -49,45 +50,41 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
       id: 'insurance',
       name: 'Étude de cas — Modélisation prédictive de coûts hospitaliers',
       period: '2026',
-      description: '',
+      description: 'Étude de cas : modélisation de coûts hospitaliers à partir de données structurées.',
       bullets: [
         'Préparé les données et constitué des jeux d’entraînement et de test séparés par patient.',
         'Développé et comparé des modèles de prédiction de coûts et de détection des coûts élevés avec scikit-learn.',
         'Évalué les résultats avec MAE, RMSE, R² et PR-AUC ; obtenu R² = 0,926 sur le test de régression.',
-        'Comparé les résultats sur les jeux de test pour vérifier la généralisation des modèles.',
       ],
     },
     {
       id: 'monstage',
       name: 'MonStage — Automatisation et exploitation de données',
       period: '2026–En cours',
-      description: '',
+      description: 'Plateforme personnelle de collecte, d’automatisation et de suivi des offres de stage.',
       bullets: [
         'Centralisé des données issues de plusieurs sources dans un outil de suivi structuré.',
         'Développé des filtres multicritères et des contrôles pour améliorer la cohérence des informations.',
         'Automatisé le suivi des candidatures et la préparation de documents grâce à React/TypeScript et Google Sheets.',
-        'Ajouté des statuts et des vues de suivi pour faciliter la priorisation des offres.',
       ],
     },
   ] : [
     {
       id: 'insurance', name: 'Case Study — Predictive Hospital Cost Modeling', period: '2026',
-      description: '',
+      description: 'Case study: predictive hospital cost modeling using structured data.',
       bullets: [
         'Prepared data with patient-separated training and test sets.',
         'Built and compared cost regression and high-cost classification models using scikit-learn.',
         'Evaluated MAE, RMSE, R² and PR-AUC; obtained R² = 0.926 on the regression test set.',
-        'Compared held-out test results to assess model generalization.',
       ],
     },
     {
       id: 'monstage', name: 'MonStage — Data Workflow Automation', period: '2026–Present',
-      description: '',
+      description: 'Personal platform for collecting, automating and tracking internship offers.',
       bullets: [
         'Centralized multi-source data in a structured tracking application.',
         'Implemented multi-criteria filtering and data consistency checks.',
         'Automated application tracking and document preparation with React/TypeScript and Google Sheets.',
-        'Added application statuses and monitoring views to help prioritize offers.',
       ],
     },
   ];
@@ -98,8 +95,8 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     draft.experience = [...defaultCvFr.experience].reverse().map(item => ({
       ...structuredClone(item),
       period: item.id === 'rws' ? 'Août 2026' : item.period,
-      description: '',
-      bullets: item.bullets.slice(0, 4),
+      description: item.id === 'unified' ? 'Préparation, analyse exploratoire et visualisation de données avec Python.' : 'Évaluation de réponses de modèles d’IA selon des critères de qualité définis.',
+      bullets: item.bullets.slice(0, 3),
     }));
   } else {
     draft.experience = reference.experience.map(item => ({
@@ -108,15 +105,13 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
         'Cleaned and structured datasets using Python and pandas.',
         'Performed exploratory analysis to identify trends and anomalies.',
         'Created visualizations and clear reports to communicate findings.',
-        'Summarized results for interpretation and decision-making.',
       ] : [
         'Evaluated model responses using consistent quality criteria.',
         'Identified errors and recurring limitations across outputs.',
         'Documented judgments with concise, evidence-based explanations.',
-        'Applied consistent assessment criteria for reproducible evaluations.',
       ],
       period: item.id === 'rws' ? 'Aug 2026' : item.period,
-      description: '',
+      description: item.id === 'unified' ? 'Data cleaning, exploratory analysis and visualization using Python.' : 'Evaluation of AI model outputs against defined quality criteria.',
     }));
   }
   draft.skills = fr
@@ -168,7 +163,11 @@ function compactExistingEdfCv(cv: CvDraft): CvDraft {
       ? 'La prévision de la consommation électrique à moyen terme m’intéresse particulièrement, notamment à travers l’analyse de nouvelles données, l’optimisation des flux de traitement et le développement d’outils Python utiles aux équipes opérationnelles. Je souhaite contribuer à ces travaux d’Équilibre Offre-Demande dans le cadre d’un stage de fin d’études de six mois dès février 2027.'
       : 'Medium-term electricity consumption forecasting interests me particularly, from analyzing new data and improving data-processing flows to building Python tools for operational teams. I would like to contribute to this supply-demand balancing work through a six-month final-year internship starting in February 2027.';
   }
-  const descriptions = new Set([
+  // Apply the requested LinkedIn layout to this EDF dossier only:
+  // one concise description followed by exactly three evidence-based bullets.
+  // Keep manually edited non-empty descriptions when present.
+  const descriptions: Record<CvLanguage, Record<string, string>> = {"FR":{"insurance":"Étude de cas : modélisation de coûts hospitaliers à partir de données structurées.","monstage":"Plateforme personnelle de collecte, d’automatisation et de suivi des offres de stage.","unified":"Préparation, analyse exploratoire et visualisation de données avec Python.","rws":"Évaluation de réponses de modèles d’IA selon des critères de qualité définis."},"EN":{"insurance":"Case study: predictive hospital cost modeling using structured data.","monstage":"Personal platform for collecting, automating and tracking internship offers.","unified":"Data cleaning, exploratory analysis and visualization using Python.","rws":"Evaluation of AI model outputs against defined quality criteria."}};
+  const obsoleteDescriptions = new Set([
     'Modèles de régression et de classification sur des données structurées.',
     'Plateforme personnelle de collecte et de suivi d’offres de stage.',
     'Regression and classification models on structured data.',
@@ -178,30 +177,19 @@ function compactExistingEdfCv(cv: CvDraft): CvDraft {
     'Data preparation, exploratory analysis and visualization.',
     'Structured evaluation of AI model outputs.',
   ]);
-  next.projects = next.projects.map(p => {
-    const fourth = next.language === 'FR'
-      ? p.id === 'insurance' ? 'Comparé les résultats sur les jeux de test pour vérifier la généralisation des modèles.'
-        : p.id === 'monstage' ? 'Ajouté des statuts et des vues de suivi pour faciliter la priorisation des offres.' : null
-      : p.id === 'insurance' ? 'Compared held-out test results to assess model generalization.'
-        : p.id === 'monstage' ? 'Added application statuses and monitoring views to help prioritize offers.' : null;
+  const normalizeEntry = <T extends { id: string; description?: string; bullets: string[] }>(entry: T): T => {
+    const knownDescription = descriptions[next.language][entry.id];
+    if (!knownDescription) return entry;
+    const currentDescription = (entry.description || '').trim();
     return {
-      ...p,
-      description: descriptions.has(p.description ?? '') ? '' : p.description,
-      bullets: fourth && p.bullets.length === 3 ? [...p.bullets, fourth] : p.bullets,
+      ...entry,
+      description: !currentDescription || obsoleteDescriptions.has(currentDescription) ? knownDescription : entry.description,
+      bullets: entry.bullets.filter(Boolean).slice(0, 3),
     };
-  });
-  next.experience = next.experience.map(e => {
-    const fourth = next.language === 'FR'
-      ? e.id === 'unified' ? 'Synthétisé les analyses pour faciliter leur interprétation et la prise de décision.'
-        : e.id === 'rws' ? 'Appliqué des critères constants pour maintenir des évaluations reproductibles.' : null
-      : e.id === 'unified' ? 'Summarized results for interpretation and decision-making.'
-        : e.id === 'rws' ? 'Applied consistent assessment criteria for reproducible evaluations.' : null;
-    return {
-      ...e,
-      description: descriptions.has(e.description ?? '') ? '' : e.description,
-      bullets: fourth && e.bullets.length === 3 ? [...e.bullets, fourth] : e.bullets,
-    };
-  });
+  };
+  next.projects = next.projects.map(normalizeEntry);
+  next.experience = next.experience.map(normalizeEntry);
+  next.showMissionLabels = false;
   next.education = next.education.map(e => e.id === 'kju' && /^(Bases en programmation Python, systèmes de bases de données, algorithmique et développement logiciel\\.|Foundations in Python, database systems, algorithms and software development\\.)$/.test(e.details) ? { ...e, details: '' } : e);
   if (next.skills === '**Programmation & données :** Python, pandas, NumPy, SQL, jointures, agrégations, sous-requêtes\n**Analyse & modélisation :** statistiques, régression, évaluation de modèles\n**Machine Learning :** scikit-learn, PyTorch\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux') {
     next.skills = '**Python & données :** Python, pandas, NumPy, SQL, jointures, agrégations, sous-requêtes\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch';
