@@ -122,7 +122,7 @@ describe('CV page-color choices', () => {
   it('keeps the three page colors available independent of template', () => {
     expect(cvPageColorOptions.map(option => option.id)).toEqual(['white', 'soft-gray', 'soft-blue']);
     expect(cvPageColorHex()).toBe('#FFFFFF');
-    expect(cvPageColorHex('soft-gray')).toBe('#FCFCFC');
+    expect(cvPageColorHex('soft-gray')).toBe('#EEF0F2');
     expect(cvPageColorHex('soft-blue')).toBe('#F4F7FB');
   });
 });
