@@ -22,8 +22,8 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     ? 'Data Science | Prévision & modélisation | Python'
     : 'Data Science | Forecasting & Modeling | Python';
   draft.summary = fr
-    ? 'Étudiant en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite appliquer Python, l’analyse de données et la modélisation à la prévision de consommation électrique, tout en développant mes compétences auprès d’une équipe opérationnelle.'
-    : 'Final-year MSc Control and Robotics student at Centrale Nantes, specializing in Data Science, Signal & Image Processing, seeking a six-month internship from February 2027 to apply Python, data analysis and modeling to electricity demand forecasting.';
+    ? 'Étudiant en dernière année du MSc Control and Robotics à Centrale Nantes, parcours Data Science, Signal & Image Processing, je recherche un stage de six mois dès février 2027 pour contribuer avec Python à l’exploitation des données, à la modélisation et à la prévision de consommation électrique.'
+    : 'Final-year MSc Control and Robotics student at Centrale Nantes (Data Science, Signal & Image Processing), seeking a six-month internship from February 2027 to contribute to data processing, modeling and electricity consumption forecasting with Python.';
   draft.keySkills = fr
     ? 'Python · Analyse de données · Modélisation · SQL · Visualisation'
     : 'Python · Data Analysis · Modeling · SQL · Visualization';
@@ -48,7 +48,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
       id: 'insurance',
       name: 'Modélisation prédictive — Analyse de coûts hospitaliers',
       period: '2026',
-      description: 'Modèles de régression et de classification sur des données structurées.',
+      description: '',
       bullets: [
         'Préparé les données et constitué des jeux d’entraînement et de test séparés par patient.',
         'Développé et comparé des modèles de prédiction de coûts et de détection des coûts élevés avec scikit-learn.',
@@ -59,7 +59,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
       id: 'monstage',
       name: 'MonStage — Automatisation et exploitation de données',
       period: '2026–En cours',
-      description: 'Plateforme personnelle de collecte et de suivi d’offres de stage.',
+      description: '',
       bullets: [
         'Centralisé des données issues de plusieurs sources dans un outil de suivi structuré.',
         'Développé des filtres multicritères et des contrôles pour améliorer la cohérence des informations.',
@@ -69,7 +69,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
   ] : [
     {
       id: 'insurance', name: 'Predictive Modeling — Hospital Cost Analysis', period: '2026',
-      description: 'Regression and classification models on structured data.',
+      description: '',
       bullets: [
         'Prepared data with patient-separated training and test sets.',
         'Built and compared cost regression and high-cost classification models using scikit-learn.',
@@ -78,7 +78,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     },
     {
       id: 'monstage', name: 'MonStage — Data Workflow Automation', period: '2026–Present',
-      description: 'Personal platform aggregating and tracking internship offers.',
+      description: '',
       bullets: [
         'Centralized multi-source data in a structured tracking application.',
         'Implemented multi-criteria filtering and data consistency checks.',
@@ -93,9 +93,7 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
     draft.experience = [...defaultCvFr.experience].reverse().map(item => ({
       ...structuredClone(item),
       period: item.id === 'rws' ? 'Août 2026' : item.period,
-      description: item.id === 'unified'
-        ? 'Nettoyage, analyse exploratoire et visualisation de données.'
-        : 'Évaluation structurée de réponses de modèles d’intelligence artificielle.',
+      description: '',
       bullets: item.bullets.slice(0, 3),
     }));
   } else {
@@ -111,13 +109,15 @@ export function buildEdfEodCv(language: CvLanguage = 'FR'): CvDraft {
         'Documented judgments with concise, evidence-based explanations.',
       ],
       period: item.id === 'rws' ? 'Aug 2026' : item.period,
-      description: item.id === 'unified' ? 'Data preparation, exploratory analysis and visualization.' : 'Structured evaluation of AI model outputs.',
+      description: '',
     }));
   }
   draft.skills = fr
     ? '**Programmation & données :** Python, pandas, NumPy, SQL (bases)\n**Analyse & modélisation :** statistiques, régression, évaluation de modèles\n**Machine Learning :** scikit-learn, PyTorch\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux'
     : '**Programming & data:** Python, pandas, NumPy, SQL (fundamentals)\n**Analysis & modeling:** statistics, regression, model evaluation\n**Machine Learning:** scikit-learn, PyTorch\n**Visualization & tools:** Matplotlib, Jupyter, Git, Linux';
   draft.leadership = [];
+  draft.interests = '';
+  draft.education = draft.education.map(item => item.id === 'kju' ? { ...item, details: '' } : item);
   draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'languages', 'interests'];
   return draft;
 }
@@ -147,9 +147,44 @@ export function buildEdfEodLetter(language: CvLanguage = 'FR'): CoverLetterDraft
   return letter;
 }
 
+// Surgical migration of the first EDF export: preserve all user-edited project
+// names, dates, bullets, contacts, and the existing letter. Only compact default
+// boilerplate that caused the CV to spill onto a mostly empty second page.
+function compactExistingEdfCv(cv: CvDraft): CvDraft {
+  const next = structuredClone(cv);
+  const oldSummary = 'Étudiant en dernière année de MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d’études de six mois dès février 2027. Je souhaite appliquer Python, l’analyse de données et la modélisation à la prévision de consommation électrique, tout en développant mes compétences auprès d’une équipe opérationnelle.';
+  if (next.summary === oldSummary) next.summary = 'Étudiant en dernière année du MSc Control and Robotics à Centrale Nantes, parcours Data Science, Signal & Image Processing, je recherche un stage de six mois dès février 2027 pour contribuer avec Python à l’exploitation des données, à la modélisation et à la prévision de consommation électrique.';
+  const descriptions = new Set([
+    'Modèles de régression et de classification sur des données structurées.',
+    'Plateforme personnelle de collecte et de suivi d’offres de stage.',
+    'Regression and classification models on structured data.',
+    'Personal platform aggregating and tracking internship offers.',
+    'Nettoyage, analyse exploratoire et visualisation de données.',
+    'Évaluation structurée de réponses de modèles d’intelligence artificielle.',
+    'Data preparation, exploratory analysis and visualization.',
+    'Structured evaluation of AI model outputs.',
+  ]);
+  next.projects = next.projects.map(p => descriptions.has(p.description ?? '') ? { ...p, description: '' } : p);
+  next.experience = next.experience.map(e => descriptions.has(e.description ?? '') ? { ...e, description: '' } : e);
+  next.education = next.education.map(e => e.id === 'kju' && /^(Bases en programmation Python, systèmes de bases de données, algorithmique et développement logiciel\\.|Foundations in Python, database systems, algorithms and software development\\.)$/.test(e.details) ? { ...e, details: '' } : e);
+  if (next.skills === '**Programmation & données :** Python, pandas, NumPy, SQL (bases)\\n**Analyse & modélisation :** statistiques, régression, évaluation de modèles\\n**Machine Learning :** scikit-learn, PyTorch\\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux') {
+    next.skills = '**Python & données :** Python, pandas, NumPy, SQL (bases)\\n**Modélisation & ML :** statistiques, régression, scikit-learn, évaluation de modèles\\n**Visualisation & outils :** Matplotlib, Jupyter, Git, Linux, PyTorch';
+  }
+  if (next.interests === 'Négociation • Échanges interculturels • Cuisine') next.interests = '';
+  return next;
+}
+
 export function prepareEdfEodDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(EDF_EOD_DOSSIER_ID, language);
-  if (existing) return existing; // Preserve edits in both studios.
+  if (existing) {
+    const nextCv = compactExistingEdfCv(existing.cv);
+    if (JSON.stringify(nextCv) !== JSON.stringify(existing.cv)) {
+      const updated = { ...existing, cv: nextCv };
+      saveApplicationDossier(updated);
+      return updated;
+    }
+    return existing;
+  }
   const cv = buildEdfEodCv(language);
   const letter = buildEdfEodLetter(language);
   const dossier = {
