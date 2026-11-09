@@ -1,5 +1,11 @@
 // Application-specific drafts are kept separately from CV master.
 export type CvLanguage = 'FR' | 'EN';
+export type CvSummaryHeading = 'profile' | 'objective';
+export function cvSummaryTitle(heading: CvSummaryHeading | undefined, language: CvLanguage): string {
+  return heading === 'objective' ? (language === 'FR' ? 'Objectif professionnel' : 'Career Objective')
+    : (language === 'FR' ? 'Profil' : 'Profile');
+}
+
 export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords';
 export type CvPageColor = 'white' | 'soft-gray' | 'soft-blue';
 export const cvPageColorOptions: { id: CvPageColor; fr: string; en: string; hex: string }[] = [
@@ -164,6 +170,7 @@ export interface CvDraft {
   linkedin: string;
   github: string;
   summary: string;
+  summaryHeading?: CvSummaryHeading;
   keySkills?: string;
   education: CvEducation[];
   experience: CvExperience[];
