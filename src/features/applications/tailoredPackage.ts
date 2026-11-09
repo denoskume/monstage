@@ -204,6 +204,52 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
       ? "L’amélioration des plans de maintenance préventive et prédictive m’intéresse particulièrement, notamment à travers le suivi des KPI, l’analyse des coûts et la création de tableaux de bord utiles aux équipes terrain. Je souhaite y contribuer dans le cadre d’un stage de fin d’études de six mois dès février 2027."
       : 'I am particularly interested in improving preventive and predictive maintenance plans through KPI monitoring, cost analysis and dashboards that support on-site teams. I would like to contribute to this work through a six-month final-year internship starting in February 2027.';
     base.projects = danoneMaintenanceProjects(language).map(item => item.project);
+    // Apply only to this Danone CV. Keep the degree names, schools and timelines intact.
+    base.education = base.education.map(education => {
+      if (education.id === 'ecn') return {
+        ...education,
+        keyCourses: 'Machine Learning • Stochastic Methods • Optimization Techniques • Data Analysis and Information Retrieval • Systems Identification and Signal Filtering',
+      };
+      if (education.id === 'kju') return {
+        ...education,
+        keyCourses: 'Database Management Systems • Data Analysis using Spreadsheets • Programming (C, Java, PHP, Python) • Software Engineering • Instrumentation Systems',
+      };
+      return education;
+    });
+    if (language === 'FR') {
+      base.experience = base.experience.map(experience => {
+        const isRws = experience.id === 'rws' || /rws/i.test(experience.company);
+        const isUnified = experience.id === 'unified' || /unified mentor/i.test(experience.company);
+        if (isRws) return {
+          ...experience,
+          role: 'Spécialiste en évaluation de modèles d’IA',
+          company: 'RWS Moravia',
+          location: 'France · À distance',
+          period: 'Août – Oct. 2026',
+          description: 'Évaluation et comparaison des réponses de modèles d’intelligence artificielle (texte, audio et images) selon leur qualité, leur pertinence et leur précision.',
+          bullets: [
+            'Évalué la pertinence, la précision et la qualité linguistique des réponses d’IA aux requêtes des utilisateurs.',
+            'Vérifié la qualité des images générées, notamment la netteté, la luminosité, le contraste et la résolution.',
+            'Comparé les résultats des modèles sur des tâches textuelles, visuelles et audio, en justifiant les évaluations par des critères précis.',
+          ],
+        };
+        if (isUnified) return {
+          ...experience,
+          role: 'Stagiaire Data Analyst',
+          company: 'Unified Mentor Private Limited',
+          location: 'Bengaluru, Inde',
+          period: 'Sept. – Déc. 2024',
+          description: 'Nettoyage et préparation de données avec Python, ainsi que création de tableaux de bord interactifs Power BI pour faciliter la prise de décision.',
+          bullets: [
+            'Nettoyé des données avec Python et pandas en traitant les valeurs manquantes, les doublons et les problèmes de format.',
+            'Réalisé des requêtes et jointures SQL, puis calculé des indicateurs de performance (KPI) avec DAX.',
+            'Conçu des tableaux de bord interactifs Power BI pour visualiser les KPI et faciliter la prise de décision.',
+          ],
+        };
+        return experience;
+      });
+    }
+
     base.skills = (language === 'FR' ? [
       '**Analyse de données :** Python, pandas, NumPy, SQL, nettoyage et contrôle qualité',
       '**KPI & reporting :** statistiques, visualisation, tableaux de bord, Power BI',
