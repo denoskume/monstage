@@ -29,6 +29,7 @@ export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'certifications' | 'languages' | 'interests';
 export interface CvCertification {
   id: string;
+  visible?: boolean;
   title: string;
   issuer: string;
   date: string;
