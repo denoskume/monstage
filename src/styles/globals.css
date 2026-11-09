@@ -1161,6 +1161,16 @@ h1, h2, h3 { color: var(--text); }
 .cv-preview--modern section { margin-top: 11px; }
 .cv-preview--modern section h2 { color: #234c70; border-bottom-color: #b7c8d8; font-size: 11px; letter-spacing: 1px; }
 .cv-preview--modern .cv-entry { margin-bottom: 8px; }
+.cv-template-field-note { font-size: .76rem; color: var(--muted); margin: 2px 0 0; }
+.cv-preview--keywords { padding: 30px 43px; line-height: 1.23; }
+.cv-preview--keywords .cv-preview__header { text-align: center; border-bottom: 1px solid #252525; padding-bottom: 6px; margin-bottom: 7px; }
+.cv-preview--keywords .cv-preview__header h1 { font-size: 24px; }
+.cv-preview--keywords .cv-preview__headline { margin: 2px 0; }
+.cv-preview--keywords section { margin-top: 8px; }
+.cv-preview--keywords section h2 { font-size: 10.5px; border-bottom-color: #888; letter-spacing: .35px; margin-bottom: 4px; }
+.cv-preview--keywords .cv-entry { margin-bottom: 7px; }
+.cv-preview--keywords .cv-keyskills { margin-top: 7px; }
+.cv-preview--keywords .cv-keyskills p { font-weight: 600; font-size: 10px; line-height: 1.3; }
 .cv-preview--minimal { padding: 32px 44px; line-height: 1.27; }
 .cv-preview--minimal .cv-preview__header { text-align: left; border-bottom: 0; padding-bottom: 5px; margin-bottom: 9px; }
 .cv-preview--minimal .cv-preview__header h1 { font-size: 24px; letter-spacing: 0; }
