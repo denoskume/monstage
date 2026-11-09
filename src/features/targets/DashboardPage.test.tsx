@@ -7,12 +7,15 @@ vi.mock('../../hooks/useOffers', () => ({ useOffers: () => ({ data: {offers: []}
 vi.mock('../../auth/useAuth', () => ({ useAuth: () => ({ token: 'test' }) }));
 
 describe('company-first dashboard', () => {
-  it('shows three transport sectors and exactly fifteen company dossiers', () => {
+  it('shows eight sectors and exactly thirty company dossiers', () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
     expect(screen.getByRole('heading', {name:'Vue d’ensemble'})).toBeInTheDocument();
     expect(screen.getAllByText('5 entreprises')).toHaveLength(3);
-    expect(screen.getByRole('heading', {name:'15 entreprises · deux plans'})).toBeInTheDocument();
-    expect(screen.getAllByText('Fiche entreprise et préparation d’appel')).toHaveLength(15);
+    expect(screen.getAllByText('4 entreprises')).toHaveLength(3);
+    expect(screen.getByText('2 entreprises')).toBeInTheDocument();
+    expect(screen.getByText('1 entreprises')).toBeInTheDocument();
+    expect(screen.getByRole('heading', {name:'30 entreprises · deux plans'})).toBeInTheDocument();
+    expect(screen.getAllByText('Fiche entreprise et préparation d’appel')).toHaveLength(30);
     expect(screen.getByText('Candidatures envoyées').nextElementSibling).toHaveTextContent('0');
   });
   it('shows the exact same companies under A and B, and no B1/B2 tabs', () => {
