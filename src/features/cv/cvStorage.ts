@@ -107,25 +107,29 @@ export interface CvLeadership {
 // This is a display helper, so previously saved CV drafts are never overwritten.
 export function cvSkillsForDisplay(skills: string, language: CvLanguage): string[] {
   const lines = skills.split('\n').map(line => line.trim()).filter(Boolean);
-  const toolsLabels = /^(?:\*\*)?(?:Tools\s*&\s*Visualization|Outils(?:\s*&\s*visualisation)?)(?:\*\*)?\s*:/i;
-  const toolRows = lines.filter(line => toolsLabels.test(line));
-  if (toolRows.length < 2) return lines;
+  // The user may have bolded the entire tool list in saved CV data.
+  // Remove bold markers only from this merged presentation, not the saved data.
+  const toolCategory = /^(?:Tools\s*&\s*Visualization|Outils(?:\s*&\s*visualisation)?)\s*:/i;
+  const isTools = (line: string) => toolCategory.test(line.replace(/\*\*/g, '').trim());
+  const toolRows = lines.filter(isTools);
+  if (!toolRows.length) return lines;
 
-  const positions = lines.map((line, index) => toolsLabels.test(line) ? index : -1).filter(index => index >= 0);
+  const firstIndex = lines.findIndex(isTools);
   const seen = new Set<string>();
-  const toolValues: string[] = [];
+  const values: string[] = [];
   for (const row of toolRows) {
-    for (const rawItem of row.replace(toolsLabels, '').split(',')) {
+    const clean = row.replace(/\*\*/g, '').trim().replace(toolCategory, '');
+    for (const rawItem of clean.split(',')) {
       const item = rawItem.trim();
       if (!item) continue;
-      const key = /^(?:jupyter|jupyter notebook)$/i.test(item) ? 'jupyter' : item.toLowerCase();
-      if (!seen.has(key)) { seen.add(key); toolValues.push(item); }
+      const key = /^jupyter(?:\s+notebook)?$/i.test(item) ? 'jupyter' : item.toLowerCase();
+      if (!seen.has(key)) { seen.add(key); values.push(item); }
     }
   }
   const heading = language === 'FR' ? '**Outils & visualisation :** ' : '**Tools & Visualization:** ';
-  return lines.flatMap((line, index) => index === positions[0]
-    ? [heading + toolValues.join(', ')]
-    : toolsLabels.test(line) ? [] : [line]);
+  return lines.flatMap((line, index) => index === firstIndex
+    ? [heading + values.join(', ')]
+    : isTools(line) ? [] : [line]);
 }
 
 // Key Skills are a short, editable shortlist of demonstrable skills, not
