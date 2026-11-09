@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { cvEducationDisplay, defaultCvFr, cvTemplateOptions } from './cvStorage';
+import { cvEducationDisplay, cvSkillsForDisplay, defaultCvFr, cvTemplateOptions } from './cvStorage';
 import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import { buildCvPdfBytes } from './pdfExport';
 
@@ -79,5 +79,23 @@ describe('Education display parity between preview and PDF', () => {
     });
     expect(bachelor.school).toBe('Bachelor of Science (BSc) - Computer Science & Electronics, Kristu Jayanti University');
     expect(bachelor.location).toBe('Bengaluru, Inde');
+  });
+});
+
+describe('CV technical skill deduplication', () => {
+  it('merges tool categories without removing distinct skills', () => {
+    const skills = [
+      'Programming: Python, NumPy, MATLAB',
+      'Computer Vision & Image Processing: OpenCV, image filtering, segmentation',
+      'Machine Learning: PyTorch, classification, model evaluation',
+      'Tools & Visualization: Jupyter Notebook, Matplotlib, Git, GitHub',
+      'Outils : Jupyter, Git, GitHub, Linux, Excel',
+    ].join('\n');
+    const result = cvSkillsForDisplay(skills, 'FR');
+    expect(result).toHaveLength(4);
+    expect(result[3]).toBe('**Outils & visualisation :** Jupyter Notebook, Matplotlib, Git, GitHub, Linux, Excel');
+    expect(result[0]).toContain('Python');
+    expect(result[1]).toContain('OpenCV');
+    expect(result[2]).toContain('PyTorch');
   });
 });
