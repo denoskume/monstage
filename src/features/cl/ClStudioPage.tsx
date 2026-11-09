@@ -48,6 +48,10 @@ export function ClStudioPage() {
   useEffect(() => {
     if (!offerParam) return;
     if (isEdfEod) {
+      // Once the EDF letter is open, feed refreshes must never replace typing.
+      const key = EDF_EOD_DOSSIER_ID + ':' + languageParam;
+      if (hydratedKey.current === key) return;
+      hydratedKey.current = key;
       setDraft(prepareEdfEodDossier(languageParam).letter);
       setDownloadError('');
       return;
