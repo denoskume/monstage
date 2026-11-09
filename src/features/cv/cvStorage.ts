@@ -185,7 +185,9 @@ export function cvSkillsForDisplay(skills: string, language: CvLanguage): string
       if (!seen.has(key)) { seen.add(key); values.push(item); }
     }
   }
-  const heading = language === 'FR' ? '**Outils & visualisation :** ' : '**Tools & Visualization:** ';
+  const isSimpleTools = toolRows.length === 1 && /^Outils\s*:/i.test(toolRows[0].replace(/\*\*/g, '').trim());
+  const heading = isSimpleTools && language === 'FR' ? '**Outils :** '
+    : language === 'FR' ? '**Outils & visualisation :** ' : '**Tools & Visualization:** ';
   return lines.flatMap((line, index) => index === firstIndex
     ? [heading + values.join(', ')]
     : isTools(line) ? [] : [cvSkillCategoryForDisplay(line, language)]);
