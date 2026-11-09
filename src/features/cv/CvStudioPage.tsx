@@ -4,9 +4,10 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv } from '../applications/edfEodDossier';
 import { CvEvidencePicker } from './CvEvidencePicker';
+import { certificateCatalog, selectedCertifications } from './cvEvidenceCatalog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, type CvCertification, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -113,9 +114,9 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
     return <section><h2>{sectionLabel(section, draft.language)}</h2>{cvSkillsForDisplay(draft.skills, draft.language).map((line, index) => <p key={index}>{renderCvBold(line)}</p>)}</section>;
   }
   if (section === 'certifications') {
-    if (!draft.certifications?.length) return null;
+    if (!draft.certifications?.some(cert => cert.visible !== false && cert.title.trim())) return null;
     return <section><h2>{sectionLabel(section, draft.language)}</h2>
-      {draft.certifications.map(cert => <p key={cert.id}><strong>{renderCvBold(cert.title)}</strong>{cert.issuer ? ' — '+cert.issuer : ''}{cert.date ? ' · '+cert.date : ''}</p>)}
+      {draft.certifications.filter(cert => cert.visible !== false && cert.title.trim()).map(cert => <p key={cert.id}><strong>{renderCvBold(cert.title)}</strong>{cert.issuer ? ' — '+cert.issuer : ''}{cert.date ? ' · '+cert.date : ''}</p>)}
     </section>;
   }
 
@@ -187,6 +188,7 @@ export function CvStudioPage() {
     setSaved(false);
   }, [offerParam, languageParam, offersData, plan]);
   const [saved, setSaved] = useState(false);
+  const [certificateToAdd, setCertificateToAdd] = useState('');
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
   const [downloadError, setDownloadError] = useState('');
@@ -394,6 +396,70 @@ export function CvStudioPage() {
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
           <AtsScore draft={draft} />
+          <section className="cv-editor-section" aria-label={draft.language === 'FR' ? 'Gérer les certifications de ce CV' : 'Manage certifications in this CV'}>
+            <div className="cv-editor-section__header">
+              <h2>{draft.language === 'FR' ? 'Certifications & formations · ce CV' : 'Certifications & training · this CV'}</h2>
+              <button className="button button--secondary cv-add-button" type="button"
+                onClick={() => patch('certifications', [...(draft.certifications ?? []),
+                  { id: uid('cert'), title: '', issuer: '', date: '', visible: true }])}>
+                + {draft.language === 'FR' ? 'Ajouter manuellement' : 'Add manually'}
+              </button>
+            </div>
+            <p className="cv-editor-hint">{draft.language === 'FR'
+              ? 'Modifier, masquer ou retirer une certification ici ne change ni la bibliothèque ni les autres CV. Les changements apparaissent dans l’aperçu et le PDF.'
+              : 'Editing, hiding or removing a certificate here does not change the library or other CVs. Changes appear in the preview and PDF.'}</p>
+            {(draft.certifications ?? []).length === 0 ? (
+              <p className="cv-editor-hint">{draft.language === 'FR' ? 'Aucune certification sélectionnée pour ce CV.' : 'No certificates selected for this CV.'}</p>
+            ) : null}
+            {(draft.certifications ?? []).map((cert, index) => (
+              <div className="cv-editor-block" key={cert.id}>
+                <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input type="checkbox" style={{ width: 'auto' }} checked={cert.visible !== false}
+                    onChange={e => patch('certifications', (draft.certifications ?? []).map((item, position) =>
+                      position === index ? { ...item, visible: e.target.checked } : item))} />
+                  {draft.language === 'FR' ? 'Afficher dans ce CV' : 'Show in this CV'}
+                </label>
+                <label>{draft.language === 'FR' ? 'Intitulé de la certification' : 'Certification name'}
+                  <input value={cert.title} onChange={e => patch('certifications', (draft.certifications ?? []).map((item, position) =>
+                    position === index ? { ...item, title: e.target.value } : item))} />
+                </label>
+                <div className="cv-editor-grid">
+                  <label>{draft.language === 'FR' ? 'Organisme' : 'Issuer'}
+                    <input value={cert.issuer} onChange={e => patch('certifications', (draft.certifications ?? []).map((item, position) =>
+                      position === index ? { ...item, issuer: e.target.value } : item))} />
+                  </label>
+                  <label>{draft.language === 'FR' ? 'Date' : 'Date'}
+                    <input value={cert.date} onChange={e => patch('certifications', (draft.certifications ?? []).map((item, position) =>
+                      position === index ? { ...item, date: e.target.value } : item))} />
+                  </label>
+                </div>
+                <button className="cv-remove-button" type="button"
+                  onClick={() => patch('certifications', (draft.certifications ?? []).filter((_, position) => position !== index))}>
+                  {draft.language === 'FR' ? 'Retirer de ce CV' : 'Remove from this CV'}
+                </button>
+              </div>
+            ))}
+            <div className="cv-editor-grid">
+              <label>{draft.language === 'FR' ? 'Ajouter depuis la bibliothèque' : 'Add from library'}
+                <select value={certificateToAdd} onChange={e => setCertificateToAdd(e.target.value)}>
+                  <option value="">{draft.language === 'FR' ? 'Sélectionner une certification…' : 'Select a certification…'}</option>
+                  {certificateCatalog.filter(entry => !(draft.certifications ?? []).some(cert => cert.id === entry.id))
+                    .map(entry => <option key={entry.id} value={entry.id}>{entry.title}{entry.issuer ? ' — ' + entry.issuer : ''}</option>)}
+                </select>
+              </label>
+              <button type="button" className="button button--secondary" disabled={!certificateToAdd ||
+                (draft.certifications ?? []).some(cert => cert.id === certificateToAdd)}
+                onClick={() => {
+                  const entry = selectedCertifications([certificateToAdd])[0];
+                  if (!entry) return;
+                  patch('certifications', [...(draft.certifications ?? []), { ...entry, visible: true }]);
+                  setCertificateToAdd('');
+                }}>
+                {draft.language === 'FR' ? 'Ajouter au CV' : 'Add to CV'}
+              </button>
+            </div>
+          </section>
+
           <CvEvidencePicker key={`${draft.language}:${plan}:${offerParam ?? 'master'}`} draft={draft} offerId={offerParam} onChange={(next) => { setDraft(next); setSaved(false); }} />
 
           {draft.template === 'keywords' ? (
