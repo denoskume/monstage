@@ -18,15 +18,18 @@ export function CvEvidencePicker({ draft, onChange, offerId }: Props) {
   const [activeFilter, setActiveFilter] = useState<PickerFilter>('all');
   const [search, setSearch] = useState('');
   const [projectIds, setProjectIds] = useState<string[]>(() => draft.projects.map(p => p.id));
-  const [certificateIds, setCertificateIds] = useState<string[]>(() => (draft.certifications || []).map(c => c.id));
+  const [certificateIds, setCertificateIds] = useState<string[]>(() => (draft.certifications || []).filter(c => c.visible !== false).map(c => c.id));
   const [courseSelections, setCourseSelections] = useState<Record<string,string[]>>(() => coursesFromDraft(draft));
   const [message, setMessage] = useState('');
   useEffect(() => {
     setProjectIds(draft.projects.map(p => p.id));
-    setCertificateIds((draft.certifications || []).map(c => c.id));
+    setCertificateIds((draft.certifications || []).filter(c => c.visible !== false).map(c => c.id));
     setCourseSelections(coursesFromDraft(draft));
     setMessage('');
   }, [draft.language, offerId]);
+  useEffect(() => {
+    setCertificateIds((draft.certifications || []).filter(cert => cert.visible !== false).map(cert => cert.id));
+  }, [draft.certifications]);
 
   const filtered = useMemo(() => {
     const query = search.toLocaleLowerCase('fr-FR').trim();
@@ -68,7 +71,17 @@ export function CvEvidencePicker({ draft, onChange, offerId }: Props) {
       ...education,
       keyCourses: (courseSelections[education.id] || []).join(' · '),
     }));
-    const certifications = selectedCertifications(certificateIds);
+    // Preserve edits made in the dedicated certification editor. Changing a
+    // selection here changes visibility, not the underlying credential data.
+    const selected = new Set(certificateIds);
+    const known = new Set(certificateCatalog.map(item => item.id));
+    const current = draft.certifications || [];
+    const currentIds = new Set(current.map(item => item.id));
+    const certifications = [
+      ...current.map(cert => known.has(cert.id) ? { ...cert, visible: selected.has(cert.id) } : cert),
+      ...selectedCertifications(certificateIds.filter(id => !currentIds.has(id)))
+        .map(cert => ({ ...cert, visible: true })),
+    ];
     const sectionOrder = draft.sectionOrder.includes('certifications')
       ? draft.sectionOrder
       : [...draft.sectionOrder.slice(0, draft.sectionOrder.indexOf('languages') >= 0 ? draft.sectionOrder.indexOf('languages') : draft.sectionOrder.length),
@@ -85,8 +98,8 @@ export function CvEvidencePicker({ draft, onChange, offerId }: Props) {
         <h2>{language === 'FR' ? 'Bibliothèque du parcours · Sélection rapide' : 'Evidence library · Quick selection'}</h2>
       </div>
       <p className="cv-editor-hint">{language === 'FR'
-        ? 'Tous les cours, projets et certificats sont conservés ici. Seuls les éléments cochés passent dans le CV. Les données du master et des autres offres restent intactes.'
-        : 'All courses, projects and credentials stay in this library. Only selected items go into the CV. Other application drafts remain untouched.'}</p>
+        ? 'Tous les cours, projets et certificats restent dans la bibliothèque. Décoche une certification pour la masquer dans ce CV ; son contenu modifié reste conservé.'
+        : 'Courses, projects and credentials remain in the library. Uncheck a certificate to hide it in this CV while keeping its edited details.'}</p>
       <div className="cv-inline-actions" style={{flexWrap:'wrap', gap:6}}>
         <button className="button button--secondary" type="button" onClick={() => usePreset('A')}>Plan A · Vision</button>
         <button className="button button--secondary" type="button" onClick={() => usePreset('B')}>Plan B · Data</button>
