@@ -8,7 +8,26 @@ export interface CvExperience {
   company: string;
   location: string;
   period: string;
+  description?: string;
   bullets: string[];
+}
+
+// Default summaries for existing RWS / Unified Mentor records. Saved edits take priority.
+export function cvExperienceDescription(experience: CvExperience, language: CvLanguage): string {
+  if (experience.description !== undefined) return experience.description;
+  const role = experience.role.toLowerCase();
+  const company = experience.company.toLowerCase();
+  if (company.includes('rws') || role.includes('speech ai')) {
+    return language === 'FR'
+      ? 'Évaluation comparative de la qualité des réponses de modèles d’IA vocale.'
+      : 'Comparative quality evaluation of speech AI model responses.';
+  }
+  if (company.includes('unified mentor') || role.includes('data analyst intern')) {
+    return language === 'FR'
+      ? 'Analyse de données et restitution des résultats à l’aide d’outils de visualisation.'
+      : 'Data analysis and communication of findings using visualization tools.';
+  }
+  return '';
 }
 
 export interface CvEducation {
