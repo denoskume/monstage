@@ -3,6 +3,7 @@ import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv } from '../applications/edfEodDossier';
+import { CvEvidencePicker } from './CvEvidencePicker';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
@@ -28,6 +29,7 @@ function sectionLabel(section: CvSectionKey, language: CvLanguage): string {
     experience: ['Expérience', 'Experience'],
     leadership: ['Leadership', 'Leadership'],
     skills: ['Compétences techniques', 'Technical Skills'],
+    certifications: ['Certifications & formations', 'Certifications & training'],
     languages: ['Langues', 'Languages'],
     interests: ['Centres d’intérêt', 'Interests'],
   };
@@ -110,6 +112,12 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
     if (!draft.skills.trim()) return null;
     return <section><h2>{sectionLabel(section, draft.language)}</h2>{cvSkillsForDisplay(draft.skills, draft.language).map((line, index) => <p key={index}>{renderCvBold(line)}</p>)}</section>;
   }
+  if (section === 'certifications') {
+    if (!draft.certifications?.length) return null;
+    return <section><h2>{sectionLabel(section, draft.language)}</h2>
+      {draft.certifications.map(cert => <p key={cert.id}><strong>{renderCvBold(cert.title)}</strong>{cert.issuer ? ' — '+cert.issuer : ''}{cert.date ? ' · '+cert.date : ''}</p>)}
+    </section>;
+  }
 
   if (section === 'languages' || section === 'interests') {
     const first = draft.sectionOrder.find((key) => key === 'languages' || key === 'interests');
@@ -130,8 +138,8 @@ function AtsScore({ draft }: { draft: CvDraft }) {
     const hasSummary = draft.summary.trim().length >= 60;
     const hasSkills = draft.skills.split(',').filter(Boolean).length >= 6;
     const hasExperienceBullets = draft.experience.every((item) => item.bullets.filter(Boolean).length >= 2);
-    const hasProjectBullets = draft.projects.length <= 2 && draft.projects.every((item) => item.bullets.filter(Boolean).length === 3);
-    const onePageFriendly = draft.projects.length <= 2 && draft.experience.length <= 3;
+    const hasProjectBullets = draft.projects.length <= 3 && draft.projects.every((item) => item.bullets.filter(Boolean).length >= 2 && item.bullets.filter(Boolean).length <= 4);
+    const onePageFriendly = draft.projects.length <= 3 && draft.experience.length <= 3;
     return [
       ['Contact details', hasContact],
       ['Degree and target roles', hasAcademicHeading],
@@ -386,6 +394,7 @@ export function CvStudioPage() {
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
           <AtsScore draft={draft} />
+          <CvEvidencePicker draft={draft} offerId={offerParam} onChange={(next) => { setDraft(next); setSaved(false); }} />
 
           {draft.template === 'keywords' ? (
             <section className="cv-editor-section">
