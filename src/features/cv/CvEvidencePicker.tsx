@@ -96,6 +96,7 @@ export function CvEvidencePicker({ draft, onChange, offerId }: Props) {
       {curricula.map(school => (
         <details key={school.educationId} className="cv-editor-block">
           <summary><strong>{school.educationId === 'ecn' ? 'Centrale Nantes · MSc (2025–2027)' : 'Kristu Jayanti · BSc (2021–2025)'}</strong> — {(courseSelections[school.educationId]||[]).length} {language === 'FR' ? 'sélectionnés' : 'selected'}</summary>
+          <p style={{fontSize:12,opacity:.8,marginTop:7}}>{school.description[language]}</p>
           {school.groups.map(group => (
             <div key={group.title} style={{paddingTop:8}}>
               <strong>{group.title}</strong>
