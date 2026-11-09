@@ -129,11 +129,13 @@ function cvSkillCategoryForDisplay(line: string, language: CvLanguage): string {
     'machine learning': 'Machine Learning',
     'tools & visualization': 'Outils & visualisation',
   };
-  return line.replace(/^(\s*)(\*\*)?([^:\n]+?)(\*\*)?\s*:\s*/, (match, initial: string, boldStart: string | undefined, label: string, boldEnd: string | undefined) => {
-    const translation = categories[label.trim().toLowerCase()];
-    if (!translation) return match;
-    return initial + (boldStart || '') + translation + ' :' + (boldEnd || '') + ' ';
-  });
+  const colon = line.indexOf(':');
+  if (colon < 0) return line;
+  const category = line.slice(0, colon).replace(/\*\*/g, '').trim().toLowerCase();
+  const translated = categories[category];
+  if (!translated) return line;
+  const content = line.slice(colon + 1).replace(/^\s*\*\*/, '').trim();
+  return '**' + translated + ' :** ' + content;
 }
 
 // Merge only duplicate tool rows; keep every distinct skill and its category.
