@@ -127,7 +127,9 @@ function fitScore(title: string): number {
   if (t.includes('vision') || t.includes('image')) score += 10;
   if (t.includes('signal')) score += 10;
   if (t.includes('data science') || t.includes('data scientist')) score += 9;
-  if (t.includes('analytics') || t.includes('data analyst') || t.includes('data engineer')) score += 7;
+  if (/(?:data analyst(?:e|s)?|analyste de donnees|analyste data|business intelligence|bi analyst|power bi)/.test(t)) score += 13;
+  else if (t.includes('analytics')) score += 9;
+  if (t.includes('maintenance') && (t.includes('machine learning') || t.includes('predictive'))) score += 8;
   return Math.min(94, score);
 }
 
