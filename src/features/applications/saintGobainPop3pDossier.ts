@@ -147,9 +147,9 @@ export function buildSaintGobainPop3pLetter(language: CvLanguage = 'FR'): CoverL
   letter.recipientName = '';
   letter.recipientRole = fr ? "À l'attention de l'équipe de recrutement" : 'Recruitment Team';
   letter.recipientLocation = 'Nantes, France';
-  letter.internshipTitle = fr
-    ? 'Stage Data Analyst (H/F) — POP3P, réf. FRA40880'
-    : 'Data Analyst Internship — POP3P, ref. FRA40880';
+  // Must match offer.title exactly: the Studio uses this identity to
+  // archive the letter in the correct application folder.
+  letter.internshipTitle = SG_POP3P_TITLE;
   letter.greeting = fr ? 'Madame, Monsieur,' : 'Dear Hiring Team,';
   letter.paragraphs = fr ? [
     "Actuellement en dernière année du MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d'études de six mois dès février 2027. Votre offre de Data Analyst au sein de POP3P m'intéresse particulièrement : concevoir à Nantes une application Streamlit pour transformer les données du matériel roulant de Saint-Gobain en indicateurs utiles aux équipes représente exactement le type de projet opérationnel auquel je souhaite contribuer.",
