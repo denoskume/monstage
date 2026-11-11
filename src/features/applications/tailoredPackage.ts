@@ -3,6 +3,7 @@ import { loadCvDraft, type CvDraft, type CvLanguage } from '../cv/cvStorage';
 import { loadCoverLetter, type CoverLetterDraft } from '../cl/clStorage';
 import { cvPresets, cvProjectLibrary, selectedCertifications } from '../cv/cvEvidenceCatalog';
 import { relevantCoursesForOffer, selectConvincingProjects } from './strategicCvSelection';
+import { isSaintGobainPop3pOffer, buildSaintGobainPop3pCv, buildSaintGobainPop3pLetter } from './saintGobainPop3pDossier';
 
 const normalized = (value: string) => value.toLocaleLowerCase('fr-FR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -113,6 +114,11 @@ function danoneMaintenanceProjects(language: CvLanguage) {
 }
 
 export function projectSelectionForOffer(offer: InternshipOffer, language: CvLanguage) {
+  if (isSaintGobainPop3pOffer(offer)) return [{
+    project: buildSaintGobainPop3pCv(language).projects[0], score: 100,
+    sourceUrl: 'https://github.com/denoskume/monstage',
+    reason: language === 'FR' ? 'MonStage : données multi-sources, tableaux de bord et gestion sécurisée des accès' : 'MonStage: multi-source data, dashboards and secure access',
+  }];
   if (isAlstomVision(offer)) return alstomProjects(language);
   if (isDanoneVolvicMaintenance(offer)) return danoneMaintenanceProjects(language);
   if (isAlstomReqAi(offer)) return alstomReqProjects(language);
@@ -156,6 +162,7 @@ export function projectSelectionForOffer(offer: InternshipOffer, language: CvLan
 }
 
 export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): CvDraft {
+  if (isSaintGobainPop3pOffer(offer)) return buildSaintGobainPop3pCv(language);
   const jobText = normalized([offer.title, offer.specialization, offer.domain, ...offer.skills].filter(Boolean).join(' '));
   const dataOrForecasting = /data analyst|data analysis|analyse de donnees|prevision|forecast|modelisation|business intelligence|data engineer|statistique|sql|predictive/.test(jobText);
   const selectedPlan = dataOrForecasting ? 'B' : 'A';
@@ -326,6 +333,7 @@ export function recipientForOffer(offer: InternshipOffer, language: CvLanguage) 
 }
 
 export function tailorLetterForOffer(offer: InternshipOffer, language: CvLanguage): CoverLetterDraft {
+  if (isSaintGobainPop3pOffer(offer)) return buildSaintGobainPop3pLetter(language);
   const stored = loadCoverLetter();
   const terms = focus(offer);
   const f = terms.slice(0, 3);
