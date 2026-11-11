@@ -295,10 +295,31 @@ jobs:
       CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if Apps Script code changed
+        id: apps_changed
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.before }}" ] && git cat-file -e "${{ github.event.before }}^{commit}" 2>/dev/null; then
+            if git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- apps-script/; then
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              echo "Apps Script is unchanged; skip creating an unnecessary version."
+            else
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            # Fail safely towards deploying on ambiguous push history.
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.apps_changed.outputs.changed == 'true'
         with:
           node-version: 22
       - name: Check Apps Script deployment credentials
+        if: steps.apps_changed.outputs.changed == 'true'
         id: clasp
         run: |
           if [ -n "$APPS_SCRIPT_SCRIPT_ID" ] && [ -n "$CLASPRC_JSON" ]; then
@@ -308,7 +329,7 @@ jobs:
             echo "::warning::Apps Script credentials unavailable; backend deployment skipped. Frontend can deploy separately."
           fi
       - name: Deploy Apps Script
-        if: steps.clasp.outputs.configured == 'true'
+        if: steps.apps_changed.outputs.changed == 'true' && steps.clasp.outputs.configured == 'true'
         working-directory: apps-script
         run: |
           printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
