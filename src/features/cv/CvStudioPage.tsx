@@ -747,6 +747,7 @@ export function CvStudioPage() {
           </section>
         </aside>
 
+        <div className="cv-preview-viewport">
         <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }} id="cv-print-area">
           <header className="cv-preview__header">
             <h1>{renderCvBold(draft.name)}</h1>
@@ -786,6 +787,7 @@ export function CvStudioPage() {
             </div>
           ) : draft.sectionOrder.map(section => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>
+        </div>
       </div>
     </section>
   );
