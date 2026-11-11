@@ -1161,7 +1161,8 @@ h1, h2, h3 { color: var(--text); }
 .cv-preview section h2 { margin: 0 0 7px; padding-bottom: 3px; border-bottom: 1px solid #444; font-size: 12px; text-transform: uppercase; letter-spacing: .7px; }
 .cv-preview p { margin: 3px 0; font-size: 10.5px; }
 .cv-entry { margin: 0 0 10px; font-size: 10.5px; break-inside: avoid; }
-/* ATS-compatible CV templates: same reading order, no columns, graphics or icons. */
+/* The four original single-column templates are retained. Two additional
+   selectable-text column layouts use semantic content, no icons or tables. */
 .cv-template-chooser { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 11px 14px; margin: 0 0 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
 .cv-template-chooser__label { font-size: .86rem; font-weight: 700; margin-right: 6px; }
 .cv-template-chooser__choice { padding: 7px 13px; border: 1px solid var(--border); border-radius: 8px; color: var(--text); background: var(--surface); cursor: pointer; font-size: .84rem; font-weight: 600; }
@@ -1179,6 +1180,70 @@ h1, h2, h3 { color: var(--text); }
 .cv-preview--modern section h2 { color: #234c70; border-bottom-color: #b7c8d8; font-size: 11px; letter-spacing: 1px; }
 .cv-preview--modern .cv-entry { margin-bottom: 8px; }
 .cv-template-field-note { font-size: .76rem; color: var(--muted); margin: 2px 0 0; }
+/* Modern two-column CV models: balanced and shaded sidebar. */
+.cv-preview--split, .cv-preview--sidebar {
+  padding: 32px 36px;
+  line-height: 1.27;
+}
+.cv-preview--split .cv-preview__header,
+.cv-preview--sidebar .cv-preview__header {
+  margin-bottom: 10px;
+  padding-bottom: 9px;
+  border-bottom: 2px solid #244b65;
+  text-align: center;
+}
+.cv-preview--split .cv-preview__header h1 { color: #244b65; font-size: 25px; }
+.cv-preview--sidebar .cv-preview__header h1 { color: #126368; font-size: 25px; }
+.cv-preview--sidebar .cv-preview__header { border-bottom-color: #126368; }
+.cv-preview--split .cv-preview__two-columns,
+.cv-preview--sidebar .cv-preview__two-columns {
+  display: grid;
+  column-gap: 17px;
+  margin-top: 13px;
+  align-items: start;
+}
+.cv-preview--split .cv-preview__two-columns { grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr); }
+.cv-preview--sidebar .cv-preview__two-columns { grid-template-columns: minmax(0, 1fr) minmax(0, 1.85fr); }
+.cv-preview--split .cv-preview__main,
+.cv-preview--sidebar .cv-preview__main { min-width: 0; }
+.cv-preview--split .cv-preview__sidebar,
+.cv-preview--sidebar .cv-preview__sidebar { min-width: 0; overflow-wrap: anywhere; }
+.cv-preview--split .cv-preview__sidebar { border-left: 1px solid #bed0d8; padding-left: 15px; }
+.cv-preview--sidebar .cv-preview__main { grid-column: 2; grid-row: 1; }
+.cv-preview--sidebar .cv-preview__sidebar {
+  grid-column: 1;
+  grid-row: 1;
+  padding: 8px 11px 12px;
+  margin: -8px 0 0 -7px;
+  background: #eaf4f4;
+}
+.cv-preview--split section, .cv-preview--sidebar section { margin-top: 10px; }
+.cv-preview--split section h2, .cv-preview--sidebar section h2 {
+  font-size: 10.5px;
+  letter-spacing: .45px;
+  color: #244b65;
+  border-bottom-color: #b9cbd1;
+}
+.cv-preview--sidebar section h2 { color: #126368; }
+.cv-preview--split .cv-preview__sidebar section h2,
+.cv-preview--sidebar .cv-preview__sidebar section h2 { font-size: 10px; letter-spacing: .15px; }
+.cv-preview--split .cv-preview__sidebar p,
+.cv-preview--sidebar .cv-preview__sidebar p,
+.cv-preview--split .cv-preview__sidebar li,
+.cv-preview--sidebar .cv-preview__sidebar li { font-size: 9.2px; line-height: 1.32; }
+.cv-preview--split .cv-entry,
+.cv-preview--sidebar .cv-entry { margin-bottom: 7px; overflow-wrap: anywhere; }
+.cv-preview--split .cv-entry__top,
+.cv-preview--sidebar .cv-entry__top { gap: 7px; flex-wrap: wrap; }
+.cv-preview--split .cv-preview__main .cv-entry__top span:last-child,
+.cv-preview--sidebar .cv-preview__main .cv-entry__top span:last-child { font-size: 9.1px; color: #475a63; }
+.cv-preview--split .cv-preview__sidebar .cv-entry__top,
+.cv-preview--sidebar .cv-preview__sidebar .cv-entry__top { flex-direction: column; gap: 2px; }
+@media (max-width: 640px) {
+  /* Preserve two columns in the document rather than collapsing to one. */
+  .cv-preview--split, .cv-preview--sidebar { min-width: 620px; padding: 30px 32px; }
+}
+
 .cv-preview--keywords { padding: 30px 43px; line-height: 1.23; }
 .cv-preview--keywords .cv-preview__header { text-align: center; border-bottom: 1px solid #252525; padding-bottom: 6px; margin-bottom: 7px; }
 .cv-preview--keywords .cv-preview__header h1 { font-size: 24px; }
