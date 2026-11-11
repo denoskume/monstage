@@ -50,7 +50,9 @@ const VISION_TITLE = /\b(computer vision|vision par ordinateur|vision artificiel
 const FINANCIAL_ROLE = /\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/;
 const DATA_SCIENTIST_ROLE = /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/;
 const NON_ANALYST_ROLE = /\b(data engineer|data engineering|ingenieur data|ingenieure data|machine learning engineer|ml engineer|ingenieur machine learning|ingenieure machine learning|consultant strateg|consultante strateg|developpeur logiciel|software engineer)\b/;
-const ANALYST_ROLE = /\b(data analyst|analyste data|analyste de donnees|analyste des donnees|bi analyst|analyste bi|analyste business intelligence|business intelligence analyst|reporting analyst|analyste reporting|data analytics|data analysis|analyse de donnees|analyse des donnees|business intelligence|power bi|tableaux? de bord|data insights)\b/;
+const ANALYST_ROLE = /\b(data analyst(?:e|s)?|analyste data|analyste de donnees|analyste des donnees|bi analyst|analyste bi|analyste business intelligence|business intelligence analyst|reporting analyst|analyste reporting|data analytics|data analysis|analyse de donnees|analyse des donnees|business intelligence|power bi|tableaux? de bord|data insights)\b/;
+const INDUSTRIAL_ML_TITLE = /\b(machine learning|apprentissage automatique|deep learning|apprentissage profond|modeles? predictifs?|predictive modeling|predictive modelling|ia predictive|intelligence artificielle pour la maintenance)\b/;
+const INDUSTRIAL_ML_CONTEXT = /\b(maintenance|fiabilite|reliability|pannes?|defaillances?|fault detection|condition monitoring|prognostic|inspection industrielle|aeronautique|ferroviaire|railway|capteurs industriels|industrial maintenance)\b/;
 const INDUSTRIAL_CONTEXT = /\b(maintenance|predictive|predictif|fiabilite|rams|defaillances?|pannes?|condition monitoring|inspection|industriel|industrielle|industrial|industrialisation|moteurs?|turbomoteurs?|usine|production|manufacturing|equipements?|ferroviaire|railway|transport|mobilite|mobilite durable|flotte|fleet|aeronautique|automobile|qualite industrielle)\b/;
 export function isFinanceRole(offer: ScopeOffer): boolean {
   return FINANCIAL_ROLE.test(normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' ')));
@@ -80,11 +82,18 @@ export function isDataDrivenMaintenanceMission(offer: ScopeOffer): boolean {
     && /\b(maintenance|performance industrielle|maintenance predictive)\b/.test(title)
     && ANALYST_ROLE.test(context);
 }
+/** Applied ML belongs to Plan A only when tied to concrete industrial reliability or maintenance work. */
+export function isIndustrialMachineLearningMission(offer: ScopeOffer): boolean {
+  const title = normalizeScope(offer.title);
+  const context = normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' '));
+  return !FINANCIAL_ROLE.test(context) && !DATA_SCIENTIST_ROLE.test(title)
+    && INDUSTRIAL_ML_TITLE.test(title) && INDUSTRIAL_ML_CONTEXT.test(context);
+}
 /** Explicit Data Analyst role takes Plan B precedence even when the department mentions imaging. */
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   if (!matchingCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
   if (isDataAnalystMission(offer) || isDataDrivenMaintenanceMission(offer)) return 'B';
-  if (isVisionMission(offer)) return 'A';
+  if (isVisionMission(offer) || isIndustrialMachineLearningMission(offer)) return 'A';
   return null;
 }
 export function isTargetOffer(offer: ScopeOffer): boolean {
