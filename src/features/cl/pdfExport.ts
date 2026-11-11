@@ -6,6 +6,8 @@ const HEIGHT = 841.89;
 const MX = 56.69;
 const TOP = 56.69;
 const BOTTOM = 56.69;
+// A discreet 0.55 cm first-line retreat, applied only to letter paragraphs.
+export const LETTER_FIRST_LINE_INDENT = 16;
 
 export function normalizeCoverLetterPdfText(value: unknown): string {
   return String(value ?? '')
@@ -24,14 +26,16 @@ export function coverLetterPdfFileName(draft: CoverLetterDraft): string {
   return signer + '_CL_' + draft.language + '.pdf';
 }
 
-function wrap(text: string, maxWidth: number, font: any, size: number): string[] {
+export function wrapCoverLetterLines(text: string, maxWidth: number, font: any, size: number, firstLineIndent = 0): string[] {
   const words = normalizeCoverLetterPdfText(text).trim().split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const lines: string[] = [];
   let line = words[0];
   for (let index = 1; index < words.length; index += 1) {
     const candidate = line + ' ' + words[index];
-    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) line = candidate;
+    // The opening line is narrower because it starts after the indent.
+    const availableWidth = maxWidth - (lines.length === 0 ? firstLineIndent : 0);
+    if (font.widthOfTextAtSize(candidate, size) <= availableWidth) line = candidate;
     else {
       lines.push(line);
       line = words[index];
@@ -68,27 +72,30 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   };
 
   const drawWrapped = (value: string, size = 10.4, font = regular, leading = 14.1, x = MX, maxWidth = usable) => {
-    const wrapped = wrap(value, maxWidth, font, size);
+    const wrapped = wrapCoverLetterLines(value, maxWidth, font, size);
     ensure(wrapped.length * leading + 4);
     for (const line of wrapped) {
       page.drawText(line, { x, y, size, font, color });
       y -= leading;
     }
   };
-  const drawJustifiedParagraph = (value: string, size = 10.4, font = regular, leading = 14.1, x = MX, maxWidth = usable) => {
-    const wrapped = wrap(value, maxWidth, font, size);
+  const drawJustifiedParagraph = (value: string, size = 10.4, font = regular, leading = 14.1, x = MX, maxWidth = usable, firstLineIndent = 0) => {
+    const wrapped = wrapCoverLetterLines(value, maxWidth, font, size, firstLineIndent);
     ensure(wrapped.length * leading + 4);
 
     wrapped.forEach((line, lineIndex) => {
       const isLastLine = lineIndex === wrapped.length - 1;
+      const indent = lineIndex === 0 ? firstLineIndent : 0;
+      const lineX = x + indent;
+      const lineWidth = maxWidth - indent;
       const words = line.split(/\s+/).filter(Boolean);
 
       if (isLastLine || words.length < 2) {
-        page.drawText(line, { x, y, size, font, color });
+        page.drawText(line, { x: lineX, y, size, font, color });
       } else {
         const wordsWidth = words.reduce((sum, word) => sum + font.widthOfTextAtSize(word, size), 0);
-        const gap = (maxWidth - wordsWidth) / (words.length - 1);
-        let cursorX = x;
+        const gap = (lineWidth - wordsWidth) / (words.length - 1);
+        let cursorX = lineX;
         for (const word of words) {
           page.drawText(word, { x: cursorX, y, size, font, color });
           cursorX += font.widthOfTextAtSize(word, size) + gap;
@@ -124,7 +131,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     y -= 2;
     // Recipient lines share the same right margin as the French date.
     const drawRecipientRight = (value: string, font = regular) => {
-      const lines = wrap(value, 225, font, 10.2);
+      const lines = wrapCoverLetterLines(value, 225, font, 10.2);
       ensure(lines.length * 13.6 + 4);
       for (const line of lines) {
         const text = normalizeCoverLetterPdfText(line);
@@ -175,7 +182,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   y -= 4;
 
   for (const paragraph of draft.paragraphs.filter((value) => value?.trim())) {
-    drawJustifiedParagraph(paragraph, 10.4, regular, 14.1);
+    drawJustifiedParagraph(paragraph, 10.4, regular, 14.1, MX, usable, LETTER_FIRST_LINE_INDENT);
     y -= 7;
   }
 
@@ -185,7 +192,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     : 'Sincerely,');
 
   if (draft.language === 'FR') {
-    drawJustifiedParagraph(closingText, 10.4, regular, 14.1);
+    drawJustifiedParagraph(closingText, 10.4, regular, 14.1, MX, usable, LETTER_FIRST_LINE_INDENT);
   } else {
     drawWrapped(closingText, 10.4, regular, 14.1);
   }
