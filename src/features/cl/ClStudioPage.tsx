@@ -375,10 +375,10 @@ export function ClStudioPage() {
 
           <p>{draft.greeting}</p>
 
-          {draft.paragraphs.filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+          {draft.paragraphs.filter(Boolean).map((paragraph, index) => <p key={index} className="cl-preview__body-paragraph">{paragraph}</p>)}
 
           <div className="cl-preview__closing">
-            <p>{draft.closing}</p>
+            <p className="cl-preview__closing-paragraph">{draft.closing}</p>
             <div className={`cl-preview__signature-block cl-preview__signature-block--${draft.language === 'FR' ? 'right' : 'left'}`}>
               {draft.signatureDataUrl ? <img className="cl-preview__signature" src={draft.signatureDataUrl} alt="Signature" /> : null}
               <strong className="cl-preview__signer">{draft.signer}</strong>
