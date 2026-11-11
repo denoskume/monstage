@@ -107,9 +107,76 @@ export function buildThalesDataLetter(language: CvLanguage = 'FR'): CoverLetterD
   return letter;
 }
 
+// Revision marker is based on content, so old browser drafts created before
+// version metadata existed can be recognized without destroying user edits.
+export const THALES_CV_REVISION = 2;
+
+export function isCurrentThalesCv(cv: CvDraft): boolean {
+  const monstage = cv.projects.find(project => project.id === 'monstage');
+  const degree = cv.education.find(item => item.id === 'ecn');
+  const bachelor = cv.education.find(item => item.id === 'kju');
+  const fr = cv.language === 'FR';
+  return cv.projects.length === 1
+    && monstage?.bullets.length === 4
+    && monstage.bullets.some(bullet => bullet.includes(fr ? 'tableau de bord' : 'dashboard'))
+    && Boolean(degree?.keyCourses?.includes(fr ? 'Analyse de données' : 'Data Analysis'))
+    && Boolean(bachelor?.keyCourses?.includes(fr ? 'Bases de données' : 'Databases'))
+    && !/Java|PHP/i.test(bachelor?.keyCourses ?? '');
+}
+
+// Only classify the *original auto-generated* Thales CV as safe for automatic
+// migration. A user's edited project or course selection needs explicit consent.
+export function isLegacyGeneratedThalesCv(cv: CvDraft): boolean {
+  const monstage = cv.projects.find(project => project.id === 'monstage');
+  const insurance = cv.projects.find(project => project.id === 'insurance');
+  const bachelor = cv.education.find(entry => entry.id === 'kju');
+  const language = cv.language;
+  return cv.projects.length === 2
+    && Boolean(insurance && monstage)
+    && monstage?.bullets.length === 3
+    && monstage.bullets[0] === (language === 'FR'
+      ? 'Centralisé des données issues de plusieurs sources dans un outil de suivi structuré.'
+      : 'Centralized data from multiple sources in a structured tracking platform.')
+    && monstage.bullets[1] === (language === 'FR'
+      ? 'Développé des filtres multicritères et des contrôles de cohérence des informations.'
+      : 'Implemented multi-criteria filters and information consistency checks.')
+    && Boolean(bachelor?.keyCourses?.includes('Programming (C, Java, PHP, Python)'));
+}
+
+// Keep personal contact details, the user's chosen visual design, the original
+// work experiences and the existing cover letter intact. Only replace the
+// sections the user explicitly asked to retarget for Thales.
+export function refreshThalesCvContent(previous: CvDraft): CvDraft {
+  const target = buildThalesDataCv(previous.language);
+  return {
+    ...previous,
+    projects: target.projects,
+    education: previous.education.map(entry => {
+      const relevant = target.education.find(candidate => candidate.id === entry.id);
+      if (!relevant) return entry;
+      return { ...entry, details: relevant.details, keyCourses: relevant.keyCourses };
+    }),
+    sectionOrder: target.sectionOrder,
+  };
+}
+
 export function prepareThalesDataDossier(language: CvLanguage = 'FR') {
   const existing = loadApplicationDossier(THALES_DATA_DOSSIER_ID, language);
-  if (existing) return existing; // Never overwrite the user's reviewed edits.
+  if (existing) {
+    // Refresh only recognizable old generator output, not hand-edited dossiers.
+    if (isLegacyGeneratedThalesCv(existing.cv)) {
+      const updated = {
+        ...existing,
+        cv: refreshThalesCvContent(existing.cv),
+        selectionReasons: language === 'FR'
+          ? ['MonStage : structuration de données multi-sources, contrôles, automatisation et tableau de bord']
+          : ['MonStage: multi-source data structuring, validation, automation and reporting dashboard'],
+      };
+      saveApplicationDossier(updated);
+      return updated;
+    }
+    return existing;
+  }
   const dossier = {
     offerId: THALES_DATA_DOSSIER_ID,
     company: 'Thales Alenia Space',
