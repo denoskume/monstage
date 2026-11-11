@@ -23,9 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Audit official career portals in 10-of-30 rolling batches
+        id: audit
         continue-on-error: true
         run: python scripts/audit_target_careers.py
-      - name: Recover Workday jobs through the runner
+      - name: Ingest Workday and Veolia SmartRecruiters jobs through runner
+        id: ingest
+        continue-on-error: true
         run: python scripts/ingest_public_ats.py
       - name: Refresh official internship feeds and report source diagnostics
         run: |
@@ -85,3 +88,9 @@ jobs:
             artifacts/career-source-coverage.md
           retention-days: 14
           if-no-files-found: warn
+
+      - name: Fail visibly if source audit or ATS runner failed
+        if: ${{ steps.audit.outcome == 'failure' || steps.ingest.outcome == 'failure' }}
+        run: |
+          echo "::error::One or more source checks/ingestions failed; review coverage artifact."
+          exit 1
