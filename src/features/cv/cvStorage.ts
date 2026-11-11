@@ -9,7 +9,7 @@ export function cvSummaryTitle(heading: CvSummaryHeading | undefined, language: 
     : (language === 'FR' ? 'Profil' : 'Profile');
 }
 
-export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords';
+export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords' | 'split' | 'sidebar';
 export type CvPageColor = 'white' | 'soft-gray' | 'soft-blue';
 export const cvPageColorOptions: { id: CvPageColor; fr: string; en: string; hex: string }[] = [
   { id: 'white', fr: 'Blanc', en: 'White', hex: '#FFFFFF' },
@@ -25,6 +25,8 @@ export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
   { id: 'modern', fr: '2 · Moderne', en: '2 · Modern' },
   { id: 'minimal', fr: '3 · Épuré', en: '3 · Minimal' },
   { id: 'keywords', fr: '4 · ATS / Compétences clés', en: '4 · ATS / Key Skills' },
+  { id: 'split', fr: '5 · Double colonne / Équilibré', en: '5 · Two Columns / Balanced' },
+  { id: 'sidebar', fr: '6 · Double colonne / Sidebar', en: '6 · Two Columns / Sidebar' },
 ];
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'certifications' | 'languages' | 'interests';
 export interface CvCertification {
