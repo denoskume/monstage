@@ -1,4 +1,8 @@
 import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
+import { normalizeCvPdfText } from './cvPdfText';
+export { normalizeCvPdfText } from './cvPdfText';
+import { buildTwoColumnCvPdfBytes } from './twoColumnPdf';
+import { isTwoColumnCv } from './twoColumnLayout';
 import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, cvPageColorHex, type CvDraft } from './cvStorage';
 
 const A4_WIDTH = 595.28;
@@ -11,19 +15,6 @@ function safeFileName(value: string): string {
   return value.trim().replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '') || 'MonStage_CV';
 }
 
-export function normalizeCvPdfText(value: string): string {
-  return String(value ?? '')
-    .normalize('NFC')
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/[\u201C\u201D]/g, '"')
-    .replace(/[\u2013\u2014]/g, '-')
-    .replace(/\u2022/g, '•')
-    .replace(/\u00B7/g, '•')
-    .replace(/\u00B2/g, '2')
-    .replace(/\u2026/g, '...')
-    .replace(/\u00A0/g, ' ')
-    .replace(/[^\x20-\x7E\xA0-\xFF\u0152\u0153\u2022\u20AC\u2022]/g, '');
-}
 
 function wrapText(text: string, maxWidth: number, font: any, size: number): string[] {
   const words = normalizeCvPdfText(text).trim().split(/\s+/).filter(Boolean);
@@ -43,6 +34,7 @@ function wrapText(text: string, maxWidth: number, font: any, size: number): stri
 }
 
 export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
+  if (isTwoColumnCv(draft.template)) return buildTwoColumnCvPdfBytes(draft);
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
