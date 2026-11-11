@@ -1243,7 +1243,11 @@ h1, h2, h3 { color: var(--text); }
 
 /* Cover Letter Studio */
 .cl-studio-page { max-width: 1500px; margin: 0 auto; }
-.cl-studio-header { align-items: flex-start; gap: 24px; }
+.cl-studio-header { align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.cl-header-selectors { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cl-header-select { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; font-weight: 600; color: var(--text); white-space: nowrap; }
+.cl-header-select select { height: 37px; width: 165px; max-width: 100%; padding: 0 25px 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.cl-header-select:last-child select { width: 130px; }
 .cl-studio-header p { margin: 6px 0 0; color: var(--muted); }
 .cl-studio-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .cl-language-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; background: var(--surface); }
@@ -1331,6 +1335,22 @@ h1, h2, h3 { color: var(--text); }
 /* Indent ONLY the first line of each body paragraph, matching PDF export. */
 .cl-preview--template > p.cl-preview__body-paragraph { text-indent: 1.5em; }
 .cl-preview--fr .cl-preview__closing p.cl-preview__closing-paragraph { text-indent: 1.5em; }
+/* CL templates use the same model choices as CV Studio, with a real
+   corresponding PDF treatment. Background color is set by the draft. */
+.cl-preview--design-modern .cl-preview__sender strong,
+.cl-preview--design-modern .cl-preview__recipient strong,
+.cl-preview--design-modern .cl-preview__subject { color: #244d70; }
+.cl-preview--design-modern .cl-preview__subject { border-bottom: 2px solid #5c8aad; }
+.cl-preview--design-minimal .cl-preview__subject,
+.cl-preview--design-keywords .cl-preview__subject { border-bottom: 0; padding-bottom: 0; }
+.cl-preview--design-minimal .cl-preview__subject { margin-bottom: 14px !important; }
+.cl-preview--design-keywords.cl-preview--fr .cl-preview__recipient {
+  width: 100%;
+  margin-right: auto;
+  margin-left: 0;
+  justify-items: start;
+  text-align: left;
+}
 .cl-preview--template .cl-preview__closing { margin-top: 18px; }
 .cl-preview--template .cl-preview__closing p { width: 100%; font-size: 10.8px; margin-bottom: 10px; }
 .cl-preview--template .cl-preview__signature-block {
