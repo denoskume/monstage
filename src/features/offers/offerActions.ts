@@ -21,6 +21,7 @@ const curatedSavedOffers = new Set([
   'OFFRE-ALSTOM-RAM-531476',
   'OFFRE-DANONE-VOLVIC-MAINT-29048',
   'external:edf:eod:2026-185820',
+  'external:thales:ai-data:R0343178',
 ]);
 
 const KEY = 'monstage:offer-actions:v1';
