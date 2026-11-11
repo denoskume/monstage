@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "scope": "France - Plan A Computer Vision/Applied industrial ML; Plan B Data Analyst/BI; 6 months from February 2027 only",
+  "notes": "Official portal entry points, not proof that the individual job feed is fully searched. candidate = URL needs independent confirmation; parent-company = needs division filter. Healthineers and Mobility are distinct.",
+  "companies": [
+    {
+      "name": "Airbus",
+      "url": "https://www.airbus.com/fr/careers/students-and-graduates/interns/internships-in-france",
+      "verification": "official",
+      "system": "Workday / Airbus",
+      "domain": "airbus.com"
+    },
+    {
+      "name": "Safran",
+      "url": "https://www.safran-group.com/fr/emplois",
+      "verification": "official",
+      "system": "Safran candidate portal",
+      "domain": "safran-group.com"
+    },
+    {
+      "name": "Thales",
+      "url": "https://careers.thalesgroup.com/fr/fr/search-results",
+      "verification": "official",
+      "system": "Workday / Thales",
+      "domain": "thalesgroup.com"
+    },
+    {
+      "name": "Dassault Aviation",
+      "url": "https://www.dassault-aviation.com/fr/groupe/carrieres/",
+      "verification": "official",
+      "system": "Dassault Aviation portal",
+      "domain": "dassault-aviation.com"
+    },
+    {
+      "name": "Air France-KLM",
+      "url": "https://recrutement.airfrance.com/",
+      "verification": "official",
+      "system": "Air France careers",
+      "domain": "airfrance.com"
+    },
+    {
+      "name": "Alstom",
+      "url": "https://jobsearch.alstom.com/?locale=fr_FR",
+      "verification": "official",
+      "system": "SuccessFactors",
+      "domain": "alstom.com"
+    },
+    {
+      "name": "SNCF",
+      "url": "https://emploi.sncf.com/nos-offres",
+      "verification": "official",
+      "system": "SNCF job board",
+      "domain": "sncf.com"
+    },
+    {
+      "name": "RATP",
+      "url": "https://www.ratp.fr/carrieres",
+      "verification": "official",
+      "system": "RATP careers",
+      "domain": "ratp.fr"
+    },
+    {
+      "name": "Siemens Mobility",
+      "url": "https://www.siemens.com/fr-fr/company/jobs/",
+      "verification": "parent-company",
+      "system": "Siemens jobs, division to filter",
+      "domain": "siemens.com"
+    },
+    {
+      "name": "Hitachi Rail",
+      "url": "https://www.hitachirail.com/Careers",
+      "verification": "official",
+      "system": "Hitachi Rail careers",
+      "domain": "hitachirail.com"
+    },
+    {
+      "name": "Renault Group",
+      "url": "https://www.renaultgroup.com/talents/",
+      "verification": "candidate",
+      "system": "Renault Group jobs",
+      "domain": "renaultgroup.com"
+    },
+    {
+      "name": "Stellantis",
+      "url": "https://careers.stellantis.com/",
+      "verification": "official",
+      "system": "Stellantis careers",
+      "domain": "stellantis.com"
+    },
+    {
+      "name": "Valeo",
+      "url": "https://www.valeo.com/fr/trouver-emploi-stage/",
+      "verification": "official",
+      "system": "Valeo careers",
+      "domain": "valeo.com"
+    },
+    {
+      "name": "FORVIA HELLA",
+      "url": "https://jobs.faurecia.com/careers/en/?locale=fr_FR",
+      "verification": "official",
+      "system": "Forvia / Faurecia",
+      "domain": "faurecia.com"
+    },
+    {
+      "name": "Michelin",
+      "url": "https://recrutement.michelin.fr/trouvez-votre-emploi-chez-michelin",
+      "verification": "official",
+      "system": "Michelin careers",
+      "domain": "michelin.fr"
+    },
+    {
+      "name": "Danone",
+      "url": "https://careers.danone.com/fr/fr/home.html",
+      "verification": "official",
+      "system": "Danone careers",
+      "domain": "danone.com"
+    },
+    {
+      "name": "Nestlé",
+      "url": "https://www.nestle.fr/emplois",
+      "verification": "official",
+      "system": "Nestlé careers",
+      "domain": "nestle.fr"
+    },
+    {
+      "name": "Lactalis",
+      "url": "https://jobs.lactalisexperience.fr/",
+      "verification": "official",
+      "system": "SuccessFactors",
+      "domain": "lactalisexperience.fr"
+    },
+    {
+      "name": "Bel Group",
+      "url": "https://jobs.groupe-bel.com/",
+      "verification": "official",
+      "system": "Bel careers",
+      "domain": "groupe-bel.com"
+    },
+    {
+      "name": "GE HealthCare",
+      "url": "https://careers.gehealthcare.com/fr/fr/search-results",
+      "verification": "official",
+      "system": "GE HealthCare careers",
+      "domain": "gehealthcare.com"
+    },
+    {
+      "name": "EssilorLuxottica",
+      "url": "https://careers.essilorluxottica.com/",
+      "verification": "official",
+      "system": "SuccessFactors",
+      "domain": "essilorluxottica.com"
+    },
+    {
+      "name": "Sanofi",
+      "url": "https://jobs.sanofi.com/",
+      "verification": "candidate",
+      "system": "Sanofi jobs",
+      "domain": "sanofi.com"
+    },
+    {
+      "name": "Siemens Healthineers",
+      "url": "https://careers.siemens-healthineers.com/fr/fr/search-results",
+      "verification": "official",
+      "system": "Siemens Healthineers (distinct)",
+      "domain": "siemens-healthineers.com"
+    },
+    {
+      "name": "Schneider Electric",
+      "url": "https://careers.se.com/france",
+      "verification": "official",
+      "system": "Schneider Electric careers",
+      "domain": "se.com"
+    },
+    {
+      "name": "Saint-Gobain",
+      "url": "https://joinus.saint-gobain.com/fr",
+      "verification": "official",
+      "system": "Saint-Gobain careers",
+      "domain": "saint-gobain.com"
+    },
+    {
+      "name": "Veolia",
+      "url": "https://jobs.smartrecruiters.com/VeoliaEnvironnementSA/",
+      "verification": "official",
+      "system": "SmartRecruiters / Veolia",
+      "domain": "smartrecruiters.com"
+    },
+    {
+      "name": "Air Liquide",
+      "url": "https://www.airliquide.com/fr/rejoignez-nous/carrieres-chez-air-liquide",
+      "verification": "official",
+      "system": "Air Liquide careers",
+      "domain": "airliquide.com"
+    },
+    {
+      "name": "EDF",
+      "url": "https://www.edf.fr/edf-recrute/rejoignez-nous/voir-les-offres/nos-offres?contract_type=Stage",
+      "verification": "official",
+      "system": "EDF careers",
+      "domain": "edf.fr"
+    },
+    {
+      "name": "ENGIE",
+      "url": "https://www.engie.com/candidats/",
+      "verification": "official",
+      "system": "ENGIE careers / GRDF",
+      "domain": "engie.com"
+    },
+    {
+      "name": "L’Oréal",
+      "url": "https://careers.loreal.com/fr/internship-apprenticeship",
+      "verification": "official",
+      "system": "L'Oréal careers",
+      "domain": "loreal.com"
+    }
+  ]
+}
