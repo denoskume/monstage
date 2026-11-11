@@ -81,9 +81,26 @@ export interface CvEducation {
 // Preserve the diploma and its programme ("Parcours") exactly as entered.
 // Only remove an already repeated city/country at the END of the school line.
 export function cvEducationDisplay(education: CvEducation): { school: string; location: string } {
-  const location = education.location.trim()
+  const normalizeLocation = (value: string) => value.trim()
     .replace(/^Bangalore(?=\s*,\s*Inde\b)/i, 'Bengaluru');
-  const school = education.school.trim().replace(/[.,]\s*(?:Bengaluru|Bangalore)\s*,\s*Inde\s*$/i, '').trim();
+  let school = education.school.trim();
+  let location = normalizeLocation(education.location);
+
+  // Older saved CVs embedded the city/country into the school title with a
+  // pipe (e.g. "University - Bachelor ... | Bengaluru, Inde"). Remove this
+  // duplicate metadata from the long title and place it on the second row.
+  // This prevents the dangling "Inde" line in narrow A4 education headers.
+  const embedded = school.match(/\s*\|\s*([^|,]+,\s*[^|,]+)\s*$/);
+  if (embedded) {
+    if (!location) location = normalizeLocation(embedded[1]);
+    school = school.slice(0, embedded.index).trim();
+  }
+  // Also retain the existing normalized University. City, Country format.
+  const trailingCity = school.match(/[.,]\s*((?:Bengaluru|Bangalore)\s*,\s*Inde)\s*$/i);
+  if (trailingCity) {
+    if (!location) location = normalizeLocation(trailingCity[1]);
+    school = school.slice(0, trailingCity.index).trim();
+  }
   return { school, location };
 }
 
