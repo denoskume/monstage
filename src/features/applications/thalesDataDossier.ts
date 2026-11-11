@@ -3,6 +3,7 @@ import type { CoverLetterDraft } from '../cl/clStorage';
 import { freshCoverLetter } from '../cl/clStorage';
 import { loadApplicationDossier, saveApplicationDossier } from './applicationDossiers';
 import { buildEdfEodCv } from './edfEodDossier';
+import { selectedCertifications } from '../cv/cvEvidenceCatalog';
 
 // The user's EDF CV is the verified presentation baseline. This separate,
 // per-offer dossier cannot modify the EDF dossier or either master CV.
@@ -43,8 +44,11 @@ export function buildThalesDataCv(language: CvLanguage = 'FR'): CvDraft {
   draft.skills = fr
     ? '**Python & données :** Python, pandas, NumPy, SQL, nettoyage, jointures, agrégations\n**Analyse & contrôle :** analyse exploratoire, cohérence des données, statistiques, détection d’anomalies\n**ML & outils :** scikit-learn, régression, évaluation de modèles, Matplotlib, Jupyter, Git'
     : '**Python & data:** Python, pandas, NumPy, SQL, cleaning, joins, aggregations\n**Analysis & checks:** exploratory analysis, data consistency, statistics, anomaly detection\n**ML & tools:** scikit-learn, regression, model evaluation, Matplotlib, Jupyter, Git';
-  draft.certifications = [];
-  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'languages'];
+  // These certificates were verified against the PDFs provided by the
+  // candidate on 11 November 2026. Keep the Thales CV concise (two only);
+  // all five certificates remain available in the Studio catalog.
+  draft.certifications = selectedCertifications(['google-advanced', 'sql-az']);
+  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'certifications', 'languages'];
   return draft;
 }
 
