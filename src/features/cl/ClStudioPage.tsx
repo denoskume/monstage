@@ -329,7 +329,7 @@ export function ClStudioPage() {
         </div>
       </div>
 
-      {(() => { try { const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null'); return review?.state === 'awaiting_review' && review?.language === draft.language && review?.company === draft.company && review?.title === draft.internshipTitle ? <p role="status" className="workspace-note"><strong>Lettre pour {review.company} — {review.title}.</strong> Vérifie les quatre paragraphes, la signature et l’en-tête. Aucun envoi sans ton OK.</p> : null; } catch { return null; } })()}
+      {(() => { try { const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null'); return offerParam && review?.offerId === offerParam && review?.state === 'awaiting_review' && review?.language === draft.language && review?.company === draft.company && review?.title === draft.internshipTitle ? <p role="status" className="workspace-note"><strong>Lettre pour {review.company} — {review.title}.</strong> Vérifie les quatre paragraphes, la signature et l’en-tête. Aucun envoi sans ton OK.</p> : null; } catch { return null; } })()}
       {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
 
       <div className="cl-studio-layout">
