@@ -8,6 +8,7 @@ import { edfSavedOffer } from '../applications/edfSavedOffer';
 import { thalesSavedOffer } from '../applications/thalesSavedOffer';
 import { currentCvNoticeOffer } from './cvOfferNotice';
 import { CvEvidencePicker } from './CvEvidencePicker';
+import { cvColumnSections, isTwoColumnCv } from './twoColumnLayout';
 import { certificateCatalog, selectedCertifications } from './cvEvidenceCatalog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
@@ -770,7 +771,20 @@ export function CvStudioPage() {
             </section>
           ) : null}
 
-          {draft.sectionOrder.map((section) => <CvPreviewSection key={section} section={section} draft={draft} />)}
+          {isTwoColumnCv(draft.template) ? (
+            <div className="cv-preview__two-columns">
+              <main className="cv-preview__main" aria-label={draft.language === 'FR' ? 'Parcours et réalisations' : 'Background and achievements'}>
+                {cvColumnSections(draft.sectionOrder).main.map(section => (
+                  <CvPreviewSection key={section} section={section} draft={draft} />
+                ))}
+              </main>
+              <aside className="cv-preview__sidebar" aria-label={draft.language === 'FR' ? 'Compétences et compléments' : 'Skills and additional details'}>
+                {cvColumnSections(draft.sectionOrder).sidebar.map(section => (
+                  <CvPreviewSection key={section} section={section} draft={draft} />
+                ))}
+              </aside>
+            </div>
+          ) : draft.sectionOrder.map(section => <CvPreviewSection key={section} section={section} draft={draft} />)}
         </article>
       </div>
     </section>
