@@ -20,8 +20,8 @@ describe('dual-column CV models', () => {
       'leadership', 'languages', 'interests',
     ];
     const groups = cvColumnSections(order);
-    expect(groups.main).toEqual(['education', 'projects', 'experience']);
-    expect(groups.sidebar).toEqual(['skills', 'certifications', 'leadership', 'languages', 'interests']);
+    expect(groups.main).toEqual(['projects', 'experience']);
+    expect(groups.sidebar).toEqual(['education', 'skills', 'certifications', 'leadership', 'languages', 'interests']);
     expect([...groups.main, ...groups.sidebar].sort()).toEqual([...order].sort());
   });
 
