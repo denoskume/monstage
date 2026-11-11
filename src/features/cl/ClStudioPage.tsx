@@ -17,6 +17,7 @@ import {
   type CoverLetterLanguage,
 } from './clStorage';
 import { buildCoverLetterPdfBytes, coverLetterPdfFileName } from './pdfExport';
+import { cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from '../cv/cvStorage';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
 function subjectLine(draft: CoverLetterDraft): string {
@@ -117,6 +118,25 @@ export function ClStudioPage() {
     setSaved(false);
   }
 
+  // Presentation choices persist immediately in the active application draft.
+  // Do not replace any paragraph, and never alter the master CV.
+  function changePresentation(key: 'template' | 'pageColor', value: CvTemplate | CvPageColor) {
+    const next = { ...draft, [key]: value };
+    setDraft(next);
+    if (offerParam && (job || isEdfEod || isThalesData || isSafranSpontaneous)) {
+      updateApplicationLetter(offerParam, draft.language, next);
+    } else {
+      saveCoverLetter(next);
+    }
+    setSaved(true);
+  }
+
+  const preservePresentation = (next: CoverLetterDraft): CoverLetterDraft => ({
+    ...next,
+    template: draft.template ?? 'classic',
+    pageColor: draft.pageColor ?? 'white',
+  });
+
   function switchLanguage(language: CoverLetterLanguage) {
     const next = isThalesData ? prepareThalesDataDossier(language).letter : isEdfEod ? prepareEdfEodDossier(language).letter : isSafranSpontaneous ? prepareSafranAiDossier(language).letter : job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
     setDraft(next);
@@ -143,7 +163,7 @@ export function ClStudioPage() {
   function generateLetter() {
     if (isThalesData) {
       if (!window.confirm('Régénérer la lettre Thales ? Les modifications de cette lettre seront remplacées, pas celles du CV.')) return;
-      const next = buildThalesDataLetter(draft.language);
+      const next = preservePresentation(buildThalesDataLetter(draft.language));
       updateApplicationLetter(THALES_DATA_DOSSIER_ID, draft.language, next);
       setDraft(next);
       setSaved(true);
@@ -151,7 +171,7 @@ export function ClStudioPage() {
     }
     if (isEdfEod) {
       if (!window.confirm('Régénérer la lettre EDF ? Les modifications manuelles de la lettre seront remplacées, pas celles du CV.')) return;
-      const next = buildEdfEodLetter(draft.language);
+      const next = preservePresentation(buildEdfEodLetter(draft.language));
       updateApplicationLetter(EDF_EOD_DOSSIER_ID, draft.language, next);
       setDraft(next);
       setSaved(true);
@@ -159,7 +179,7 @@ export function ClStudioPage() {
     }
     if (!job || !window.confirm('Régénérer la lettre pour cette offre ? Les modifications manuelles de cette lettre seront remplacées, pas celles du CV.')) return;
     prepareApplicationDossier(job, draft.language);
-    const next = tailorLetterForOffer(job, draft.language);
+    const next = preservePresentation(tailorLetterForOffer(job, draft.language));
     updateApplicationLetter(job.id, draft.language, next);
     saveCoverLetter(next);
     setDraft(next);
@@ -271,8 +291,30 @@ export function ClStudioPage() {
   return (
     <section className="page cl-studio-page">
       <div className="page-header cl-studio-header">
-        <div>
+        <div className="cl-header-selectors">
           <h1 className="sr-only">CL Studio</h1>
+          <label className="cl-header-select">
+            <span>{draft.language === 'FR' ? 'Modèle' : 'Template'}</span>
+            <select
+              aria-label={draft.language === 'FR' ? 'Modèle de lettre' : 'Cover letter template'}
+              value={draft.template ?? 'classic'}
+              onChange={event => changePresentation('template', event.target.value as CvTemplate)}>
+              {cvTemplateOptions.map(({ id, fr, en }) => (
+                <option key={id} value={id}>{draft.language === 'FR' ? fr : en}</option>
+              ))}
+            </select>
+          </label>
+          <label className="cl-header-select">
+            <span>{draft.language === 'FR' ? 'Couleur' : 'Color'}</span>
+            <select
+              aria-label={draft.language === 'FR' ? 'Couleur de la lettre' : 'Cover letter page color'}
+              value={draft.pageColor ?? 'white'}
+              onChange={event => changePresentation('pageColor', event.target.value as CvPageColor)}>
+              {cvPageColorOptions.map(({ id, fr, en }) => (
+                <option key={id} value={id}>{draft.language === 'FR' ? fr : en}</option>
+              ))}
+            </select>
+          </label>
         </div>
         <div className="cl-studio-actions">
           <div className="cl-language-toggle" aria-label="Cover letter language">
@@ -351,7 +393,7 @@ export function ClStudioPage() {
           </section>
         </aside>
 
-        <article className={`cl-preview cl-preview--template ${draft.language === 'FR' ? 'cl-preview--fr' : 'cl-preview--en'}`}>
+        <article className={`cl-preview cl-preview--template ${draft.language === 'FR' ? 'cl-preview--fr' : 'cl-preview--en'} cl-preview--design-${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }}>
           <header className={`cl-preview__sender ${draft.language === 'FR' ? 'cl-preview__sender--left' : 'cl-preview__sender--right'}`}>
             <strong>{draft.signer}</strong>
             {(draft.senderLocation ?? 'Nantes, France') ? <span>{draft.senderLocation ?? 'Nantes, France'}</span> : null}
