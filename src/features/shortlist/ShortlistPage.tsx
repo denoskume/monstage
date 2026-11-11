@@ -15,7 +15,8 @@ import { useAuth } from '../../auth/useAuth';
 import { getWorkspaceState } from '../workspace/workspaceStorage';
 import { getFollowUpAdvice } from '../workspace/intelligence';
 import { EDF_EOD_DOSSIER_ID } from '../applications/edfEodDossier';
-import { withSavedEdfOffer } from '../applications/edfSavedOffer';
+import { withSavedManualOffers } from '../applications/thalesSavedOffer';
+import { THALES_DATA_DOSSIER_ID } from '../applications/thalesDataDossier';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'refused' | 'archived';
 
@@ -95,10 +96,10 @@ export function ShortlistPage() {
 
   // EDF is a manually saved application; it must remain visible even when not
   // included in the automated offer feed.
-  const allOffers = withSavedEdfOffer(data?.offers ?? []);
+  const allOffers = withSavedManualOffers(data?.offers ?? []);
   const savedOffers = useMemo(
     () => sortOffers(allOffers.filter((offer) =>
-      (isTargetOffer(offer) || offer.id === EDF_EOD_DOSSIER_ID) && !actions.isHidden(offer.id) &&
+      (isTargetOffer(offer) || offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) && !actions.isHidden(offer.id) &&
       actions.isSaved(offer.id, offer.shortlist) &&
       resolvedStage(offer) === null
     ), 'best'),
@@ -155,9 +156,9 @@ export function ShortlistPage() {
     if (next === 'archived' && offer.applicationStatus === 'Refus') { actions.setStage(offer.id, 'archived'); return; }
     setSavingId(offer.id);
     try {
-      if (offer.id !== EDF_EOD_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
+      if (offer.id !== EDF_EOD_DOSSIER_ID && offer.id !== THALES_DATA_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
       actions.setStage(offer.id, next);
-      setNotice(offer.id === EDF_EOD_DOSSIER_ID ? 'Statut EDF enregistré localement.' : 'Statut enregistré et synchronisé.');
+      setNotice((offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) ? 'Statut de cette offre enregistrée localement.' : 'Statut enregistré et synchronisé.');
       retry();
     } catch (error) {
       setNotice(error instanceof Error ? 'Enregistrement impossible : ' + error.message : 'Enregistrement impossible.');
@@ -170,9 +171,9 @@ export function ShortlistPage() {
     if (savingId) return;
     setSavingId(offer.id);
     try {
-      if (offer.id !== EDF_EOD_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
+      if (offer.id !== EDF_EOD_DOSSIER_ID && offer.id !== THALES_DATA_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
       actions.setStage(offer.id, status === 'Entretien' || status === 'Test technique' ? 'interview' : status === 'Abandonné' ? 'archived' : status === 'Refus' ? null : 'application');
-      setNotice(offer.id === EDF_EOD_DOSSIER_ID ? 'Statut EDF enregistré localement.' : 'Statut actualisé et enregistré.');
+      setNotice((offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) ? 'Statut de cette offre enregistrée localement.' : 'Statut actualisé et enregistré.');
       retry();
     } catch (error) {
       setNotice(error instanceof Error ? 'Modification impossible : ' + error.message : 'Modification impossible.');
