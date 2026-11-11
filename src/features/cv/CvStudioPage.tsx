@@ -3,7 +3,7 @@ import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv } from '../applications/edfEodDossier';
-import { THALES_DATA_DOSSIER_ID, prepareThalesDataDossier, buildThalesDataCv } from '../applications/thalesDataDossier';
+import { THALES_DATA_DOSSIER_ID, prepareThalesDataDossier, buildThalesDataCv, isCurrentThalesCv, refreshThalesCvContent } from '../applications/thalesDataDossier';
 import { edfSavedOffer } from '../applications/edfSavedOffer';
 import { thalesSavedOffer } from '../applications/thalesSavedOffer';
 import { currentCvNoticeOffer } from './cvOfferNotice';
@@ -263,6 +263,14 @@ export function CvStudioPage() {
     setParams(nextParams, { replace: true });
   }
 
+  function updateThalesCv() {
+    if (!window.confirm('Actualiser le contenu du CV Thales ? Le projet et les cours seront remplacés. Les expériences, coordonnées, modèle, couleur et lettre resteront inchangés.')) return;
+    const next = refreshThalesCvContent(draft);
+    updateApplicationCv(THALES_DATA_DOSSIER_ID, draft.language, next);
+    setDraft(next);
+    setSaved(true);
+  }
+
   function generateCv() {
     // Regeneration refreshes the targeted content, not the chosen visual layout.
     const preserveLayout = (next: CvDraft): CvDraft => ({
@@ -446,6 +454,12 @@ export function CvStudioPage() {
       </div>
 
       {noticeOffer ? <p role="status" className="workspace-note"><strong>CV pour {noticeOffer.company} — {noticeOffer.title}.</strong> Vérifie le contenu et l’en-tête centré avant toute validation. Aucun envoi sans ton OK.</p> : null}
+      {offerParam === THALES_DATA_DOSSIER_ID && !isCurrentThalesCv(draft) ? (
+        <div role="status" className="workspace-note" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span><strong>Nouvelle version du CV Thales disponible.</strong> Un seul projet MonStage (4 réalisations), cours ciblés et formation en premier.</span>
+          <button className="button button--primary" type="button" onClick={updateThalesCv}>Appliquer la mise à jour Thales</button>
+        </div>
+      ) : null}
       {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
 
       <div className="cv-studio-layout">
