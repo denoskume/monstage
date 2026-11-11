@@ -273,6 +273,23 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
     y -= compact ? 11.7 : 12;
   };
 
+  // One selected flagship project deserves legible technical evidence.
+  // Previously each long bullet was shrunk as low as ~7pt to fit one line.
+  // Give it natural line wrapping at the same readable size as experience.
+  const drawProjectBullet = (value: string) => {
+    if (!value.trim()) return;
+    if (draft.projects.length !== 1) {
+      drawBullet(value);
+      return;
+    }
+    const size = compact ? 9.1 : 9.2;
+    const leading = compact ? 11.7 : 12;
+    // Keep at least two lines together if the last section is near page-end.
+    ensureSpace(leading * 2 + 2);
+    page.drawCircle({ x: MARGIN_X + 2.4, y: y + 3.4, size: 1.7, color: textColor });
+    drawLines(value, size, regular, 12, leading);
+  };
+
   // Preserve each experience bullet on one line in the exported CV.
   const drawExperienceBullet = (value: string) => {
     if (!value.trim()) return;
@@ -355,7 +372,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         if (draft.showMissionLabels !== false && item.bullets.some((value) => value.trim())) {
           drawLines(draft.language === 'FR' ? '**Missions :**' : '**Tasks:**', compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
         }
-        for (const bullet of item.bullets.filter((value) => value.trim())) drawBullet(bullet.trim());
+        for (const bullet of item.bullets.filter((value) => value.trim())) drawProjectBullet(bullet.trim());
         y -= compact ? 5 : 6;
       }
     }
