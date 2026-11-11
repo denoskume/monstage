@@ -14,8 +14,8 @@ export function buildThalesDataCv(language: CvLanguage = 'FR'): CvDraft {
   const fr = language === 'FR';
   const draft = buildEdfEodCv(language);
   draft.headline = fr
-    ? 'Data Science | Qualité des données | Python'
-    : 'Data Science | Data Quality | Python';
+    ? 'Analyse de données | Qualité des données | Python'
+    : 'Data Analysis | Data Quality | Python';
   draft.summary = fr
     ? "Je souhaite appliquer Python, l'analyse de données et l'automatisation à la fiabilisation de bases industrielles, à la détection d'incohérences et à la restitution d'informations utiles aux équipes. En dernière année du MSc Control and Robotics à Centrale Nantes, je recherche un stage de six mois dès février 2027."
     : "I want to apply Python, data analysis and automation to improve industrial data quality, identify inconsistencies and deliver useful information to operational teams. I am a final-year MSc Control and Robotics student at Centrale Nantes seeking a six-month internship from February 2027.";
