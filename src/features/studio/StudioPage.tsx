@@ -8,6 +8,8 @@ import { useAuth } from '../../auth/useAuth';
 import { saveApplicationStatus } from '../../api/applications';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv, buildEdfEodLetter } from '../applications/edfEodDossier';
 import { edfSavedOffer } from '../applications/edfSavedOffer';
+import { THALES_DATA_DOSSIER_ID, prepareThalesDataDossier, buildThalesDataCv, buildThalesDataLetter } from '../applications/thalesDataDossier';
+import { thalesSavedOffer } from '../applications/thalesSavedOffer';
 import { useOfferActions } from '../offers/offerActions';
 import { saveApplicationDossier } from '../applications/applicationDossiers';
 
@@ -24,6 +26,7 @@ export function StudioPage() {
   const [chosenOfferId, setChosenOfferId] = useState('');
   const activeOfferId = offerId || chosenOfferId;
   const offer = activeOfferId === EDF_EOD_DOSSIER_ID ? edfSavedOffer
+    : activeOfferId === THALES_DATA_DOSSIER_ID ? thalesSavedOffer
     : activeOfferId ? data?.offers.find(item => item.id === activeOfferId) : undefined;
   const selectedOfferId = offerId || chosenOfferId;
 
@@ -31,6 +34,7 @@ export function StudioPage() {
   useEffect(() => {
     if (!offer) return;
     if (offer.id === EDF_EOD_DOSSIER_ID) prepareEdfEodDossier(language);
+    else if (offer.id === THALES_DATA_DOSSIER_ID) prepareThalesDataDossier(language);
     else prepareApplicationDossier(offer, language);
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title,
@@ -46,6 +50,9 @@ export function StudioPage() {
     if (offer.id === EDF_EOD_DOSSIER_ID) {
       const dossier = prepareEdfEodDossier(language);
       saveApplicationDossier({ ...dossier, cv: buildEdfEodCv(language), letter: buildEdfEodLetter(language) });
+    } else if (offer.id === THALES_DATA_DOSSIER_ID) {
+      const dossier = prepareThalesDataDossier(language);
+      saveApplicationDossier({ ...dossier, cv: buildThalesDataCv(language), letter: buildThalesDataLetter(language) });
     } else prepareApplicationDossier(offer, language, true);
     localStorage.setItem('monstage:application-review:v1', JSON.stringify({
       offerId: offer.id, company: offer.company, title: offer.title,
@@ -63,9 +70,9 @@ export function StudioPage() {
     setStatusBusy(true);
     setStatusNotice('');
     try {
-      if (offer.id === EDF_EOD_DOSSIER_ID) {
+      if (offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) {
         actions.setStage(offer.id, 'application');
-        setStatusNotice('Candidature EDF marquée envoyée dans le suivi local de MonStage.');
+        setStatusNotice('Candidature marquée envoyée dans le suivi local de MonStage.');
       } else {
         await saveApplicationStatus(token, offer.id, 'Candidature envoyée');
         retry();
