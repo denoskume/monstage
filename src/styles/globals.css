@@ -1122,7 +1122,7 @@ h1, h2, h3 { color: var(--text); }
 .cv-studio-toolbar .cv-header-selectors { display: flex; align-items: center; justify-content: flex-start; gap: 10px; min-width: 0; flex-wrap: nowrap; }
 .cv-studio-action-group { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: nowrap; white-space: nowrap; }
 .cv-studio-toolbar .cv-header-select { display: inline-flex; align-items: center; gap: 6px; color: var(--text); font-size: .82rem; font-weight: 600; white-space: nowrap; }
-.cv-studio-toolbar .cv-header-select select { height: 37px; width: 165px; max-width: 100%; padding: 0 25px 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.cv-studio-toolbar .cv-header-select select { height: 37px; width: 245px; max-width: 100%; padding: 0 25px 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
 .cv-studio-toolbar .cv-header-select:last-child select { width: 130px; }
 .cv-studio-toolbar .cv-studio-action-group > .button,
 .cv-studio-toolbar .cv-studio-action-group > .cl-language-toggle { flex-shrink: 0; }
