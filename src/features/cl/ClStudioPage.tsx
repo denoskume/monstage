@@ -299,7 +299,7 @@ export function ClStudioPage() {
               aria-label={draft.language === 'FR' ? 'Modèle de lettre' : 'Cover letter template'}
               value={draft.template ?? 'classic'}
               onChange={event => changePresentation('template', event.target.value as CvTemplate)}>
-              {cvTemplateOptions.map(({ id, fr, en }) => (
+              {cvTemplateOptions.filter(({ id }) => id !== 'split' && id !== 'sidebar').map(({ id, fr, en }) => (
                 <option key={id} value={id}>{draft.language === 'FR' ? fr : en}</option>
               ))}
             </select>
