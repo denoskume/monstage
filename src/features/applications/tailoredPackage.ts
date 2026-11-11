@@ -2,6 +2,7 @@ import type { InternshipOffer } from '../../api/contract';
 import { loadCvDraft, type CvDraft, type CvLanguage } from '../cv/cvStorage';
 import { loadCoverLetter, type CoverLetterDraft } from '../cl/clStorage';
 import { cvPresets, cvProjectLibrary, selectedCertifications } from '../cv/cvEvidenceCatalog';
+import { relevantCoursesForOffer, selectConvincingProjects } from './strategicCvSelection';
 
 const normalized = (value: string) => value.toLocaleLowerCase('fr-FR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
@@ -145,12 +146,13 @@ export function projectSelectionForOffer(offer: InternshipOffer, language: CvLan
     return { project: { ...entry.project, bullets: [...entry.project.bullets] }, score,
       sourceUrl: entry.url, reason: entry.project.name + ' : ' + (reasons.join(', ') || (language === 'FR' ? 'compétences transversales' : 'transferable skills')) };
   }).sort((a,b) => b.score - a.score || a.project.name.localeCompare(b.project.name));
-  return ranked.filter(entry => {
+  const distinct = ranked.filter(entry => {
     const name = normalized(entry.project.name);
     if (unique.has(name)) return false;
     unique.add(name);
     return true;
-  }).slice(0, 2);
+  });
+  return selectConvincingProjects(distinct);
 }
 
 export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): CvDraft {
@@ -159,10 +161,11 @@ export function tailorCvForOffer(offer: InternshipOffer, language: CvLanguage): 
   const selectedPlan = dataOrForecasting ? 'B' : 'A';
   const base = structuredClone(loadCvDraft(language, selectedPlan));
   const preset = cvPresets[selectedPlan];
+  const courses = relevantCoursesForOffer(offer, language);
   base.education = base.education.map(e => ({
     ...e,
-    keyCourses: e.id === 'ecn' ? preset.ecn.join(' · ')
-      : e.id === 'kju' ? preset.kju.join(' · ') : e.keyCourses,
+    keyCourses: e.id === 'ecn' ? courses.ecn
+      : e.id === 'kju' ? courses.kju : e.keyCourses,
   }));
   base.certifications = selectedCertifications(preset.certificates);
   if (!base.sectionOrder.includes('certifications')) {
