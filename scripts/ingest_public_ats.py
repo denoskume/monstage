@@ -16,30 +16,40 @@ WORKDAY = [
     ("thales", "wd3", "Careers"),
     ("evoyageurs", "wd3", "jobs"),
     ("alliancewd", "wd3", "renault-group-careers"),
+    ("airliquidehr", "wd3", "AirLiquideExternalCareer"),
 ]
 WORKDAY_TERMS = (
     "stage vision", "stage image", "stage data analyst",
     "analyse de données", "stage data", "stage maintenance", "stage 2027",
-    "power bi",
+    "power bi", "stage computer vision", "stage machine learning",
+    "stage traitement image", "stage data analyste",
 )
 
 
 def workday_search(tenant, host, site, phrase):
     endpoint = f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs"
-    payload = json.dumps({
-        "appliedFacets": {}, "limit": 20, "offset": 0, "searchText": phrase
-    }).encode()
-    request = urllib.request.Request(endpoint, payload, {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0",
-    }, method="POST")
-    with urllib.request.urlopen(request, timeout=18) as response:
-        return json.load(response).get("jobPostings", [])
+    results = []
+    # Two pages instead of silently truncating every keyword to 20 vacancies.
+    for offset in (0, 20):
+        payload = json.dumps({
+            "appliedFacets": {}, "limit": 20, "offset": offset, "searchText": phrase
+        }).encode()
+        request = urllib.request.Request(endpoint, payload, {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "User-Agent": "Mozilla/5.0",
+        }, method="POST")
+        with urllib.request.urlopen(request, timeout=18) as response:
+            body = json.load(response)
+        batch = body.get("jobPostings") or []
+        results.extend(batch)
+        if len(batch) < 20 or offset + len(batch) >= int(body.get("total") or 0):
+            break
+    return results
 
 
 def refresh_workday():
-    """Restore Workday offers from four allowlisted ATS feeds."""
+    """Restore postings from five employer-authorized Workday feeds."""
     accepted = 0
     failures = []
     for tenant, host, site in WORKDAY:
@@ -68,20 +78,21 @@ def refresh_workday():
         print("Workday", tenant, "successful searches", successes,
               "unique job postings", len(jobs))
         if successes and jobs:
-            try:
-                accepted += ingest("workday", tenant, list(jobs.values()))
-            except Exception as exc:
-                failures.append(f"{tenant}/ingestion: {str(exc)[:150]}")
+            for offset in range(0, len(jobs), 200):
+                try:
+                    accepted += ingest("workday", tenant, list(jobs.values())[offset:offset+200])
+                except Exception as exc:
+                    failures.append(f"{tenant}/ingestion: {str(exc)[:150]}")
     print("Workday runner accepted", accepted, "warnings", len(failures))
     for message in failures[:12]:
         print("Workday warning:", message)
-    if not accepted:
-        raise RuntimeError("Workday runner recovered no eligible postings")
+    if len(failures) >= len(WORKDAY) * len(WORKDAY_TERMS):
+        raise RuntimeError("Every Workday query failed")
     return accepted
 
 
 GREENHOUSE = []
-SMARTRECRUITERS = ["BoschGroup"]
+SMARTRECRUITERS = ["veoliaenvironnementsa"]
 
 
 def read_json(url):
@@ -143,32 +154,41 @@ def main():
             errors.append("greenhouse/" + board + ": " + str(exc)[:180])
     for company in SMARTRECRUITERS:
         try:
-            params = urllib.parse.urlencode({
-                "limit": 100, "offset": 0, "country": "fr", "q": "stage"
-            })
-            url = ("https://api.smartrecruiters.com/v1/companies/"
-                   + urllib.parse.quote(company) + "/postings?" + params)
-            jobs = (read_json(url).get("content") or [])
-            jobs = [{
-                "id": job.get("id"),
-                "name": job.get("name"),
-                "ref": job.get("ref"),
-                "releasedDate": job.get("releasedDate"),
-                "location": job.get("location") or {},
-                "department": job.get("department") or {},
-                "function": job.get("function") or {},
-                "typeOfEmployment": job.get("typeOfEmployment") or {},
-            } for job in jobs if job.get("id")]
-            print("SmartRecruiters", company, "fetched", len(jobs))
-            if jobs:
-                accepted += ingest("smartRecruiters", company, jobs)
+            collected = {}
+            for phrase in ("stage data", "stage data analyst", "stage vision", "stage maintenance", "power bi"):
+                for offset in (0, 100, 200):
+                    params = urllib.parse.urlencode({
+                        "limit": 100, "offset": offset, "country": "fr", "q": phrase
+                    })
+                    url = ("https://api.smartrecruiters.com/v1/companies/"
+                           + urllib.parse.quote(company) + "/postings?" + params)
+                    feed = read_json(url)
+                    batch = feed.get("content") or []
+                    for job in batch:
+                        if job.get("id"):
+                            collected[str(job["id"])] = {
+                                "id": job.get("id"),
+                                "name": job.get("name"),
+                                "ref": job.get("ref"),
+                                "releasedDate": job.get("releasedDate"),
+                                "location": job.get("location") or {},
+                                "department": job.get("department") or {},
+                                "function": job.get("function") or {},
+                                "typeOfEmployment": job.get("typeOfEmployment") or {},
+                            }
+                    if len(batch) < 100 or offset + len(batch) >= int(feed.get("totalFound") or 0):
+                        break
+            jobs = list(collected.values())
+            print("SmartRecruiters", company, "unique official postings", len(jobs))
+            for offset in range(0, len(jobs), 200):
+                accepted += ingest("smartRecruiters", company, jobs[offset:offset+200])
         except Exception as exc:
             errors.append("smartrecruiters/" + company + ": " + str(exc)[:180])
     print("ATS runner ingestion: accepted", accepted, "errors", len(errors))
     for error in errors:
         print("ATS source warning:", error)
-    if errors and len(errors) == len(GREENHOUSE) + len(SMARTRECRUITERS):
-        raise SystemExit("All targeted ATS sources failed")
+    if errors and not accepted:
+        raise SystemExit("ATS ingestion returned no accepted postings; inspect provider diagnostics")
 
 
 if __name__ == "__main__":
