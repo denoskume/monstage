@@ -81,7 +81,7 @@ function normalize(value: unknown): string {
 
 function isInternship(title: string): boolean {
   const text = normalize(title);
-  return ['stage', 'stagiaire', 'internship', 'intern'].some((term) => text.includes(term));
+  return /\b(stage|stagiaire|internship|intern|pfe)\b/.test(text);
 }
 
 function isRelevant(title: string, company: string): boolean {
@@ -124,7 +124,7 @@ function fitScore(title: string): number {
   const t = normalize(title);
   let score = 72;
   if (t.includes('machine learning') || t.includes('deep learning')) score += 12;
-  if (t.includes('vision') || t.includes('image')) score += 10;
+  if (t.includes('vision') || t.includes('image')) score += 16;
   if (t.includes('signal')) score += 10;
   if (t.includes('data science') || t.includes('data scientist')) score += 9;
   if (/(?:data analyst(?:e|s)?|analyste de donnees|analyste data|business intelligence|bi analyst|power bi)/.test(t)) score += 13;
