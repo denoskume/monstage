@@ -14,14 +14,14 @@ export function buildThalesDataCv(language: CvLanguage = 'FR'): CvDraft {
   const fr = language === 'FR';
   const draft = buildEdfEodCv(language);
   draft.headline = fr
-    ? 'Analyse de données | Qualité des données | Python'
-    : 'Data Analysis | Data Quality | Python';
+    ? 'Analyse de données | SQL & Python | Qualité des données'
+    : 'Data Analysis | SQL & Python | Data Quality';
   draft.summary = fr
-    ? "Je souhaite appliquer Python, l'analyse de données et l'automatisation à la fiabilisation de bases industrielles, à la détection d'incohérences et à la restitution d'informations utiles aux équipes. En dernière année du MSc Control and Robotics à Centrale Nantes, je recherche un stage de six mois dès février 2027."
-    : "I want to apply Python, data analysis and automation to improve industrial data quality, identify inconsistencies and deliver useful information to operational teams. I am a final-year MSc Control and Robotics student at Centrale Nantes seeking a six-month internship from February 2027.";
+    ? "Je souhaite mobiliser SQL, Python et l'analyse de données pour contrôler la cohérence de bases industrielles, repérer les informations manquantes et automatiser des restitutions utiles aux équipes. En dernière année du MSc Control and Robotics à Centrale Nantes, je recherche un stage de six mois dès février 2027."
+    : "I aim to use SQL, Python and data analysis to check industrial data consistency, identify missing information and automate useful reporting for operational teams. I am a final-year MSc Control and Robotics student at Centrale Nantes seeking a six-month internship from February 2027.";
   draft.keySkills = fr
-    ? 'Python · Analyse exploratoire · Qualité des données · Automatisation · ML'
-    : 'Python · Exploratory Analysis · Data Quality · Automation · ML';
+    ? 'SQL · Python · Analyse de données · Contrôles de cohérence · Automatisation'
+    : 'SQL · Python · Data Analysis · Consistency Checks · Automation';
   // The EDF baseline contains only demonstrable experience and projects.
   // Put the automation/data-quality project first for this specific role.
   draft.projects = [...draft.projects].sort((a, b) => a.id === 'monstage' ? -1 : b.id === 'monstage' ? 1 : 0);
@@ -42,8 +42,8 @@ export function buildThalesDataCv(language: CvLanguage = 'FR'): CvDraft {
     ],
   } : project);
   draft.skills = fr
-    ? '**Python & données :** Python, pandas, NumPy, SQL, nettoyage, jointures, agrégations\n**Analyse & contrôle :** analyse exploratoire, cohérence des données, statistiques, détection d’anomalies\n**ML & outils :** scikit-learn, régression, évaluation de modèles, Matplotlib, Jupyter, Git'
-    : '**Python & data:** Python, pandas, NumPy, SQL, cleaning, joins, aggregations\n**Analysis & checks:** exploratory analysis, data consistency, statistics, anomaly detection\n**ML & tools:** scikit-learn, regression, model evaluation, Matplotlib, Jupyter, Git';
+    ? '**SQL & bases de données :** SQL, jointures, agrégations, sous-requêtes, extraction et contrôle des données\n**Python & analyse :** Python, pandas, NumPy, nettoyage, analyse exploratoire, détection d’anomalies\n**ML & outils :** scikit-learn, statistiques, régression, Matplotlib, Jupyter, Git'
+    : '**SQL & databases:** SQL, joins, aggregations, subqueries, data extraction and validation\n**Python & analysis:** Python, pandas, NumPy, cleaning, exploratory analysis, anomaly detection\n**ML & tools:** scikit-learn, statistics, regression, Matplotlib, Jupyter, Git';
   // These certificates were verified against the PDFs provided by the
   // candidate on 11 November 2026. Keep the Thales CV concise (two only);
   // all five certificates remain available in the Studio catalog.
@@ -68,12 +68,12 @@ export function buildThalesDataLetter(language: CvLanguage = 'FR'): CoverLetterD
   letter.paragraphs = fr ? [
     "Actuellement en dernière année du MSc Control and Robotics, parcours Data Science, Signal & Image Processing à Centrale Nantes, je recherche un stage de fin d'études de six mois dès février 2027. Votre offre en intelligence artificielle et analyse de données à Cannes a retenu mon attention pour son ancrage dans les besoins opérationnels du secteur spatial.",
     "Au sein de la direction Bids & Programs Management, identifier des informations manquantes ou incohérentes, améliorer la fiabilité des bases et faciliter leur mise à jour représente un défi concret. J'aimerais contribuer à l'exploration des données existantes, à l'évaluation de contrôles et d'approches algorithmiques, puis à des restitutions simples pour les équipes.",
-    "Ma formation en data science et mon BSc en informatique et électronique m'ont apporté des bases en Python, statistiques et machine learning. Lors de mon stage Data Analyst, j'ai travaillé sur la préparation, l'analyse et la visualisation de données. J'ai aussi développé MonStage, une plateforme personnelle combinant collecte multi-sources, filtres et contrôles de cohérence, ainsi qu'une étude de cas de modélisation de coûts hospitaliers avec scikit-learn. Ces expériences m'ont appris à vérifier les résultats et à documenter les choix techniques.",
+    "Mon parcours en informatique et en data science comprend SQL (jointures, agrégations et sous-requêtes), Python, statistiques et machine learning. J'ai également obtenu une certification SQL. Lors de mon stage Data Analyst, j'ai travaillé sur la préparation, l'analyse et la visualisation de données. J'ai aussi développé MonStage, une plateforme personnelle combinant collecte multi-sources, filtres et contrôles de cohérence, ainsi qu'une étude de cas de modélisation de coûts hospitaliers avec scikit-learn. Ces expériences m'ont appris à vérifier les résultats et à documenter les choix techniques.",
     "Rigoureux, curieux et conscient des compétences qu'il me reste à développer, je serais heureux d'apprendre auprès de votre équipe et de contribuer à des solutions utiles, pragmatiques et maintenables. Je serais ravi d'échanger avec vous sur ma candidature.",
   ] : [
     "I am completing my MSc Control and Robotics, specializing in Data Science, Signal & Image Processing at Centrale Nantes, and seeking a six-month final-year internship from February 2027. Your AI and data analysis internship in Cannes interests me because it addresses practical operational needs in the space industry.",
     "Within Bids & Programs Management, identifying missing or inconsistent information, improving database reliability and prioritizing updates are meaningful challenges. I would like to help explore the existing data, evaluate analytical and algorithmic checks, and present useful findings to operational teams.",
-    "My MSc and BSc in Computer Science & Electronics have given me foundations in Python, statistics and machine learning. During my Data Analyst internship, I worked on data preparation, analysis and visualization. I also built MonStage, a personal multi-source tracking platform with filtering and consistency checks, and completed a predictive hospital-cost modeling case study using scikit-learn. These projects taught me to verify results and document technical decisions.",
+    "My computer science and data science training covers SQL (joins, aggregations and subqueries), Python, statistics and machine learning, and I have also earned a SQL course certificate. During my Data Analyst internship, I worked on data preparation, analysis and visualization. I also built MonStage, a personal multi-source tracking platform with filtering and consistency checks, and completed a predictive hospital-cost modeling case study using scikit-learn. These projects taught me to verify results and document technical decisions.",
     "I am curious, rigorous and motivated to keep learning. I would welcome the opportunity to contribute to practical, maintainable solutions with your team and discuss my application.",
   ];
   letter.closing = fr
