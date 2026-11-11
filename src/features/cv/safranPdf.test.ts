@@ -86,6 +86,89 @@ describe('Education display parity between preview and PDF', () => {
   });
 });
 
+describe('Long education titles and single flagship project display', () => {
+  it('moves an embedded pipe-separated city to the location field without changing the degree title', () => {
+    const bachelor = cvEducationDisplay({
+      id: 'kju',
+      school: 'Kristu Jayanti University - Bachelor of Science, Computer Science & Electronics | Bengaluru, Inde',
+      degree: 'Parcours: Informatique et Électronique',
+      location: '',
+      period: '2021–2025',
+      details: 'Double cursus en informatique et électronique.',
+    });
+    expect(bachelor.school).toBe('Kristu Jayanti University - Bachelor of Science, Computer Science & Electronics');
+    expect(bachelor.location).toBe('Bengaluru, Inde');
+
+    const master = cvEducationDisplay({
+      id: 'ecn',
+      school: 'Centrale Nantes - Master of Science in Control and Robotics | Nantes, France',
+      degree: 'Parcours: Data Science, Signal & Image Processing',
+      location: '',
+      period: '2025–2027',
+      details: '',
+    });
+    expect(master.school).toBe('Centrale Nantes - Master of Science in Control and Robotics');
+    expect(master.location).toBe('Nantes, France');
+  });
+
+  it('exports long four-bullet project and programme descriptions to one A4 page', async () => {
+    const draft = structuredClone(defaultCvFr);
+    draft.headline = 'Data Analytics | SQL & Python | Data Quality & Automation';
+    draft.academicHeadline = 'Master 2 Control and Robotics - Data Science, Signal & Image Processing';
+    draft.template = 'modern';
+    draft.showMissionLabels = false;
+    draft.summary = "Étudiant en dernière année de MSc à Centrale Nantes, j'ai conçu et déployé MonStage, une plateforme intégrant collecte multi-sources, contrôles de cohérence et automatisation de données. Je souhaite mettre cette expérience et mes compétences en SQL, Python et analyse de données au service de la fiabilité des données chez Thales Alenia Space, dans le cadre d'un stage de six mois dès février 2027.";
+    draft.education = [
+      {
+        id: 'ecn',
+        school: 'Centrale Nantes - Master of Science in Control and Robotics | Nantes, France',
+        degree: 'Parcours: Data Science, Signal & Image Processing',
+        location: '',
+        period: '2025–2027',
+        details: "Formation avancée en analyse de données, IA, Machine Learning et traitement du signal et de l'image.",
+        keyCourses: 'Data Analysis and Information Retrieval · IA · Machine Learning · Algorithmics and Programming',
+      },
+      {
+        id: 'kju',
+        school: 'Kristu Jayanti University - Bachelor of Science, Computer Science & Electronics | Bengaluru, Inde',
+        degree: 'Parcours: Informatique et Électronique',
+        location: '',
+        period: '2021–2025',
+        details: 'Double cursus en informatique et électronique, associant programmation, données et développement logiciel.',
+        keyCourses: 'Database Management Systems · Data Analysis · Python Programming · Software Engineering',
+      },
+    ];
+    draft.experience = draft.experience.map(item => ({
+      ...item,
+      bullets: item.bullets.slice(0, 3),
+      description: item.id === 'rws'
+        ? "Contrôle de la qualité et de la cohérence des réponses de modèles d'intelligence artificielle."
+        : 'Préparation, exploration et restitution de données structurées avec Python.',
+    }));
+    draft.projects = [{
+      id: 'monstage',
+      name: "MonStage - Plateforme d'automatisation et de fiabilisation des données",
+      period: 'Sept. 2026–En cours',
+      description: 'Application web déployée permettant de collecter, structurer et exploiter des données issues de plusieurs sources de recrutement.',
+      bullets: [
+        'Intégration : connecté plusieurs flux ATS et structuré les offres selon leurs attributs (entreprise, poste, localisation, dates et statuts).',
+        "Qualité des données : implémenté des règles d'identification et de dédoublonnage des offres, ainsi que des filtres multicritères pour fiabiliser les résultats.",
+        'Automatisation : mis en œuvre des flux API, Google Apps Script et des traitements de synchronisation pour actualiser les données sans ressaisie manuelle.',
+        'Traçabilité et reporting : développé un tableau de bord de suivi et des dossiers par candidature reliant statuts, documents et actions à effectuer.',
+      ],
+    }];
+    draft.leadership = [];
+    draft.sectionOrder = ['education','experience','projects','skills','certifications','languages'];
+    draft.certifications = [
+      { id: 'google-advanced', title: 'Google Advanced Data Analytics', issuer: 'Google (Coursera)', date: 'Déc. 2024' },
+      { id: 'sql-az', title: 'SQL Certification Course', issuer: 'Simplilearn', date: 'Juil. 2024' },
+    ];
+    const pdf = await PDFDocument.load(await buildCvPdfBytes(draft));
+    expect(pdf.getPageCount()).toBe(1);
+    expect(pdf.getPage(0).getWidth()).toBeCloseTo(595.28, 1);
+  });
+});
+
 describe('CV technical skill deduplication', () => {
   it('merges tool categories without removing distinct skills', () => {
     const skills = [
