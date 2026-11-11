@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 import type { CoverLetterDraft } from './clStorage';
+import { cvPageColorHex } from '../cv/cvStorage';
 
 const WIDTH = 595.28;
 const HEIGHT = 841.89;
@@ -58,24 +59,45 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  let page = pdf.addPage([WIDTH, HEIGHT]);
+  const template = draft.template ?? 'classic';
+  const modern = template === 'modern';
+  const minimal = template === 'minimal';
+  const ats = template === 'keywords';
   const color = rgb(0.05, 0.05, 0.05);
-  const lineColor = rgb(0.55, 0.55, 0.55);
+  const accentColor = modern ? rgb(0.14, 0.30, 0.44) : color;
+  const lineColor = modern ? rgb(0.36, 0.54, 0.68) : rgb(0.55, 0.55, 0.55);
   const usable = WIDTH - (MX * 2);
+  const paper = cvPageColorHex(draft.pageColor);
+  let page = pdf.addPage([WIDTH, HEIGHT]);
   let y = HEIGHT - TOP;
+
+  // Paint the complete sheet, including any overflow pages, before drawing text.
+  const paintPaper = () => {
+    if (paper === '#FFFFFF') return;
+    page.drawRectangle({
+      x: 0, y: 0, width: WIDTH, height: HEIGHT,
+      color: rgb(
+        parseInt(paper.slice(1, 3), 16) / 255,
+        parseInt(paper.slice(3, 5), 16) / 255,
+        parseInt(paper.slice(5, 7), 16) / 255,
+      ),
+    });
+  };
+  paintPaper();
 
   const ensure = (height: number) => {
     if (y - height < BOTTOM) {
       page = pdf.addPage([WIDTH, HEIGHT]);
+      paintPaper();
       y = HEIGHT - TOP;
     }
   };
 
-  const drawWrapped = (value: string, size = 10.4, font = regular, leading = 14.1, x = MX, maxWidth = usable) => {
+  const drawWrapped = (value: string, size = 10.4, font = regular, leading = 14.1, x = MX, maxWidth = usable, ink = color) => {
     const wrapped = wrapCoverLetterLines(value, maxWidth, font, size);
     ensure(wrapped.length * leading + 4);
     for (const line of wrapped) {
-      page.drawText(line, { x, y, size, font, color });
+      page.drawText(line, { x, y, size, font, color: ink });
       y -= leading;
     }
   };
@@ -109,7 +131,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   const drawRight = (value: string, size: number, font: any, right = WIDTH - MX) => {
     const text = normalizeCoverLetterPdfText(value);
     const width = font.widthOfTextAtSize(text, size);
-    page.drawText(text, { x: right - width, y, size, font, color });
+    page.drawText(text, { x: right - width, y, size, font, color: modern && font === bold ? accentColor : color });
     y -= size + 3.4;
   };
 
@@ -124,7 +146,7 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
     ];
     for (const line of senderLines) {
       if (!line.text.trim()) continue;
-      page.drawText(normalizeCoverLetterPdfText(line.text), { x: MX, y, size: line.size, font: line.font, color });
+      page.drawText(normalizeCoverLetterPdfText(line.text), { x: MX, y, size: line.size, font: line.font, color: modern && line.font === bold ? accentColor : color });
       y -= line.size + 3.4;
     }
 
@@ -136,8 +158,8 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
       for (const line of lines) {
         const text = normalizeCoverLetterPdfText(line);
         page.drawText(text, {
-          x: WIDTH - MX - font.widthOfTextAtSize(text, 10.2),
-          y, size: 10.2, font, color,
+          x: ats ? MX : WIDTH - MX - font.widthOfTextAtSize(text, 10.2),
+          y, size: 10.2, font, color: modern && font === bold ? accentColor : color,
         });
         y -= 13.6;
       }
@@ -174,9 +196,11 @@ export async function buildCoverLetterPdfBytes(draft: CoverLetterDraft): Promise
   const subject = draft.language === 'FR'
     ? 'Objet : ' + (/^Candidature/i.test(draft.internshipTitle) ? draft.internshipTitle : 'Candidature — ' + (draft.internshipTitle || '[INTITULE DU STAGE]'))
     : 'Re: Application for ' + (draft.internshipTitle || '[INTERNSHIP TITLE]');
-  drawWrapped(subject, 10.8, bold, 14.5);
-  page.drawLine({ start: { x: MX, y: y + 6 }, end: { x: WIDTH - MX, y: y + 6 }, thickness: 0.55, color: lineColor });
-  y -= 14;
+  drawWrapped(subject, 10.8, bold, 14.5, MX, usable, accentColor);
+  if (!minimal && !ats) {
+    page.drawLine({ start: { x: MX, y: y + 6 }, end: { x: WIDTH - MX, y: y + 6 }, thickness: modern ? 1.6 : 0.55, color: lineColor });
+  }
+  y -= minimal || ats ? 10 : 14;
 
   drawWrapped(draft.greeting || (draft.language === 'FR' ? 'Madame, Monsieur,' : 'Dear Hiring Manager,'), 10.4, regular, 14.1);
   y -= 4;
