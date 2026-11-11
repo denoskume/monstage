@@ -350,6 +350,7 @@ export function CvStudioPage() {
   // Archive a stable CV draft automatically; downloading is no longer required.
   useEffect(() => {
     if (!offerParam || !token || !pdfReady || !pdfBytes) return;
+    if (offerParam === THALES_DATA_DOSSIER_ID && loadedViewKey !== viewKey) return;
     const snapshot = JSON.stringify(draft);
     const key = 'monstage:github-autosave:cv:' + offerParam + ':' + draft.language;
     if (sessionStorage.getItem(key) === snapshot) return;
@@ -363,7 +364,7 @@ export function CvStudioPage() {
         .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique GitHub privé impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
     }, 2500);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [offerParam, token, draft, pdfReady, pdfBytes]);
+  }, [offerParam, token, draft, pdfReady, pdfBytes, loadedViewKey, viewKey]);
 
   // Never show an unrelated master CV while a requested offer is loading.
   if (loadedViewKey !== viewKey) {
