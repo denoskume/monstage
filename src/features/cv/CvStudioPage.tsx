@@ -774,11 +774,11 @@ export function CvStudioPage() {
 
           {isTwoColumnCv(draft.template) ? (
             <div className="cv-preview__two-columns">
-              <main className="cv-preview__main" aria-label={draft.language === 'FR' ? 'Parcours et réalisations' : 'Background and achievements'}>
+              <div role="region" className="cv-preview__main" aria-label={draft.language === 'FR' ? 'Parcours et réalisations' : 'Background and achievements'}>
                 {cvColumnSections(draft.sectionOrder).main.map(section => (
                   <CvPreviewSection key={section} section={section} draft={draft} />
                 ))}
-              </main>
+              </div>
               <aside className="cv-preview__sidebar" aria-label={draft.language === 'FR' ? 'Compétences et compléments' : 'Skills and additional details'}>
                 {cvColumnSections(draft.sectionOrder).sidebar.map(section => (
                   <CvPreviewSection key={section} section={section} draft={draft} />
