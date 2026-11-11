@@ -1,7 +1,7 @@
 import { useAuth } from '../../auth/useAuth';
 import { SAFRAN_AI_DOSSIER_ID, prepareSafranAiDossier } from '../applications/safranAiDossier';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodLetter } from '../applications/edfEodDossier';
-import { THALES_DATA_DOSSIER_ID, prepareThalesDataDossier, buildThalesDataLetter } from '../applications/thalesDataDossier';
+import { THALES_DATA_DOSSIER_ID, THALES_DATA_TITLE, prepareThalesDataDossier, buildThalesDataLetter } from '../applications/thalesDataDossier';
 import { useEffect, useRef } from 'react';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
 import { useOffers } from '../../hooks/useOffers';
@@ -222,6 +222,7 @@ export function ClStudioPage() {
   // Persist a stable tailored letter PDF automatically, without marking it as submitted.
   useEffect(() => {
     if (!offerParam || !token || (!job && !isSafranSpontaneous && !isEdfEod && !isThalesData)) return;
+    if (isThalesData && (draft.company !== 'Thales Alenia Space' || draft.internshipTitle !== THALES_DATA_TITLE + ' — Réf. R0343178')) return;
     if (job && (draft.company !== job.company || draft.internshipTitle !== job.title)) return;
     const snapshot = JSON.stringify(draft);
     const key = 'monstage:github-autosave:letter:' + offerParam + ':' + draft.language;
@@ -238,7 +239,7 @@ export function ClStudioPage() {
         .catch(error => { if (!cancelled) setDownloadError('Sauvegarde automatique GitHub privé impossible : ' + (error instanceof Error ? error.message : 'Erreur inconnue')); });
     }, 3000);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [offerParam, token, job?.id, isSafranSpontaneous, isEdfEod, draft]);
+  }, [offerParam, token, job?.id, isSafranSpontaneous, isEdfEod, isThalesData, draft]);
 
   async function downloadPdf() {
     try {
