@@ -43,7 +43,7 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
   // A targeted CV with project summaries and mission labels must still fit A4.
   // Match French and English titles; never rely on a particular language to compact.
   const compact = draft.email === 'kamenan.kume@eleves.ec-nantes.fr'
-    && /Computer Vision|Vision par ordinateur|Image Processing|Traitement d.images|Data Analysis|Analyse de données/i.test(draft.headline);
+    && /Computer Vision|Vision par ordinateur|Image Processing|Traitement d.images|Data Analysis|Data Analytics|Analyse de données/i.test(draft.headline);
   let y = A4_HEIGHT - (compact ? 28 : MARGIN_TOP);
 
   const template = draft.template ?? 'classic';
