@@ -140,6 +140,9 @@ export function isLegacyGeneratedThalesCv(cv: CvDraft): boolean {
     && monstage.bullets[1] === (language === 'FR'
       ? 'Développé des filtres multicritères et des contrôles de cohérence des informations.'
       : 'Implemented multi-criteria filters and information consistency checks.')
+    && monstage.bullets[2] === (language === 'FR'
+      ? 'Automatisé le suivi des candidatures et la préparation de documents avec React/TypeScript et Google Sheets.'
+      : 'Automated application tracking and document preparation using React/TypeScript and Google Sheets.')
     && Boolean(bachelor?.keyCourses?.includes('Programming (C, Java, PHP, Python)'));
 }
 
