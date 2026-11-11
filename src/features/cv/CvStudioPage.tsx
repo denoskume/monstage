@@ -3,6 +3,7 @@ import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv } from '../applications/edfEodDossier';
+import { THALES_DATA_DOSSIER_ID, prepareThalesDataDossier, buildThalesDataCv } from '../applications/thalesDataDossier';
 import { CvEvidencePicker } from './CvEvidencePicker';
 import { certificateCatalog, selectedCertifications } from './cvEvidenceCatalog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -185,6 +186,8 @@ export function CvStudioPage() {
       next = loadCvDraft(languageParam, plan);
     } else if (offerParam === EDF_EOD_DOSSIER_ID) {
       next = prepareEdfEodDossier(languageParam).cv;
+    } else if (offerParam === THALES_DATA_DOSSIER_ID) {
+      next = prepareThalesDataDossier(languageParam).cv;
     } else {
       // For a new offer, hydrate once after its metadata becomes available.
       if (!selectedOffer) return;
@@ -251,6 +254,14 @@ export function CvStudioPage() {
   }
 
   function generateCv() {
+    if (offerParam === THALES_DATA_DOSSIER_ID) {
+      if (!window.confirm('Régénérer le CV Thales ? Les modifications de ce CV seront remplacées, pas celles de la lettre.')) return;
+      const next = buildThalesDataCv(draft.language);
+      updateApplicationCv(THALES_DATA_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+      setSaved(true);
+      return;
+    }
     if (offerParam === EDF_EOD_DOSSIER_ID) {
       if (!window.confirm('Régénérer le CV EDF ? Les modifications manuelles du CV EDF seront remplacées, pas celles de la lettre.')) return;
       const next = buildEdfEodCv(draft.language);
@@ -269,6 +280,13 @@ export function CvStudioPage() {
   }
 
   function reset() {
+    if (offerParam === THALES_DATA_DOSSIER_ID) {
+      const next = buildThalesDataCv(draft.language);
+      updateApplicationCv(THALES_DATA_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+      setSaved(false);
+      return;
+    }
     if (offerParam === EDF_EOD_DOSSIER_ID) {
       const next = buildEdfEodCv(draft.language);
       updateApplicationCv(EDF_EOD_DOSSIER_ID, draft.language, next);
@@ -397,7 +415,7 @@ export function CvStudioPage() {
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
           </div>
-          {offerParam ? <button className="button button--primary" type="button" disabled={offerParam !== EDF_EOD_DOSSIER_ID && !offersData?.offers.some(item => item.id === offerParam)} onClick={generateCv}>Générer CV</button> : null}
+          {offerParam ? <button className="button button--primary" type="button" disabled={offerParam !== EDF_EOD_DOSSIER_ID && offerParam !== THALES_DATA_DOSSIER_ID && !offersData?.offers.some(item => item.id === offerParam)} onClick={generateCv}>Générer CV</button> : null}
           <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistré' : 'Enregistrer'}</button>
           {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>Dossier</button> : null}
