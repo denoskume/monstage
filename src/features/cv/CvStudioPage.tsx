@@ -264,9 +264,15 @@ export function CvStudioPage() {
   }
 
   function generateCv() {
+    // Regeneration refreshes the targeted content, not the chosen visual layout.
+    const preserveLayout = (next: CvDraft): CvDraft => ({
+      ...next,
+      template: draft.template ?? 'classic',
+      pageColor: draft.pageColor ?? 'white',
+    });
     if (offerParam === THALES_DATA_DOSSIER_ID) {
       if (!window.confirm('Régénérer le CV Thales ? Les modifications de ce CV seront remplacées, pas celles de la lettre.')) return;
-      const next = buildThalesDataCv(draft.language);
+      const next = preserveLayout(buildThalesDataCv(draft.language));
       updateApplicationCv(THALES_DATA_DOSSIER_ID, draft.language, next);
       setDraft(next);
       setSaved(true);
@@ -274,7 +280,7 @@ export function CvStudioPage() {
     }
     if (offerParam === EDF_EOD_DOSSIER_ID) {
       if (!window.confirm('Régénérer le CV EDF ? Les modifications manuelles du CV EDF seront remplacées, pas celles de la lettre.')) return;
-      const next = buildEdfEodCv(draft.language);
+      const next = preserveLayout(buildEdfEodCv(draft.language));
       updateApplicationCv(EDF_EOD_DOSSIER_ID, draft.language, next);
       setDraft(next);
       setSaved(true);
@@ -283,7 +289,7 @@ export function CvStudioPage() {
     const offer = offersData?.offers.find(item => item.id === offerParam);
     if (!offer || !window.confirm('Régénérer le CV pour cette offre ? Les modifications manuelles de ce CV seront remplacées, pas celles de la lettre.')) return;
     prepareApplicationDossier(offer, draft.language);
-    const next = tailorCvForOffer(offer, draft.language);
+    const next = preserveLayout(tailorCvForOffer(offer, draft.language));
     updateApplicationCv(offer.id, draft.language, next);
     setDraft(next);
     setSaved(true);
