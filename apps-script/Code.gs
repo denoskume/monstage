@@ -322,7 +322,7 @@ function targetSignalScore_(posting) {
     ['robotics', 8], ['optimisation', 7], ['optimization', 7],
     ['industrial ai', 8], ['quality', 4], ['automation', 4],
     ['data engineer', 6], ['data engineering', 6], ['analytics engineer', 5],
-    ['data analyst', 5], ['data analytics', 5], ['analytics', 4], ['data collection', 4],
+    ['data analyst', 5], ['data analyste', 3], ['analyste de donnees', 5], ['data analytics', 5], ['analytics', 4], ['data collection', 4],
     ['data processing', 5], ['data analysis', 5], ['business intelligence', 4],
     ['digitalization', 3], ['digitalisation', 3], ['digital transformation', 3],
     ['statistical', 3], ['statistics', 3], ['predictive', 4], ['forecasting', 4],
@@ -342,7 +342,7 @@ function targetSignalScore_(posting) {
   var titleBoosts = [
     ['computer vision', 8], ['vision par ordinateur', 8], ['image processing', 9], ['traitement d image', 9], ['imagerie', 5], ['image', 4],
     ['machine learning', 7], ['apprentissage automatique', 7],
-    ['data scientist', 6], ['analytics', 4], ['data', 2], ['ai engineer', 7], ['ingenieur ia', 7],
+    ['data scientist', 6], ['data analyst', 6], ['analyste de donnees', 6], ['business intelligence', 5], ['analytics', 4], ['data', 2], ['ai engineer', 7], ['ingenieur ia', 7],
     ['intelligence artificielle', 6], ['signal', 7],
     ['robotics', 6], ['r&d', 4],
     ['maintenance predictive', 12], ['predictive maintenance', 12],
@@ -386,6 +386,7 @@ function externalFitScores_(posting) {
     'Predictive Maintenance / Reliability': 17,
     'Industrial AI / Process': 11,
     'Data Engineering / Analytics': 6,
+    'Data Analyst / Business Intelligence': 16,
     'Data / AI': 2
   }[specialization] || 0;
 
@@ -418,6 +419,7 @@ function specializationForPosting_(posting) {
   if (['maintenance predictive', 'predictive maintenance', 'failure prediction', 'condition monitoring', 'remaining useful life', 'fault detection', 'prognostics'].some(function (term) { return text.indexOf(term) !== -1; })) return 'Predictive Maintenance / Reliability';
   if (text.indexOf('computer vision') !== -1 || text.indexOf('image processing') !== -1 || text.indexOf('opencv') !== -1) return 'Computer Vision / Image Processing';
   if (text.indexOf('machine learning') !== -1 || text.indexOf('deep learning') !== -1 || text.indexOf('generative ai') !== -1 || text.indexOf('ai engineer') !== -1) return 'Machine Learning / AI';
+  if (strictAnalyst_(posting.text)) return 'Data Analyst / Business Intelligence';
   if (text.indexOf('data science') !== -1 || text.indexOf('data scientist') !== -1) return 'Data Science';
   if (text.indexOf('data engineer') !== -1 || text.indexOf('analytics engineer') !== -1) return 'Data Engineering / Analytics';
   if (text.indexOf('signal') !== -1 || text.indexOf('audio') !== -1 || text.indexOf('speech') !== -1) return 'Signal / Audio';
