@@ -3,10 +3,10 @@ import type { CvSectionKey, CvTemplate } from './cvStorage';
 // Semantic order is preserved within each column. The professional content is
 // emitted first in the PDF's content stream for better text-extraction behavior.
 export const CV_MAIN_COLUMN_SECTIONS: ReadonlySet<CvSectionKey> = new Set([
-  'education', 'experience', 'projects',
+  'experience', 'projects',
 ]);
 export const CV_SIDEBAR_SECTIONS: ReadonlySet<CvSectionKey> = new Set([
-  'skills', 'certifications', 'languages', 'interests', 'leadership',
+  'education', 'skills', 'certifications', 'languages', 'interests', 'leadership',
 ]);
 
 export function isTwoColumnCv(template?: CvTemplate): boolean {
