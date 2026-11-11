@@ -1,7 +1,12 @@
+import type { CvTemplate, CvPageColor } from '../cv/cvStorage';
+
 export type CoverLetterLanguage = 'FR' | 'EN';
 
 export interface CoverLetterDraft {
   language: CoverLetterLanguage;
+  // Same non-destructive presentation options as CV Studio, per application.
+  template?: CvTemplate;
+  pageColor?: CvPageColor;
   date: string;
   company: string;
   team: string;
@@ -40,6 +45,8 @@ const enParagraphs = [
 
 export const defaultCoverLetterFr: CoverLetterDraft = {
   language: 'FR',
+  template: 'classic',
+  pageColor: 'white',
   date: '10 octobre 2026',
   company: 'Airbus Atlantic',
   team: 'Département Qualité — site de Nantes',
@@ -66,6 +73,8 @@ export const defaultCoverLetterFr: CoverLetterDraft = {
 
 export const defaultCoverLetterEn: CoverLetterDraft = {
   language: 'EN',
+  template: 'classic',
+  pageColor: 'white',
   date: '',
   company: '',
   team: '',
