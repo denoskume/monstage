@@ -53,10 +53,14 @@ describe('thirty target groups · A/B only', () => {
     expect(getOfferPlan({company:'Danone',title:'Stage technicien maintenance mécanique',domain:'Maintenance mécanique'})).toBeNull();
   });
 
-  it('rejects finance and Data Scientist; only vision-centric ML remains eligible for A', () => {
+  it('rejects finance and Data Scientist; accepts predictive industrial ML and vision for A', () => {
     expect(isTargetOffer({company:'Michelin',title:'Stage Data Analyst Finance'})).toBe(false);
     expect(isTargetOffer({company:'Renault Group',title:'Stage Data Scientist maintenance prédictive'})).toBe(false);
-    expect(isTargetOffer({company:'Alstom',title:'Stage Machine Learning Engineer maintenance prédictive'})).toBe(false);
+    expect(getOfferPlan({company:'Alstom',title:'Stage Machine Learning Engineer maintenance prédictive'})).toBe('A');
+    expect(getOfferPlan({company:'Safran',title:'Stage Ingénieur Développement Machine Learning pour maintenance aéronautique'})).toBe('A');
+    expect(isTargetOffer({company:'Alstom',title:'Stage Machine Learning Engineer - plateforme commerciale'})).toBe(false);
+    expect(isTargetOffer({company:'Alstom',title:'Stage maintenance mécanique'})).toBe(false);
+    expect(getOfferPlan({company:'EDF',title:'Stage - Data Analyste - Prévisions de Consommation Énergétique F/H'})).toBe('B');
     expect(isTargetOffer({company:'Alstom',title:'Stage Marketing'})).toBe(false);
     expect(getOfferPlan({company:'Safran',title:'Stage Machine Learning Engineer Computer Vision'})).toBe('A');
     expect(getOfferPlan({company:'RATP',title:'Stage Data Analyst exploitation Power BI'})).toBe('B');
