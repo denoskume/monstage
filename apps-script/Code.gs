@@ -270,7 +270,7 @@ function strictCompany_(company) {
 }
 var SCOPE_FINANCE_ = /\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/;
 var SCOPE_SCIENTIST_ = /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/;
-var SCOPE_ANALYST_ = /\b(data analyst|analyste data|analyste de donnees|analyste des donnees|bi analyst|analyste bi|analyste business intelligence|business intelligence analyst|reporting analyst|analyste reporting|data analytics|data analysis|analyse de donnees|analyse des donnees|business intelligence|power bi|tableaux? de bord|data insights)\b/;
+var SCOPE_ANALYST_ = /\b(data analyst(?:e|s)?|analyste data|analyste de donnees|analyste des donnees|bi analyst|analyste bi|analyste business intelligence|business intelligence analyst|reporting analyst|analyste reporting|data analytics|data analysis|analyse de donnees|analyse des donnees|business intelligence|power bi|tableaux? de bord|data insights)\b/;
 var SCOPE_NON_ANALYST_ = /\b(data engineer|data engineering|ingenieur data|ingenieure data|machine learning engineer|ml engineer|ingenieur machine learning|ingenieure machine learning|consultant strateg|consultante strateg|developpeur logiciel|software engineer)\b/;
 function strictVision_(title, context) {
   var text = scopeNorm_(title + ' ' + (context || ''));
@@ -283,6 +283,8 @@ function strictAnalyst_(title) {
   return !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
     !SCOPE_NON_ANALYST_.test(name) && SCOPE_ANALYST_.test(name);
 }
+var SCOPE_INDUSTRIAL_ML_TITLE_ = /\b(machine learning|apprentissage automatique|deep learning|apprentissage profond|modeles? predictifs?|predictive modeling|predictive modelling|ia predictive|intelligence artificielle pour la maintenance)\b/;
+var SCOPE_INDUSTRIAL_ML_CONTEXT_ = /\b(maintenance|fiabilite|reliability|pannes?|defaillances?|fault detection|condition monitoring|prognostic|inspection industrielle|aeronautique|ferroviaire|railway|capteurs industriels|industrial maintenance)\b/;
 function strictRelevant_(title, context) {
   var full = scopeNorm_(title + ' ' + (context || ''));
   if (SCOPE_FINANCE_.test(full) || SCOPE_SCIENTIST_.test(scopeNorm_(title))) return false;
@@ -291,7 +293,8 @@ function strictRelevant_(title, context) {
   var dataDrivenMaintenance = !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
     /\b(maintenance|performance industrielle|maintenance predictive)\b/.test(name) &&
     SCOPE_ANALYST_.test(analyticalContext);
-  return strictAnalyst_(title) || strictVision_(title, context) || dataDrivenMaintenance;
+  var appliedIndustrialML = SCOPE_INDUSTRIAL_ML_TITLE_.test(name) && SCOPE_INDUSTRIAL_ML_CONTEXT_.test(full);
+  return strictAnalyst_(title) || strictVision_(title, context) || dataDrivenMaintenance || appliedIndustrialML;
 }
 function strictEligible_(company, title, context) {
   return strictCompany_(company) && strictRelevant_(title, context);
