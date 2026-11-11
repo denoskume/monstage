@@ -4,6 +4,9 @@ import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv 
 import { tailorCvForOffer } from '../applications/tailoredPackage';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodCv } from '../applications/edfEodDossier';
 import { THALES_DATA_DOSSIER_ID, prepareThalesDataDossier, buildThalesDataCv } from '../applications/thalesDataDossier';
+import { edfSavedOffer } from '../applications/edfSavedOffer';
+import { thalesSavedOffer } from '../applications/thalesSavedOffer';
+import { currentCvNoticeOffer } from './cvOfferNotice';
 import { CvEvidencePicker } from './CvEvidencePicker';
 import { certificateCatalog, selectedCertifications } from './cvEvidenceCatalog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -177,6 +180,12 @@ export function CvStudioPage() {
   const viewKey = offerParam ? 'offer:' + offerParam + ':' + languageParam : 'master:' + languageParam + ':' + plan;
   const [loadedViewKey, setLoadedViewKey] = useState('');
   const selectedOffer = offersData?.offers.find(item => item.id === offerParam);
+  const noticeOffer = currentCvNoticeOffer(
+    offerParam,
+    offerParam === EDF_EOD_DOSSIER_ID ? edfSavedOffer
+      : offerParam === THALES_DATA_DOSSIER_ID ? thalesSavedOffer : selectedOffer,
+    loadedViewKey === viewKey,
+  );
   const selectedOfferId = selectedOffer?.id;
   const [saved, setSaved] = useState(false);
   useEffect(() => {
@@ -429,7 +438,7 @@ export function CvStudioPage() {
         </div>
       </div>
 
-      {(() => { try { const review = JSON.parse(localStorage.getItem('monstage:application-review:v1') || 'null'); return review?.state === 'awaiting_review' && review?.language === draft.language ? <p role="status" className="workspace-note"><strong>CV pour {review.company} — {review.title}.</strong> Vérifie le contenu et l’en-tête centré avant toute validation. Aucun envoi sans ton OK.</p> : null; } catch { return null; } })()}
+      {noticeOffer ? <p role="status" className="workspace-note"><strong>CV pour {noticeOffer.company} — {noticeOffer.title}.</strong> Vérifie le contenu et l’en-tête centré avant toute validation. Aucun envoi sans ton OK.</p> : null}
       {downloadError ? <div className="native-application-result native-application-result--error">{downloadError}</div> : null}
 
       <div className="cv-studio-layout">
