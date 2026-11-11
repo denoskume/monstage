@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "scope": "France - Plan A Computer Vision/Applied industrial ML; Plan B Data Analyst/BI; 6 months from February 2027 only",
-  "notes": "Official portal entry points, not proof that the individual job feed is fully searched. candidate = URL needs independent confirmation; parent-company = needs division filter. Healthineers and Mobility are distinct.",
+  "notes": "Official careers entry points, not proof that job feeds are fully searched. candidate means URL still needs independent verification. Parent-company portals must filter by exact division. ATS subdomains (e.g. SmartRecruiters Veolia) are collected separately.",
   "companies": [
     {
       "name": "Airbus",
@@ -12,7 +12,7 @@
     },
     {
       "name": "Safran",
-      "url": "https://www.safran-group.com/fr/emplois",
+      "url": "https://www.safran-group.com/fr/offres?contracts%5B2%5D=42-stage&countries%5B0%5D=1002-france&page=0",
       "verification": "official",
       "system": "Safran candidate portal",
       "domain": "safran-group.com"
@@ -152,8 +152,8 @@
     },
     {
       "name": "Sanofi",
-      "url": "https://jobs.sanofi.com/",
-      "verification": "candidate",
+      "url": "https://jobs.sanofi.com/fr/recherche-d%27offres/France",
+      "verification": "official",
       "system": "Sanofi jobs",
       "domain": "sanofi.com"
     },
@@ -180,10 +180,10 @@
     },
     {
       "name": "Veolia",
-      "url": "https://jobs.smartrecruiters.com/VeoliaEnvironnementSA/",
+      "url": "https://www.veolia.com/fr/carrieres",
       "verification": "official",
       "system": "SmartRecruiters / Veolia",
-      "domain": "smartrecruiters.com"
+      "domain": "veolia.com"
     },
     {
       "name": "Air Liquide",
