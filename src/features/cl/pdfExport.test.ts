@@ -1,8 +1,39 @@
 import { describe, expect, test } from 'vitest';
+import { PDFDocument } from 'pdf-lib';
 import { buildCoverLetterPdfBytes, normalizeCoverLetterPdfText, LETTER_FIRST_LINE_INDENT, wrapCoverLetterLines } from './pdfExport';
 import { freshCoverLetter } from './clStorage';
 
 describe('cover letter PDF export', () => {
+  test('supports the four CV-matched letter templates and three paper colors', async () => {
+    const draft = freshCoverLetter('FR');
+    draft.paragraphs = [
+      'Une candidature pour analyser des données structurées et améliorer leur fiabilité.',
+      'Ce second paragraphe confirme que le texte est identique dans chaque variante.',
+    ];
+    const options = ['classic', 'modern', 'minimal', 'keywords'] as const;
+    const rendered: Uint8Array[] = [];
+    for (const template of options) {
+      const bytes = await buildCoverLetterPdfBytes({ ...draft, template, pageColor: 'white' });
+      const pdf = await PDFDocument.load(bytes);
+      expect(pdf.getPageCount()).toBe(1);
+      rendered.push(bytes);
+    }
+    // A template selection must affect actual PDF graphics/layout, not only UI.
+    expect([...rendered[0]]).not.toEqual([...rendered[1]]);
+    expect([...rendered[0]]).not.toEqual([...rendered[2]]);
+    expect([...rendered[0]]).not.toEqual([...rendered[3]]);
+
+    const paper: Uint8Array[] = [];
+    for (const pageColor of ['white', 'soft-gray', 'soft-blue'] as const) {
+      const bytes = await buildCoverLetterPdfBytes({ ...draft, template: 'modern', pageColor });
+      expect((await PDFDocument.load(bytes)).getPageCount()).toBe(1);
+      paper.push(bytes);
+    }
+    // The selected paper color must be embedded in the exported PDF.
+    expect([...paper[0]]).not.toEqual([...paper[1]]);
+    expect([...paper[1]]).not.toEqual([...paper[2]]);
+  });
+
   test('first-line indent narrows only the opening line, without changing text', () => {
     // Fixed-width fake font makes line-wrap expectations deterministic.
     const font = { widthOfTextAtSize: (value: string) => value.length };
