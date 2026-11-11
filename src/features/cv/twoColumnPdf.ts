@@ -6,7 +6,7 @@ import {
   type CvDraft, type CvSectionKey,
 } from './cvStorage';
 import { cvColumnSections } from './twoColumnLayout';
-import { normalizeCvPdfText } from './pdfExport';
+import { normalizeCvPdfText } from './cvPdfText';
 
 const W = 595.28;
 const H = 841.89;
@@ -23,7 +23,6 @@ const TEAL = rgb(0.07, 0.38, 0.41);
 const SIDEBAR_FILL = rgb(0.92, 0.96, 0.965);
 const DIVIDER = rgb(0.76, 0.83, 0.86);
 
-type Col = 'main' | 'sidebar';
 type Word = { text: string; font: PDFFont };
 
 function rgbFromHex(hex: string) {
@@ -193,22 +192,43 @@ export async function buildTwoColumnCvPdfBytes(draft: CvDraft): Promise<Uint8Arr
   y -= 17;
   const headerLine = (value: string, fontSize: number, font = regular) => {
     const cleaned = normalizeCvPdfText(value).trim();
-    if (!cleaned) return;
+    if (!cleaned) return null;
     const measured = font.widthOfTextAtSize(cleaned, fontSize);
     const adjusted = measured > fullWidth ? fontSize * fullWidth / measured : fontSize;
     const fitted = font.widthOfTextAtSize(cleaned, adjusted);
     y -= 3;
+    const left = (W - fitted) / 2;
+    const baseline = y;
     currentPage.drawText(cleaned, {
-      x: (W - fitted) / 2, y, font, size: adjusted, color: INK,
+      x: left, y, font, size: adjusted, color: INK,
     });
     y -= 8.5;
+    return { left, baseline, fontSize: adjusted };
   };
   headerLine(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE, 8.2);
   headerLine(draft.headline, 9.4, bold);
   const contacts = [draft.location, draft.email, draft.phone].filter(Boolean).join(' | ');
   headerLine(contacts, 7.9);
   const links = [draft.linkedin ? 'LinkedIn' : '', draft.github ? 'GitHub' : ''].filter(Boolean).join(' | ');
-  headerLine(links, 8.1);
+  const linkPosition = headerLine(links, 8.1);
+  const secureProfileUrl = (raw: string, host: string) => {
+    if (!raw.trim()) return null;
+    try {
+      const url = new URL(/^https:\/\//i.test(raw) ? raw : 'https://' + raw);
+      return url.protocol === 'https:' && (url.hostname === host || url.hostname === 'www.' + host)
+        ? url.href : null;
+    } catch { return null; }
+  };
+  if (linkPosition) {
+    const { left, baseline, fontSize } = linkPosition;
+    const linkedin = secureProfileUrl(draft.linkedin, 'linkedin.com');
+    const github = secureProfileUrl(draft.github, 'github.com');
+    if (linkedin) addLink(left, baseline, 'LinkedIn', linkedin);
+    if (github) {
+      const githubLeft = left + (draft.linkedin ? regular.widthOfTextAtSize('LinkedIn | ', fontSize) : 0);
+      addLink(githubLeft, baseline, 'GitHub', github);
+    }
+  }
   y -= 8;
   currentPage.drawLine({
     start: { x: M, y }, end: { x: W - M, y },
