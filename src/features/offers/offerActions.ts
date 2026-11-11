@@ -22,6 +22,7 @@ const curatedSavedOffers = new Set([
   'OFFRE-DANONE-VOLVIC-MAINT-29048',
   'external:edf:eod:2026-185820',
   'external:thales:ai-data:R0343178',
+  'SG-FRA40880', // Saint-Gobain POP3P, Data Analyst, Nantes (saved by request 2026-11-11)
 ]);
 
 const KEY = 'monstage:offer-actions:v1';
