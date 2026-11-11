@@ -1,6 +1,7 @@
 import { useAuth } from '../../auth/useAuth';
 import { SAFRAN_AI_DOSSIER_ID, prepareSafranAiDossier } from '../applications/safranAiDossier';
 import { EDF_EOD_DOSSIER_ID, prepareEdfEodDossier, buildEdfEodLetter } from '../applications/edfEodDossier';
+import { THALES_DATA_DOSSIER_ID, prepareThalesDataDossier, buildThalesDataLetter } from '../applications/thalesDataDossier';
 import { useEffect, useRef } from 'react';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationLetter } from '../applications/applicationDossiers';
 import { useOffers } from '../../hooks/useOffers';
@@ -40,6 +41,7 @@ export function ClStudioPage() {
   const job = offerParam ? data?.offers.find(item => item.id === offerParam) : undefined;
   const isSafranSpontaneous = offerParam === SAFRAN_AI_DOSSIER_ID;
   const isEdfEod = offerParam === EDF_EOD_DOSSIER_ID;
+  const isThalesData = offerParam === THALES_DATA_DOSSIER_ID;
   const [draft, setDraft] = useState<CoverLetterDraft>(() => loadCoverLetter());
   const [saved, setSaved] = useState(false);
   const [downloadError, setDownloadError] = useState('');
@@ -47,6 +49,14 @@ export function ClStudioPage() {
 
   useEffect(() => {
     if (!offerParam) return;
+    if (isThalesData) {
+      const key = THALES_DATA_DOSSIER_ID + ':' + languageParam;
+      if (hydratedKey.current === key) return;
+      hydratedKey.current = key;
+      setDraft(prepareThalesDataDossier(languageParam).letter);
+      setDownloadError('');
+      return;
+    }
     if (isEdfEod) {
       // Once the EDF letter is open, feed refreshes must never replace typing.
       const key = EDF_EOD_DOSSIER_ID + ':' + languageParam;
@@ -100,7 +110,7 @@ export function ClStudioPage() {
     setDraft(prepared);
     setDownloadError('');
     setSaved(false);
-  }, [job?.id, offerParam, languageParam, offersLoading, isSafranSpontaneous, isEdfEod]);
+  }, [job?.id, offerParam, languageParam, offersLoading, isSafranSpontaneous, isEdfEod, isThalesData]);
 
   function patch<K extends keyof CoverLetterDraft>(key: K, value: CoverLetterDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -108,7 +118,7 @@ export function ClStudioPage() {
   }
 
   function switchLanguage(language: CoverLetterLanguage) {
-    const next = isEdfEod ? prepareEdfEodDossier(language).letter : isSafranSpontaneous ? prepareSafranAiDossier(language).letter : job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
+    const next = isThalesData ? prepareThalesDataDossier(language).letter : isEdfEod ? prepareEdfEodDossier(language).letter : isSafranSpontaneous ? prepareSafranAiDossier(language).letter : job ? tailorLetterForOffer(job, language) : freshCoverLetter(language);
     setDraft(next);
     if (job) {
       saveCoverLetter(next);
@@ -122,7 +132,8 @@ export function ClStudioPage() {
   }
 
   function save() {
-    if (isEdfEod) updateApplicationLetter(EDF_EOD_DOSSIER_ID, draft.language, draft);
+    if (isThalesData) updateApplicationLetter(THALES_DATA_DOSSIER_ID, draft.language, draft);
+    else if (isEdfEod) updateApplicationLetter(EDF_EOD_DOSSIER_ID, draft.language, draft);
     else if (isSafranSpontaneous) updateApplicationLetter(SAFRAN_AI_DOSSIER_ID, draft.language, draft);
     else if (job) updateApplicationLetter(job.id, draft.language, draft);
     else saveCoverLetter(draft);
@@ -130,6 +141,14 @@ export function ClStudioPage() {
   }
 
   function generateLetter() {
+    if (isThalesData) {
+      if (!window.confirm('Régénérer la lettre Thales ? Les modifications de cette lettre seront remplacées, pas celles du CV.')) return;
+      const next = buildThalesDataLetter(draft.language);
+      updateApplicationLetter(THALES_DATA_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+      setSaved(true);
+      return;
+    }
     if (isEdfEod) {
       if (!window.confirm('Régénérer la lettre EDF ? Les modifications manuelles de la lettre seront remplacées, pas celles du CV.')) return;
       const next = buildEdfEodLetter(draft.language);
@@ -148,7 +167,11 @@ export function ClStudioPage() {
   }
 
   function reset() {
-    if (isEdfEod) {
+    if (isThalesData) {
+      const next = buildThalesDataLetter(draft.language);
+      updateApplicationLetter(THALES_DATA_DOSSIER_ID, draft.language, next);
+      setDraft(next);
+    } else if (isEdfEod) {
       const next = buildEdfEodLetter(draft.language);
       updateApplicationLetter(EDF_EOD_DOSSIER_ID, draft.language, next);
       setDraft(next);
@@ -198,7 +221,7 @@ export function ClStudioPage() {
 
   // Persist a stable tailored letter PDF automatically, without marking it as submitted.
   useEffect(() => {
-    if (!offerParam || !token || (!job && !isSafranSpontaneous && !isEdfEod)) return;
+    if (!offerParam || !token || (!job && !isSafranSpontaneous && !isEdfEod && !isThalesData)) return;
     if (job && (draft.company !== job.company || draft.internshipTitle !== job.title)) return;
     const snapshot = JSON.stringify(draft);
     const key = 'monstage:github-autosave:letter:' + offerParam + ':' + draft.language;
@@ -255,7 +278,7 @@ export function ClStudioPage() {
             <button type="button" className={draft.language === 'FR' ? 'is-active' : ''} onClick={() => switchLanguage('FR')}>FR</button>
             <button type="button" className={draft.language === 'EN' ? 'is-active' : ''} onClick={() => switchLanguage('EN')}>EN</button>
           </div>
-          {job || isEdfEod ? <button className="button button--primary" type="button" onClick={generateLetter}>Générer CL</button> : null}
+          {job || isEdfEod || isThalesData ? <button className="button button--primary" type="button" onClick={generateLetter}>Générer CL</button> : null}
           <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistrée' : 'Enregistrer'}</button>
           {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>Dossier</button> : null}
