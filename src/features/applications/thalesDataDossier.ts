@@ -22,25 +22,50 @@ export function buildThalesDataCv(language: CvLanguage = 'FR'): CvDraft {
   draft.keySkills = fr
     ? 'SQL · Python · Analyse de données · Contrôles de cohérence · Automatisation'
     : 'SQL · Python · Data Analysis · Consistency Checks · Automation';
-  // The EDF baseline contains only demonstrable experience and projects.
-  // Put the automation/data-quality project first for this specific role.
-  draft.projects = [...draft.projects].sort((a, b) => a.id === 'monstage' ? -1 : b.id === 'monstage' ? 1 : 0);
-  draft.projects = draft.projects.map(project => project.id === 'monstage' ? {
-    ...project,
-    name: fr ? 'MonStage — Automatisation et qualité des données' : 'MonStage — Data Automation and Quality',
+  // Strategic application: one directly relevant and defensible project.
+  // Avoid copying the EDF project list into an unrelated Thales application.
+  const monstage = draft.projects.find(project => project.id === 'monstage');
+  if (!monstage) throw new Error('Thales CV requires the verified MonStage project');
+  draft.projects = [{
+    ...monstage,
+    name: fr ? 'MonStage — Automatisation et qualité des données'
+      : 'MonStage — Data Automation and Data Quality',
+    period: fr ? '2026–En cours' : '2026–Present',
     description: fr
-      ? 'Plateforme personnelle de collecte, de structuration et de suivi de données multi-sources.'
-      : 'Personal platform for collecting, structuring and tracking multi-source data.',
+      ? 'Plateforme de collecte multi-sources, de contrôle de cohérence et de suivi des candidatures.'
+      : 'Platform for multi-source data collection, consistency checks and application tracking.',
     bullets: fr ? [
-      'Centralisé des données issues de plusieurs sources dans un outil de suivi structuré.',
-      'Développé des filtres multicritères et des contrôles de cohérence des informations.',
-      'Automatisé le suivi des candidatures et la préparation de documents avec React/TypeScript et Google Sheets.',
+      'Structuré des offres multi-sources par entreprise, poste, localisation, date et statut pour centraliser leur suivi.',
+      'Développé des filtres multicritères et des contrôles de cohérence pour fiabiliser les informations exploitées.',
+      'Automatisé la collecte et la synchronisation des offres et statuts avec Google Apps Script et des flux API.',
+      'Conçu un tableau de bord et un dossier par candidature pour prioriser les actions et tracer les documents.',
     ] : [
-      'Centralized data from multiple sources in a structured tracking platform.',
-      'Implemented multi-criteria filters and information consistency checks.',
-      'Automated application tracking and document preparation using React/TypeScript and Google Sheets.',
+      'Structured multi-source job postings by company, role, location, date and status for centralized tracking.',
+      'Built multi-criteria filters and consistency checks to improve the reliability of information used.',
+      'Automated collection and synchronization of postings and statuses with Google Apps Script and API feeds.',
+      'Built a dashboard and per-application dossier to prioritize actions and track supporting documents.',
     ],
-  } : project);
+  }];
+
+  // Two one-line education summaries and only courses relevant to this offer.
+  // Course labels are deliberately shortened, without inventing new subjects.
+  draft.education = draft.education.map(entry => ({
+    ...entry,
+    details: entry.id === 'ecn'
+      ? (fr ? 'Analyse de données, apprentissage automatique et méthodes statistiques appliquées.'
+        : 'Applied data analysis, machine learning and statistical methods.')
+      : entry.id === 'kju'
+        ? (fr ? 'Programmation, bases de données et traitement de données.'
+          : 'Programming, databases and data processing.')
+        : entry.details,
+    keyCourses: entry.id === 'ecn'
+      ? (fr ? 'Analyse de données · Machine Learning · Méthodes stochastiques'
+        : 'Data Analysis · Machine Learning · Stochastic Methods')
+      : entry.id === 'kju'
+        ? (fr ? 'Bases de données · Programmation Python'
+          : 'Databases · Python Programming')
+        : entry.keyCourses,
+  }));
   draft.skills = fr
     ? '**SQL & bases de données :** SQL, jointures, agrégations, sous-requêtes, extraction et contrôle des données\n**Python & analyse :** Python, pandas, NumPy, nettoyage, analyse exploratoire, détection d’anomalies\n**ML & outils :** scikit-learn, statistiques, régression, Matplotlib, Jupyter, Git'
     : '**SQL & databases:** SQL, joins, aggregations, subqueries, data extraction and validation\n**Python & analysis:** Python, pandas, NumPy, cleaning, exploratory analysis, anomaly detection\n**ML & tools:** scikit-learn, statistics, regression, Matplotlib, Jupyter, Git';
@@ -48,7 +73,7 @@ export function buildThalesDataCv(language: CvLanguage = 'FR'): CvDraft {
   // candidate on 11 November 2026. Keep the Thales CV concise (two only);
   // all five certificates remain available in the Studio catalog.
   draft.certifications = selectedCertifications(['google-advanced', 'sql-az']);
-  draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'certifications', 'languages'];
+  draft.sectionOrder = ['education', 'experience', 'projects', 'skills', 'certifications', 'languages'];
   return draft;
 }
 
@@ -93,8 +118,8 @@ export function prepareThalesDataDossier(language: CvLanguage = 'FR') {
     cv: buildThalesDataCv(language),
     letter: buildThalesDataLetter(language),
     selectionReasons: language === 'FR'
-      ? ['MonStage : collecte, contrôles de cohérence et automatisation', 'Modélisation prédictive : analyse de données et évaluation de modèles']
-      : ['MonStage: data integration, consistency checks and automation', 'Predictive modeling: data analysis and model evaluation'],
+      ? ['MonStage : structuration de données multi-sources, contrôles, automatisation et tableau de bord']
+      : ['MonStage: multi-source data structuring, validation, automation and reporting dashboard'],
     state: 'awaiting_review' as const,
     preparedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
