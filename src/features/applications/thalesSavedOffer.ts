@@ -41,10 +41,12 @@ export const thalesSavedOffer: InternshipOffer = {
 
 export function withSavedManualOffers(feed: InternshipOffer[]): InternshipOffer[] {
   const withEdf = withSavedEdfOffer(feed);
-  const exists = withEdf.some(offer =>
-    offer.id === thalesSavedOffer.id ||
-    (offer.company.toLowerCase().includes('thales') &&
-     ((offer.applicationUrl || '').includes('R0343178') || offer.title === thalesSavedOffer.title))
+  // Prefer the stable manually saved record over a duplicate discovery-feed
+  // record with a different numeric id, so the saved button and dossier work.
+  const unique = withEdf.filter(offer =>
+    offer.id !== thalesSavedOffer.id &&
+    !(offer.company.toLowerCase().includes('thales') &&
+      ((offer.applicationUrl || '').includes('R0343178') || offer.title === thalesSavedOffer.title))
   );
-  return exists ? withEdf : [...withEdf, thalesSavedOffer];
+  return [...unique, thalesSavedOffer];
 }
