@@ -28,7 +28,7 @@ ALLOWED_JOB_DOMAINS = {
 # are excluded, even if their headings contain internship keywords.
 INDIVIDUAL_PATH = re.compile(
     r"/(?:fr/)?(?:offres/(?:france/)?[^/?]+|job/[^/?]+|jobs/[^/?]+|"
-    r"jobdetails/[^/?]+|offre/detail/[^/?]+|nos-offres/\\d+|"
+    r"jobdetails/[^/?]+|offre/detail/[^/?]+|nos-offres/\d+|"
     r"fr-fr/emplois/[^/?]+|emploi/[^/?]+/[^/?]+)", re.I
 )
 INTERNSHIP = re.compile(r"\b(stage|stagiaire|internship|intern|pfe)\b", re.I)
