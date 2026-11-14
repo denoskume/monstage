@@ -47,6 +47,16 @@ test('best sort ranks matching evidence before priority and technical fit', () =
   expect(sortOffers(offers, 'best').map(offer => offer.id)).toEqual(expected);
 });
 
+test('detected sort reveals freshly checked postings without inventing publication dates', () => {
+  const offers = [
+    { ...base, id: 'old-known', publishedAt: '2026-11-10', verifiedAt: '2026-11-11T10:00:00Z' },
+    { ...base, id: 'fresh-found', publishedAt: null, verifiedAt: '2026-11-14T10:00:00Z' },
+    { ...base, id: 'older-found', publishedAt: null, verifiedAt: '2026-11-13T10:00:00Z' },
+  ];
+  expect(sortOffers(offers, 'detected').map(offer => offer.id)).toEqual(['fresh-found', 'older-found', 'old-known']);
+  expect(offers[1].publishedAt).toBeNull();
+});
+
 test('recent sort uses publication dates only and never substitutes verification timestamps', () => {
   const offers = [
     { ...base, id: 'older-published', publishedAt: '2026-09-01', verifiedAt: '2026-10-01T08:00:00Z' },
