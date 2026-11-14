@@ -1,6 +1,12 @@
 name: Refresh MonStage internship sources
 
 on:
+  push:
+    paths:
+      - '.github/workflows/sync-ats.yml'
+      - 'scripts/audit_target_careers.py'
+      - 'scripts/ingest_public_ats.py'
+      - 'scripts/target_career_sources.json'
   schedule:
     # Hourly, 24/7. Scheduled GitHub runners can start late.
     - cron: '17 * * * *'
