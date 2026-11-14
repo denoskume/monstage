@@ -186,6 +186,11 @@ export function sortOffers(offers: InternshipOffer[], sort: SortMode): Internshi
   switch (sort) {
     case 'recent':
       return copy.sort((a, b) => recentValue(b) - recentValue(a) || compareBest(a, b));
+    case 'detected':
+      // Latest verification is a different signal from the publication date.
+      // This sort shows recently recovered official postings without claiming
+      // they were newly published. Never mutate publishedAt.
+      return copy.sort((a, b) => parseDateValue(b.verifiedAt) - parseDateValue(a.verifiedAt) || compareBest(a, b));
     case 'score':
       return copy.sort((a, b) => (b.decisionScore ?? -1) - (a.decisionScore ?? -1) || compareBest(a, b));
     case 'priority':
