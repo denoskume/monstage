@@ -96,6 +96,9 @@ export function OfferCard({
   const publication = parsePublishedDate(offer.publishedAt);
   const publishedLabel = relativePublishedDate(publication);
   const exactPublicationLabel = publication?.exact ? publication.dateLabel : null;
+  const verifiedDate = offer.verifiedAt ? new Date(offer.verifiedAt) : null;
+  const verifiedLabel = verifiedDate && Number.isFinite(verifiedDate.getTime())
+    ? verifiedDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) : null;
   const companyMark = offer.company
     .split(/\s+/)
     .filter(Boolean)
@@ -111,7 +114,7 @@ export function OfferCard({
             <div className="offer-card__company-row">
               <span className="offer-card__company">{offer.company}</span>
               <span className="offer-card__published" title={exactPublicationLabel ?? publishedLabel}>
-                {publishedLabel}{exactPublicationLabel ? ` · ${exactPublicationLabel}` : null}
+                {publishedLabel}{exactPublicationLabel ? ` · ${exactPublicationLabel}` : null}{!publication?.exact && verifiedLabel ? ` · Vérifiée le ${verifiedLabel}` : null}
               </span>
             </div>
             <h2 className="offer-card__title">{offer.title}</h2>
