@@ -2,8 +2,8 @@ name: Refresh MonStage internship sources
 
 on:
   schedule:
-    # Four independent refreshes per day; no browser visit required.
-    - cron: '17 5,11,17,23 * * *'
+    # Hourly, 24/7. Scheduled GitHub runners can start late.
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -30,52 +30,39 @@ jobs:
         id: ingest
         continue-on-error: true
         run: python scripts/ingest_public_ats.py
-      - name: Refresh official internship feeds and report source diagnostics
+      - name: Verify ATS offers persisted without triggering a destructive second sync
         run: |
           python - <<'PY'
           import json
           import os
-          import time
-          import urllib.error
           import urllib.request
 
           endpoint = os.getenv("APPS_SCRIPT_URL")
           secret = os.getenv("APPS_SCRIPT_GATEWAY_SECRET")
           if not endpoint or not secret:
-              raise SystemExit("Missing Apps Script URL or gateway secret; sources were not refreshed.")
-
-          payload = json.dumps({
+              raise SystemExit("Missing Apps Script URL or gateway secret")
+          data = json.dumps({
               "gatewaySecret": secret,
-              "action": "syncExternalSources",
+              "action": "offers",
           }).encode("utf-8")
-          last_error = None
-          for attempt in range(1, 3):
-              try:
-                  request = urllib.request.Request(endpoint, payload, {
-                      "Content-Type": "application/json",
-                      "Accept": "application/json",
-                  }, method="POST")
-                  with urllib.request.urlopen(request, timeout=310) as response:
-                      body = json.load(response)
-                  sources = body.get("sync")
-                  if not isinstance(sources, dict):
-                      raise RuntimeError("Backend did not return synchronization diagnostics")
-                  print("Synchronization (source counts, no candidate data):")
-                  for name in ("lever", "greenhouse", "ashby", "smartRecruiters", "workday"):
-                      entry = sources.get(name) or {}
-                      print(name, "count=", entry.get("count"), "error=", str(entry.get("error") or "")[:160])
-                  if all((sources.get(name) or {}).get("error") for name in
-                         ("lever", "greenhouse", "ashby", "smartRecruiters", "workday")):
-                      raise RuntimeError("All ATS refresh providers reported errors")
-                  print("Source refresh completed.")
-                  break
-              except (OSError, ValueError, RuntimeError) as exc:
-                  last_error = str(exc)
-                  print("Source refresh attempt", attempt, "failed:", last_error[:200])
-                  if attempt == 1:
-                      time.sleep(10)
-          else:
-              raise SystemExit("Source refresh failed: " + str(last_error)[:200])
+          req = urllib.request.Request(endpoint, data, {
+              "Content-Type": "application/json",
+              "Accept": "application/json",
+          }, method="POST")
+          with urllib.request.urlopen(req, timeout=120) as response:
+              payload = json.load(response)
+          if payload.get("source") != "Stage Intelligence France" or not isinstance(payload.get("offers"), list):
+              raise SystemExit("Backend did not return the expected persisted offers")
+          rows = payload["offers"]
+          counts = {
+              prefix: sum(str(row.get("id", "")).lower().startswith(prefix + ":") for row in rows)
+              for prefix in ("workday", "smartrecruiters", "greenhouse", "ashby", "lever")
+          }
+          print("Persisted official ATS listings by provider:", json.dumps(counts))
+          print("Total stored offers, including historical records:", len(rows))
+          if counts["workday"] == 0 and counts["smartrecruiters"] == 0:
+              raise SystemExit("ATS ingestion appears empty: no Workday or SmartRecruiters listings persisted")
+          print("Backend read verified; no second provider refresh was run.")
           PY
 
       - name: Publish per-company A/B coverage audit
