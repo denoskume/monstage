@@ -7,6 +7,7 @@ on:
       - 'scripts/audit_target_careers.py'
       - 'scripts/discover_official_jobs.py'
       - 'scripts/discover_additional_workday.py'
+      - 'scripts/discover_successfactors.py'
       - 'scripts/test_discover_official_jobs.py'
       - 'scripts/ingest_public_ats.py'
       - 'scripts/target_career_sources.json'
@@ -37,6 +38,10 @@ jobs:
         id: audit
         continue-on-error: true
         run: python scripts/audit_target_careers.py
+      - name: Discover SuccessFactors employer job pages (read-only)
+        id: successfactors
+        continue-on-error: true
+        run: python scripts/discover_successfactors.py
       - name: Discover additional verified Workday tenants (read-only pending gateway authorization)
         id: additional_workday
         continue-on-error: true
@@ -89,13 +94,14 @@ jobs:
             artifacts/career-source-coverage.json
             artifacts/career-official-leads.json
             artifacts/career-additional-workday-leads.json
+            artifacts/career-successfactors-leads.json
             artifacts/career-source-coverage.md
             artifacts/career-jobboard-leads.json
           retention-days: 14
           if-no-files-found: warn
 
       - name: Fail visibly if source audit or ATS runner failed
-        if: ${{ steps.audit.outcome == 'failure' || steps.additional_workday.outcome == 'failure' || steps.ingest.outcome == 'failure' }}
+        if: ${{ steps.audit.outcome == 'failure' || steps.additional_workday.outcome == 'failure' || steps.successfactors.outcome == 'failure' || steps.ingest.outcome == 'failure' }}
         run: |
           echo "::error::One or more source checks/ingestions failed; review coverage artifact."
           exit 1
