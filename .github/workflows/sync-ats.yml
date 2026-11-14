@@ -73,6 +73,7 @@ jobs:
           path: |
             artifacts/career-source-coverage.json
             artifacts/career-source-coverage.md
+            artifacts/career-jobboard-leads.json
           retention-days: 14
           if-no-files-found: warn
 
