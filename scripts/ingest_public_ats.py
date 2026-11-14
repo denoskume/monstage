@@ -6,6 +6,7 @@ No job posting dates are inferred: only original ATS timestamps are passed throu
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -77,12 +78,21 @@ def refresh_workday():
                     failures.append(f"{tenant}/{phrase}: {str(exc)[:90]}")
         print("Workday", tenant, "successful searches", successes,
               "unique job postings", len(jobs))
-        if successes and jobs:
-            for offset in range(0, len(jobs), 200):
-                try:
-                    accepted += ingest("workday", tenant, list(jobs.values())[offset:offset+200])
-                except Exception as exc:
-                    failures.append(f"{tenant}/ingestion: {str(exc)[:150]}")
+        # The gateway replaces one employer's snapshot per request. Sending
+        # a second chunk with 0 matches used to mark earlier accepted jobs stale.
+        # Only internship titles are eligible downstream; submit once per source.
+        candidates = [
+            job for job in jobs.values()
+            if re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b", str(job.get("title", "")), re.I)
+        ]
+        print("Workday", tenant, "internship-title candidates", len(candidates))
+        if len(candidates) > 200:
+            failures.append(f"{tenant}: {len(candidates)} candidates exceed gateway batch; partial ingestion prohibited")
+        elif successes:
+            try:
+                accepted += ingest("workday", tenant, candidates)
+            except Exception as exc:
+                failures.append(f"{tenant}/ingestion: {str(exc)[:150]}")
     print("Workday runner accepted", accepted, "warnings", len(failures))
     for message in failures[:12]:
         print("Workday warning:", message)
@@ -180,8 +190,16 @@ def main():
                         break
             jobs = list(collected.values())
             print("SmartRecruiters", company, "unique official postings", len(jobs))
-            for offset in range(0, len(jobs), 200):
-                accepted += ingest("smartRecruiters", company, jobs[offset:offset+200])
+            # Ingest one consistent employer snapshot, never separate chunks
+            # that overwrite the accepted postings from the earlier chunk.
+            candidates = [
+                job for job in jobs
+                if re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b", str(job.get("name", "")), re.I)
+            ]
+            print("SmartRecruiters", company, "internship-title candidates", len(candidates))
+            if len(candidates) > 200:
+                raise RuntimeError(f"{company}: {len(candidates)} candidates exceed 200; no partial snapshot submitted")
+            accepted += ingest("smartRecruiters", company, candidates)
         except Exception as exc:
             errors.append("smartrecruiters/" + company + ": " + str(exc)[:180])
     print("ATS runner ingestion: accepted", accepted, "errors", len(errors))
