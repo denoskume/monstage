@@ -75,44 +75,47 @@ def fetch(url, timeout=18):
 
 
 def portal_check(company):
+    """Probe the employer portal and curated listing pages independently.
+
+    One blocked landing page must never suppress a reachable official vacancy
+    listing feed, especially for Safran.
+    """
+    status, final_url, data, portal_error = None, None, b"", None
+    on_expected_domain = False
     try:
         status, final_url, data = fetch(company["url"])
         parsed = urllib.parse.urlparse(final_url)
-        # An external redirect can be harmless, but isn't validated as the listed portal.
         expected = company["domain"].lower()
         host = (parsed.hostname or "").lower()
         on_expected_domain = host == expected or host.endswith("." + expected)
-        official_leads = extract_official_jobs(company, final_url, data) if on_expected_domain else []
-        listing_diagnostics = []
-        for source_url in OFFICIAL_LISTING_PAGES.get(company["name"], []):
-            try:
-                sub_status, sub_url, sub_data = fetch(source_url, timeout=18)
-                extracted = extract_official_jobs(company, sub_url, sub_data)
-                official_leads.extend(extracted)
-                listing_diagnostics.append({
-                    "url": source_url, "http": sub_status,
-                    "found_individual_leads": len(extracted), "error": None
-                })
-            except Exception as exc:
-                listing_diagnostics.append({
-                    "url": source_url, "http": None, "found_individual_leads": 0,
-                    "error": str(exc)[:150]
-                })
-        return {
-            "ok": 200 <= status < 400 and on_expected_domain,
-            "status": status, "final_url": final_url,
-            "domain_valid": on_expected_domain,
-            "html_bytes_read": len(data),
-            "official_job_leads": dedupe_official_leads(official_leads),
-            "extra_listings": listing_diagnostics,
-            "error": None,
-        }
     except Exception as exc:
-        return {"ok": False, "status": None, "final_url": None,
-                "domain_valid": False, "html_bytes_read": 0,
-                "official_job_leads": [], "extra_listings": [],
-                "error": (type(exc).__name__ + ": " + str(exc))[:180]}
+        portal_error = (type(exc).__name__ + ": " + str(exc))[:180]
 
+    official_leads = extract_official_jobs(company, final_url, data) if on_expected_domain else []
+    listing_diagnostics = []
+    for source_url in OFFICIAL_LISTING_PAGES.get(company["name"], []):
+        try:
+            sub_status, sub_url, sub_data = fetch(source_url, timeout=18)
+            extracted = extract_official_jobs(company, sub_url, sub_data)
+            official_leads.extend(extracted)
+            listing_diagnostics.append({
+                "url": source_url, "http": sub_status,
+                "found_individual_leads": len(extracted), "error": None,
+            })
+        except Exception as exc:
+            listing_diagnostics.append({
+                "url": source_url, "http": None, "found_individual_leads": 0,
+                "error": (type(exc).__name__ + ": " + str(exc))[:150],
+            })
+    return {
+        "ok": bool(status and 200 <= status < 400 and on_expected_domain),
+        "status": status, "final_url": final_url,
+        "domain_valid": on_expected_domain,
+        "html_bytes_read": len(data),
+        "official_job_leads": dedupe_official_leads(official_leads),
+        "extra_listings": listing_diagnostics,
+        "error": portal_error,
+    }
 
 def indexed_check(company, plan):
     # Search engine results are supporting leads, never a verified vacancy.
