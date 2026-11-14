@@ -283,7 +283,7 @@ def main():
             "leads": official_leads,
             "verified_offers": 0,
             "notes": "Leads from individual official employer URLs; opening and start date still require validation"
-        }, indent=2, ensure_ascii=False) + "\\n", encoding="utf-8"
+        }, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
     (OUTPUT / "career-jobboard-leads.json").write_text(
         json.dumps({"checked_at_utc": summary["finished_at_utc"],
