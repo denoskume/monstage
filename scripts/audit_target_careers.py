@@ -35,6 +35,18 @@ JOB_BOARD_DOMAINS = {
     "Apec": "apec.fr",
     "France Travail": "francetravail.fr",
 }
+# Only individual job postings count as leads. A LinkedIn company profile,
+# a search result page or a company landing page is NOT a job opportunity.
+JOB_POSTING_PATHS = {
+    "LinkedIn Jobs": r"^/jobs/view/[^/]+",
+    "JobTeaser": r"^/fr/job-offers/[^/]+",
+    "Welcome to the Jungle": r"^/fr/companies/[^/]+/jobs/[^/]+",
+    "Indeed": r"^/viewjob$",
+    "HelloWork": r"^/fr-fr/emplois/[^/]+",
+    "Apec": r"^/candidat/recherche-emploi\.html/emploi/detail-offre/[^/]+",
+    "France Travail": r"^/offres/recherche/detail/[^/]+",
+}
+
 BOARD_TERMS = {
     "A": '("computer vision" OR "vision industrielle" OR "traitement images" OR "image processing" OR "perception 3d" OR "maintenance predictive")',
     "B": '("data analyst" OR "analyste de donnees" OR "power bi" OR "business intelligence" OR "data analytics")',
@@ -108,8 +120,14 @@ def jobboard_index_check(company, plan, board_name, board_domain):
         for item in root.findall(".//item")[:20]:
             link = (item.findtext("link") or "").strip()
             title = (item.findtext("title") or "").strip()
-            host = (urllib.parse.urlparse(link).hostname or "").lower()
-            if link.startswith("https://") and (host == board_domain or host.endswith("." + board_domain)):
+            parsed = urllib.parse.urlparse(link)
+            host = (parsed.hostname or "").lower()
+            individual_job = bool(re.search(JOB_POSTING_PATHS[board_name], parsed.path))
+            internship_title = bool(re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b",
+                                                title, flags=re.IGNORECASE))
+            if (link.startswith("https://") and
+                (host == board_domain or host.endswith("." + board_domain)) and
+                individual_job and internship_title):
                 leads.append({"title": title[:180], "url": link})
         return {"status": "index_reachable", "http": response_code,
                 "indexed_leads": leads[:10], "error": None}
