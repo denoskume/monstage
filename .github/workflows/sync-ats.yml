@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/sync-ats.yml'
       - 'scripts/audit_target_careers.py'
+      - 'scripts/discover_official_jobs.py'
+      - 'scripts/test_discover_official_jobs.py'
       - 'scripts/ingest_public_ats.py'
       - 'scripts/target_career_sources.json'
   schedule:
@@ -28,7 +30,9 @@ jobs:
       APPS_SCRIPT_GATEWAY_SECRET: ${{ secrets.APPS_SCRIPT_GATEWAY_SECRET }}
     steps:
       - uses: actions/checkout@v4
-      - name: Audit official career portals in 10-of-30 rolling batches
+      - name: Validate official-source adapters
+        run: python -m unittest discover -s scripts -p 'test_discover_official_jobs.py' -v
+      - name: Audit all 30 employer career portals and public job sources
         id: audit
         continue-on-error: true
         run: python scripts/audit_target_careers.py
@@ -78,6 +82,7 @@ jobs:
           name: target-career-coverage-${{ github.run_number }}
           path: |
             artifacts/career-source-coverage.json
+            artifacts/career-official-leads.json
             artifacts/career-source-coverage.md
             artifacts/career-jobboard-leads.json
           retention-days: 14
