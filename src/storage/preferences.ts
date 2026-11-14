@@ -1,4 +1,4 @@
-export type SortMode = 'best' | 'recent' | 'score' | 'priority' | 'city';
+export type SortMode = 'best' | 'recent' | 'detected' | 'score' | 'priority' | 'city';
 
 export interface MonStagePreferences {
   query: string;
@@ -17,8 +17,8 @@ export interface MonStagePreferences {
 
 export const defaultPreferences: MonStagePreferences = {
   query: '',
-  sort: 'best',
-  onlyForMe: true,
+  sort: 'detected',
+  onlyForMe: false,
   minScore: 0,
   specialization: null,
   industry: null,
@@ -30,13 +30,19 @@ export const defaultPreferences: MonStagePreferences = {
   applicationStatus: null,
 };
 
-const KEY = 'monstage:preferences:v1';
-const validSortModes: SortMode[] = ['best', 'recent', 'score', 'priority', 'city'];
+const KEY = 'monstage:preferences:v2';
+const LEGACY_KEY = 'monstage:preferences:v1';
+const validSortModes: SortMode[] = ['best', 'recent', 'detected', 'score', 'priority', 'city'];
 
 export function loadPreferences(): MonStagePreferences {
   let raw: string | null = null;
+  let legacy = false;
   try {
     raw = localStorage.getItem(KEY);
+    if (!raw) {
+      raw = localStorage.getItem(LEGACY_KEY);
+      legacy = Boolean(raw);
+    }
   } catch {
     return defaultPreferences;
   }
@@ -45,8 +51,9 @@ export function loadPreferences(): MonStagePreferences {
     const parsed = JSON.parse(raw) as Partial<MonStagePreferences>;
     return {
       query: typeof parsed.query === 'string' ? parsed.query : defaultPreferences.query,
-      sort: validSortModes.includes(parsed.sort as SortMode) ? parsed.sort as SortMode : defaultPreferences.sort,
-      onlyForMe: typeof parsed.onlyForMe === 'boolean' ? parsed.onlyForMe : defaultPreferences.onlyForMe,
+      // v1 silently hid all newly imported ATS rows without CV skills or A/A+.
+      sort: legacy && parsed.sort === 'best' ? 'detected' : validSortModes.includes(parsed.sort as SortMode) ? parsed.sort as SortMode : defaultPreferences.sort,
+      onlyForMe: legacy ? false : typeof parsed.onlyForMe === 'boolean' ? parsed.onlyForMe : defaultPreferences.onlyForMe,
       minScore: typeof parsed.minScore === 'number' && Number.isFinite(parsed.minScore) ? parsed.minScore : defaultPreferences.minScore,
       specialization: typeof parsed.specialization === 'string' ? parsed.specialization : null,
       industry: typeof parsed.industry === 'string' ? parsed.industry : null,
