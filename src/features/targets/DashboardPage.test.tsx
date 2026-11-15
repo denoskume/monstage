@@ -58,6 +58,9 @@ describe('interactive decision dashboard',()=>{
     expect(screen.getByLabelText('Filtrer par plan')).toHaveValue('B');
     fireEvent.click(screen.getByRole('button',{name:'Filtrer statut Envoyée'}));
     expect(screen.getByLabelText('Filtrer par statut')).toHaveValue('Envoyée');
+    // Another saved manual application may also have been sent in Plan B.
+    // Company drill-down isolates the Alstom source record.
+    fireEvent.change(screen.getByLabelText('Filtrer par entreprise'),{target:{value:'Alstom'}});
     expect(screen.getByText('Dossiers analysés').nextElementSibling).toHaveTextContent('1');
     expect(feed[1].applicationStatus).toBe('Candidature envoyée');
   });

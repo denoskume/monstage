@@ -111,12 +111,22 @@ export function byStatus(offers: InternshipOffer[]) {
   return statusOrder.map(label => ({ label, count: offers.filter(o => statusGroup(o) === label).length }));
 }
 export function bySector(offers: InternshipOffer[]) {
-  return sectors.map(s => ({
+  const result = sectors.map(s => ({
     id: s.id, label: s.name,
     A: offers.filter(o => offerSector(o) === s.id && dashboardPlan(o) === 'A').length,
     B: offers.filter(o => offerSector(o) === s.id && dashboardPlan(o) === 'B').length,
     other: offers.filter(o => offerSector(o) === s.id && !dashboardPlan(o)).length,
   })).filter(row => row.A + row.B + row.other > 0);
+  const outside = offers.filter(o => offerSector(o) === 'autres');
+  if (outside.length) {
+    result.push({
+      id:'autres', label:'Autres candidatures',
+      A:outside.filter(o => dashboardPlan(o) === 'A').length,
+      B:outside.filter(o => dashboardPlan(o) === 'B').length,
+      other:outside.filter(o => !dashboardPlan(o)).length,
+    });
+  }
+  return result;
 }
 export function byCity(offers: InternshipOffer[]) {
   const counts = new Map<string, number>();
