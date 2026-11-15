@@ -8,7 +8,8 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ingest_remaining_official import (
     CONFIG, source_matches, canonical_url, extract_listing_links, verify_html,
-    publication_from_page, visible_location, JobHTML, extract_rss_job_links
+    publication_from_page, visible_location, JobHTML, extract_rss_job_links,
+    clearly_ineligible_calendar
 )
 
 REGISTRY=json.loads(CONFIG.read_text(encoding="utf-8"))["sources"]
@@ -161,6 +162,22 @@ class RemainingOfficialTests(unittest.TestCase):
         html="<h1>Stage Data Analyst</h1><div>Location: Paris, France</div>"
         self.assertIsNone(verify_html(s,s["seed"][0],html))
         self.assertIsNotNone(verify_html(s,s["seed"][0],html+"<div>Hitachi Rail RCS France SAS</div>"))
+
+    def test_explicitly_incompatible_start_or_duration_never_enters_monstage(self):
+        s = BY_COMPANY["L’Oréal"]
+        url = s["seed"][0]
+        self.assertTrue(clearly_ineligible_calendar(
+            "4-MONTH INTERNSHIP - Starting January 2027 – Data Analyst & Visualisation"))
+        self.assertTrue(clearly_ineligible_calendar("Stage 5 mois Data Analyst"))
+        self.assertTrue(clearly_ineligible_calendar("Stage Data Analyst Janvier 2027"))
+        self.assertFalse(clearly_ineligible_calendar("Stage 6 mois - Data Analyst - Février 2027"))
+        self.assertFalse(clearly_ineligible_calendar("Stage - Data Analyst, disponibilité à confirmer"))
+        invalid = ('<h1>4-MONTH INTERNSHIP - Starting January 2027 – Data Analyst & Visualisation</h1>'
+                   '<p>Paris, France</p>')
+        self.assertIsNone(verify_html(s, url, invalid))
+        valid = ('<h1>6-MONTH INTERNSHIP - Starting February 2027 – Data Analyst & Visualisation</h1>'
+                 '<p>Paris, France</p>')
+        self.assertIsNotNone(verify_html(s, url, valid))
 
     def test_job_page_without_france_or_relevant_internship_rejected(self):
         s=BY_COMPANY["Sanofi"]
