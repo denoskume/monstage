@@ -60,7 +60,7 @@ export function DashboardPage() {
   }, [sectorId]);
   const setFilter = <K extends keyof DashboardFilters,>(key: K, value: DashboardFilters[K]) =>
     setFilters(f => ({...f, [key]:value}));
-  const toggleFilter = (key: 'status'|'sector'|'city'|'sentMonth', value:string) =>
+  const toggleFilter = (key: 'status'|'sector'|'city'|'sentMonth'|'sentWeek', value:string) =>
     setFilters(f => ({...f,[key]:f[key]===value?'':value}));
   const clear = () => {setFilters(INITIAL_FILTERS);setShowAll(false);};
 
