@@ -286,9 +286,15 @@ function strictAnalyst_(title) {
 var SCOPE_INDUSTRIAL_ML_TITLE_ = /\b(machine learning|apprentissage automatique|deep learning|apprentissage profond|modeles? predictifs?|modeles? d ia|predictive modeling|predictive modelling|ia predictive|intelligence artificielle.{0,45}maintenance)\b/;
 var SCOPE_INDUSTRIAL_ML_CONTEXT_ = /\b(maintenance|fiabilite|reliability|pannes?|defaillances?|fault detection|condition monitoring|prognostic|inspection industrielle|aeronautique|ferroviaire|railway|capteurs industriels|industrial maintenance)\b/;
 function strictRelevant_(title, context) {
-  var full = scopeNorm_(title + ' ' + (context || ''));
-  if (SCOPE_FINANCE_.test(full) || SCOPE_SCIENTIST_.test(scopeNorm_(title))) return false;
   var name = scopeNorm_(title);
+  var full = scopeNorm_(title + ' ' + (context || ''));
+  // Mentions of financial systems/customers in a job description do not make
+  // an industrial Data Analyst role a finance vacancy. Exclude finance in
+  // the actual title or an explicitly finance-owned department, not every
+  // incidental "finance" word in the entire job description.
+  var roleContext = scopeNorm_(String(context || '').slice(0,420));
+  var financeDepartment = /\b(direction financiere|direction finance|departement finance|finance department|equipe finance|finance team|service financier|service finance|audit financier|controle de gestion|comptabilite|accounting department)\b/.test(roleContext);
+  if (SCOPE_FINANCE_.test(name) || financeDepartment || SCOPE_SCIENTIST_.test(name)) return false;
   var analyticalContext = scopeNorm_(context);
   var dataDrivenMaintenance = !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
     /\b(maintenance|performance industrielle|maintenance predictive)\b/.test(name) &&
