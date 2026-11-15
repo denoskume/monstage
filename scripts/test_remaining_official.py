@@ -80,6 +80,30 @@ class RemainingOfficialTests(unittest.TestCase):
         self.assertIsNone(result["publishedAt"])
         self.assertIsNone(verify_html(s, url, page.replace("Type de contrat Stage", "Type de contrat CDI")))
 
+    def test_sanofi_location_next_to_h1_not_page_header(self):
+        s = BY_COMPANY["Sanofi"]
+        url = s["seed"][0]
+        page = ("<nav>" + "Welcome Careers " * 160 + "</nav>"
+                "<h1>stage 6 mois – data analyst audit interne</h1>"
+                "<p>Gentilly, France Apprentice/Intern (Fixed Term)</p>"
+                "<section>Python SQL Power BI and dashboards</section>")
+        result = verify_html(s, url, page)
+        self.assertIsNotNone(result)
+        self.assertEqual(result["location"], "Gentilly, France")
+        self.assertIsNone(verify_html(s, url, page.replace("Gentilly, France", "Boston, USA")
+                                      + "<footer>Location: Paris, France</footer>"))
+
+    def test_airfrance_talentsoft_location_below_navigation(self):
+        s = BY_COMPANY["Air France-KLM"]
+        url = s["seed"][0]
+        page = ("<nav>" + "Connexion espace candidat " * 140 + "</nav>"
+                "<h1>Stage Data Analyst - Analyse de données</h1>"
+                "<section>Localisation France, Ile de France, 95 - Roissy "
+                "Domaine professionnel / métier Data Type de contrat Stage</section>")
+        result = verify_html(s, url, page)
+        self.assertIsNotNone(result)
+        self.assertEqual(result["location"], "Roissy, France")
+
     def test_dassault_public_url_variants_share_stable_job_id(self):
         s = BY_COMPANY["Dassault Aviation"]
         a = "https://dassault-aviation-cand.talent-soft.com/Pages/Offre/detailoffre.aspx?LCID=1036&idOffre=15827&idOrigine=502"
