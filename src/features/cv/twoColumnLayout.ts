@@ -10,7 +10,7 @@ export const CV_SIDEBAR_SECTIONS: ReadonlySet<CvSectionKey> = new Set([
 ]);
 
 export function isTwoColumnCv(template?: CvTemplate): boolean {
-  return template === 'split' || template === 'sidebar';
+  return template === 'split' || template === 'sidebar' || template === 'portrait';
 }
 
 export function cvColumnSections(sectionOrder: readonly CvSectionKey[]): {
