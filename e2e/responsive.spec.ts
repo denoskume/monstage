@@ -259,14 +259,19 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await expect(page.locator('.db-screen')).toBeVisible();
   await expect(page.getByRole('group', {name:'Activité hebdomadaire des candidatures'})).toBeVisible();
   const planSelect=page.getByRole('combobox',{name:'Choisir un plan'});
+  const dynamicHeading=page.locator('.db-dynamic-heading');
+  await expect(dynamicHeading).toHaveText('Dashboard');
   await expect(planSelect).toBeVisible();
   await expect(page.locator('.db-insight-tile')).toHaveCount(0);
   await expect(page.locator('.db-visual-space')).toHaveCount(1);
   await planSelect.selectOption('B');
   await expect(planSelect).toHaveValue('B');
+  await expect(dynamicHeading).toContainText('Plan B');
   await planSelect.selectOption('A');
   await expect(planSelect).toHaveValue('A');
+  await expect(dynamicHeading).toContainText('Plan A');
   await planSelect.selectOption('all');
+  await expect(dynamicHeading).toHaveText('Dashboard');
   await expect(page.locator('.db-side-area')).toHaveCount(0);
   await expect(page.getByText('MonStage Intelligence')).toHaveCount(0);
   const contentWidth = await page.evaluate(() => {
@@ -279,6 +284,14 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   expect(contentWidth.primary).toBeGreaterThanOrEqual(contentWidth.available - 1);
   for(const size of [{width:1366,height:768},{width:1280,height:720},{width:1440,height:900},{width:1024,height:768}]){
     await page.setViewportSize(size);
+    const positions=await page.evaluate(()=>{
+      const title=document.querySelector('.db-header-title')!.getBoundingClientRect();
+      const search=document.querySelector('.db-topsearch')!.getBoundingClientRect();
+      const plan=document.querySelector('.db-plan-picker')!.getBoundingClientRect();
+      return {titleX:title.x, titleRight:title.right, searchX:search.x, searchRight:search.right, planX:plan.x};
+    });
+    expect(positions.titleRight).toBeLessThanOrEqual(positions.searchX+1);
+    expect(positions.searchRight).toBeLessThanOrEqual(positions.planX+1);
     const metrics=await page.evaluate(()=>({
       html:document.documentElement.scrollHeight,
       body:document.body.scrollHeight,

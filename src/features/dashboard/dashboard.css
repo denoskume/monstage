@@ -719,3 +719,39 @@
   .db-screen .db-plan-picker{margin-left:0;min-width:78px;max-width:101px}
   .db-screen .db-plan-picker select{font-size:.64rem;padding-left:7px;padding-right:17px;background-position:right 4px center}
 }
+
+
+/* Contextual Dashboard heading: location and active filters always share the
+   same source of truth as the KPI, timeline, map and decision queue. */
+.db-screen .db-topbar{gap:13px}
+.db-screen .db-header-title{
+  display:flex;align-items:center;flex:0 1 245px;
+  min-width:155px;max-width:300px;overflow:hidden;
+}
+.db-screen .db-dynamic-heading{
+  display:block;min-width:0;width:100%;margin:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#29293d;font-size:clamp(1.03rem,1.3vw,1.25rem);
+  font-weight:840;letter-spacing:-.035em;line-height:1.28;
+}
+.db-screen .db-topsearch{flex:0 1 330px}
+.db-screen .db-plan-picker{margin-left:2px}
+@media(max-width:1100px){
+  .db-screen .db-header-title{flex-basis:185px;min-width:125px}
+  .db-screen .db-topsearch{max-width:280px;flex:0 1 280px}
+  .db-screen .db-topbar{gap:10px}
+}
+@media(max-width:780px){
+  .db-screen .db-header-title{flex:0 1 115px;min-width:82px}
+  .db-screen .db-dynamic-heading{font-size:.9rem}
+  .db-screen .db-topsearch{flex:1 1 110px;min-width:68px;max-width:none}
+  .db-screen .db-topbar{gap:7px}
+}
+@media(max-width:480px){
+  .db-screen .db-header-title{flex:0 1 78px;min-width:63px}
+  .db-screen .db-dynamic-heading{font-size:.73rem;letter-spacing:-.02em}
+  .db-screen .db-topsearch{flex:1 1 65px;min-width:48px}
+  .db-screen .db-topbar{gap:4px}
+  .db-screen .db-topsearch{padding:0 7px}
+  .db-screen .db-topsearch input{font-size:.67rem}
+}

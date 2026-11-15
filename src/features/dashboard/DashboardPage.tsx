@@ -137,6 +137,25 @@ export function DashboardPage() {
   const cityOptions = [...new Set(all.map(o=>o.city).filter((x): x is string => Boolean(x)))].sort((a,b)=>a.localeCompare(b,'fr'));
   const activeCount = (Object.keys(filters) as Array<keyof DashboardFilters>)
     .filter(key => filters[key] !== INITIAL_FILTERS[key]).length;
+  // Keep the heading aligned with the exact same filter state used by all charts.
+  // Location goes first, followed by other dimensions; long combinations retain
+  // their complete text in the native title tooltip.
+  const titleParts = [
+    filters.city,
+    filters.company,
+    filters.plan !== 'all' ? 'Plan ' + filters.plan : '',
+    filters.sector ? (sectors.find(s => s.id === filters.sector)?.name || 'Autres secteurs') : '',
+    filters.status,
+    filters.priority ? 'Priorité ' + filters.priority : '',
+    filters.period === '7d' ? '7 derniers jours' : filters.period === '30d' ? '30 derniers jours' : filters.period === '90d' ? '90 derniers jours' : '',
+    filters.sentWeek ? 'Semaine du ' + new Date(filters.sentWeek+'T12:00:00Z').toLocaleDateString('fr-FR') : '',
+    filters.sentMonth ? formatMonth(filters.sentMonth) : '',
+    filters.search.trim() ? 'Recherche : ' + filters.search.trim() : '',
+  ].filter((part): part is string => Boolean(part));
+  const dashboardFullTitle = titleParts.length ? 'Dashboard — ' + titleParts.join(' · ') : 'Dashboard';
+  const dashboardTitle = titleParts.length > 2
+    ? 'Dashboard — ' + titleParts.slice(0, 2).join(' · ') + ' (+' + (titleParts.length-2) + ')'
+    : dashboardFullTitle;
   const sourceTime = data?.generatedAt && Number.isFinite(Date.parse(data.generatedAt))
     ? new Date(data.generatedAt).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'})
     : 'horodatage indisponible';
@@ -174,6 +193,9 @@ export function DashboardPage() {
     </nav>
     <div className="db-stage">
       <header className="db-topbar">
+        <div className="db-header-title">
+          <h1 className="db-dynamic-heading" title={dashboardFullTitle}>{dashboardTitle}</h1>
+        </div>
         <div className="db-topsearch">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
           <input type="search" aria-label="Rechercher dans le Dashboard" placeholder="Search" value={filters.search} onChange={e=>setFilter('search',e.target.value)}/>
@@ -197,8 +219,6 @@ export function DashboardPage() {
       </header>
       <main className="db-stage-content">
         <div className="db-primary">
-          <div className="db-mobile-section-title"><strong>Dashboard</strong><span>Vue d’ensemble</span></div>
-          <h1 className="sr-only">Dashboard</h1>
           <section className="db-kpis" aria-label="Indicateurs clés">
             <Metric label="Opportunités" value={metrics.total} hint={metrics.toApply+' à candidater'} accent="#9d86f6"/>
             <Metric label="Progression" value={metrics.sent} hint="Candidatures envoyées" accent="#7679dc"/>

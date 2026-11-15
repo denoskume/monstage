@@ -67,6 +67,24 @@ describe('single-screen MonStage decision dashboard',()=>{
     fireEvent.change(plan,{target:{value:'all'}});
     expect(screen.getByText('Opportunités').nextElementSibling).toHaveTextContent(String(countAll));
   });
+  it('changes the Dashboard title dynamically for the city and combined filters',()=>{
+    mount();
+    const title=screen.getByRole('heading',{level:1});
+    expect(title).toHaveTextContent('Dashboard');
+    const plan=screen.getByRole('combobox',{name:'Choisir un plan'});
+    fireEvent.change(plan,{target:{value:'B'}});
+    expect(title).toHaveTextContent('Dashboard — Plan B');
+    fireEvent.click(screen.getByRole('button',{name:'Ouvrir les filtres'}));
+    fireEvent.change(screen.getByLabelText('Filtrer par ville'),{target:{value:'Nantes'}});
+    expect(title).toHaveTextContent('Dashboard — Nantes · Plan B');
+    fireEvent.change(screen.getByLabelText('Filtrer par entreprise'),{target:{value:'Alstom'}});
+    expect(title).toHaveAttribute('title','Dashboard — Nantes · Alstom · Plan B');
+    expect(title).toHaveTextContent('Dashboard — Nantes · Alstom (+1)');
+    fireEvent.click(screen.getByRole('button',{name:'Fermer le panneau'}));
+    fireEvent.click(screen.getByRole('button',{name:'Réinitialiser'}));
+    expect(title).toHaveTextContent('Dashboard');
+    expect(title).toHaveAttribute('title','Dashboard');
+  });
   it('opens advanced filters as a dialog and retains cross-filtering without page scroll',()=>{
     mount();
     fireEvent.click(screen.getByRole('button',{name:'Ouvrir les filtres'}));
