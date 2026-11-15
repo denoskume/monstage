@@ -1041,6 +1041,55 @@ var WORKDAY_SOURCES_ = [
   { tenant: 'gehc', host: 'wd5', site: 'GEHC_ExternalSite', company: 'GE HealthCare' }
 ];
 
+// Exact employer hosts; only job detail pages checked by the CI runner may
+// enter this source. A search result or an HTTP 200 career home is insufficient.
+var OFFICIAL_PAGE_SOURCES_ = [
+  { id: 'alstom', company: 'Alstom', host: 'jobsearch.alstom.com' },
+  { id: 'nestle', company: 'Nestlé', host: 'jobdetails.nestle.com' },
+  { id: 'lactalis', company: 'Lactalis', host: 'jobs.lactalisexperience.fr' },
+  { id: 'bel', company: 'Bel Group', host: 'jobs.groupe-bel.com' },
+  { id: 'essilor', company: 'EssilorLuxottica', host: 'careers.essilorluxottica.com' },
+  { id: 'engie', company: 'ENGIE', host: 'jobs.engie.com' },
+  { id: 'forvia', company: 'FORVIA HELLA', host: 'jobs.faurecia.com' }
+];
+
+function officialPageJobToRow_(source, job, posting) {
+  var fit = externalFitScores_(posting);
+  var calendarConfirmed = fit.start === 'Février 2027' && fit.duration === '6 mois';
+  var verified = new Date().toISOString();
+  return [
+    'official:' + source.id + ':' + job.id,
+    source.company,
+    posting.text,
+    specializationForPosting_(posting),
+    posting.categories.location,
+    '',
+    calendarConfirmed ? 'Oui probable — calendrier indiqué' : 'À confirmer',
+    fit.start,
+    fit.duration,
+    '',
+    skillsForPosting_(posting),
+    formatPublicationDate_(verifiedPublicationDate_(job.publishedAt)),
+    'À vérifier',
+    'À candidater',
+    'Vérifier l’ouverture et les dates du stage sur le portail officiel',
+    job.url,
+    false,
+    null,
+    null,
+    specializationForPosting_(posting),
+    fit.technicalFit,
+    fit.decisionScore,
+    fit.priority,
+    'Vérifié <24h',
+    verified,
+    'Page officielle individuelle',
+    calendarConfirmed && fit.priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
+    calendarConfirmed ? 'Oui probable — six mois dès février 2027' : 'À confirmer',
+    fit.signal >= 14 ? 'Haute' : 'Moyenne'
+  ];
+}
+
 function workdayBaseUrl_(source) {
   return 'https://' + source.tenant + '.' + source.host + '.myworkdayjobs.com';
 }
@@ -2379,15 +2428,20 @@ function ingestRunnerAtsPostings_(request) {
   var source = null;
   var sources = provider === 'greenhouse' ? GREENHOUSE_SOURCES_ :
     provider === 'smartRecruiters' ? SMARTRECRUITERS_SOURCES_ :
-    provider === 'workday' ? WORKDAY_SOURCES_ : [];
+    provider === 'workday' ? WORKDAY_SOURCES_ :
+    provider === 'officialPage' ? OFFICIAL_PAGE_SOURCES_ : [];
   sources.forEach(function (candidate) {
-    if (String(provider === 'greenhouse' ? candidate.board : provider === 'workday' ? candidate.tenant : candidate.companyId) === sourceId) source = candidate;
+    var id = provider === 'greenhouse' ? candidate.board :
+      provider === 'workday' ? candidate.tenant :
+      provider === 'officialPage' ? candidate.id : candidate.companyId;
+    if (String(id) === sourceId) source = candidate;
   });
   if (!source) throw new Error('Unknown authorized ATS source');
   var jobs = request.jobs;
   if (!Array.isArray(jobs) || jobs.length > 200) throw new Error('Invalid ATS batch');
   var sheetName = provider === 'greenhouse' ? 'Offres - Greenhouse' :
-    provider === 'workday' ? 'Offres - Workday' : 'Offres - SmartRecruiters';
+    provider === 'workday' ? 'Offres - Workday' :
+    provider === 'officialPage' ? 'Offres - Official' : 'Offres - SmartRecruiters';
   var spreadsheet = getSpreadsheet_();
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
@@ -2408,6 +2462,30 @@ function ingestRunnerAtsPostings_(request) {
       if (targetSignalScore_(posting) < 3) return;
       counters.relevant++;
       row = greenhouseJobToRow_(source, job);
+    } else if (provider === 'officialPage') {
+      // Only an actual employer-hosted job detail URL is eligible. The CI
+      // runner must independently fetch that individual page and confirm
+      // its title, FR location and canonical URL before sending it here.
+      var url = String(job.url || '');
+      var host = /^https:\/\/([^/:?#]+)(?:\/|$)/i.exec(url);
+      if (!strictCompany_(source.company) || !host ||
+          host[1].toLowerCase() !== source.host ||
+          !/^https:\/\/[^/]+\/(?:job|jobdetails)\//i.test(url) ||
+          !/^[a-f0-9]{20}$/.test(String(job.id || ''))) return;
+      var title = normalizeText_(job.title) || '';
+      if (!/\b(stage|stagiaire|internship|intern|pfe)\b/i.test(normalizeComparable_(title))) return;
+      counters.internship++;
+      var location = normalizeText_(job.location) || '';
+      if (!isFranceLocation_(location)) return;
+      counters.france++;
+      posting = {
+        text: title,
+        descriptionPlain: String(job.description || '').slice(0, 4000),
+        categories: { location: location, team: '', department: '' }
+      };
+      if (targetSignalScore_(posting) < 3) return;
+      counters.relevant++;
+      row = officialPageJobToRow_(source, job, posting);
     } else if (provider === 'workday') {
       // Workday feeds are authenticated at the gateway and restricted to
       // configured tenants. Never accept arbitrary external source URLs.
