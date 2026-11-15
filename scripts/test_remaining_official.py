@@ -110,6 +110,30 @@ class RemainingOfficialTests(unittest.TestCase):
         b = "https://dassault-aviation-cand.talent-soft.com/offre-de-emploi/emploi-stage-modeles-d-ia_15827.aspx"
         self.assertEqual(canonical_url(s, a), canonical_url(s, b))
 
+    def test_airfrance_official_stage_contract_rss(self):
+        s = BY_COMPANY["Air France-KLM"]
+        self.assertEqual(s["rss"][0], "https://recrutement.airfrance.com/handlers/offerRss.ashx?LCID=1036&Rss_Contract=3442")
+        xml = """<rss><channel>
+          <item><title>Stage – Methods &amp; Data Analyst F/H</title>
+            <link>https://recrutement.airfrance.com/offre-de-emploi/emploi-stage-methods-data-analyst-f-h_25738.aspx</link></item>
+          <item><title>Stage – Methods &amp; Data Analyst F/H</title>
+            <link>https://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx?LCID=1036&amp;idOffre=25738</link></item>
+          <item><title>Fake stage</title>
+            <link>https://recrutement.airfrance.com.evil.net/offre-de-emploi/emploi-stage-data_12.aspx</link></item>
+        </channel></rss>"""
+        urls = extract_rss_job_links(s, s["rss"][0], xml)
+        self.assertEqual(len(urls), 1)
+        self.assertIn("25738", urls[0])
+        self.assertEqual(extract_rss_job_links(s, s["rss"][0].replace("3442", "3441"), xml), [])
+
+    def test_airfrance_talentsoft_slug_shares_same_job_id_as_aspx_detail(self):
+        s = BY_COMPANY["Air France-KLM"]
+        long_url = s["seed"][1]
+        slug = "https://recrutement.airfrance.com/offre-de-emploi/emploi-stage-methods-data-analyst-f-h_25738.aspx"
+        self.assertTrue(source_matches(s, slug))
+        self.assertEqual(canonical_url(s, long_url), canonical_url(s, slug))
+        self.assertFalse(source_matches(s, "https://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx"))
+
     def test_air_france_identity_keeps_offer_number(self):
         s=BY_COMPANY["Air France-KLM"]
         first=canonical_url(s,s["seed"][0])
