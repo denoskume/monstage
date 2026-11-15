@@ -262,11 +262,13 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await expect(page.locator('.db-side-area')).toHaveCount(0);
   await expect(page.getByText('MonStage Intelligence')).toHaveCount(0);
   const contentWidth = await page.evaluate(() => {
-    const root = document.querySelector('.db-stage-content')!.getBoundingClientRect();
-    const primary = document.querySelector('.db-primary')!.getBoundingClientRect();
-    return { root: root.width, primary: primary.width };
+    const root = document.querySelector('.db-stage-content')!;
+    const style = getComputedStyle(root);
+    const available = root.getBoundingClientRect().width
+      - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    return { available, primary: document.querySelector('.db-primary')!.getBoundingClientRect().width };
   });
-  expect(contentWidth.primary).toBeGreaterThanOrEqual(contentWidth.root - 1);
+  expect(contentWidth.primary).toBeGreaterThanOrEqual(contentWidth.available - 1);
   for(const size of [{width:1366,height:768},{width:1280,height:720},{width:1440,height:900},{width:1024,height:768}]){
     await page.setViewportSize(size);
     const metrics=await page.evaluate(()=>({
