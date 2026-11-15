@@ -46,9 +46,11 @@ class AtsIngestionTests(TestCase):
     def test_enrichment_keeps_listing_when_detail_fetch_fails(self):
         jobs = [{"externalPath": "/job/Paris/JR1", "title": "Stage Data Analyst"},
                 {"externalPath": "/job/Lyon/JR2", "title": "Stage Vision"}]
-        with mock.patch.object(ats, "workday_details", side_effect=[
-            {"jobDescription": "SQL et Python"}, OSError("Temporary 503")
-        ]):
+        def detail_by_job(tenant, host, site, path):
+            if path.endswith("JR1"):
+                return {"jobDescription": "SQL et Python"}
+            raise OSError("Temporary 503")
+        with mock.patch.object(ats, "workday_details", side_effect=detail_by_job):
             ok, failed = ats.enrich_workday_candidates("ratp", "wd3", "RATP_Externe", jobs)
         self.assertEqual((ok, failed), (1, 1))
         self.assertEqual(jobs[0]["details"]["jobDescription"], "SQL et Python")
