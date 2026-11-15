@@ -107,6 +107,21 @@ class AtsIngestionTests(TestCase):
         fetch.assert_called_once()
 
     @mock.patch.dict(os.environ, {"APPS_SCRIPT_GATEWAY_SECRET": "test-secret", "APPS_SCRIPT_URL": "https://example.invalid/exec"})
+    def test_backend_filter_stage_counters_are_reported_without_extra_fields(self):
+        reply = {"ingestion": {"accepted": 0, "persisted": True, "acceptedIds": [],
+                 "counters": {"received": 1, "internship": 1, "france": 1,
+                              "relevant": 0, "enriched": 0,
+                              "gatewaySecret": "never-print-me"}}}
+        with mock.patch.object(ats.urllib.request, "urlopen",
+                               return_value=fake_response(reply)), mock.patch("builtins.print") as printed:
+            self.assertEqual(ats.ingest("officialPage", "sanofi",
+                                        [{"id": "deadbeef000000000000"}]), 0)
+        logged = json.loads(printed.call_args.args[0])
+        self.assertEqual(logged["filterCounters"]["relevant"], 0)
+        self.assertEqual(logged["filterCounters"]["france"], 1)
+        self.assertNotIn("gatewaySecret", str(logged))
+
+    @mock.patch.dict(os.environ, {"APPS_SCRIPT_GATEWAY_SECRET": "test-secret", "APPS_SCRIPT_URL": "https://example.invalid/exec"})
     def test_backend_acknowledgement_requires_persisted_ids(self):
         old_backend = {"ingestion": {"provider": "workday", "sourceId": "ratp", "accepted": 1}}
         with mock.patch.object(ats.urllib.request, "urlopen", return_value=fake_response(old_backend)):

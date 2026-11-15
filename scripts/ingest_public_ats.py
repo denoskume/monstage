@@ -237,7 +237,15 @@ def ingest(provider, source_id, jobs):
         print(json.dumps({
             "provider": provider, "sourceId": source_id,
             "batch": offset // batch_size + 1, "rowsSent": len(batch),
-            "accepted": accepted, "persisted": True
+            "accepted": accepted, "persisted": True,
+            # Counters only describe public job-filter stages; no secrets,
+            # application IDs or candidate personal data are logged.
+            "filterCounters": {
+                key: int(value)
+                for key, value in (result.get("counters") or {}).items()
+                if key in ("received", "internship", "france", "relevant", "enriched")
+                and isinstance(value, (int, float)) and not isinstance(value, bool)
+            },
         }, ensure_ascii=False))
     return total_accepted
 
