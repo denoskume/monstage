@@ -5,12 +5,13 @@ import { cvColumnSections, isTwoColumnCv } from './twoColumnLayout';
 import { buildCvPdfBytes } from './pdfExport';
 
 describe('dual-column CV models', () => {
-  test('are two extra options while retaining all existing templates', () => {
+  test('retain existing templates and add a full-height portrait option', () => {
     expect(cvTemplateOptions.map(option => option.id)).toEqual([
-      'classic', 'modern', 'minimal', 'keywords', 'split', 'sidebar',
+      'classic', 'modern', 'minimal', 'keywords', 'split', 'sidebar', 'portrait',
     ]);
     expect(isTwoColumnCv('split')).toBe(true);
     expect(isTwoColumnCv('sidebar')).toBe(true);
+    expect(isTwoColumnCv('portrait')).toBe(true);
     expect(isTwoColumnCv('modern')).toBe(false);
   });
 
