@@ -50,7 +50,7 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(screen.getByRole('img',{name:/Graphique en courbes lissées avec axes X et Y de septembre 2026 à février 2027/})).toBeInTheDocument();
     expect(screen.getByTestId('google-maps-iframe')).toBeInTheDocument();
     expect(screen.getByText('sept. 26')).toBeInTheDocument();
-    expect(screen.getByText('févr. 27')).toBeInTheDocument();
+    expect(screen.queryByText('févr. 27')).not.toBeInTheDocument();
     expect(document.querySelector('.db-campaign-chart svg')).toHaveTextContent('Date (mois)');
     expect(document.querySelector('.db-campaign-chart svg')).toHaveTextContent('Nombre de dossiers');
     expect(document.querySelectorAll('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveLength(3);
@@ -91,6 +91,21 @@ describe('single-screen MonStage decision dashboard',()=>{
       fireEvent.keyDown(chart,{key:'Enter'});
       expect(screen.getByRole('button',{name:'Effacer le filtre du mois'})).toBeInTheDocument();
     } finally {getBounds.mockRestore();}
+  });
+  it('zooms the timeline without filtering dossiers and restores the entire campaign',()=>{
+    mount();
+    const before=screen.getByText('Opportunités').nextElementSibling?.textContent;
+    fireEvent.click(screen.getByRole('button',{name:'30 derniers jours'}));
+    expect(screen.getByRole('button',{name:'30 derniers jours'})).toHaveAttribute('aria-pressed','true');
+    expect(screen.getByText('Opportunités').nextElementSibling?.textContent).toBe(before);
+    fireEvent.click(screen.getByRole('button',{name:'Toute la campagne'}));
+    expect(screen.getByText('févr. 27')).toBeInTheDocument();
+  });
+  it('shows counts and percentages immediately on a status hover',()=>{
+    mount();
+    fireEvent.mouseEnter(screen.getByRole('button',{name:'Filtrer statut À candidater'}));
+    expect(screen.getByRole('tooltip')).toHaveTextContent('À candidater');
+    expect(screen.getByRole('tooltip')).toHaveTextContent('%');
   });
   it('toggles each campaign line from its legend',()=>{
     mount();

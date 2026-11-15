@@ -85,7 +85,7 @@ function historicalCohort(offers:InternshipOffer[],today:string): DatedOffer[] {
 export type CampaignObservation = {date:string;total:number;applied:number;pending:number};
 /** Actual WEEKLY cumulative snapshots until today, plus the precise last day.
  * The smooth curve is a visualization between observed points, NOT a forecast. */
-export function campaignTimeline(offers:InternshipOffer[],now:Date) {
+export function campaignTimeline(offers:InternshipOffer[],now:Date,stepDays:1|7=7) {
   const today=now.toISOString().slice(0,10);
   const cutoff=today<'2027-02-28'?today:'2027-02-28';
   const reliable=historicalCohort(offers,cutoff);
@@ -93,7 +93,7 @@ export function campaignTimeline(offers:InternshipOffer[],now:Date) {
   const start=new Date('2026-09-01T12:00:00Z');
   const last=new Date(cutoff+'T12:00:00Z');
   const dates:string[]=[];
-  for(let date=new Date(start);date<=last;date.setUTCDate(date.getUTCDate()+7)) {
+  for(let date=new Date(start);date<=last;date.setUTCDate(date.getUTCDate()+stepDays)) {
     dates.push(date.toISOString().slice(0,10));
   }
   if(dates.at(-1)!==cutoff)dates.push(cutoff);

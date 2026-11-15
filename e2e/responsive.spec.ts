@@ -287,6 +287,17 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await page.getByRole('button',{name:'Afficher la courbe Non postulées'}).click();
   await expect(page.locator('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveCount(3);
 
+  const countBeforeZoom=await page.locator('.db-kpis').textContent();
+  await page.getByRole('button',{name:'30 derniers jours'}).click();
+  await expect(page.getByRole('button',{name:'30 derniers jours'})).toHaveAttribute('aria-pressed','true');
+  expect(await page.locator('.db-kpis').textContent()).toBe(countBeforeZoom);
+  await page.getByRole('slider',{name:'Zoom temporel'}).fill('40');
+  await expect(page.getByRole('slider',{name:'Zoom temporel'})).toHaveValue('40');
+  await page.getByRole('button',{name:'Réinitialiser le zoom'}).click();
+  await expect(page.getByRole('slider',{name:'Zoom temporel'})).toHaveValue('0');
+  await page.getByRole('button',{name:'Filtrer statut À candidater'}).hover();
+  await expect(page.getByRole('tooltip')).toContainText('%');
+  await page.getByRole('heading',{name:'Campagne de stages'}).hover();
   await expect(page.locator('.db-map-mini .db-google-map-shell')).toBeVisible();
   await planSelect.selectOption('B');
   await expect(planSelect).toHaveValue('B');

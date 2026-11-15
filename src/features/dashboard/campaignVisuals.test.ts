@@ -90,3 +90,14 @@ describe('continuous campaign line plots with real X and Y axes',()=>{
     expect(campaignAxisMax(101)).toBe(200);
   });
 });
+
+
+describe('daily exploration',()=>{
+  it('shows the exact day an offer appears and an application is sent',()=>{
+    const rows=[make('daily','Candidature envoyée','2026-09-03','2026-09-05')];
+    const {points}=campaignTimeline(rows,new Date('2026-09-06T12:00:00Z'),1);
+    expect(points).toHaveLength(6);
+    expect(points[2]).toEqual({date:'2026-09-03',total:1,applied:0,pending:1});
+    expect(points[4]).toEqual({date:'2026-09-05',total:1,applied:1,pending:0});
+  });
+});

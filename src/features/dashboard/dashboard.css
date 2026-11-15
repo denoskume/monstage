@@ -979,3 +979,21 @@
  .db-screen .db-campaign-tooltip strong{font-size:.62rem}
  .db-screen .db-campaign-tooltip small{font-size:.57rem}
 }
+
+/* Compact exploration controls preserve the original three-panel dashboard. */
+.db-chart-toolbar{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.db-chart-toolbar button,.db-chart-zoom button{font:inherit;font-size:.65rem;border:1px solid #e7e3f3;background:#fff;color:#777389;border-radius:6px;padding:4px 8px;cursor:pointer}
+.db-chart-toolbar button[aria-pressed=true]{background:#ede9ff;border-color:#d8d0fb;color:#6354c7;font-weight:700}
+.db-chart-toolbar button:hover,.db-chart-zoom button:hover{background:#f3f0ff}
+.db-chart-toolbar button:focus-visible,.db-chart-zoom button:focus-visible{outline:2px solid #766ef0;outline-offset:2px}
+.db-chart-zoom{display:flex;align-items:center;gap:9px;font-size:.6rem;color:#777389;flex:none}
+.db-chart-zoom input{min-width:0;flex:1;height:14px;accent-color:#766ef0;cursor:ew-resize}
+.db-chart-zoom button{font-size:1rem;padding:0 7px}
+.db-pie-layout{position:relative}
+.db-status-tooltip{position:absolute;z-index:15;top:0;left:50%;transform:translateX(-50%);min-width:170px;max-width:95%;padding:10px 13px;border:1px solid #ddd8f3;border-radius:10px;background:#fffffff5;box-shadow:0 8px 24px #32314d25;pointer-events:none;font-size:.7rem;display:grid;grid-template-columns:8px 1fr;align-items:center;gap:6px}
+.db-status-tooltip i{width:8px;height:8px;border-radius:50%}
+.db-status-tooltip span{grid-column:2;color:#777389;font-variant-numeric:tabular-nums}
+.db-pie-slice{transition:opacity .15s ease,filter .15s ease}
+.db-screen .db-campaign-chart{min-height:145px}
+@media(prefers-reduced-motion:reduce){.db-pie-slice{transition:none}}
+@media(max-width:850px){.db-chart-toolbar button{font-size:.55rem;padding:3px 5px}.db-chart-zoom{font-size:.55rem;gap:4px}}

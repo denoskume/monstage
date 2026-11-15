@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { InternshipOffer } from '../../api/contract';
 import {
   CAMPAIGN_MONTHS, campaignTimeline, campaignAxisMax, smoothCampaignPath, pieSector,
@@ -16,19 +16,27 @@ const SERIES=[
 type SeriesField = typeof SERIES[number]['field'];
 
 export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProps) {
-  const {points,excluded,tracked}=useMemo(()=>campaignTimeline(offers,now),[offers,now]);
+  const {points,excluded,tracked}=useMemo(()=>campaignTimeline(offers,now,1),[offers,now]);
+  const clipId=useId();
+  const [windowDays,setWindowDays]=useState<'all'|'observed'|30|90>('observed');
+  const [rangeStart,setRangeStart]=useState(0);
+  const [pointerX,setPointerX]=useState<number|null>(null);
   const [hovered,setHovered]=useState<number|null>(null);
   const [visible,setVisible]=useState<SeriesField[]>(['total','applied','pending']);
   const max=campaignAxisMax(Math.max(0,...points.map(row=>row.total)));
   const left=68,right=610,top=24,bottom=262;
-  const domainStart=Date.parse('2026-09-01T12:00:00Z');
-  const domainEnd=Date.parse('2027-03-01T12:00:00Z');
+  const campaignStart=Date.parse('2026-09-01T12:00:00Z');
+  const observedEnd=Math.max(campaignStart+86400000,Date.parse((points.at(-1)?.date||'2026-09-02')+'T12:00:00Z'));
+  const domainEnd=windowDays==='all'?Date.parse('2027-03-01T12:00:00Z'):observedEnd;
+  const baseStart=typeof windowDays==='number'?Math.max(campaignStart,domainEnd-windowDays*86400000):campaignStart;
+  const domainStart=baseStart+(domainEnd-baseStart-86400000)*rangeStart/100;
+  const chooseWindow=(value:typeof windowDays)=>{setWindowDays(value);setRangeStart(0);setHovered(null);setPointerX(null);};
   const px=(date:string)=>left+(Date.parse(date+'T12:00:00Z')-domainStart)/(domainEnd-domainStart)*(right-left);
   const py=(n:number)=>bottom-n/max*(bottom-top);
   const observed=points.length>0;
   const todayX=observed?px(points[points.length-1].date):left;
   const active=hovered===null ? null : points[hovered] || null;
-  const activeX=active?px(active.date):left;
+  const activeX=pointerX??(active?px(active.date):left);
   const monthFor=(date:string)=>date.slice(0,7);
   const toggleSeries=(field:SeriesField)=>{
     setVisible(current=>current.includes(field)
@@ -41,14 +49,16 @@ export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProp
   };
   const setNearest=(x:number)=>{
     if(!points.length)return;
+    if(!Number.isFinite(x))x=left;
     let index=0,dist=Infinity;
     points.forEach((row,i)=>{
       const difference=Math.abs(px(row.date)-x);
       if(difference<dist){dist=difference;index=i;}
     });
     setHovered(index);
+    setPointerX(Math.max(left,Math.min(todayX,right,x)));
   };
-  useEffect(()=>setHovered(null),[points]);
+  useEffect(()=>{setHovered(null);setPointerX(null);},[points,domainStart,domainEnd]);
 
   return <section className="db-mini-panel db-campaign-lines" aria-label="Évolution de la campagne">
     <div className="db-mini-panel-header">
@@ -69,22 +79,32 @@ export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProp
         <i style={{backgroundColor:series.color}}/>{series.label}
       </button>)}
     </div>
+    <div className="db-chart-toolbar" aria-label="Période affichée">
+      {([{value:'all',label:'Campagne',title:'Toute la campagne'},
+        {value:'observed',label:'À ce jour',title:'Du début à aujourd’hui'},
+        {value:30,label:'30 j',title:'30 derniers jours'},
+        {value:90,label:'90 j',title:'90 derniers jours'}] as const).map(option=>
+        <button type="button" key={option.value} aria-label={option.title}
+          aria-pressed={windowDays===option.value} onClick={()=>chooseWindow(option.value)}>{option.label}</button>)}
+    </div>
     <div className="db-campaign-chart" role="group" tabIndex={0}
       aria-label="Explorer le graphique des offres. Survolez pour voir les trois valeurs, flèches gauche et droite pour les dates, Entrée pour filtrer par mois d’envoi."
       onKeyDown={event=>{
         if(!points.length)return;
         if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
           event.preventDefault();
-          setHovered(index=>Math.min(points.length-1,Math.max(0,(index??0)+(event.key==='ArrowRight'?1:-1))));
+          setPointerX(null);
+          setHovered(index=>Math.min(points.length-1,Math.max(Math.max(0,points.findIndex(row=>px(row.date)>=left)),(index??Math.max(0,points.findIndex(row=>px(row.date)>=left)))+(event.key==='ArrowRight'?1:-1))));
         }else if((event.key==='Enter'||event.key===' ')&&hovered!==null){
           event.preventDefault();
           selectIndex(hovered);
         }else if(event.key==='Escape'){
-          setHovered(null);
+          setHovered(null);setPointerX(null);
         }
       }}>
       <svg viewBox="0 0 640 325" preserveAspectRatio="none" role="img"
         aria-label={'Graphique en courbes lissées avec axes X et Y de septembre 2026 à février 2027, '+tracked+' offres datées et '+excluded+' dossiers sans historique exploitable'}>
+        <defs><clipPath id={clipId}><rect x={left} y={top-6} width={right-left} height={bottom-top+12}/></clipPath></defs>
         {observed&&todayX<right&&<rect x={todayX} y={top} width={right-todayX} height={bottom-top}
           fill="#faf9ff" opacity=".8"/>}
         {[0,1,2,3,4].map(index=>{
@@ -97,6 +117,7 @@ export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProp
         })}
         {CAMPAIGN_MONTHS.map(month=>{
           const x=px(month.month+'-01');
+          if(x<left||x>right)return null;
           return <g key={month.month}>
             <line x1={x} y1={top} x2={x} y2={bottom} stroke="#eeeef6"
               strokeDasharray="3 7" strokeWidth="1"/>
@@ -104,6 +125,9 @@ export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProp
             <text x={x} y={bottom+23} fontSize="12" fill="#73798d" textAnchor="middle">{month.label}</text>
           </g>;
         })}
+        {windowDays!=='all'&&[domainStart,domainEnd].map((time,index)=><text key={time}
+          x={index?right:left} y={bottom+43} textAnchor={index?'end':'start'} fontSize="12" fill="#73798d">
+          {new Date(time).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</text>)}
         <path d={'M '+left+' '+top+' V '+bottom+' H '+right} fill="none"
           stroke="#636779" strokeWidth="1.8" strokeLinecap="round"/>
         <text x={(left+right)/2} y="318" fontSize="13" fill="#50576e"
@@ -119,21 +143,17 @@ export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProp
           const coords=points.map(row=>({
             x:px(row.date),y:py(row[series.field]),value:row[series.field],date:row.date,
           }));
-          return <g key={series.field}>
+          return <g key={series.field} clipPath={"url(#"+clipId+")"}>
             <path d={smoothCampaignPath(coords)} fill="none" stroke={series.color}
               strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round"/>
-            {coords.filter((_,index)=>index===0||index===coords.length-1||index%3===0)
-              .map(p=><circle key={p.date} cx={p.x} cy={p.y} r="3.1"
-                fill="#fff" stroke={series.color} strokeWidth="2">
-                <title>{series.label} : {p.value} — {new Date(p.date+'T12:00:00Z').toLocaleDateString('fr-FR')}</title>
-              </circle>)}
+
           </g>;
         })}
-        {active&&<g className="db-campaign-crosshair" pointerEvents="none">
+        {active&&<g className="db-campaign-crosshair" pointerEvents="none" clipPath={"url(#"+clipId+")"}>
           <line x1={activeX} x2={activeX} y1={top} y2={bottom}
             stroke="#49485d" strokeWidth="1.5" strokeDasharray="5 4"/>
           {SERIES.filter(series=>visible.includes(series.field)).map(series=>
-            <circle key={series.field} cx={activeX} cy={py(active[series.field])}
+            <circle key={series.field} cx={px(active.date)} cy={py(active[series.field])}
               r="5.2" stroke={series.color} strokeWidth="3" fill="#fff"/>)}
         </g>}
         <rect className="db-campaign-hitarea" x={left} y={top} width={right-left} height={bottom-top}
@@ -143,7 +163,11 @@ export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProp
             if(!bounds?.width)return;
             setNearest((event.clientX-bounds.left)/bounds.width*640);
           }}
-          onPointerLeave={()=>setHovered(null)}
+          onPointerLeave={()=>{setHovered(null);setPointerX(null);}}
+          onPointerDown={event=>{
+            const bounds=event.currentTarget.ownerSVGElement?.getBoundingClientRect();
+            if(bounds?.width)setNearest((event.clientX-bounds.left)/bounds.width*640);
+          }}
           onClick={()=>{if(hovered!==null)selectIndex(hovered);}}
         />
       </svg>
@@ -154,13 +178,18 @@ export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProp
           <i style={{backgroundColor:series.color}}/><span>{series.label}</span>
           <b>{active[series.field]}</b>
         </div>)}
-        <small>Cliquez pour filtrer les envois de ce mois</small>
+        <small>Valeurs enregistrées à cette date · cliquez pour filtrer les envois du mois</small>
       </div>}
     </div>
+    <label className="db-chart-zoom">Zoom temporel
+      <input type="range" min="0" max="95" step="1" value={rangeStart}
+        aria-label="Zoom temporel" onChange={event=>{if(windowDays==='all')setWindowDays('observed');setRangeStart(Number(event.target.value));}}/>
+      <button type="button" onClick={()=>chooseWindow('all')} aria-label="Réinitialiser le zoom">↺</button>
+    </label>
     <p className="db-campaign-footnote">{excluded>0
       ? excluded+' dossier(s) sans dates historiques fiables : non représentés.'
       : 'Évolution cumulative calculée à partir des dates enregistrées.'}
-      {' '}Survolez les courbes pour comparer les valeurs. Cliquez pour filtrer le mois d’envoi.</p>
+      {' '}Survol : valeurs quotidiennes. Courbes lissées entre les observations, sans prévision.</p>
   </section>;
 }
 type PieProps={
@@ -170,8 +199,10 @@ type PieProps={
 };
 
 export function CampaignStatusPie({offers,selected,onSelect}:PieProps) {
+  const [highlighted,setHighlighted]=useState<PieBucket|null>(null);
   const buckets=useMemo(()=>statusPie(offers),[offers]);
   const total=offers.length;
+  const detail=buckets.find(part=>part.id===highlighted);
   let angle=0;
   const arcs=buckets.filter(part=>part.count>0).map(part=>{
     const from=angle;
@@ -188,6 +219,9 @@ export function CampaignStatusPie({offers,selected,onSelect}:PieProps) {
         <svg viewBox="0 0 120 120" aria-label="Pie chart des candidatures" role="img">
           <circle cx="60" cy="60" r="45" fill="#eceaf5"/>
           {arcs.map(part=><path key={part.id} d={part.path}
+            style={{opacity:highlighted&&highlighted!==part.id?0.35:1}}
+            onMouseEnter={()=>setHighlighted(part.id)} onMouseLeave={()=>setHighlighted(null)}
+            onFocus={()=>setHighlighted(part.id)} onBlur={()=>setHighlighted(null)}
             fill={part.color} stroke="#ffffff" strokeWidth="1.5"
             role="button" tabIndex={0} aria-label={part.label+' : '+part.count}
             aria-pressed={selected===part.id} className={selected===part.id?'db-pie-slice selected':'db-pie-slice'}
@@ -197,11 +231,17 @@ export function CampaignStatusPie({offers,selected,onSelect}:PieProps) {
           </path>)}
         </svg>
       </div>
+      {detail&&<div className="db-status-tooltip" role="tooltip">
+        <i style={{background:detail.color}}/><strong>{detail.label}</strong>
+        <span>{detail.count} dossier(s) · {total?(detail.count/total*100).toLocaleString('fr-FR',{maximumFractionDigits:1}):0} %</span>
+      </div>}
       <div className="db-pie-legend">
         {PIE_BUCKETS.map(part=>{
           const found=buckets.find(b=>b.id===part.id);
           return <button key={part.id} type="button"
             className={'db-pie-item'+(selected===part.id?' selected':'')}
+            onMouseEnter={()=>setHighlighted(part.id)} onMouseLeave={()=>setHighlighted(null)}
+            onFocus={()=>setHighlighted(part.id)} onBlur={()=>setHighlighted(null)}
             onClick={()=>onSelect(part.id)} aria-pressed={selected===part.id}
             aria-label={'Filtrer statut '+part.label}>
             <i style={{backgroundColor:part.color}}/>
