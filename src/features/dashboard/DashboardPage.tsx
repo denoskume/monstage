@@ -14,7 +14,8 @@ import {
   routeForOffer, statusGroup, dashboardPlan, type DashboardFilters, type DashboardPeriod,
   type DashboardPlan,
 } from './decisionModel';
-import { cityPoint, pointXY, francePath } from './franceGeo';
+import { cityPoint } from './franceGeo';
+import { GoogleFranceMap } from './GoogleFranceMap';
 import './dashboard.css';
 
 const number = new Intl.NumberFormat('fr-FR');
@@ -136,8 +137,6 @@ export function DashboardPage() {
   }));
   const [showAll, setShowAll] = useState(false);
   const [panel, setPanel] = useState<'filters'|'analytics'|'map'|'queue'|null>(null);
-  const [mapZoom, setMapZoom] = useState(1);
-  const [mapOrigin, setMapOrigin] = useState({x:310,y:220});
 
   useEffect(() => {
     const refreshLocal = () => { setLocal(readProspectionOffers()); setNow(new Date()); };
@@ -177,19 +176,6 @@ export function DashboardPage() {
   const maxSector = Math.max(...sectorGroups.map(x=>x.A+x.B+x.other), 1);
   const mapped = cityGroups.map(row => ({...row, point:cityPoint(row.city)}))
     .filter((row): row is typeof row & {point:{lon:number;lat:number}} => row.point!==null);
-  // Cluster city points near one another on overview; split when zooming in.
-  const clusters: Array<{x:number;y:number;count:number;cities:string[]}> = [];
-  const radius=mapZoom>=2.5?9:mapZoom>=1.7?13:20;
-  for(const item of mapped){
-    const at=pointXY(item.point.lon,item.point.lat);
-    const cluster=clusters.find(c=>Math.hypot(c.x-at.x,c.y-at.y)<radius);
-    if(cluster){
-      const total=cluster.count+item.count;
-      cluster.x=(cluster.x*cluster.count+at.x*item.count)/total;
-      cluster.y=(cluster.y*cluster.count+at.y*item.count)/total;
-      cluster.count=total; cluster.cities.push(item.city);
-    }else clusters.push({...at,count:item.count,cities:[item.city]});
-  }
   const recentActivity=activity.slice(-4).reduce((sum,row)=>sum+row.count,0);
   const coveredPins = mapped.reduce((sum,row)=>sum+row.count,0);
   const unknownPositions = shown.length-coveredPins;
@@ -397,63 +383,31 @@ export function DashboardPage() {
     </div>
 
 }
-          {panel==='map'&&    <div id="dashboard-map-panel" className="db-wide-map">      <section className="db-panel db-map-panel">
-        <PanelHeader title="Carte des opportunités" detail="France métropolitaine · Points géographiques réels"/>
-        <div className="db-geo-summary"><span><strong>{coveredPins}</strong> dossiers localisés</span>
-          <span><strong>{unknownPositions}</strong> non positionnés</span>
-          <span>La taille du point représente le nombre de dossiers.</span></div>
+          {panel==='map'&&    <div id="dashboard-map-panel" className="db-wide-map">
+      <section className="db-panel db-map-panel">
+        <PanelHeader title="Carte des opportunités" detail="Google Maps réel · Zoom, déplacement et recherche"/>
+        <div className="db-geo-summary">
+          <span><strong>{coveredPins}</strong> dossiers localisés</span>
+          <span><strong>{unknownPositions}</strong> localisations inconnues</span>
+          <span>Une position par ville connue.</span>
+        </div>
         <div className="db-map-layout">
-          <div className="db-map-canvas" role="group" aria-label="Carte interactive des villes">
-            <div className="db-map-tools" aria-label="Zoom de la carte">
-              <button type="button" aria-label="Agrandir la carte" disabled={mapZoom>=3.8}
-                onClick={()=>setMapZoom(z=>Math.min(4,Math.round((z+.5)*10)/10))}>+</button>
-              <button type="button" aria-label="Réduire la carte" disabled={mapZoom<=1}
-                onClick={()=>setMapZoom(z=>Math.max(1,Math.round((z-.5)*10)/10))}>−</button>
-              <button type="button" aria-label="Réinitialiser le zoom" onClick={()=>{setMapZoom(1);setMapOrigin({x:310,y:220});}}>⌂</button>
-            </div>
-            <div className="db-map-world" style={{
-              transform:'scale('+mapZoom+')',
-              transformOrigin:(mapOrigin.x/620*100)+'% '+(mapOrigin.y/440*100)+'%',
-            }}>
-              <svg viewBox="0 0 620 440" xmlns="http://www.w3.org/2000/svg"
-                aria-label="France métropolitaine d'après le tracé public IGN">
-                <defs>
-                  <pattern id="db-geo-dots" patternUnits="userSpaceOnUse" width="22" height="22">
-                    <circle cx="1" cy="1" r=".6" fill="#7c94ad" opacity=".23"/>
-                  </pattern>
-                </defs>
-                <rect width="620" height="440" fill="url(#db-geo-dots)"/>
-                <path d={francePath} fill="#e9f1f9" stroke="#91aac5" strokeWidth="1.5" strokeLinejoin="round"/>
-              </svg>
-              {clusters.map((cluster,i)=>{
-                const hasSingle=cluster.cities.length===1;
-                const active=hasSingle && filters.city===cluster.cities[0];
-                const size=25+Math.min(23,Math.sqrt(cluster.count)*3.8);
-                return <button type="button" key={cluster.cities.join('|')+i}
-                  className={'db-map-pin db-map-cluster'+(active?' selected':'')}
-                  style={{left:(cluster.x/620*100)+'%',top:(cluster.y/440*100)+'%',width:size,height:size}}
-                  aria-label={hasSingle?'Filtrer ville '+cluster.cities[0]+' ('+cluster.count+' dossiers)':'Zoomer sur '+cluster.cities.slice(0,3).join(', ')}
-                  title={cluster.cities.join(' · ')+' — '+cluster.count+' dossier(s)'}
-                  aria-pressed={active} onClick={()=>{
-                    if(hasSingle) toggleFilter('city',cluster.cities[0]);
-                    else{setMapOrigin({x:cluster.x,y:cluster.y});setMapZoom(z=>Math.min(4,Math.max(2,z*1.8)));}
-                  }}>{cluster.count}</button>;
-              })}
-            </div>
-            <span className="db-map-attribution">Fond géographique : © IGN / France GeoJSON · Licence Ouverte</span>
-          </div>
+          <GoogleFranceMap cities={mapped} selectedCity={filters.city}
+            onCitySelect={city => toggleFilter('city', city)}/>
           <div className="db-map-cities">
-            <strong>Répartition par ville</strong>
-            {cityGroups.slice(0,9).map(row=><button className={'db-city-row'+(filters.city===row.city?' selected':'')}
-              key={row.city} type="button" aria-label={'Afficher les dossiers à '+row.city}
-              onClick={()=>toggleFilter('city',row.city)} aria-pressed={filters.city===row.city}>
+            <strong>Villes principales</strong>
+            {cityGroups.slice(0,10).map(row => <button key={row.city} type="button"
+              className={'db-city-row'+(filters.city===row.city?' selected':'')}
+              aria-label={'Afficher les dossiers à '+row.city}
+              aria-pressed={filters.city===row.city}
+              onClick={()=>toggleFilter('city',row.city)}>
               <span>{row.city}</span><b>{number.format(row.count)}</b>
             </button>)}
             {cityGroups.length===0&&<p className="db-empty">Aucune ville connue.</p>}
-            <small>{cityGroups.length} villes distinctes · {unknownPositions} dossier(s) sans localisation exploitable</small>
+            <small>{cityGroups.length} villes distinctes · {unknownPositions} dossier(s) non localisable(s)</small>
           </div>
         </div>
-        <p className="db-note">Les points voisins sont regroupés au zoom général. Cliquez sur un groupe pour agrandir, ou sur une ville pour filtrer les KPIs et les dossiers. Les lieux ambigus restent non positionnés.</p>
+        <p className="db-note">Le fond est Google Maps. Les positions correspondent aux centres-villes, pas aux adresses précises des entreprises.</p>
       </section>
     </div>
 }
