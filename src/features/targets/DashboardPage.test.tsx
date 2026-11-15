@@ -40,6 +40,18 @@ describe('interactive decision dashboard',()=>{
     expect(screen.queryByRole('heading',{name:'30 entreprises · deux plans'})).not.toBeInTheDocument();
     expect(screen.getByText('Dossiers analysés').nextElementSibling).not.toHaveTextContent('0');
   });
+  it('renders the three illustrated decision cards and filters Plan B directly',()=>{
+    mount();
+    expect(screen.getByRole('button',{name:/Computer Vision/})).toBeInTheDocument();
+    expect(screen.getByRole('button',{name:/Data & BI/})).toBeInTheDocument();
+    expect(screen.getByRole('button',{name:/Explorer les villes/})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Mon agenda de candidatures'})).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:/Data & BI/}));
+    expect(screen.getByLabelText('Parcours · filtre rapide')).toHaveValue('B');
+    expect(screen.getByRole('button',{name:/Data & BI/})).toHaveAttribute('aria-pressed','true');
+    fireEvent.click(screen.getByRole('button',{name:/Data & BI/}));
+    expect(screen.getByLabelText('Parcours · filtre rapide')).toHaveValue('all');
+  });
   it('cross-filters the KPIs, sector chart and map from a sector click',()=>{
     mount();
     fireEvent.click(screen.getByRole('button',{name:'Filtrer secteur Ferroviaire & transport public'}));
