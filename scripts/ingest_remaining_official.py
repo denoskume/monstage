@@ -208,7 +208,13 @@ def verify_html(source, requested, content, resolved=None):
     if not source_matches(source, requested) or not source_matches(source, resolved):
         return None
     parsed = JobHTML()
-    parsed.feed(content)
+    # Header navigation and footer office addresses are not job locations.
+    # Exclude them before extracting the H1-adjacent workplace; otherwise a
+    # footer "Paris, France" can make a US job appear eligible.
+    document = content.decode("utf-8", "replace") if isinstance(content, bytes) else content
+    document = re.sub(r"<(?:nav|footer)\\b[^>]*>.*?</(?:nav|footer)\\s*>",
+                      "", document, flags=re.I | re.S)
+    parsed.feed(document)
     headline = " ".join(parsed.h1).strip()
     structured = []
     for raw in parsed.ld_scripts:
