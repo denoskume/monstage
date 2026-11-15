@@ -236,7 +236,7 @@ export function DashboardPage() {
             {[['Envoyées',metrics.sent],['Réponses',metrics.responses],['Entretiens',metrics.interviews],['Offres',metrics.offersReceived]].map(([name,value])=>
               <div key={name} className="db-conversion-stage"><strong>{value}</strong><span>{name}</span></div>)}
           </div>
-          <p className="db-note">Réponses = relances ou réponses, entretiens, offres et refus. Taux d’entretien : {percent(metrics.interviewRate)} des candidatures envoyées.</p>
+          <p className="db-note">Réponses = retours des recruteurs, entretiens, offres et refus ; une relance sortante n’est pas une réponse. Taux d’entretien : {percent(metrics.interviewRate)} des candidatures envoyées.</p>
         </div>
       </section>
     </div>
