@@ -6,6 +6,7 @@ vacancy; only internship titles relevant to Plan A/B and explicitly French
 locations may reach the authenticated Apps Script gateway.
 """
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import Counter
 from datetime import datetime, timezone
 from hashlib import sha256
 from html.parser import HTMLParser
@@ -257,13 +258,19 @@ def clearly_ineligible_calendar(title):
     return bool(short_duration or january_2027)
 
 
-def verify_html(source, requested, content, resolved=None):
+def verify_html(source, requested, content, resolved=None, rejection_reasons=None):
+    def rejected(reason):
+        if rejection_reasons is not None:
+            rejection_reasons.append(reason)
+
     resolved = resolved or requested
     if not source_matches(source, requested) or not source_matches(source, resolved):
+        rejected("not_official_job_url")
         return None
     # Reject redirects to another vacancy of the same employer, not only
     # cross-domain redirects, to keep stable employer references intact.
     if canonical_url(source, requested) != canonical_url(source, resolved):
+        rejected("redirect_to_different_job")
         return None
     parsed = JobHTML()
     # Header navigation and footer office addresses are not job locations.
@@ -300,12 +307,14 @@ def verify_html(source, requested, content, resolved=None):
                 r"\bType de contrat\s*:?\s*(?:Convention de stage|Stage)\b",
                 body, re.I,
             ):
+                rejected("stage_contract_not_confirmed")
                 continue
         if source["id"] == "dassault":
             # Talentsoft sometimes omits "Stage" from the H1 although the
             # employer detail explicitly states "Type de contrat Stage".
             stage_contract = re.search(r"\bType de contrat\s*:?\s*Stage\b", body, re.I)
             if not stage_contract:
+                rejected("stage_contract_not_confirmed")
                 continue
             if not re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b", title, re.I):
                 title = "Stage - " + title
@@ -317,7 +326,11 @@ def verify_html(source, requested, content, resolved=None):
             )
         else:
             relevant = bool(candidate_plans(title))
-        if not title or not relevant or clearly_ineligible_calendar(title):
+        if not title or not relevant:
+            rejected("title_outside_plans_a_b")
+            continue
+        if clearly_ineligible_calendar(title):
+            rejected("calendar_incompatible")
             continue
         if headline and normalized(title) not in normalized(headline) and normalized(headline) not in normalized(title):
             # Air France can use generic H1 "Détail de l'offre"; the
@@ -327,15 +340,19 @@ def verify_html(source, requested, content, resolved=None):
                 or "detail de l offre" in normalized(headline)
             )
             if not generic_af_heading and normalized(title).replace("stage ", "", 1) not in normalized(headline):
+                rejected("job_title_heading_mismatch")
                 continue
         if source.get("entity") and not any(normalized(name) in normalized(body)
                                             for name in source["entity"]):
+            rejected("business_unit_not_confirmed")
             continue
         location = structured_location(posting) or visible_location(parsed, source["company"])
         if not location:
+            rejected("french_job_location_not_confirmed")
             continue
         identity = canonical_url(source, resolved)
         if not identity:
+            rejected("offer_id_missing")
             continue
         description = str(posting.get("description") or parsed.meta.get("description") or body[:3200] or title)
         return {
@@ -346,14 +363,18 @@ def verify_html(source, requested, content, resolved=None):
             "description": re.sub(r"<[^>]+>", " ", description)[:4000],
             "publishedAt": publication_from_page(parsed, posting),
         }
+    if rejection_reasons is not None and not rejection_reasons:
+        rejected("no_valid_job_posting_metadata")
     return None
 
 
 def verify_live(source, url):
     if not source_matches(source, url):
-        return None
+        return None, "not_official_job_url"
     final, html_text = fetch_html(url)
-    return verify_html(source, url, html_text, final)
+    reasons = []
+    job = verify_html(source, url, html_text, final, rejection_reasons=reasons)
+    return job, ("accepted" if job else (reasons[0] if reasons else "unclassified_rejection"))
 
 
 def collect(source):
@@ -403,20 +424,25 @@ def collect(source):
             errors.append("Listing: " + type(exc).__name__)
     candidates = urls[:MAX_LISTING_LINKS + len(source["seed"])]
     results = []
+    rejected_counts = Counter()
     with ThreadPoolExecutor(max_workers=4) as pool:
         futures = {pool.submit(verify_live, source, url): url for url in candidates}
         for future in as_completed(futures):
             try:
-                value = future.result()
+                value, reason = future.result()
                 if value:
                     results.append(value)
+                else:
+                    rejected_counts[reason] += 1
             except (OSError, RuntimeError, ValueError) as exc:
                 errors.append("Detail: " + type(exc).__name__)
+                rejected_counts["detail_fetch_error"] += 1
     return {
         "company": source["company"], "source_id": source["id"],
         "listing_pages_reachable": reached, "listing_pages_attempted": len(source["listing"]),
         "rss_feeds_reachable": rss_reached, "rss_feeds_attempted": len(source.get("rss", [])),
         "individual_job_urls": len(candidates), "verified_fr_internships": len(results),
+        "rejected_detail_reasons": dict(sorted(rejected_counts.items())),
         "errors": errors[:18], "jobs": results,
     }
 
@@ -438,6 +464,7 @@ def main():
                         "listing_pages_reachable": 0, "listing_pages_attempted": len(source["listing"]),
                         "individual_job_urls": 0, "verified_fr_internships": 0,
                         "rss_feeds_reachable": 0, "rss_feeds_attempted": len(source.get("rss", [])),
+                        "rejected_detail_reasons": {"fatal_adapter_error": 1},
                         "errors": ["Fatal " + type(exc).__name__], "jobs": []}
             if data["jobs"]:
                 try:
@@ -454,7 +481,8 @@ def main():
                   "individual job URLs", data["individual_job_urls"],
                   "verified", data["verified_fr_internships"],
                   "accepted", data["backend_accepted"],
-                  "warnings", len(data["errors"]))
+                  "warnings", len(data["errors"]),
+                  "rejections", data.get("rejected_detail_reasons", {}))
             results.append(data)
     results.sort(key=lambda item: item["company"].lower())
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
