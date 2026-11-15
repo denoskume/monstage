@@ -32,7 +32,7 @@ function mount(path='/dashboard') {
 
 describe('single-screen MonStage decision dashboard',()=>{
   beforeEach(()=>localStorage.clear());
-  it('shows four KPIs, graph, illustrated cards, agenda and rail without page-level secondary content',()=>{
+  it('shows full-width KPIs, chart and illustrated cards without the redundant agenda sidebar',()=>{
     mount();
     expect(screen.getByRole('heading',{name:'Dashboard'})).toBeInTheDocument();
     expect(screen.getByRole('group',{name:'Activité hebdomadaire des candidatures'})).toBeInTheDocument();
@@ -40,7 +40,10 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(screen.getByRole('button',{name:/Computer Vision/})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:/Data & BI/})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:/Explorer les villes/})).toBeInTheDocument();
-    expect(screen.getByRole('heading',{name:'Mon agenda'})).toBeInTheDocument();
+    expect(screen.queryByRole('heading',{name:'Mon agenda'})).not.toBeInTheDocument();
+    expect(screen.queryByText('MonStage Intelligence')).not.toBeInTheDocument();
+    expect(screen.queryByText('Voir toutes mes actions')).not.toBeInTheDocument();
+    expect(screen.queryByRole('complementary',{name:'Mon agenda de candidatures'})).not.toBeInTheDocument();
     expect(screen.getByText('Opportunités').nextElementSibling).not.toHaveTextContent('0');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });

@@ -276,30 +276,7 @@ export function DashboardPage() {
       </div>
           <button className="db-primary-cta" type="button" onClick={()=>setPanel('queue')}>Voir toutes mes candidatures <span aria-hidden="true">↗</span></button>
         </div>
-        <aside className="db-side-area" aria-label="Mon agenda de candidatures">
-          <section className="db-side-promo">
-            <div className="db-side-promo-head"><span>MonStage Intelligence</span><span className="db-side-tag">Plan A + B</span></div>
-            <h2>Vos opportunités.<br/>Vos prochaines étapes.</h2>
-            <p>Une vue claire pour suivre les candidatures, anticiper les relances et préparer les entretiens.</p>
-            <div className="db-mini-avatars" aria-hidden="true"><span>CV</span><span>BI</span><span>ML</span><span>AI</span><b>+{metrics.companies}</b><small>entreprises suivies</small></div>
-            <button type="button" onClick={()=>setPanel('analytics')}>Explorer les analyses</button>
-          </section>
-          <section className="db-side-schedule">
-            <div className="db-side-schedule-header"><h2>Mon agenda</h2><button type="button" onClick={()=>setPanel('queue')} aria-label="Voir tous les dossiers">Semaine ⌄</button></div>
-            <div className="db-schedule-items">
-              {queue.slice(0,5).map((o,i)=><Link to={routeForOffer(o)} className="db-schedule-row" key={o.id}>
-                <span className={'db-schedule-glyph db-schedule-glyph--'+i%3} aria-hidden="true">{['✦','◈','✳','✧','◆'][i]}</span>
-                <span className="db-schedule-copy"><strong>{o.company}</strong><small>{o.title}</small></span>
-                <span className="db-schedule-meta"><b>{hasSubmissionEvidence(o)&&followUpDue(o,today)?'Relancer':statusGroup(o)==='À vérifier'?'Vérifier':'Postuler'}</b>
-                  <small>{canonicalDate(o.followUpAt)?new Date(canonicalDate(o.followUpAt)+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}):o.priority||'Priorité'}</small>
-                </span>
-              </Link>)}
-              {!queue.length&&<p className="db-empty">Aucune action prioritaire.</p>}
-            </div>
-            {metrics.unverifiedOutcomes>0&&<button type="button" className="db-small-alert" onClick={()=>{setFilter('status','À vérifier');setPanel('queue')}}>{metrics.unverifiedOutcomes} statut(s) à vérifier <span>→</span></button>}
-            <button type="button" className="db-schedule-bottom" onClick={()=>setPanel('queue')}>Voir toutes mes actions <span>↗</span></button>
-          </section>
-        </aside>
+
       </main>
       <span className="db-sync-caption" aria-label="Dernière synchronisation">Données MonStage · {sourceTime}</span>
     </div>

@@ -674,3 +674,17 @@
 @media(max-width:850px){.db-dialog-body .db-map-layout{grid-template-columns:1fr}
 .db-google-map-shell{height:clamp(285px,47dvh,480px)}
 .db-dialog-body .db-map-cities{max-height:none}}
+
+/* Full-width single-screen dashboard after removing the redundant right sidebar.
+   All details stay in existing dialogs; no viewport-level scrolling. */
+.db-screen .db-stage-content {
+  grid-template-columns: minmax(0, 1fr);
+}
+.db-screen .db-primary {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+@media (max-width: 780px) {
+  .db-screen .db-stage-content { display: flex; }
+}
