@@ -207,12 +207,26 @@ def ingest(provider, source_id, jobs):
             method="POST",
             headers={"Content-Type": "application/json"},
         )
-        # Upserts allow a safe retry after a lost acknowledgement.
-        reply = fetch_json_with_backoff(request, timeout=90)
+        # Retry only transient backend responses. Stable-ID upserts make
+        # replaying an ambiguous batch safe after a lost acknowledgement.
+        for attempt in range(3):
+            reply = fetch_json_with_backoff(request, timeout=90)
+            reason = str(reply.get("error") or "")
+            retryable = reply.get("retryable") is True or reason in (
+                "MONSTAGE_API_ERROR", "ATS_INGEST_RETRYABLE",
+            )
+            if retryable and attempt < 2:
+                print("ATS transient gateway failure", provider, source_id,
+                      "batch", offset // batch_size + 1,
+                      "reason", reason, "retry", attempt + 1)
+                time.sleep(2 * (attempt + 1))
+                continue
+            break
         result = reply.get("ingestion")
         if not isinstance(result, dict):
             server_error = str(reply.get("error") or "missing response receipt")[:120]
-            raise RuntimeError(f"Apps Script did not acknowledge {source_id} batch {offset}: {server_error}")
+            category = str(reply.get("category") or "")[:40]
+            raise RuntimeError(f"Apps Script did not acknowledge {source_id} batch {offset}: {server_error} / {category}")
         accepted = int(result.get("accepted", 0))
         receipt = result.get("acceptedIds")
         if result.get("persisted") is not True or not isinstance(receipt, list) or len(receipt) != accepted:

@@ -2629,7 +2629,21 @@ function doPost(e) {
     }
 
     if (action === 'ingestExternalPostings') {
-      return jsonOutput_({ ingestion: ingestRunnerAtsPostings_(body) });
+      try {
+        return jsonOutput_({ ingestion: ingestRunnerAtsPostings_(body) });
+      } catch (ingestError) {
+        // The caller is authenticated but CI logs are public. Keep the actual
+        // exception in private Apps Script executions; emit only a safe code.
+        var detail = String(ingestError && ingestError.message || ingestError);
+        console.error('ATS source import failed: ' + detail);
+        var retryable = /lock|timed? out|temporar|too many times|rate|quota|service unavailable|service spreadsheets failed/i.test(detail);
+        return jsonOutput_({
+          error: retryable ? 'ATS_INGEST_RETRYABLE' : 'ATS_INGEST_FAILED',
+          retryable: retryable,
+          category: /lock/i.test(detail) ? 'LOCK_CONTENTION' :
+            /sheet|spreadsheet|range|cell|row|column/i.test(detail) ? 'SHEETS_WRITE' : 'INGEST_VALIDATION'
+        });
+      }
     }
 
     if (action === 'syncExternalSources') {

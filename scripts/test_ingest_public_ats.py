@@ -85,6 +85,28 @@ class AtsIngestionTests(TestCase):
         sleep.assert_called_once()
 
     @mock.patch.dict(os.environ, {"APPS_SCRIPT_GATEWAY_SECRET": "test-secret", "APPS_SCRIPT_URL": "https://example.invalid/exec"})
+    def test_transient_gateway_error_is_retried_without_duplicate_rows(self):
+        transient = {"error": "ATS_INGEST_RETRYABLE", "retryable": True, "category": "LOCK_CONTENTION"}
+        receipt = {"ingestion": {"accepted": 1, "persisted": True,
+                   "acceptedIds": ["workday:ag:job"]}}
+        with mock.patch.object(ats.urllib.request, "urlopen", side_effect=[
+            fake_response(transient), fake_response(receipt)
+        ]) as fetch, mock.patch.object(ats.time, "sleep") as sleep:
+            accepted = ats.ingest("workday", "ag", [{"id": "job", "externalPath": "/job/Paris/job"}])
+        self.assertEqual(accepted, 1)
+        self.assertEqual(fetch.call_count, 2)
+        sleep.assert_called_once()
+
+    @mock.patch.dict(os.environ, {"APPS_SCRIPT_GATEWAY_SECRET": "test-secret", "APPS_SCRIPT_URL": "https://example.invalid/exec"})
+    def test_permanent_gateway_error_is_not_retried(self):
+        with mock.patch.object(ats.urllib.request, "urlopen", return_value=fake_response({
+            "error": "ATS_INGEST_FAILED", "retryable": False, "category": "SHEETS_WRITE"
+        })) as fetch:
+            with self.assertRaisesRegex(RuntimeError, "SHEETS_WRITE"):
+                ats.ingest("workday", "ag", [{"id": "job", "externalPath": "/job/Paris/job"}])
+        fetch.assert_called_once()
+
+    @mock.patch.dict(os.environ, {"APPS_SCRIPT_GATEWAY_SECRET": "test-secret", "APPS_SCRIPT_URL": "https://example.invalid/exec"})
     def test_backend_acknowledgement_requires_persisted_ids(self):
         old_backend = {"ingestion": {"provider": "workday", "sourceId": "ratp", "accepted": 1}}
         with mock.patch.object(ats.urllib.request, "urlopen", return_value=fake_response(old_backend)):
