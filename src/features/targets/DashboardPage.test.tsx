@@ -47,10 +47,14 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(screen.getByRole('heading',{name:'Campagne de stages'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Statut des dossiers'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
-    expect(screen.getByRole('img',{name:/Trois courbes cumulatives de septembre 2026 à février 2027/})).toBeInTheDocument();
+    expect(screen.getByRole('img',{name:/Graphique en courbes lissées avec axes X et Y de septembre 2026 à février 2027/})).toBeInTheDocument();
     expect(screen.getByTestId('google-maps-iframe')).toBeInTheDocument();
     expect(screen.getByText('sept. 26')).toBeInTheDocument();
     expect(screen.getByText('févr. 27')).toBeInTheDocument();
+    expect(document.querySelector('.db-campaign-chart svg')).toHaveTextContent('Date (mois)');
+    expect(document.querySelector('.db-campaign-chart svg')).toHaveTextContent('Nombre de dossiers');
+    expect(document.querySelectorAll('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveLength(3);
+    expect([...document.querySelectorAll('.db-campaign-chart svg path[stroke-width="3.5"]')].every(path=>path.getAttribute('d')?.includes(' C '))).toBe(true);
     expect(document.querySelector('.db-insight-tiles')).not.toBeInTheDocument();
     expect(screen.queryByRole('button',{name:/Computer Vision/})).not.toBeInTheDocument();
     expect(screen.queryByRole('button',{name:/Data & BI/})).not.toBeInTheDocument();

@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import type {InternshipOffer} from '../../api/contract';
-import {CAMPAIGN_MONTHS,campaignMonthly,pieSector,statusPie,statusBucket} from './campaignVisuals';
+import {CAMPAIGN_MONTHS,campaignMonthly,campaignTimeline,campaignAxisMax,smoothCampaignPath,pieSector,statusPie,statusBucket} from './campaignVisuals';
 
 const make=(id:string,status:string,publishedAt:string|null,appliedAt:string|null):InternshipOffer=>({
   id,company:'Airbus',title:'Stage Computer Vision',city:'Toulouse',region:null,
@@ -52,5 +52,41 @@ describe('September 2026 to February 2027 visual campaign',()=>{
     expect(new Set(rows.map(statusBucket)).size).toBe(5);
     expect(pieSector(0,120)).toContain(' A ');
     expect(pieSector(0,0)).toBe('');
+  });
+});
+
+describe('continuous campaign line plots with real X and Y axes',()=>{
+  it('creates weekly observations, stops at today and does not project into the future',()=>{
+    const rows=[
+      make('sep','À candidater','2026-09-03',null),
+      make('oct','Candidature envoyée','2026-10-04','2026-10-08'),
+      make('nov','Candidature envoyée','2026-11-03','2026-11-11'),
+      make('unknown','Candidature envoyée',null,'2026-11-11'),
+    ];
+    const timeline=campaignTimeline(rows,new Date('2026-11-15T14:00:00Z'));
+    expect(timeline.points[0]).toEqual({date:'2026-09-01',total:0,applied:0,pending:0});
+    expect(timeline.points.at(-1)).toEqual({date:'2026-11-15',total:3,applied:2,pending:1});
+    expect(timeline.points).toHaveLength(12);
+    expect(timeline.points.every(p=>p.total===p.applied+p.pending)).toBe(true);
+    expect(timeline.points.every(p=>p.date<='2026-11-15')).toBe(true);
+    expect(timeline.excluded).toBe(1);
+  });
+  it('interpolates actual points with smooth cubic sections and no overshoot',()=>{
+    const path=smoothCampaignPath([{x:0,y:100},{x:10,y:50},{x:20,y:50},{x:30,y:80}]);
+    expect(path).toContain(' C ');
+    expect(path.startsWith('M 0.00 100.00')).toBe(true);
+    expect(path.endsWith('30.00 80.00')).toBe(true);
+    const numbers=path.match(/-?\d+\.\d+/g)?.map(Number)||[];
+    const vertical=numbers.filter((_,i)=>i%2===1);
+    expect(Math.min(...vertical)).toBeGreaterThanOrEqual(49.99);
+    expect(Math.max(...vertical)).toBeLessThanOrEqual(100.01);
+    expect(smoothCampaignPath([])).toBe('');
+    expect(smoothCampaignPath([{x:0,y:0}])).toBe('M 0.00 0.00');
+  });
+  it('produces clearly graduated integer Y-axis ticks',()=>{
+    expect(campaignAxisMax(72)).toBe(80);
+    expect(campaignAxisMax(3)).toBe(4);
+    expect(campaignAxisMax(0)).toBe(4);
+    expect(campaignAxisMax(101)).toBe(200);
   });
 });

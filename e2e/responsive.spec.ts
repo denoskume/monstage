@@ -268,8 +268,11 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await expect(page.locator('.db-visual-panels')).toHaveCount(1);
   await expect(page.locator('.db-visual-panels > .db-mini-panel')).toHaveCount(3);
   await expect(page.locator('.db-primary > .db-visual-panels')).toBeVisible();
-  await expect(page.getByRole('img',{name:/Trois courbes cumulatives de septembre 2026 à février 2027/})).toBeVisible();
+  await expect(page.getByRole('img',{name:/Graphique en courbes lissées avec axes X et Y de septembre 2026 à février 2027/})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Statut des dossiers'})).toBeVisible();
+  await expect(page.locator('.db-campaign-chart svg')).toContainText('Date (mois)');
+  await expect(page.locator('.db-campaign-chart svg')).toContainText('Nombre de dossiers');
+  await expect(page.locator('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveCount(3);
   await expect(page.locator('.db-map-mini .db-google-map-shell')).toBeVisible();
   await planSelect.selectOption('B');
   await expect(planSelect).toHaveValue('B');

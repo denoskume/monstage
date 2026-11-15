@@ -57,14 +57,7 @@ export function statusPie(offers:InternshipOffer[]) {
 export function campaignMonthly(offers:InternshipOffer[],now:Date) {
   const today=now.toISOString().slice(0,10);
   const currentMonth=today.slice(0,7);
-  const reliable = offers.flatMap(offer => {
-    const published=canonicalDate(offer.publishedAt);
-    if(!published || published<'2026-09-01' || published>today) return [];
-    const isSent=hasSubmissionEvidence(offer);
-    const applied=isSent?canonicalDate(offer.appliedAt):'';
-    if (isSent && (!applied || applied>today || applied<published)) return [];
-    return [{published,applied}];
-  });
+  const reliable = historicalCohort(offers,today);
   const points:CampaignPoint[]=CAMPAIGN_MONTHS.map(({month,label,full}) => {
     if(month>currentMonth) return {month,label,full,total:null,applied:null,pending:null};
     const end=month===currentMonth?today:month+'-31';
@@ -74,6 +67,81 @@ export function campaignMonthly(offers:InternshipOffer[],now:Date) {
     return {month,label,full,total,applied,pending:total-applied};
   });
   return {points, excluded:offers.length-reliable.length, tracked:reliable.length};
+}
+
+
+type DatedOffer = {published:string;applied:string};
+/** Only recorded, chronologically coherent dates. */
+function historicalCohort(offers:InternshipOffer[],today:string): DatedOffer[] {
+  return offers.flatMap(offer=>{
+    const published=canonicalDate(offer.publishedAt);
+    if(!published || published<'2026-09-01' || published>today || published>'2027-02-28')return [];
+    const isSent=hasSubmissionEvidence(offer);
+    const applied=isSent?canonicalDate(offer.appliedAt):'';
+    if(isSent && (!applied || applied>today || applied<published))return [];
+    return [{published,applied}];
+  });
+}
+export type CampaignObservation = {date:string;total:number;applied:number;pending:number};
+/** Actual WEEKLY cumulative snapshots until today, plus the precise last day.
+ * The smooth curve is a visualization between observed points, NOT a forecast. */
+export function campaignTimeline(offers:InternshipOffer[],now:Date) {
+  const today=now.toISOString().slice(0,10);
+  const cutoff=today<'2027-02-28'?today:'2027-02-28';
+  const reliable=historicalCohort(offers,cutoff);
+  if(cutoff<'2026-09-01')return {points:[] as CampaignObservation[],excluded:offers.length,tracked:0};
+  const start=new Date('2026-09-01T12:00:00Z');
+  const last=new Date(cutoff+'T12:00:00Z');
+  const dates:string[]=[];
+  for(let date=new Date(start);date<=last;date.setUTCDate(date.getUTCDate()+7)) {
+    dates.push(date.toISOString().slice(0,10));
+  }
+  if(dates.at(-1)!==cutoff)dates.push(cutoff);
+  const points=dates.map(date=>{
+    const published=reliable.filter(row=>row.published<=date);
+    const applied=published.filter(row=>row.applied && row.applied<=date).length;
+    return {date,total:published.length,applied,pending:published.length-applied};
+  });
+  return {points,excluded:offers.length-reliable.length,tracked:reliable.length};
+}
+/** Shape-preserving cubic Hermite interpolation with harmonic tangents.
+ * Smooth, continuous plot without overshooting actual cumulative observations. */
+export function smoothCampaignPath(points:Array<{x:number;y:number}>):string {
+  if(!points.length)return '';
+  const fmt=(p:{x:number;y:number})=>p.x.toFixed(2)+' '+p.y.toFixed(2);
+  if(points.length===1)return 'M '+fmt(points[0]);
+  const h:number[]=[],delta:number[]=[];
+  for(let i=0;i<points.length-1;i++){
+    const width=points[i+1].x-points[i].x;
+    if(width<=0 || !Number.isFinite(width))return campaignPath(points);
+    h.push(width);
+    delta.push((points[i+1].y-points[i].y)/width);
+  }
+  const slope=new Array<number>(points.length).fill(0);
+  slope[0]=delta[0];
+  slope[points.length-1]=delta.at(-1)!;
+  for(let i=1;i<points.length-1;i++){
+    const before=delta[i-1],after=delta[i];
+    if(before*after<=0){slope[i]=0;continue;}
+    const w1=2*h[i]+h[i-1],w2=h[i]+2*h[i-1];
+    slope[i]=(w1+w2)/(w1/before+w2/after);
+  }
+  let path='M '+fmt(points[0]);
+  for(let i=0;i<points.length-1;i++){
+    const p=points[i],q=points[i+1],offset=h[i]/3;
+    path+=' C '+(p.x+offset).toFixed(2)+' '+(p.y+slope[i]*offset).toFixed(2)+
+      ' '+(q.x-offset).toFixed(2)+' '+(q.y-slope[i+1]*offset).toFixed(2)+
+      ' '+fmt(q);
+  }
+  return path;
+}
+/** Integer Y-axis with four equal steps and a rounded maximum. */
+export function campaignAxisMax(max:number):number {
+  if(!Number.isFinite(max)||max<=0)return 4;
+  const target=max/4;
+  const power=10**Math.floor(Math.log10(target));
+  const step=[1,2,5,10].map(n=>n*power).find(s=>s>=target)||10*power;
+  return step*4;
 }
 
 export function campaignPath(points:Array<{x:number;y:number}>) {
