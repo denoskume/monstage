@@ -111,7 +111,7 @@ export function byStatus(offers: InternshipOffer[]) {
   return statusOrder.map(label => ({ label, count: offers.filter(o => statusGroup(o) === label).length }));
 }
 export function bySector(offers: InternshipOffer[]) {
-  const result = sectors.map(s => ({
+  const result: Array<{id:string;label:string;A:number;B:number;other:number}> = sectors.map(s => ({
     id: s.id, label: s.name,
     A: offers.filter(o => offerSector(o) === s.id && dashboardPlan(o) === 'A').length,
     B: offers.filter(o => offerSector(o) === s.id && dashboardPlan(o) === 'B').length,
