@@ -144,7 +144,10 @@ def visible_location(parsed, company):
         near_job = text[heading_index + len(headline):heading_index + len(headline) + 460]
         place = re.search(r"\b([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'()\- ]{1,44}),\s*France\b", near_job, re.I)
         if place:
-            return place.group(1).strip() + ", France"
+            city = re.sub(r"^(?:(?:month|months|mois|internship|stage)\s+)+",
+                          "", place.group(1).strip(), flags=re.I).strip()
+            if city:
+                return city + ", France"
     # Prefer structured JobPosting location. These page-header patterns are
     # deliberately narrow, to avoid treating footer office addresses as jobs.
     label = labelled_france_location(text[:1800])
@@ -206,6 +209,19 @@ def publication_from_page(parsed, posting):
     return parse_official_date(raw)
 
 
+
+def clearly_ineligible_calendar(title):
+    """Never ingest titles explicitly starting before Feb 2027 or <6 months.
+
+    Unknown calendars stay eligible for manual verification; do not infer
+    eligibility or use general dates in long descriptions.
+    """
+    clean = normalized(title)
+    short_duration = re.search(r"\b(?:[1-5][ -]?(?:months?|mois)|(?:months?|mois)[ -]?[1-5])\b", clean)
+    january_2027 = re.search(r"\b(?:january|janvier)\s+2027\b", clean)
+    return bool(short_duration or january_2027)
+
+
 def verify_html(source, requested, content, resolved=None):
     resolved = resolved or requested
     if not source_matches(source, requested) or not source_matches(source, resolved):
@@ -244,7 +260,7 @@ def verify_html(source, requested, content, resolved=None):
             )
         else:
             relevant = bool(candidate_plans(title))
-        if not title or not relevant:
+        if not title or not relevant or clearly_ineligible_calendar(title):
             continue
         if headline and normalized(title) not in normalized(headline) and normalized(headline) not in normalized(title):
             # The explicit 'Stage -' prefix above must not break H1 matching.

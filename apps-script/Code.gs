@@ -372,6 +372,21 @@ function extractDurationFromPosting_(posting) {
   return null;
 }
 
+/**
+ * Avoid proposing explicitly incompatible start dates or durations.
+ * Unknown calendars remain in "À confirmer" rather than guessing.
+ * This is intentionally conservative to avoid matching unrelated dates
+ * in long descriptions, for example a graduation date.
+ */
+function clearlyIneligibleStageSchedule_(title) {
+  var normalized = normalizeComparable_(title);
+  var shortDuration = /\b(?:[1-5][ -]?(?:months?|mois)|(?:months?|mois)[ -]?[1-5])\b/.test(normalized);
+  var startsBeforeFebruary2027 =
+    /\b(?:starting|start(?:s)?|beginning|debut(?:ant)?|commenc(?:e|ant)|des|from)\b.{0,35}\b(?:january|janvier)\s+2027\b/.test(normalized) ||
+    /\b(?:january|janvier)\s+2027\b/.test(normalized);
+  return shortDuration || startsBeforeFebruary2027;
+}
+
 function externalFitScores_(posting) {
   var signal = targetSignalScore_(posting);
   var specialization = specializationForPosting_(posting);
@@ -2494,6 +2509,9 @@ function ingestRunnerAtsPostings_(request) {
           !/[?&]idOffre=\d+(?:&|$)/i.test(url)) return;
       var title = normalizeText_(job.title) || '';
       if (!/\b(stage|stagiaire|internship|intern|pfe)\b/i.test(normalizeComparable_(title))) return;
+      // Do not surface L'Oréal "4-MONTH INTERNSHIP - Starting January
+      // 2027" as a February-onward six-month internship.
+      if (clearlyIneligibleStageSchedule_(title)) return;
       counters.internship++;
       var location = normalizeText_(job.location) || '';
       if (!isFranceLocation_(location)) return;
