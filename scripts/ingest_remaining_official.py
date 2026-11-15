@@ -151,6 +151,22 @@ def visible_location(parsed, company):
             region = area.group(1).strip()
             if len(region) >= 3 and "france" not in normalized(region)[:8]:
                 return region + ", France"
+    if company == "Danone":
+        # Danone's official article header is rendered as:
+        # "<h1>INTERNSHIP ...</h1> France PARIS On-site Temporary Full-Time".
+        # Accept only the employer's *near-H1 header*, not an office address
+        # elsewhere in the article or a generic "France" footer.
+        headline = " ".join(parsed.h1).strip()
+        index = text.find(headline) if headline else -1
+        if index >= 0:
+            near = text[index + len(headline): index + len(headline) + 160].strip()
+            location = re.match(
+                r"^France\s+([A-ZÀ-Ÿ][A-ZÀ-Ÿ'() -]{1,45})\s+"
+                r"(?:On-site|Hybrid|Remote|Temporary|Publié|Posted|6 mois)\b",
+                near,
+            )
+            if location:
+                return location.group(1).strip().title() + ", France"
     if company == "Safran":
         # The official Safran job card states:
         # "Emplacement : Blagnac , Occitanie , France" rather than
@@ -290,6 +306,19 @@ def verify_html(source, requested, content, resolved=None, rejection_reasons=Non
     for posting in (structured or [{}]):
         title = re.sub(r"\s+", " ", str(posting.get("title") or headline)).strip()
         body = " ".join(parsed.content)[:10000]
+        if source["id"] == "sanofi":
+            # Sanofi's official Phenom page often repeats the real role in
+            # "Intitulé du poste", while JSON-LD can supply a different
+            # heading. Prefer the explicit on-page job title and require a
+            # relevant internship there, not merely a generic page heading.
+            label = re.search(
+                r"\bIntitul[eé] du poste\s*:\s*"
+                r"(.{8,175}?)\s+(?:Lieu\s*:|[ÀA]\s+partir\s+de\s*:|"
+                r"[ÀA]\s+propos\s+du\s+poste|Principales responsabilit[eé]s)\b",
+                body, re.I,
+            )
+            if label:
+                title = label.group(1).strip()
         if source["id"] == "airfrance":
             # The actual job title can live under "Intitulé du poste" while
             # the H1 is the generic "Détail de l'offre" on Talentsoft pages.
@@ -339,7 +368,13 @@ def verify_html(source, requested, content, resolved=None, rejection_reasons=Non
                 normalized(headline) in ("detail de l offre", "detail de l'offre")
                 or "detail de l offre" in normalized(headline)
             )
-            if not generic_af_heading and normalized(title).replace("stage ", "", 1) not in normalized(headline):
+            # Sanofi's clearly labelled "Intitulé du poste" is published
+            # on the same verified job-detail URL, so an H1 variation is
+            # acceptable, but only when a matching *real job field* exists.
+            valid_sanofi_field = source["id"] == "sanofi" and bool(
+                re.search(r"\bIntitul[eé] du poste\s*:\s*" + re.escape(title), body, re.I)
+            )
+            if not (generic_af_heading or valid_sanofi_field) and normalized(title).replace("stage ", "", 1) not in normalized(headline):
                 rejected("job_title_heading_mismatch")
                 continue
         if source.get("entity") and not any(normalized(name) in normalized(body)
