@@ -2,6 +2,7 @@ import { PDFDocument, PDFString, StandardFonts, rgb } from 'pdf-lib';
 import { normalizeCvPdfText } from './cvPdfText';
 export { normalizeCvPdfText } from './cvPdfText';
 import { buildTwoColumnCvPdfBytes } from './twoColumnPdf';
+import { buildPortraitCvPdfBytes } from './portraitPdf';
 import { isTwoColumnCv } from './twoColumnLayout';
 import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, cvPageColorHex, type CvDraft } from './cvStorage';
 
@@ -34,6 +35,7 @@ function wrapText(text: string, maxWidth: number, font: any, size: number): stri
 }
 
 export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
+  if (draft.template === 'portrait') return buildPortraitCvPdfBytes(draft);
   if (isTwoColumnCv(draft.template)) return buildTwoColumnCvPdfBytes(draft);
   const pdf = await PDFDocument.create();
   const regular = await pdf.embedFont(StandardFonts.Helvetica);
