@@ -135,6 +135,17 @@ def extract_rss_job_links(source, feed_url, document):
 
 def visible_location(parsed, company):
     text = " ".join(parsed.content)
+    if company == "Safran":
+        # The official Safran job card states:
+        # "Emplacement : Blagnac , Occitanie , France" rather than
+        # "Location: Blagnac, France". Require the exact metadata label and
+        # country, not an incidental office address in a page footer.
+        match = re.search(
+            r"\bEmplacement\s*:\s*([A-Za-zÀ-ÿ0-9'() .-]{2,70})\s*,\s*"
+            r"[A-Za-zÀ-ÿ'() -]{3,65}\s*,\s*France\b",
+            text[:4200], re.I)
+        if match:
+            return match.group(1).strip() + ", France"
     # Phenom/Recruitment-style pages (Sanofi, L'Oréal) commonly show
     # 'Gentilly, France' immediately after the job H1, not at the start of
     # the HTML. Search near the *actual posting heading*, not the footer.
@@ -192,6 +203,15 @@ def publication_from_page(parsed, posting):
     if validated:
         return validated
     text = " ".join(parsed.content)[:2800]
+    # Safran publishes dates as "Publié 14.11.2026" on the individual
+    # official vacancy. Keep this separate from our verification timestamp.
+    saf = re.search(r"\bPubli[eé]\s+(\d{2})\.(\d{2})\.(20\d{2})\b", text, re.I)
+    if saf:
+        try:
+            date = datetime(int(saf.group(3)), int(saf.group(2)), int(saf.group(1))).date()
+            return date.isoformat() if date <= datetime.now(timezone.utc).date() else None
+        except ValueError:
+            return None
     iso = re.search(r"\b(?:Publication|Publié le|Mis en ligne le|Date de publication|Date Posted|Posté le)\s*:"
                     r"?\s*(\d{4}-\d{2}-\d{2}|\d{2}/\d{2}/\d{4}|\d{1,2}\s+[A-Za-zÀ-ÿ]+\.?\s+20\d{2})", text, re.I)
     if not iso:
