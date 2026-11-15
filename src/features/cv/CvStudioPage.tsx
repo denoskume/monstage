@@ -221,10 +221,43 @@ export function CvStudioPage() {
   const [pdfBytes, setPdfBytes] = useState<Uint8Array | null>(null);
   const [pdfReady, setPdfReady] = useState(false);
   const [downloadError, setDownloadError] = useState('');
+  const [photoError, setPhotoError] = useState('');
 
   function patch<K extends keyof CvDraft>(key: K, value: CvDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
     setSaved(false);
+  }
+
+  async function uploadPortraitPhoto(file?: File) {
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setPhotoError(draft.language === 'FR' ? 'Choisis une image JPG, PNG ou WebP.' : 'Select a JPG, PNG or WebP image.');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setPhotoError(draft.language === 'FR' ? 'La photo ne doit pas dépasser 8 Mo.' : 'Photo must be smaller than 8 MB.');
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      const canvas = document.createElement('canvas');
+      canvas.width = 448;
+      canvas.height = 528;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas unavailable');
+      const scale = Math.max(canvas.width / bitmap.width, canvas.height / bitmap.height);
+      const width = bitmap.width * scale;
+      const height = bitmap.height * scale;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+      bitmap.close();
+      // Compact, centered portrait: exact same data URL drives preview and PDF.
+      patch('photoDataUrl', canvas.toDataURL('image/jpeg', 0.84));
+      setPhotoError('');
+    } catch {
+      setPhotoError(draft.language === 'FR' ? 'Impossible de lire cette photo.' : 'Could not read this photo.');
+    }
   }
 
   function moveSection(section: CvSectionKey, direction: -1 | 1) {
@@ -277,6 +310,7 @@ export function CvStudioPage() {
       ...next,
       template: draft.template ?? 'classic',
       pageColor: draft.pageColor ?? 'white',
+      photoDataUrl: draft.photoDataUrl,
     });
     if (offerParam === THALES_DATA_DOSSIER_ID) {
       if (!window.confirm('Régénérer le CV Thales ? Les modifications de ce CV seront remplacées, pas celles de la lettre.')) return;
@@ -464,6 +498,27 @@ export function CvStudioPage() {
 
       <div className="cv-studio-layout">
         <aside className="cv-editor card">
+          {draft.template === 'portrait' ? (
+            <section className="cv-editor-section cv-photo-editor" aria-label={draft.language === 'FR' ? 'Photo du CV' : 'CV photo'}>
+              <h2>{draft.language === 'FR' ? 'Photo du CV (facultative)' : 'CV photo (optional)'}</h2>
+              <label className="cv-photo-editor__file">
+                {draft.language === 'FR' ? 'Importer une photo' : 'Upload a photo'}
+                <input aria-label={draft.language === 'FR' ? 'Ajouter une photo au CV' : 'Add a photo to the CV'}
+                  type="file" accept="image/jpeg,image/png,image/webp"
+                  onChange={(event) => { void uploadPortraitPhoto(event.target.files?.[0]); event.target.value = ''; }} />
+              </label>
+              {draft.photoDataUrl ? (
+                <button className="button button--secondary" type="button"
+                  onClick={() => { patch('photoDataUrl', undefined); setPhotoError(''); }}>
+                  {draft.language === 'FR' ? 'Supprimer la photo' : 'Remove photo'}
+                </button>
+              ) : null}
+              <p className="cv-editor-hint">{draft.language === 'FR'
+                ? 'Recadrage automatique au centre. La photo apparaît dans l’aperçu et le PDF uniquement pour ce modèle.'
+                : 'Automatically center-cropped. The photo appears in this template preview and PDF only.'}</p>
+              {photoError ? <p role="alert" className="cv-photo-editor__error">{photoError}</p> : null}
+            </section>
+          ) : null}
           <AtsScore draft={draft} />
           <section className="cv-editor-section" aria-label={draft.language === 'FR' ? 'Gérer les certifications de ce CV' : 'Manage certifications in this CV'}>
             <div className="cv-editor-section__header">
@@ -769,6 +824,42 @@ export function CvStudioPage() {
 
         <div className="cv-preview-viewport">
         <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }} id="cv-print-area">
+          {draft.template === 'portrait' ? (
+            <div className="cv-preview__portrait-grid">
+              <aside className="cv-preview__portrait-sidebar">
+                <div className="cv-preview__portrait-photo" aria-label={draft.language === 'FR' ? 'Emplacement de la photo' : 'Photo area'}>
+                  {draft.photoDataUrl?.startsWith('data:image/') ? (
+                    <img src={draft.photoDataUrl} alt={draft.language === 'FR' ? 'Photo du candidat' : 'Candidate photo'} />
+                  ) : <span>{draft.language === 'FR' ? 'Photo facultative' : 'Optional photo'}</span>}
+                </div>
+                <section className="cv-preview__portrait-contact">
+                  <h2>{draft.language === 'FR' ? 'Coordonnées' : 'Contact'}</h2>
+                  {draft.location ? <p>{renderCvBold(draft.location)}</p> : null}
+                  {draft.phone ? <p>{renderCvBold(draft.phone)}</p> : null}
+                  {draft.email ? <p>{renderCvBold(draft.email)}</p> : null}
+                  {draft.linkedin ? <p>LinkedIn : {renderCvBold(draft.linkedin.replace(/^https?:\/\//, ''))}</p> : null}
+                  {draft.github ? <p>GitHub : {renderCvBold(draft.github.replace(/^https?:\/\//, ''))}</p> : null}
+                </section>
+                {cvColumnSections(draft.sectionOrder).sidebar.map(section => (
+                  <CvPreviewSection key={section} section={section} draft={draft} />
+                ))}
+              </aside>
+              <div className="cv-preview__portrait-main">
+                <header className="cv-preview__portrait-banner">
+                  <h1>{renderCvBold(draft.name)}</h1>
+                  <p>{renderCvBold(draft.headline || draft.academicHeadline || '')}</p>
+                </header>
+                <section className="cv-preview__portrait-summary">
+                  <h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2>
+                  <p>{renderCvBold(draft.summary)}</p>
+                </section>
+                {cvColumnSections(draft.sectionOrder).main.map(section => (
+                  <CvPreviewSection key={section} section={section} draft={draft} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
           <header className="cv-preview__header">
             <h1>{renderCvBold(draft.name)}</h1>
             <p className="cv-preview__headline">{renderCvBold(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE)}</p>
@@ -806,6 +897,8 @@ export function CvStudioPage() {
               </aside>
             </div>
           ) : draft.sectionOrder.map(section => <CvPreviewSection key={section} section={section} draft={draft} />)}
+            </>
+          )}
         </article>
         </div>
       </div>
