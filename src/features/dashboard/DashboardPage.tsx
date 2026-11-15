@@ -56,7 +56,7 @@ export function DashboardPage() {
   useEffect(() => {
     if (sectorId && sectors.some(s => s.id === sectorId)) setFilters(f => ({...f, sector: sectorId}));
   }, [sectorId]);
-  const setFilter = <K extends keyof DashboardFilters>(key: K, value: DashboardFilters[K]) =>
+  const setFilter = <K extends keyof DashboardFilters,>(key: K, value: DashboardFilters[K]) =>
     setFilters(f => ({...f, [key]:value}));
   const toggleFilter = (key: 'status'|'sector'|'city'|'sentMonth', value:string) =>
     setFilters(f => ({...f,[key]:f[key]===value?'':value}));
