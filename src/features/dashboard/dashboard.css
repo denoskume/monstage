@@ -688,3 +688,34 @@
 @media (max-width: 780px) {
   .db-screen .db-stage-content { display: flex; }
 }
+
+
+/* One top-level Plan A / Plan B selector; leave the lower dashboard canvas free
+   for future analytical visuals rather than occupying it with plan cards. */
+.db-screen .db-topbar{justify-content:flex-start}
+.db-screen .db-topsearch{flex:0 1 345px}
+.db-screen .db-plan-picker{display:flex;align-items:center;flex:0 0 auto;margin-left:16px;min-width:145px}
+.db-screen .db-plan-picker select{
+  width:100%;height:34px;min-width:0;padding:0 32px 0 13px;
+  appearance:none;-webkit-appearance:none;
+  border:1px solid #e7e5f7;border-radius:20px;
+  background:#f0edff;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%237468d1' stroke-width='1.8' viewBox='0 0 12 12'%3E%3Cpath d='m2 4 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  color:#5b51b9;font-size:.76rem;font-weight:780;cursor:pointer;
+  box-shadow:0 2px 8px #7065bd10;
+}
+.db-screen .db-plan-picker select:hover{border-color:#b8aef2;background-color:#eae6ff}
+.db-screen .db-plan-picker select:focus-visible{outline:2px solid #a49afa;outline-offset:2px}
+.db-screen .db-topbar-actions{margin-left:auto}
+.db-screen .db-visual-space{display:block;min-height:0;min-width:0}
+@media(max-width:780px){
+  .db-screen .db-topsearch{flex:1 1 180px}
+  .db-screen .db-plan-picker{margin-left:3px;min-width:102px}
+  .db-screen .db-plan-picker select{height:32px;padding-left:10px;padding-right:24px;font-size:.70rem;background-position:right 8px center}
+}
+@media(max-width:480px){
+  .db-screen .db-topbar{gap:5px}
+  .db-screen .db-plan-picker{margin-left:0;min-width:78px;max-width:101px}
+  .db-screen .db-plan-picker select{font-size:.64rem;padding-left:7px;padding-right:17px;background-position:right 4px center}
+}

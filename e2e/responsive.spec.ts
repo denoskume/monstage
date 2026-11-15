@@ -258,7 +258,15 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await page.goto('#/dashboard');
   await expect(page.locator('.db-screen')).toBeVisible();
   await expect(page.getByRole('group', {name:'Activité hebdomadaire des candidatures'})).toBeVisible();
-  await expect(page.locator('.db-insight-tile')).toHaveCount(3);
+  const planSelect=page.getByRole('combobox',{name:'Choisir un plan'});
+  await expect(planSelect).toBeVisible();
+  await expect(page.locator('.db-insight-tile')).toHaveCount(0);
+  await expect(page.locator('.db-visual-space')).toHaveCount(1);
+  await planSelect.selectOption('B');
+  await expect(planSelect).toHaveValue('B');
+  await planSelect.selectOption('A');
+  await expect(planSelect).toHaveValue('A');
+  await planSelect.selectOption('all');
   await expect(page.locator('.db-side-area')).toHaveCount(0);
   await expect(page.getByText('MonStage Intelligence')).toHaveCount(0);
   const contentWidth = await page.evaluate(() => {

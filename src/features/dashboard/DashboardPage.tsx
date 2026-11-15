@@ -77,52 +77,6 @@ function ActivityGraph({weeks, selected, onSelect}:{
   </div>;
 }
 
-/** Original vector treatments for the portfolio-style insight cards. */
-function InsightArtwork({variant}: {variant:'vision'|'data'|'locations'}) {
-  const base='db-art-'+variant;
-  return <svg className="db-insight-artwork" viewBox="0 0 220 142" role="img"
-    aria-label={variant==='vision'?'Formes géométriques évoquant le traitement d’image':variant==='data'?'Prismes de visualisation des données':'Repère géographique abstrait'}>
-    <defs>
-      <linearGradient id={base+'-face'} x1="8%" y1="3%" x2="95%" y2="92%">
-        <stop offset="0%" stopColor="#ffd8f3"/><stop offset="28%" stopColor="#b29bff"/>
-        <stop offset="66%" stopColor="#6478f0"/><stop offset="100%" stopColor="#3729aa"/>
-      </linearGradient>
-      <linearGradient id={base+'-light'} x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#fff" stopOpacity=".98"/>
-        <stop offset="45%" stopColor="#e5b7fa" stopOpacity=".86"/>
-        <stop offset="100%" stopColor="#6975ec" stopOpacity=".86"/>
-      </linearGradient>
-      <linearGradient id={base+'-edge'} x1="0%" y1="80%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#4c38cc"/><stop offset="60%" stopColor="#8daaff"/>
-        <stop offset="100%" stopColor="#ffd5ed"/>
-      </linearGradient>
-      <filter id={base+'-shadow'} x="-40%" y="-50%" width="190%" height="220%">
-        <feDropShadow dx="2" dy="8" stdDeviation="7" floodColor="#6250c0" floodOpacity=".20"/>
-      </filter>
-    </defs>
-    {variant==='vision'&&<g filter={'url(#'+base+'-shadow)'}>
-      <path d="M46 22 L84 34 L105 12 L123 52 L102 78 L122 103 L78 93 L57 122 L41 86 L15 72 Z" fill={'url(#'+base+'-face)'} />
-      <path d="M46 22 L84 34 L79 93 L41 86 Z" fill={'url(#'+base+'-light)'} opacity=".85"/>
-      <path d="M123 52 L166 28 L196 59 L167 87 L193 117 L144 109 L122 103 L102 78 Z" fill={'url(#'+base+'-edge)'}/>
-      <path d="M166 28 L196 59 L167 87 L144 68 Z" fill={'url(#'+base+'-light)'} opacity=".7"/>
-      <path d="M57 122 L78 93 L122 103 L107 127 Z" fill={'url(#'+base+'-face)'}/>
-    </g>}
-    {variant==='data'&&<g filter={'url(#'+base+'-shadow)'}>
-      <path d="M34 43 L80 60 L80 19 L109 13 L109 73 L141 82 L151 47 L181 55 L163 125 L125 113 L125 139 L97 130 L97 100 L53 86 Z" fill={'url(#'+base+'-face)'}/>
-      <path d="M34 43 L80 60 L80 19 L97 16 L97 98 L53 86 Z" fill={'url(#'+base+'-light)'} opacity=".88"/>
-      <path d="M109 73 L141 82 L151 47 L181 55 L163 125 L125 113 Z" fill={'url(#'+base+'-edge)'}/>
-      <path d="M80 19 L109 13 L109 73 L97 98 L97 16 Z" fill={'url(#'+base+'-light)'} opacity=".78"/>
-    </g>}
-    {variant==='locations'&&<g filter={'url(#'+base+'-shadow)'}>
-      <path d="M119 16 C170 15 196 49 179 86 C162 118 126 133 112 133 L93 104 C130 100 151 83 159 66 C169 44 143 42 115 45 Z" fill={'url(#'+base+'-face)'}/>
-      <path d="M119 16 C170 15 196 49 179 86 C179 86 162 65 159 66 C169 44 143 42 115 45 Z" fill={'url(#'+base+'-light)'} opacity=".9"/>
-      <path d="M115 45 L87 65 L61 62 L35 96 L58 119 L86 87 L93 104 L112 133 L124 89 Z" fill={'url(#'+base+'-edge)'}/>
-      <path d="M35 96 L58 119 L86 87 L61 62 Z" fill={'url(#'+base+'-light)'} opacity=".8"/>
-    </g>}
-    <ellipse cx="110" cy="135" rx="73" ry="5" fill="#a0a1df" opacity=".1"/>
-  </svg>;
-}
-
 export function DashboardPage() {
   const { sectorId } = useParams();
   const [params] = useSearchParams();
@@ -224,6 +178,15 @@ export function DashboardPage() {
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
           <input type="search" aria-label="Rechercher dans le Dashboard" placeholder="Search" value={filters.search} onChange={e=>setFilter('search',e.target.value)}/>
         </div>
+        <label className="db-plan-picker">
+          <span className="sr-only">Filtrer le Dashboard par plan</span>
+          <select aria-label="Choisir un plan" value={filters.plan}
+            onChange={event => setFilter('plan', event.target.value as DashboardPlan)}>
+            <option value="all">Tous les plans</option>
+            <option value="A">Plan A</option>
+            <option value="B">Plan B</option>
+          </select>
+        </label>
         <div className="db-topbar-actions">
           {activeCount>0&&<button type="button" onClick={clear} className="db-clear-chip" aria-label="Réinitialiser">Effacer {activeCount} filtre(s) ×</button>}
           <button type="button" title="Filtres et période" onClick={()=>setPanel('filters')} className="db-mini-tool" aria-label="Ouvrir les filtres">☷</button>
@@ -245,7 +208,7 @@ export function DashboardPage() {
           <section className="db-panel db-activity-card">
             <div className="db-hero-panel-title">
               <div><h2>Activité des candidatures</h2><p>12 dernières semaines · envois datés</p></div>
-              <button className="db-chart-tag" type="button" aria-label="Afficher les filtres de parcours" onClick={()=>setPanel('filters')}>{filters.plan==='all'?'Tous les plans':filters.plan==='A'?'Plan A':'Plan B'}⌄</button>
+              <span className="db-chart-tag">12 semaines</span>
             </div>
             <ActivityGraph weeks={activity} selected={filters.sentWeek} onSelect={week=>toggleFilter('sentWeek',week)}/>
             <div className="db-activity-footer">
@@ -254,26 +217,7 @@ export function DashboardPage() {
               <div><strong>{Math.max(0,metrics.sent-datedSends)}</strong><span>Envois non datés</span></div>
             </div>
           </section>
-                <div className="db-insight-tiles" aria-label="Explorer mes parcours et mes opportunités">
-        <button type="button" className={'db-insight-tile db-insight-tile--vision'+(filters.plan==='A'?' selected':'')}
-          onClick={()=>setFilter('plan',filters.plan==='A'?'all':'A')} aria-pressed={filters.plan==='A'}>
-          <InsightArtwork variant="vision"/>
-          <div><strong>Computer Vision</strong><small>{all.filter(o=>dashboardPlan(o)==='A').length} dossiers détectés · Plan A</small></div>
-          <span className="db-insight-arrow" aria-hidden="true">↗</span>
-        </button>
-        <button type="button" className={'db-insight-tile db-insight-tile--data'+(filters.plan==='B'?' selected':'')}
-          onClick={()=>setFilter('plan',filters.plan==='B'?'all':'B')} aria-pressed={filters.plan==='B'}>
-          <InsightArtwork variant="data"/>
-          <div><strong>Data & BI</strong><small>{all.filter(o=>dashboardPlan(o)==='B').length} dossiers détectés · Plan B</small></div>
-          <span className="db-insight-arrow" aria-hidden="true">↗</span>
-        </button>
-        <button type="button" className="db-insight-tile db-insight-tile--locations"
-          onClick={()=>setPanel('map')}>
-          <InsightArtwork variant="locations"/>
-          <div><strong>Explorer les villes</strong><small>{mapped.length} villes identifiées · Carte</small></div>
-          <span className="db-insight-arrow" aria-hidden="true">↗</span>
-        </button>
-      </div>
+          <div className="db-visual-space" aria-hidden="true" />
           <button className="db-primary-cta" type="button" onClick={()=>setPanel('queue')}>Voir toutes mes candidatures <span aria-hidden="true">↗</span></button>
         </div>
 

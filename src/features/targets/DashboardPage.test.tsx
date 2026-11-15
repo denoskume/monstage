@@ -32,14 +32,16 @@ function mount(path='/dashboard') {
 
 describe('single-screen MonStage decision dashboard',()=>{
   beforeEach(()=>localStorage.clear());
-  it('shows full-width KPIs, chart and illustrated cards without the redundant agenda sidebar',()=>{
+  it('shows full-width KPIs and chart with space reserved for new visuals',()=>{
     mount();
     expect(screen.getByRole('heading',{name:'Dashboard'})).toBeInTheDocument();
     expect(screen.getByRole('group',{name:'Activité hebdomadaire des candidatures'})).toBeInTheDocument();
     expect(screen.getByRole('navigation',{name:'Navigation MonStage'})).toBeInTheDocument();
-    expect(screen.getByRole('button',{name:/Computer Vision/})).toBeInTheDocument();
-    expect(screen.getByRole('button',{name:/Data & BI/})).toBeInTheDocument();
-    expect(screen.getByRole('button',{name:/Explorer les villes/})).toBeInTheDocument();
+    expect(screen.getByRole('combobox',{name:'Choisir un plan'})).toHaveValue('all');
+    expect(document.querySelector('.db-visual-space')).toBeInTheDocument();
+    expect(document.querySelector('.db-insight-tiles')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button',{name:/Computer Vision/})).not.toBeInTheDocument();
+    expect(screen.queryByRole('button',{name:/Data & BI/})).not.toBeInTheDocument();
     expect(screen.queryByRole('heading',{name:'Mon agenda'})).not.toBeInTheDocument();
     expect(screen.queryByText('MonStage Intelligence')).not.toBeInTheDocument();
     expect(screen.queryByText('Voir toutes mes actions')).not.toBeInTheDocument();
@@ -47,13 +49,23 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(screen.getByText('Opportunités').nextElementSibling).not.toHaveTextContent('0');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
-  it('filters Plan B from the illustrated tile and clears it using the top toolbar',()=>{
+  it('filters all KPIs through the single header dropdown for Plan A and Plan B',()=>{
     mount();
-    fireEvent.click(screen.getByRole('button',{name:/Data & BI/}));
-    expect(screen.getByRole('button',{name:/Data & BI/})).toHaveAttribute('aria-pressed','true');
-    expect(screen.getByText('Opportunités').nextElementSibling).not.toHaveTextContent('0');
-    fireEvent.click(screen.getByRole('button',{name:/Data & BI/}));
-    expect(screen.getByRole('button',{name:/Data & BI/})).toHaveAttribute('aria-pressed','false');
+    const plan = screen.getByRole('combobox',{name:'Choisir un plan'});
+    expect(plan).toHaveValue('all');
+    const countAll = Number(screen.getByText('Opportunités').nextElementSibling?.textContent?.replace(/[^0-9]/g,''));
+    fireEvent.change(plan,{target:{value:'A'}});
+    expect(plan).toHaveValue('A');
+    const countA = Number(screen.getByText('Opportunités').nextElementSibling?.textContent?.replace(/[^0-9]/g,''));
+    fireEvent.change(plan,{target:{value:'B'}});
+    expect(plan).toHaveValue('B');
+    const countB = Number(screen.getByText('Opportunités').nextElementSibling?.textContent?.replace(/[^0-9]/g,''));
+    expect(countA).toBeGreaterThan(0);
+    expect(countB).toBeGreaterThan(0);
+    expect(countA).toBeLessThanOrEqual(countAll);
+    expect(countB).toBeLessThanOrEqual(countAll);
+    fireEvent.change(plan,{target:{value:'all'}});
+    expect(screen.getByText('Opportunités').nextElementSibling).toHaveTextContent(String(countAll));
   });
   it('opens advanced filters as a dialog and retains cross-filtering without page scroll',()=>{
     mount();
@@ -69,7 +81,7 @@ describe('single-screen MonStage decision dashboard',()=>{
   });
   it('opens the map from the illustrated tile and analytics from the rail',()=>{
     mount();
-    fireEvent.click(screen.getByRole('button',{name:/Explorer les villes/}));
+    fireEvent.click(screen.getByRole('button',{name:'Carte géographique'}));
     expect(screen.getByRole('dialog',{name:'Carte des opportunités'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
     const realMap = screen.queryByTestId('google-maps-js') || screen.queryByTestId('google-maps-iframe');
