@@ -55,7 +55,7 @@ def canonical_url(source, url):
             return None
         # Stable identity, independent from session, language or referrer args.
         return f"https://{source['host']}{parsed.path}?idOffre={offer}"
-    if source["id"] == "dassault":
+    if source["id"] in ("dassault", "airfrance"):
         match = re.search(r"_(\d+)\.aspx$", parsed.path, re.I)
         if match:
             return f"https://{source['host']}/Pages/Offre/detailoffre.aspx?idOffre={match.group(1)}"
@@ -106,20 +106,23 @@ def extract_listing_links(source, url, page):
 
 
 def extract_rss_job_links(source, feed_url, document):
-    """Trust only real RSS item links on the employer-authorized exact host.
+    """Use only the stage-specific official Talentsoft RSS links.
 
-    The Talentsoft official page publishes stage-contract RSS (4161). Titles
-    without 'stage' are still candidates here, because that contract filter
-    is authoritative; detail-page validation is mandatory before saving.
+    A matching URL is only a lead. Every individual job still has to pass
+    employer, contract, location, scope and backend persistence verification.
     """
-    if source["id"] != "dassault" or not (
-        feed_url.startswith("https://dassault-aviation-cand.talent-soft.com/handlers/offerRss.ashx?")
-        and "Rss_Contract=4161" in feed_url
-    ):
+    contract = {"dassault": "4161", "airfrance": "3442"}.get(source["id"])
+    if not contract:
+        return []
+    parsed = urllib.parse.urlparse(feed_url)
+    params = urllib.parse.parse_qs(parsed.query)
+    if (parsed.scheme != "https" or parsed.hostname != source["host"]
+            or parsed.path != "/handlers/offerRss.ashx"
+            or params.get("Rss_Contract") != [contract]):
         return []
     root = ET.fromstring(document)
     seen, links = set(), []
-    for item in root.findall(".//item")[:120]:
+    for item in root.findall(".//item")[:150]:
         url = (item.findtext("link") or "").strip()
         if not source_matches(source, url):
             continue
