@@ -295,6 +295,15 @@ def verify_html(source, requested, content, resolved=None, rejection_reasons=Non
     document = content.decode("utf-8", "replace") if isinstance(content, bytes) else content
     document = re.sub(r"<(?:nav|footer)\b[^>]*>.*?</(?:nav|footer)\s*>",
                       "", document, flags=re.I | re.S)
+    if source["id"] == "danone":
+        # Danone presents the country in the job header using a flag
+        # <img alt="France"> followed by the city in plain text. Preserve
+        # this publisher-provided country only inside the actual document;
+        # never infer a country from a flag's filename or generic footer.
+        document = re.sub(
+            r"""<img\b(?=[^>]*\balt\s*=\s*['"]France['"])[^>]*>""",
+            "<span>France</span>", document, flags=re.I,
+        )
     parsed.feed(document)
     headline = " ".join(parsed.h1).strip()
     structured = []
