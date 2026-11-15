@@ -263,7 +263,11 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await expect(dynamicHeading).toHaveText('Dashboard');
   await expect(planSelect).toBeVisible();
   await expect(page.locator('.db-insight-tile')).toHaveCount(0);
-  await expect(page.locator('.db-visual-space')).toHaveCount(1);
+  await expect(page.locator('.db-visual-panels')).toHaveCount(1);
+  await expect(page.locator('.db-visual-panels > .db-mini-panel')).toHaveCount(3);
+  await expect(page.getByRole('img',{name:/Trois courbes cumulatives de septembre 2026 à février 2027/})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Statut des dossiers'})).toBeVisible();
+  await expect(page.locator('.db-map-mini .db-google-map-shell')).toBeVisible();
   await planSelect.selectOption('B');
   await expect(planSelect).toHaveValue('B');
   await expect(dynamicHeading).toContainText('Plan B');
@@ -301,11 +305,18 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
     expect(metrics.html, 'document scrollHeight @ '+size.width+'x'+size.height).toBeLessThanOrEqual(metrics.inner+1);
     expect(metrics.body, 'body scrollHeight @ '+size.width+'x'+size.height).toBeLessThanOrEqual(metrics.inner+1);
     expect(metrics.dashboard).toBeLessThanOrEqual(metrics.inner+1);
+    const tiles = await page.locator('.db-visual-panels > .db-mini-panel').evaluateAll(elements =>
+      elements.map(el => {const r=el.getBoundingClientRect();return {left:r.left,right:r.right,bottom:r.bottom,top:r.top};}));
+    expect(tiles).toHaveLength(3);
+    expect(tiles[0].right).toBeLessThanOrEqual(tiles[1].left+1);
+    expect(tiles[1].right).toBeLessThanOrEqual(tiles[2].left+1);
+    expect(Math.max(...tiles.map(x=>x.bottom))).toBeLessThanOrEqual(size.height+1);
   }
   await page.getByRole('button',{name:'Carte géographique'}).click();
   await expect(page.getByRole('dialog',{name:'Carte des opportunités'})).toBeVisible();
-  const googleFrame = page.getByTestId('google-maps-iframe');
-  const googleJs = page.getByTestId('google-maps-js');
+  const dialog = page.getByRole('dialog',{name:'Carte des opportunités'});
+  const googleFrame = dialog.getByTestId('google-maps-iframe');
+  const googleJs = dialog.getByTestId('google-maps-js');
   await expect(googleFrame.or(googleJs)).toHaveCount(1);
   if (await googleFrame.count()) {
     await expect(googleFrame).toHaveAttribute('src', /maps\.google\.com\/maps\?output=embed/);
