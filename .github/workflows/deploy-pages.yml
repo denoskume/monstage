@@ -299,22 +299,26 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Check if Apps Script code changed
+      # Track the last *successful deployment*, never merely the previous
+      # commit. A cancelled prior run may have skipped deploying Code.gs.
+      # GitHub cache key is a content fingerprint of the Apps Script files.
+      - name: Read last successfully deployed Apps Script source fingerprint
+        id: apps_cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .monstage-apps-deployed-marker
+          key: monstage-apps-deployed-${{ hashFiles('apps-script/**') }}
+      - name: Check if Apps Script backend actually needs deployment
         id: apps_changed
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ github.event.before }}" ] && git cat-file -e "${{ github.event.before }}^{commit}" 2>/dev/null; then
-            if git diff --quiet "${{ github.event.before }}" "${{ github.sha }}" -- apps-script/; then
-              echo "changed=false" >> "$GITHUB_OUTPUT"
-              echo "Apps Script is unchanged; skip creating an unnecessary version."
-            else
-              echo "changed=true" >> "$GITHUB_OUTPUT"
-            fi
+          if [ "${{ steps.apps_cache.outputs.cache-hit }}" = "true" ] &&
+             [ -f .monstage-apps-deployed-marker ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Apps Script content fingerprint already deployed successfully."
           else
-            # Fail safely towards deploying on ambiguous push history.
             echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Apps Script deployment marker missing for this version. Publishing backend."
           fi
       - uses: actions/setup-node@v4
         if: steps.apps_changed.outputs.changed == 'true'
@@ -350,6 +354,15 @@ jobs:
           npx --yes @google/clasp@latest create-deployment \
             --deploymentId "$deployment_id" \
             --description "GitHub Actions $GITHUB_SHA"
+      - name: Record successful Apps Script backend deployment
+        if: steps.apps_changed.outputs.changed == 'true' && steps.clasp.outputs.configured == 'true'
+        run: printf '%s\n' "$GITHUB_SHA" > .monstage-apps-deployed-marker
+      - name: Cache successfully deployed backend fingerprint
+        if: steps.apps_changed.outputs.changed == 'true' && steps.clasp.outputs.configured == 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .monstage-apps-deployed-marker
+          key: monstage-apps-deployed-${{ hashFiles('apps-script/**') }}
 
   deploy:
     if: github.ref == 'refs/heads/main'
