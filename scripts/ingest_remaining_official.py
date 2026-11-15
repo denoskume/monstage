@@ -17,6 +17,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 
 from discover_official_jobs import candidate_plans, _LinkParser
 from ingest_public_ats import ingest, fetch_json_with_backoff
@@ -36,7 +37,7 @@ def source_matches(source, url):
         return False
     if not re.search(source["path"], parsed.path, flags=re.I):
         return False
-    if source["id"] == "airfrance":
+    if source["id"] in ("airfrance", "dassault") and parsed.path.lower().endswith("/detailoffre.aspx"):
         return re.search(r"(?:^|&)idOffre=\d+(?:&|$)", parsed.query, flags=re.I) is not None
     return True
 
@@ -48,13 +49,17 @@ def listing_matches(source, url):
 
 def canonical_url(source, url):
     parsed = urllib.parse.urlparse(url)
-    if source["id"] == "airfrance":
+    if source["id"] in ("airfrance", "dassault") and parsed.path.lower().endswith("/detailoffre.aspx"):
         offer = urllib.parse.parse_qs(parsed.query).get("idOffre", [None])[0]
         if not offer or not offer.isdigit():
             return None
-        # Identity and application URL must both carry idOffre; generic ASPX
-        # is not a job. Avoid unstable language/origin parameters in the ID.
+        # Stable identity, independent from session, language or referrer args.
         return f"https://{source['host']}{parsed.path}?idOffre={offer}"
+    if source["id"] == "dassault":
+        match = re.search(r"_(\d+)\.aspx$", parsed.path, re.I)
+        if match:
+            return f"https://{source['host']}/Pages/Offre/detailoffre.aspx?idOffre={match.group(1)}"
+        return None
     return urllib.parse.urlunparse(("https", source["host"], parsed.path.rstrip("/"), "", "", ""))
 
 
@@ -100,6 +105,31 @@ def extract_listing_links(source, url, page):
     return results
 
 
+def extract_rss_job_links(source, feed_url, document):
+    """Trust only real RSS item links on the employer-authorized exact host.
+
+    The Talentsoft official page publishes stage-contract RSS (4161). Titles
+    without 'stage' are still candidates here, because that contract filter
+    is authoritative; detail-page validation is mandatory before saving.
+    """
+    if source["id"] != "dassault" or not (
+        feed_url.startswith("https://dassault-aviation-cand.talent-soft.com/handlers/offerRss.ashx?")
+        and "Rss_Contract=4161" in feed_url
+    ):
+        return []
+    root = ET.fromstring(document)
+    seen, links = set(), []
+    for item in root.findall(".//item")[:120]:
+        url = (item.findtext("link") or "").strip()
+        if not source_matches(source, url):
+            continue
+        identifier = canonical_url(source, url)
+        if identifier and identifier not in seen:
+            seen.add(identifier)
+            links.append(url)
+    return links
+
+
 def visible_location(parsed, company):
     text = " ".join(parsed.content)
     # Prefer structured JobPosting location. These page-header patterns are
@@ -122,6 +152,22 @@ def visible_location(parsed, company):
         return early.group(1).strip() + ", France"
     if re.search(r"\b(?:Pays\s*/\s*Région|Country|Pays)\s*:\s*France\b", header, re.I):
         return "France"
+    if company == "Dassault Aviation":
+        # Talentsoft shows "Localisation France, PACA, 13 - Istres" deep below
+        # login/navigation UI, not in the first 1,100 visible characters.
+        area = re.search(
+            r"\bLocalisation\s+France\s*,\s*"
+            r"[^,]{2,55},\s*(?:\d{2,3})\s*-\s*"
+            r"([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'() -]{1,65})\b",
+            text, re.I
+        )
+        if area:
+            city = area.group(1).strip()
+            # The next metadata key bounds the city even in flattened HTML.
+            city = re.split(r"\s+(?:Domaine professionnel|Type de contrat|Niveau du stage)\b",
+                            city, maxsplit=1)[0].strip()
+            if city:
+                return city + ", France"
     return None
 
 
@@ -162,11 +208,29 @@ def verify_html(source, requested, content, resolved=None):
             pass
     for posting in (structured or [{}]):
         title = re.sub(r"\s+", " ", str(posting.get("title") or headline)).strip()
-        if not title or not candidate_plans(title):
+        body = " ".join(parsed.content)[:10000]
+        if source["id"] == "dassault":
+            # Talentsoft sometimes omits "Stage" from the H1 although the
+            # employer detail explicitly states "Type de contrat Stage".
+            stage_contract = re.search(r"\bType de contrat\s*:?\s*Stage\b", body, re.I)
+            if not stage_contract:
+                continue
+            if not re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b", title, re.I):
+                title = "Stage - " + title
+            relevant = bool(candidate_plans(title)) or bool(
+                re.search(r"\b(?:intelligence artificielle|mod[eè]les? d[' ]IA)\b",
+                          title, re.I) and
+                re.search(r"\b(?:machine learning|apprentissage automatique|"
+                          r"maintenance a[eé]ronautique|RAG|LLM)\b", body, re.I)
+            )
+        else:
+            relevant = bool(candidate_plans(title))
+        if not title or not relevant:
             continue
         if headline and normalized(title) not in normalized(headline) and normalized(headline) not in normalized(title):
-            continue
-        body = " ".join(parsed.content)[:6000]
+            # The explicit 'Stage -' prefix above must not break H1 matching.
+            if normalized(title).replace("stage ", "", 1) not in normalized(headline):
+                continue
         if source.get("entity") and not any(normalized(name) in normalized(body)
                                             for name in source["entity"]):
             continue
@@ -204,6 +268,25 @@ def collect(source):
             seen.add(cid)
             urls.append(url)
     reached = 0
+    rss_reached = 0
+    for feed in source.get("rss", []):
+        if not listing_matches(source, feed):
+            errors.append("RSS host mismatch")
+            continue
+        try:
+            resolved, feed_xml = fetch_html(feed)
+            if not listing_matches(source, resolved):
+                errors.append("RSS redirected outside employer host")
+                continue
+            feed_links = extract_rss_job_links(source, feed, feed_xml)
+            rss_reached += 1
+            for job_url in feed_links:
+                cid = canonical_url(source, job_url)
+                if cid and cid not in seen and len(urls) < MAX_LISTING_LINKS + len(source["seed"]):
+                    seen.add(cid)
+                    urls.append(job_url)
+        except (ET.ParseError, OSError, RuntimeError, ValueError) as exc:
+            errors.append("RSS: " + type(exc).__name__)
     for page in source["listing"]:
         if not listing_matches(source, page):
             errors.append("Listing host mismatch")
@@ -235,6 +318,7 @@ def collect(source):
     return {
         "company": source["company"], "source_id": source["id"],
         "listing_pages_reachable": reached, "listing_pages_attempted": len(source["listing"]),
+        "rss_feeds_reachable": rss_reached, "rss_feeds_attempted": len(source.get("rss", [])),
         "individual_job_urls": len(candidates), "verified_fr_internships": len(results),
         "errors": errors[:18], "jobs": results,
     }
@@ -256,6 +340,7 @@ def main():
                 data = {"company": source["company"], "source_id": source["id"],
                         "listing_pages_reachable": 0, "listing_pages_attempted": len(source["listing"]),
                         "individual_job_urls": 0, "verified_fr_internships": 0,
+                        "rss_feeds_reachable": 0, "rss_feeds_attempted": len(source.get("rss", [])),
                         "errors": ["Fatal " + type(exc).__name__], "jobs": []}
             if data["jobs"]:
                 try:
@@ -267,6 +352,8 @@ def main():
                 data["backend_accepted"] = 0
             print("Remaining 13 source", data["company"], "pages",
                   data["listing_pages_reachable"], "/", data["listing_pages_attempted"],
+                  "RSS", data.get("rss_feeds_reachable", 0),
+                  "/", data.get("rss_feeds_attempted", 0),
                   "individual job URLs", data["individual_job_urls"],
                   "verified", data["verified_fr_internships"],
                   "accepted", data["backend_accepted"],
@@ -278,6 +365,7 @@ def main():
         "sources_attempted": len(results),
         "sources_with_listing_pages_reachable": sum(i["listing_pages_reachable"] > 0 for i in results),
         "sources_with_individual_job_pages_verified": sum(i["verified_fr_internships"] > 0 for i in results),
+        "official_rss_feeds_reachable": sum(i.get("rss_feeds_reachable", 0) for i in results),
         "verified_job_details": sum(i["verified_fr_internships"] for i in results),
         "accepted_by_backend": sum(i["backend_accepted"] for i in results),
         "errors": errors,
