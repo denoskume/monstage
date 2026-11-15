@@ -249,3 +249,30 @@ test('CV Studio shows both two-column templates with intact ATS-readable section
   await template.selectOption('classic');
   await expect(page.locator('.cv-preview__two-columns')).toHaveCount(0);
 });
+
+
+test('Dashboard fills laptop viewports without vertical document scrolling', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Desktop Chrome', 'single-screen desktop acceptance');
+  await openSignedOut(page);
+  await signIn(page);
+  await page.goto('#/dashboard');
+  await expect(page.locator('.db-screen')).toBeVisible();
+  await expect(page.getByRole('group', {name:'Activité hebdomadaire des candidatures'})).toBeVisible();
+  await expect(page.locator('.db-insight-tile')).toHaveCount(3);
+  for(const size of [{width:1366,height:768},{width:1280,height:720},{width:1440,height:900},{width:1024,height:768}]){
+    await page.setViewportSize(size);
+    const metrics=await page.evaluate(()=>({
+      html:document.documentElement.scrollHeight,
+      body:document.body.scrollHeight,
+      inner:window.innerHeight,
+      dashboard:document.querySelector('.db-screen')?.getBoundingClientRect().height,
+    }));
+    expect(metrics.html, 'document scrollHeight @ '+size.width+'x'+size.height).toBeLessThanOrEqual(metrics.inner+1);
+    expect(metrics.body, 'body scrollHeight @ '+size.width+'x'+size.height).toBeLessThanOrEqual(metrics.inner+1);
+    expect(metrics.dashboard).toBeLessThanOrEqual(metrics.inner+1);
+  }
+  await page.getByRole('button',{name:'Carte géographique'}).click();
+  await expect(page.getByRole('dialog',{name:'Carte des opportunités'})).toBeVisible();
+  await page.getByRole('button',{name:'Fermer le panneau'}).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
