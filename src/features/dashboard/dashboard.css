@@ -44,14 +44,16 @@
 .db-status-item>strong, .db-sector-row>strong { font-size:.83rem; text-align:right; font-variant-numeric:tabular-nums; }
 .db-bar-track, .db-sector-track { height:11px; background:var(--surface-muted); border-radius:12px; display:flex; min-width:0; overflow:hidden; }
 .db-status-bar { display:block; min-width:0; height:100%; border-radius:10px; background:#8aa7d8; transition:width .22s ease; }
-.db-status-bar--0 { background:#aebbd1; }
-.db-status-bar--1 { background:#4c78c3; }
+.db-status-bar--0 { background:#91a5bf; }
+.db-status-bar--1 { background:#b3bdca; }
 .db-status-bar--2 { background:#c99843; }
-.db-status-bar--3 { background:#4b9aab; }
-.db-status-bar--4 { background:#7164c5; }
-.db-status-bar--5 { background:#26947c; }
-.db-status-bar--6 { background:#cf776b; }
-.db-status-bar--7 { background:#b4a3a3; }
+.db-status-bar--3 { background:#4c78c3; }
+.db-status-bar--4 { background:#9579ba; }
+.db-status-bar--5 { background:#4b9aab; }
+.db-status-bar--6 { background:#7164c5; }
+.db-status-bar--7 { background:#26947c; }
+.db-status-bar--8 { background:#cf776b; }
+.db-status-bar--9 { background:#b4a3a3; }
 .db-legend { display:flex; gap:15px; align-items:center; flex-wrap:wrap; margin:-4px 0 12px; font-size:.72rem; color:var(--text-muted); }
 .db-legend span { display:inline-flex; align-items:center; gap:5px; }
 .db-dot { display:inline-block; width:9px; height:9px; border-radius:2px; background:#4473bd; }
@@ -196,7 +198,7 @@
 .db-week-bars{height:206px;min-width:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:stretch;position:relative;background:repeating-linear-gradient(to bottom,transparent 0,transparent 59px,color-mix(in srgb,var(--border) 70%,transparent) 59px,color-mix(in srgb,var(--border) 70%,transparent) 60px);background-size:100% 180px;background-repeat:no-repeat}
 .db-week-col{height:100%;border:1px solid transparent;border-radius:6px;background:transparent;padding:0 1px;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text-muted);font-size:.72rem}
 .db-week-plot{height:180px;min-width:0;width:100%;display:flex;align-items:flex-end;justify-content:center;position:relative}
-.db-week-count{position:absolute;bottom:calc(100% + 2px);font-size:.68rem;font-weight:790;color:var(--text);pointer-events:none;opacity:0}
+.db-week-count{position:absolute;top:4px;font-size:.68rem;font-weight:790;color:var(--text);pointer-events:none;opacity:0}
 .db-week-fill{display:block;width:72%;min-width:0;max-width:32px;border-radius:5px 5px 0 0;background:#467cce;transition:height .2s ease,background .2s ease;min-height:0}
 .db-week-col:has(.db-week-fill[style*="height: 0%"]) .db-week-fill{min-height:0}
 .db-week-col:hover,.db-week-col:focus-visible,.db-week-col.selected{background:#e9f1ff;border-color:#d7e5fa;color:#204e92}

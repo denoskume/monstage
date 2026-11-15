@@ -2,7 +2,7 @@ import { expect,test } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
 import {
   INITIAL_FILTERS, canonicalDate, dashboardMetrics, dashboardPlan, filterDashboardOffers,
-  uniqueDashboardOffers, byStatus, applicationMonths, priorityQueue, statusGroup, hasSubmissionEvidence,
+  uniqueDashboardOffers, byStatus, applicationMonths, applicationWeeks, weekOf, priorityQueue, statusGroup, hasSubmissionEvidence,
 } from './decisionModel';
 const offer = (id:string, title:string, company:string, status:string, partial:Partial<InternshipOffer>={}): InternshipOffer => ({
   id,company,title,domain:null,city:'Nantes',region:null,m2Fit:'Oui',start:null,duration:null,
@@ -67,4 +67,19 @@ test('a job advert incorrectly marked "Offre reçue" is not an employment offer'
 test('does not duplicate source records and excludes untracked unrelated jobs',()=>{
   const extras=[...sample,sample[0],offer('noise','Stage Computer Vision','Unrelated Co','À candidater')];
   expect(uniqueDashboardOffers(extras)).toHaveLength(4);
+});
+
+test('weekly activity includes empty weeks and filters the exact week',()=>{
+  const rows=[
+    offer('one','Stage Computer Vision','Airbus','Candidature envoyée',{appliedAt:'2026-11-11'}),
+    offer('two','Stage Computer Vision','Airbus','Candidature envoyée',{appliedAt:'2026-11-11'}),
+    offer('three','Stage Data Analyst','Michelin','Candidature envoyée',{appliedAt:'2026-10-06'}),
+  ];
+  expect(weekOf('2026-11-11')).toBe('2026-11-09');
+  const weeks=applicationWeeks(rows,new Date('2026-11-15T12:00:00Z'),8);
+  expect(weeks).toHaveLength(8);
+  expect(weeks.at(-1)?.count).toBe(2);
+  expect(weeks.some(x=>x.count===0)).toBe(true);
+  const filtered=filterDashboardOffers(rows,{...INITIAL_FILTERS,sentWeek:'2026-11-09'});
+  expect(filtered).toHaveLength(2);
 });

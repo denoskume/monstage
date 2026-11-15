@@ -110,6 +110,7 @@ const aliases:Record<string,string>={
   clermontferrandcataroux:'clermontferrand',
   clermontferrandsitedeladoux:'clermontferrand',
   poissygreencampus:'poissy',
+  velizy:'velizyvillacoublay',
   roissycharlesdegaulle:'roissycdg',
   parisladefense:'paris',
   rennescessonsevigne:'cessonsevigne',
