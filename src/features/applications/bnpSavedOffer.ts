@@ -1,0 +1,37 @@
+import type { InternshipOffer } from '../../api/contract';
+
+// User-selected application saved on 15 November 2026. This is NOT a 31st
+// automatically monitored company; its ID matches the private Sheet row.
+export const bnpRhPowerBiSavedOffer: InternshipOffer = {
+  id: 'BNP-RHG27-002',
+  company: 'BNP Paribas',
+  title: 'Stage - Data Analyst RH Power BI H/F',
+  domain: 'Plan B — Data Analyst / Business Intelligence / Reporting RH',
+  city: 'Paris',
+  region: 'Île-de-France',
+  m2Fit: 'Oui — Master 2 Data Science; RNCP à confirmer',
+  start: 'Février 2027 selon JobTeaser — confirmer avec le recruteur (site officiel : février 2026)',
+  duration: '6 mois',
+  compensation: '1 250–2 100 € brut/mois (Bac+5)',
+  skills: ['Power BI', 'Excel', 'Analyse de données', 'Nettoyage et consolidation', 'KPI', 'Reporting automatisé', 'Data Visualisation', 'Pilotage de la performance'],
+  publishedAt: '2026-11-04',
+  offerStatus: 'Candidature officielle accessible — date de début à confirmer',
+  applicationStatus: 'À candidater',
+  nextAction: 'Actualiser CV Data Analyst et préparer la lettre; confirmer février 2027, puis postuler et préparer les tests en ligne.',
+  applicationUrl: 'https://group.bnpparibas/emploi-carriere/offre-emploi/stage-data-analyst-rh-power-bi-h-f',
+  shortlist: true,
+  appliedAt: null,
+  followUpAt: null,
+  specialization: 'Plan B — Data Analyst / BI / performance RH',
+  technicalFit: 85,
+  decisionScore: 86,
+  priority: 'B+',
+  freshness: 'Publié le 04/11/2026',
+  verifiedAt: '15/11/2026',
+  sourceQuality: 'Offre employeur officielle — réf. !S_RHG27_002',
+  actionLevel: 'CANDIDATER 48H',
+  calendarFit: 'Février 2027 — à confirmer',
+  confidence: 'Haute sur les missions; date de début à confirmer',
+  relevance: 'Power BI, consolidation multi-sources, KPI, analyse des écarts, reporting et aide au management RH.',
+  gaps: 'Consolider Power Query/DAX et vérifier la reconnaissance RNCP et la date de début.',
+};

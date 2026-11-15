@@ -1,5 +1,6 @@
 /** Two-plan internship discovery: 30 target groups in France, identical for A and B. */
 export interface ScopeOffer {
+  id?: string | null;
   company?: string | null;
   title?: string | null;
   domain?: string | null;
@@ -91,6 +92,11 @@ export function isIndustrialMachineLearningMission(offer: ScopeOffer): boolean {
 }
 /** Explicit Data Analyst role takes Plan B precedence even when the department mentions imaging. */
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
+  // Explicit user-saved application outside the automated 30-company discovery scope.
+  // Do not add BNP Paribas to TARGET_COMPANIES or expand the automatic monitoring perimeter.
+  if (offer.id === 'BNP-RHG27-002'
+      && normalizeScope(offer.company) === 'bnp paribas'
+      && normalizeScope(offer.title).includes('stage data analyst rh power bi')) return 'B';
   if (!matchingCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
   if (isDataAnalystMission(offer) || isDataDrivenMaintenanceMission(offer)) return 'B';
   if (isVisionMission(offer) || isIndustrialMachineLearningMission(offer)) return 'A';

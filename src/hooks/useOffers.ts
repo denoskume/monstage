@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ApiAuthError } from '../api/authClient';
 import { fetchOffers } from '../api/client';
+import { bnpRhPowerBiSavedOffer } from '../features/applications/bnpSavedOffer';
 import type { OffersApiResponse } from '../api/contract';
 import { useAuth } from '../auth/useAuth';
 
@@ -53,7 +54,10 @@ export function useOffers(): UseOffersState {
     fetchOffers(token)
       .then((fresh) => {
         if (!active) return;
-        setData(fresh);
+        // A manually selected offer remains accessible in MonStage even if the
+        // upstream 30-company discovery gateway omits it. Match the Sheet ID.
+        setData({ ...fresh, offers: fresh.offers.some(offer => offer.id === bnpRhPowerBiSavedOffer.id)
+          ? fresh.offers : [...fresh.offers, bnpRhPowerBiSavedOffer] });
       })
       .catch((reason: unknown) => {
         if (!active) return;

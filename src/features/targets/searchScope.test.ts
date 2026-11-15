@@ -35,6 +35,14 @@ describe('thirty target groups · A/B only', () => {
     expect((restrictOffersPayload({offers}) as {offers:typeof offers}).offers).toHaveLength(5);
   });
 
+  it('keeps one explicitly saved BNP offer without adding a 31st monitored company', () => {
+    const manual = {id:'BNP-RHG27-002',company:'BNP Paribas',title:'Stage - Data Analyst RH Power BI H/F'};
+    expect(getOfferPlan(manual)).toBe('B');
+    expect(isTargetOffer(manual)).toBe(true);
+    expect(targetCompany('BNP Paribas')).toBeNull();
+    expect(getOfferPlan({...manual,id:'UNTRACKED-BNP'})).toBeNull();
+  });
+
   it('excludes companies outside the thirty, even if the title matches', () => {
     for (const company of ['Orange', 'Capgemini', 'Wabtec', 'Bosch', 'RTX', 'KPMG']) {
       expect(targetCompany(company)).toBeNull();

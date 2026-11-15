@@ -24,6 +24,7 @@ function Probe() {
     <div>
       <span data-testid="loading">{String(state.loading)}</span>
       <span data-testid="has-data">{String(Boolean(state.data))}</span>
+      <span data-testid="bnp-saved">{String(state.data?.offers.some(offer => offer.id === 'BNP-RHG27-002') ?? false)}</span>
       <span data-testid="error">{state.error ?? ''}</span>
     </div>
   );
@@ -53,6 +54,7 @@ describe('useOffers protected loading', () => {
     await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('false'));
     expect(mockedFetchOffers).toHaveBeenCalledWith('owner-token');
     expect(screen.getByTestId('has-data')).toHaveTextContent('true');
+    expect(screen.getByTestId('bnp-saved')).toHaveTextContent('true');
   });
 
   test('401 clears protected data and invalidates the auth session', async () => {
