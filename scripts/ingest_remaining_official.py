@@ -132,6 +132,16 @@ def extract_rss_job_links(source, feed_url, document):
 
 def visible_location(parsed, company):
     text = " ".join(parsed.content)
+    # Phenom/Recruitment-style pages (Sanofi, L'Oréal) commonly show
+    # 'Gentilly, France' immediately after the job H1, not at the start of
+    # the HTML. Search near the *actual posting heading*, not the footer.
+    headline = " ".join(parsed.h1).strip()
+    heading_index = text.find(headline) if headline else -1
+    if heading_index >= 0:
+        near_job = text[heading_index + len(headline):heading_index + len(headline) + 460]
+        place = re.search(r"\b([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'()\- ]{1,44}),\s*France\b", near_job, re.I)
+        if place:
+            return place.group(1).strip() + ", France"
     # Prefer structured JobPosting location. These page-header patterns are
     # deliberately narrow, to avoid treating footer office addresses as jobs.
     label = labelled_france_location(text[:1800])
@@ -152,7 +162,7 @@ def visible_location(parsed, company):
         return early.group(1).strip() + ", France"
     if re.search(r"\b(?:Pays\s*/\s*Région|Country|Pays)\s*:\s*France\b", header, re.I):
         return "France"
-    if company == "Dassault Aviation":
+    if company in ("Dassault Aviation", "Air France-KLM"):
         # Talentsoft shows "Localisation France, PACA, 13 - Istres" deep below
         # login/navigation UI, not in the first 1,100 visible characters.
         area = re.search(
