@@ -140,6 +140,7 @@ def report(targets, audit, sf, page_details, offers, now, remaining=None):
             "official_pages_verified": int(detail.get("verified_details") or 0) +
                 int(remaining_detail.get("verified_fr_internships") or 0),
             "listing_pages_reachable": int(remaining_detail.get("listing_pages_reachable") or 0),
+            "official_rss_feeds_reachable": int(remaining_detail.get("rss_feeds_reachable") or 0),
             "individual_candidate_urls_checked": int(remaining_detail.get("individual_job_urls") or 0),
             "saved_official": c.get("saved_official", 0),
             "verified_48h": fresh,
@@ -158,6 +159,11 @@ def report(targets, audit, sf, page_details, offers, now, remaining=None):
             for x in companies if x["company"] in set(
                 item.get("company") for item in remaining.get("sources", []))),
         "remaining_13_with_listing_page_reachable": sum(int(x["listing_pages_reachable"] > 0)
+            for x in companies),
+        "remaining_13_with_rss_reachable": sum(int(x["official_rss_feeds_reachable"] > 0)
+            for x in companies),
+        "remaining_13_with_listing_or_rss_reachable": sum(
+            int(x["listing_pages_reachable"] > 0 or x["official_rss_feeds_reachable"] > 0)
             for x in companies),
         "official_rows_verified_48h": sum(x["verified_48h"] for x in companies),
         "official_rows_published_7d": sum(x["published_7d"] for x in companies),
@@ -206,6 +212,7 @@ def main():
         f"- Connecteurs configurés : {m['groups_with_a_configured_ingestion']}/30 (ne prouve pas exhaustivité)",
         f"- Sans adaptateur configuré : {m['groups_without_configured_ingestion']}/30",
         f"- Parmi les 13 nouveaux adaptateurs, avec fiche d'offre effectivement vérifiée : {m['remaining_13_with_verified_job_detail']}/13",
+        f"- Parmi les 13, au moins un flux RSS ou une page de liste accessible : {m['remaining_13_with_listing_or_rss_reachable']}/13",
         f"- Entreprises avec offre officielle revérifiée <48h : {m['groups_with_official_listings_verified_48h']}/30",
         f"- Offres officielles sauvegardées : {m['official_rows_saved']} (pas toutes récentes)",
         "",

@@ -49,6 +49,21 @@ class CoverageTests(unittest.TestCase):
         rows=[{"id":"workday:unknown:job", "verifiedAt":"2026-11-15T08:00:00Z"}]
         self.assertEqual(saved_official_counts(rows,NOW),{})
 
+    def test_official_rss_counts_as_reachable_but_not_verified_job(self):
+        audit = {"summary":{"groups_attempted":30},"companies":[]}
+        remaining = {"sources":[
+            {"company":"Dassault Aviation","listing_pages_reachable":0,
+             "rss_feeds_reachable":1,"verified_fr_internships":0}
+        ]}
+        payload = report(TARGETS, audit, {}, {}, [], NOW, remaining=remaining)
+        summary = payload["summary"]
+        self.assertGreaterEqual(summary["remaining_13_with_listing_or_rss_reachable"], 1)
+        self.assertEqual(summary["remaining_13_with_rss_reachable"], 1)
+        self.assertEqual(summary["remaining_13_with_verified_job_detail"], 0)
+        dassault = next(c for c in payload["companies"] if c["company"]=="Dassault Aviation")
+        self.assertEqual(dassault["official_rss_feeds_reachable"], 1)
+        self.assertEqual(dassault["saved_official"], 0)
+
     def test_rejects_scope_drift(self):
         changed={"companies":TARGETS["companies"][:-1]}
         with self.assertRaisesRegex(ValueError,"EXACTLY 30"):
