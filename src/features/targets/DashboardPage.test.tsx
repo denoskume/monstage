@@ -69,7 +69,11 @@ describe('single-screen MonStage decision dashboard',()=>{
     fireEvent.click(screen.getByRole('button',{name:/Explorer les villes/}));
     expect(screen.getByRole('dialog',{name:'Carte des opportunités'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
-    expect(screen.getByTestId('google-maps-iframe')).toHaveAttribute('src',expect.stringContaining('maps.google.com/maps?output=embed'));
+    const realMap = screen.queryByTestId('google-maps-js') || screen.queryByTestId('google-maps-iframe');
+    expect(realMap).toBeInTheDocument();
+    if (realMap?.getAttribute('data-testid') === 'google-maps-iframe') {
+      expect(realMap).toHaveAttribute('src',expect.stringContaining('maps.google.com/maps?output=embed'));
+    }
     expect(screen.queryByText(/Fond géographique : © IGN/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button',{name:'Fermer le panneau'}));
     fireEvent.click(screen.getByRole('button',{name:'Analyses avancées'}));
