@@ -19,6 +19,8 @@ jobs:
     env:
       VITE_GOOGLE_CLIENT_ID: 398882157701-3brttf6bps0ual14rfoh81qnu8d6ceq9.apps.googleusercontent.com
       VITE_MONSTAGE_API_URL: https://monstage-auth-gateway.denoskume.workers.dev
+      # Optional HTTP-referrer-restricted browser key for clickable Google Maps markers.
+      VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_BROWSER_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
