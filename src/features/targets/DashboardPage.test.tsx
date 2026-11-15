@@ -81,7 +81,7 @@ describe('single-screen MonStage decision dashboard',()=>{
       expect(screen.getByRole('status')).toHaveTextContent('Non postulées');
       fireEvent.click(area);
       expect(screen.getByRole('button',{name:'Effacer le filtre du mois'})).toBeInTheDocument();
-      expect(screen.getByRole('heading',{level:1})).toHaveTextContent('oct.');
+      expect(screen.getByRole('heading',{level:1})).toHaveTextContent(/^Dashboard — /);
       fireEvent.click(screen.getByRole('button',{name:'Effacer le filtre du mois'}));
       expect(screen.queryByRole('button',{name:'Effacer le filtre du mois'})).not.toBeInTheDocument();
       chart.focus();
