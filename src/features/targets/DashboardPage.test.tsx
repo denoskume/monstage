@@ -38,6 +38,8 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(screen.queryByRole('group',{name:'Activité hebdomadaire des candidatures'})).not.toBeInTheDocument();
     expect(screen.queryByRole('heading',{name:'Activité des candidatures'})).not.toBeInTheDocument();
     expect(document.querySelector('.db-activity-card')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button',{name:/Voir toutes mes candidatures/i})).not.toBeInTheDocument();
+    expect(document.querySelector('.db-primary-cta')).not.toBeInTheDocument();
     expect(screen.getByRole('navigation',{name:'Navigation MonStage'})).toBeInTheDocument();
     expect(screen.getByRole('combobox',{name:'Choisir un plan'})).toHaveValue('all');
     expect(document.querySelector('.db-visual-panels')).toBeInTheDocument();

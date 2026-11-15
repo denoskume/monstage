@@ -862,7 +862,7 @@
 /* Three-panel dashboard: the campaign line chart, status pie and Google Maps
    REPLACE the obsolete weekly Activity card. One spacious row; no page scroll. */
 .db-screen .db-primary{
-  grid-template-rows:minmax(82px,92px) minmax(0,1fr) 37px;
+  grid-template-rows:minmax(82px,92px) minmax(0,1fr);
   gap:10px;
 }
 .db-screen .db-visual-panels{
@@ -918,7 +918,7 @@
   .db-screen .db-pie-legend{gap:2px 4px}
 }
 @media(max-width:780px){
-  .db-screen .db-primary{grid-template-rows:minmax(75px,83px) minmax(0,1fr) 32px;gap:7px}
+  .db-screen .db-primary{grid-template-rows:minmax(75px,83px) minmax(0,1fr);gap:7px}
   .db-screen .db-visual-panels{grid-template-columns:minmax(0,1.13fr) minmax(0,1fr) minmax(0,1fr);gap:5px}
   .db-screen .db-mini-panel{padding:8px 6px 7px;gap:5px}
   .db-screen .db-mini-panel-header h2{font-size:.7rem}
@@ -930,7 +930,7 @@
   .db-screen .db-pie-caption,.db-screen .db-campaign-footnote{font-size:.52rem}
 }
 @media(max-width:480px){
-  .db-screen .db-primary{grid-template-rows:minmax(75px,80px) minmax(0,1fr) 30px;gap:5px}
+  .db-screen .db-primary{grid-template-rows:minmax(75px,80px) minmax(0,1fr);gap:5px}
   .db-screen .db-mini-panel{padding:6px 4px;gap:3px}
   .db-screen .db-mini-panel-header h2{font-size:.56rem}
   .db-screen .db-campaign-legend{font-size:.47rem;gap:2px 4px}

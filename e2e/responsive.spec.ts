@@ -258,6 +258,7 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await page.goto('#/dashboard');
   await expect(page.locator('.db-screen')).toBeVisible();
   await expect(page.locator('.db-activity-card')).toHaveCount(0);
+  await expect(page.locator('.db-primary-cta')).toHaveCount(0);
   await expect(page.getByRole('heading', {name:'Activité des candidatures'})).toHaveCount(0);
   const planSelect=page.getByRole('combobox',{name:'Choisir un plan'});
   const dynamicHeading=page.locator('.db-dynamic-heading');
@@ -317,12 +318,13 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
       kpiBottom:document.querySelector('.db-kpis')!.getBoundingClientRect().bottom,
       visualTop:document.querySelector('.db-visual-panels')!.getBoundingClientRect().top,
       visualHeight:document.querySelector('.db-visual-panels')!.getBoundingClientRect().height,
-      ctaTop:document.querySelector('.db-primary-cta')!.getBoundingClientRect().top,
+      primaryBottom:document.querySelector('.db-primary')!.getBoundingClientRect().bottom,
       visualBottom:document.querySelector('.db-visual-panels')!.getBoundingClientRect().bottom,
     }));
     expect(layout.visualTop).toBeGreaterThanOrEqual(layout.kpiBottom);
     expect(layout.visualHeight).toBeGreaterThan(size.height*0.5);
-    expect(layout.visualBottom).toBeLessThanOrEqual(layout.ctaTop);
+    expect(layout.visualBottom).toBeLessThanOrEqual(layout.primaryBottom+1);
+    expect(layout.primaryBottom-layout.visualBottom).toBeLessThanOrEqual(12);
   }
   await page.getByRole('button',{name:'Carte géographique'}).click();
   await expect(page.getByRole('dialog',{name:'Carte des opportunités'})).toBeVisible();

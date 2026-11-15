@@ -199,7 +199,6 @@ export function DashboardPage() {
                 onCitySelect={city => toggleFilter('city',city)} compact/>
             </section>
           </div>
-          <button className="db-primary-cta" type="button" onClick={()=>setPanel('queue')}>Voir toutes mes candidatures <span aria-hidden="true">↗</span></button>
         </div>
 
       </main>
