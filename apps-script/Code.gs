@@ -1608,6 +1608,20 @@ function installPublicationAuditTrigger() {
   ScriptApp.newTrigger('syncHistoricalPublicationDates').timeBased().everyHours(1).create();
 }
 
+/**
+ * An explicitly incompatible internship can remain in the historical source
+ * sheet for traceability. Do not offer it as a new application opportunity.
+ * Keep it visible when the user has actually tracked, saved or applied to it.
+ */
+function showSavedOfferInFeed_(offer) {
+  var fromOfficialImporter = String(offer.id || '').indexOf('official:') === 0;
+  if (!fromOfficialImporter || !clearlyIneligibleStageSchedule_(offer.title)) return true;
+  var status = normalizeComparable_(offer.applicationStatus || '');
+  var isTracked = Boolean(offer.shortlist || offer.appliedAt || offer.followUpAt || offer.autonomy) ||
+    /\b(enregistre|envoye|postul|entretien|accepte|offre|refuse|retire)\b/.test(status);
+  return isTracked;
+}
+
 function getOffers_() {
   // Read only: upstream ATS refreshes run in the independent scheduled workflow.
   // Doing long Workday syncs inside each Jobs request caused gateway timeouts.
@@ -1629,7 +1643,8 @@ function getOffers_() {
       })
       .forEach(function (row) {
         var id = normalizeText_(valueByHeader_(row, headerMap, 'ID')) || '';
-        offers.push(mapOffer_(row, headerMap, autonomyMap[id] || null));
+        var mapped = mapOffer_(row, headerMap, autonomyMap[id] || null);
+        if (showSavedOfferInFeed_(mapped)) offers.push(mapped);
       });
   });
 
