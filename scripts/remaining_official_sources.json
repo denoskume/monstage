@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "notes": "Paths and seeds grounded in employer-hosted individual job pages; registry presence never implies full job-feed coverage. Existing or historic listings may have expired.",
+  "sources": [
+    {
+      "company": "Safran",
+      "id": "safran",
+      "host": "www.safran-group.com",
+      "path": "^/fr/offres/[^/?#]+",
+      "listing": [
+        "https://www.safran-group.com/fr/offres?contracts%5B0%5D=42-stage&job_fields%5B0%5D=1578-data&sort=relevance",
+        "https://www.safran-group.com/fr/offres?contracts%5B0%5D=42-stage&job_fields%5B0%5D=1608-systemes-informations&sort=relevance"
+      ],
+      "seed": []
+    },
+    {
+      "company": "Dassault Aviation",
+      "id": "dassault",
+      "host": "carriere.dassault-aviation.com",
+      "path": "^/(?:fr/)?(?:offre|job|emploi)/[^?#]+",
+      "listing": [
+        "https://carriere.dassault-aviation.com/"
+      ],
+      "seed": []
+    },
+    {
+      "company": "Air France-KLM",
+      "id": "airfrance",
+      "host": "recrutement.airfrance.com",
+      "path": "^/Pages/Offre/detailoffre\\.aspx$",
+      "listing": [
+        "https://recrutement.airfrance.com/Pages/Offre/ListeOffre.aspx?facet_JobDescription_Contract=3442&lcid=1036"
+      ],
+      "seed": [
+        "https://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx?LCID=3082&idOffre=25467&idOrigine=502&offerReference=2026-25467"
+      ]
+    },
+    {
+      "company": "Siemens Mobility",
+      "id": "siemensmobility",
+      "host": "jobs.siemens.com",
+      "path": "^/(?:careers/)?job/[^?#]+",
+      "listing": [
+        "https://jobs.siemens.com/careers"
+      ],
+      "seed": [],
+      "entity": [
+        "siemens mobility"
+      ]
+    },
+    {
+      "company": "Hitachi Rail",
+      "id": "hitachirail",
+      "host": "careers.hitachi.com",
+      "path": "^/(?:fr/)?[^?#]*/job/R\\d+$",
+      "listing": [
+        "https://careers.hitachi.com/search/hitachi-rail/jobs"
+      ],
+      "seed": [
+        "https://careers.hitachi.com/fr/stagiaire-documentation-par-ia-h-f/job/R0139301"
+      ],
+      "entity": [
+        "hitachi rail"
+      ]
+    },
+    {
+      "company": "Stellantis",
+      "id": "stellantis",
+      "host": "careers.stellantis.com",
+      "path": "^/job/\\d+/[^?#]+",
+      "listing": [
+        "https://careers.stellantis.com/"
+      ],
+      "seed": [
+        "https://careers.stellantis.com/job/23942476/stage-purchasing-data-analyst-green-campus-poissy-fr/",
+        "https://careers.stellantis.com/job/23941949/stage-ing-nierie-des-donn-es-et-mod-lisation-s-mantique-poissy-fr/"
+      ]
+    },
+    {
+      "company": "Danone",
+      "id": "danone",
+      "host": "careers.danone.com",
+      "path": "^/fr-global/jobs/[^?#]+\\.html$",
+      "listing": [
+        "https://careers.danone.com/fr-global/jobs.html?layout=teaserList&p.limit=100&p.offset=0"
+      ],
+      "seed": [
+        "https://careers.danone.com/fr-global/jobs/internship-compliance-data-analyst-march-2027-m-f-27039-en-us.html",
+        "https://careers.danone.com/fr-global/jobs/stage-compliance-and-risk-anticipation-data-analyst-mars-2027-h-f-28914-fr-fr.html"
+      ]
+    },
+    {
+      "company": "Sanofi",
+      "id": "sanofi",
+      "host": "jobs.sanofi.com",
+      "path": "^/fr/emploi/[^/]+/[^/]+/\\d+/\\d+$",
+      "listing": [
+        "https://jobs.sanofi.com/fr/recherche-d%27offres/stage"
+      ],
+      "seed": [
+        "https://jobs.sanofi.com/fr/emploi/gentilly/stage-6-mois-data-analyst-audit-interne/2649/45386371776",
+        "https://jobs.sanofi.com/fr/emploi/marcy-l-etoile/stage-6-mois-data-integrity-et-transformation-digitale/2649/45574878848"
+      ]
+    },
+    {
+      "company": "Siemens Healthineers",
+      "id": "siemenshealthineers",
+      "host": "careers.siemens-healthineers.com",
+      "path": "^/(?:fr/fr/|en-us/)?job/[^?#]+",
+      "listing": [
+        "https://careers.siemens-healthineers.com/fr/fr/search-results"
+      ],
+      "seed": []
+    },
+    {
+      "company": "Schneider Electric",
+      "id": "schneider",
+      "host": "careers.se.com",
+      "path": "^/jobs/\\d+$",
+      "listing": [
+        "https://careers.se.com/france"
+      ],
+      "seed": [
+        "https://careers.se.com/jobs/136452?lang=fr-fr",
+        "https://careers.se.com/jobs/136708?lang=fr-fr",
+        "https://careers.se.com/jobs/136746?lang=fr-fr"
+      ]
+    },
+    {
+      "company": "Saint-Gobain",
+      "id": "saintgobain",
+      "host": "joinus.saint-gobain.com",
+      "path": "^/fr/fra/is/i/\\d+/\\d+/[^?#]+",
+      "listing": [
+        "https://joinus.saint-gobain.com/fr"
+      ],
+      "seed": [
+        "https://joinus.saint-gobain.com/fr/fra/is/i/03830/329924/data-analyst-hf"
+      ]
+    },
+    {
+      "company": "EDF",
+      "id": "edf",
+      "host": "www.edf.fr",
+      "path": "^/edf-recrute/offre/detail/\\d{4}-\\d+$",
+      "listing": [
+        "https://www.edf.fr/edf-recrute/rejoignez-nous/voir-les-offres/nos-offres?contract_type=Stage"
+      ],
+      "seed": [
+        "https://www.edf.fr/edf-recrute/offre/detail/2026-184850?idOrigine=35052"
+      ]
+    },
+    {
+      "company": "L’Oréal",
+      "id": "loreal",
+      "host": "careers.loreal.com",
+      "path": "^/fr/emploi/[^/]+/[^/]+/\\d+/\\d+$",
+      "listing": [
+        "https://careers.loreal.com/fr/internship-apprenticeship"
+      ],
+      "seed": [
+        "https://careers.loreal.com/fr/emploi/paris/4-month-internship-starting-january-2027-data-analyst-and-visualisation-hr-tech-licence-3-1300-month/3456/46428950976",
+        "https://careers.loreal.com/fr/emploi/paris/6-month-internship-starting-january-2027-data-master-s-1700-month/3456/43673770368"
+      ]
+    }
+  ]
+}
