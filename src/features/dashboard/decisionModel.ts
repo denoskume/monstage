@@ -1,6 +1,6 @@
 import type { InternshipOffer } from '../../api/contract';
 import { getOfferPlan, isDataAnalystMission, isVisionMission, targetCompany } from '../../../shared/searchScope';
-import { sectors, dateKey, followUpDue, wasSent, matchesCompany } from '../targets/targets';
+import { sectors, dateKey, followUpDue, matchesCompany } from '../targets/targets';
 
 export type DashboardPlan = 'all' | 'A' | 'B';
 export type DashboardStatus = 'À candidater' | 'À qualifier' | 'À vérifier' | 'Envoyée' | 'Relance' | 'Réponse' | 'Entretien' | 'Offre' | 'Refus' | 'Archivée';
@@ -15,10 +15,11 @@ export interface DashboardFilters {
   period: DashboardPeriod;
   search: string;
   sentMonth: string;
+  sentWeek: string;
 }
 export const INITIAL_FILTERS: DashboardFilters = {
   plan: 'all', sector: '', company: '', city: '', priority: '', status: '',
-  period: 'all', search: '', sentMonth: '',
+  period: 'all', search: '', sentMonth: '', sentWeek: '',
 };
 export const statusOrder: DashboardStatus[] = ['À candidater', 'À qualifier', 'À vérifier', 'Envoyée', 'Relance', 'Réponse', 'Entretien', 'Offre', 'Refus', 'Archivée'];
 
@@ -95,6 +96,7 @@ export function filterDashboardOffers(offers: InternshipOffer[], filters: Dashbo
     if (filters.priority && o.priority !== filters.priority) return false;
     if (filters.status && statusGroup(o) !== filters.status) return false;
     if (filters.sentMonth && canonicalDate(o.appliedAt).slice(0, 7) !== filters.sentMonth) return false;
+    if (filters.sentWeek && weekOf(canonicalDate(o.appliedAt)) !== filters.sentWeek) return false;
     if (needle && !normalize([o.company, o.title, o.city, o.domain, o.specialization, ...o.skills].filter(Boolean).join(' ')).includes(needle)) return false;
     if (Number.isFinite(maxAge)) {
       const dt = canonicalDate(o.publishedAt);
@@ -152,6 +154,35 @@ export function byCity(offers: InternshipOffer[]) {
   }
   return [...counts].map(([city, count]) => ({city, count}))
     .sort((a, b) => b.count - a.count || a.city.localeCompare(b.city, 'fr'));
+}
+
+/** ISO Monday identifier for weekly activity. Unknown date => no period. */
+export function weekOf(iso:string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
+  const date=new Date(iso+'T12:00:00Z');
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0,10)!==iso) return '';
+  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay()+6)%7));
+  return date.toISOString().slice(0,10);
+}
+/** Always return a continuous sequence, including genuine zero-activity weeks.
+ * Rows without a dated send remain in "sent" KPIs but do not enter a time series. */
+export function applicationWeeks(offers: InternshipOffer[], now:Date, numberOfWeeks=10) {
+  const today=now.toISOString().slice(0,10);
+  const lastMonday=weekOf(today);
+  if(!lastMonday) return [];
+  const last=new Date(lastMonday+'T12:00:00Z');
+  const counts=new Map<string,number>();
+  for(const o of offers) {
+    if(!hasSubmissionEvidence(o))continue;
+    const week=weekOf(canonicalDate(o.appliedAt));
+    if(week)counts.set(week,(counts.get(week)||0)+1);
+  }
+  return Array.from({length:numberOfWeeks},(_,i)=>{
+    const date=new Date(last);
+    date.setUTCDate(last.getUTCDate() - 7*(numberOfWeeks-1-i));
+    const week=date.toISOString().slice(0,10);
+    return {week,count:counts.get(week)||0};
+  });
 }
 export function applicationMonths(offers: InternshipOffer[]) {
   const counts = new Map<string, number>();
