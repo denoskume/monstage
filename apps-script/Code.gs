@@ -2354,9 +2354,21 @@ function ingestRunnerAtsPostings_(request) {
     }) : [];
     var combined = base.concat(rows);
     writeExternalOfferRows_(sheet, combined);
+    // Read back actual persisted row IDs before acknowledging a successful CI
+    // import; this is independent from API-level deduplication and UI filters.
+    if (rows.length) {
+      SpreadsheetApp.flush();
+      var savedIds = {};
+      sheet.getRange(2, 1, Math.max(1, sheet.getLastRow() - 1), 1).getDisplayValues()
+        .forEach(function (record) { if (record[0]) savedIds[record[0]] = true; });
+      var missing = rows.map(function (row) { return row[0]; })
+        .filter(function (id) { return !savedIds[id]; });
+      if (missing.length) throw new Error('ATS write verification failed: ' +
+        sourceId + ' / missing ' + missing.length + ' IDs');
+    }
   }
   return { provider: provider, sourceId: sourceId, accepted: rows.length,
-    acceptedIds: rows.map(function (row) { return row[0]; }), counters: counters };
+    acceptedIds: rows.map(function (row) { return row[0]; }), persisted: true, counters: counters };
 }
 
 function updateApplicationStatus_(input) {
