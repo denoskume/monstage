@@ -9,7 +9,7 @@ import { combineDossiers, PROSPECTION_EVENT, readProspectionOffers } from '../ta
 import { sectors, followUpDue } from '../targets/targets';
 import {
   INITIAL_FILTERS, filterDashboardOffers, uniqueDashboardOffers, dashboardMetrics,
-  bySector, byStatus, byCity, applicationMonths, priorityQueue,
+  bySector, byStatus, byCity, applicationWeeks, priorityQueue, hasSubmissionEvidence, canonicalDate,
   routeForOffer, statusGroup, dashboardPlan, type DashboardFilters, type DashboardPeriod,
   type DashboardPlan,
 } from './decisionModel';
@@ -45,6 +45,8 @@ export function DashboardPage() {
     sector: sectorId && sectors.some(s => s.id === sectorId) ? sectorId : '',
   }));
   const [showAll, setShowAll] = useState(false);
+  const [mapZoom, setMapZoom] = useState(1);
+  const [mapOrigin, setMapOrigin] = useState({x:310,y:220});
 
   useEffect(() => {
     const refreshLocal = () => { setLocal(readProspectionOffers()); setNow(new Date()); };
@@ -71,14 +73,28 @@ export function DashboardPage() {
   const statusGroups = useMemo(() => byStatus(shown),[shown]);
   const sectorGroups = useMemo(() => bySector(shown),[shown]);
   const cityGroups = useMemo(() => byCity(shown),[shown]);
-  const sentMonths = useMemo(() => applicationMonths(shown),[shown]);
+  const activity = useMemo(() => applicationWeeks(shown, now, 12),[shown,now]);
+  const datedSends = shown.filter(o => hasSubmissionEvidence(o) && Boolean(canonicalDate(o.appliedAt))).length;
   const queue = useMemo(() => priorityQueue(shown,today),[shown,today]);
   const maxStatus = Math.max(...statusGroups.map(x=>x.count), 1);
   const maxSector = Math.max(...sectorGroups.map(x=>x.A+x.B+x.other), 1);
-  const maxMonth = Math.max(...sentMonths.map(x=>x.count), 1);
+  const maxWeek = Math.max(...activity.map(x=>x.count),1);
   const mapped = cityGroups.map(row => ({...row, point:cityPoint(row.city)}))
     .filter((row): row is typeof row & {point:{lon:number;lat:number}} => row.point!==null);
-  const visiblePins = mapped.slice(0,25);
+  // Cluster city points near one another on overview; split when zooming in.
+  const clusters: Array<{x:number;y:number;count:number;cities:string[]}> = [];
+  const radius=mapZoom>=2.5?9:mapZoom>=1.7?13:20;
+  for(const item of mapped){
+    const at=pointXY(item.point.lon,item.point.lat);
+    const cluster=clusters.find(c=>Math.hypot(c.x-at.x,c.y-at.y)<radius);
+    if(cluster){
+      const total=cluster.count+item.count;
+      cluster.x=(cluster.x*cluster.count+at.x*item.count)/total;
+      cluster.y=(cluster.y*cluster.count+at.y*item.count)/total;
+      cluster.count=total; cluster.cities.push(item.city);
+    }else clusters.push({...at,count:item.count,cities:[item.city]});
+  }
+  const recentActivity=activity.slice(-4).reduce((sum,row)=>sum+row.count,0);
   const coveredPins = mapped.reduce((sum,row)=>sum+row.count,0);
   const unknownPositions = shown.length-coveredPins;
   const companyOptions = [...new Set(all.map(o=>o.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
@@ -141,10 +157,16 @@ export function DashboardPage() {
           <input aria-label="Rechercher dans le Dashboard" type="search" placeholder="Mission, compétence…" value={filters.search} onChange={e=>setFilter('search',e.target.value)}/>
         </label>
       </div>
-      {filters.sentMonth && <button className="db-filter-chip" type="button" onClick={()=>setFilter('sentMonth','')}>Envois : {formatMonth(filters.sentMonth)} ×</button>}
+      {filters.sentWeek && <button className="db-filter-chip" type="button" onClick={()=>setFilter('sentWeek','')}>Semaine du {new Date(filters.sentWeek+'T12:00:00Z').toLocaleDateString('fr-FR')} ×</button>}
       {filters.period !== 'all' && <p className="db-caveat">Le filtre temporel exclut les offres sans date de publication fiable. La date de vérification ne remplace jamais la publication.</p>}
     </section>
 
+    {metrics.unverifiedOutcomes > 0 && <aside className="db-integrity" role="status">
+      <span className="db-integrity__mark">!</span>
+      <div><strong>{metrics.unverifiedOutcomes} statut(s) « Offre reçue » sans envoi daté</strong>
+      <p>Ces annonces sont exclues des offres d’embauche confirmées et du taux de conversion tant que leur statut n’a pas été vérifié.</p></div>
+      <button type="button" onClick={()=>setFilter('status','À vérifier')}>Examiner les dossiers</button>
+    </aside>}
     <section className="db-kpis" aria-label="Indicateurs clés">
       <Metric label="Dossiers analysés" value={metrics.total} hint="Dans la sélection actuelle" />
       <Metric label="À candidater" value={metrics.toApply} hint={number.format(metrics.priority)+' de priorité A / A+'} accent="#b97b10"/>
@@ -186,57 +208,97 @@ export function DashboardPage() {
     </div>
 
     <div className="db-analytics-grid db-analytics-grid--second">
+
       <section className="db-panel db-map-panel">
-        <PanelHeader title="Carte des opportunités" detail="France · Villes renseignées"/>
+        <PanelHeader title="Carte des opportunités" detail="France métropolitaine · Points géographiques réels"/>
+        <div className="db-geo-summary"><span><strong>{coveredPins}</strong> dossiers localisés</span>
+          <span><strong>{unknownPositions}</strong> non positionnés</span>
+          <span>La taille du point représente le nombre de dossiers.</span></div>
         <div className="db-map-layout">
           <div className="db-map-canvas" role="group" aria-label="Carte interactive des villes">
-            <svg viewBox="0 0 620 440" xmlns="http://www.w3.org/2000/svg" aria-label="Contour simplifié de la France métropolitaine">
-              <defs><pattern id="db-dot-grid" patternUnits="userSpaceOnUse" width="20" height="20"><circle cx="2" cy="2" r="0.8" fill="currentColor" opacity=".11"/></pattern></defs>
-              <rect width="620" height="440" fill="url(#db-dot-grid)"/>
-              <path d={francePath} fill="#e8f0fb" stroke="#a3bad4" strokeWidth="2" strokeLinejoin="round"/>
-            </svg>
-            {visiblePins.map(row=>{
-              const coords=pointXY(row.point.lon,row.point.lat);
-              const isActive=filters.city===row.city;
-              const size=13+Math.min(19,Math.sqrt(row.count)*4);
-              return <button type="button" key={row.city}
-                className={'db-map-pin'+(isActive?' selected':'')}
-                style={{left:(coords.x/620*100)+'%',top:(coords.y/440*100)+'%',width:size,height:size}}
-                title={row.city+' · '+row.count+' dossier(s)'} aria-label={'Filtrer ville '+row.city+' ('+row.count+' dossiers)'}
-                aria-pressed={isActive} onClick={()=>toggleFilter('city',row.city)}>
-                <span className="sr-only">{row.city}</span>
-              </button>;
-            })}
+            <div className="db-map-tools" aria-label="Zoom de la carte">
+              <button type="button" aria-label="Agrandir la carte" disabled={mapZoom>=3.8}
+                onClick={()=>setMapZoom(z=>Math.min(4,Math.round((z+.5)*10)/10))}>+</button>
+              <button type="button" aria-label="Réduire la carte" disabled={mapZoom<=1}
+                onClick={()=>setMapZoom(z=>Math.max(1,Math.round((z-.5)*10)/10))}>−</button>
+              <button type="button" aria-label="Réinitialiser le zoom" onClick={()=>{setMapZoom(1);setMapOrigin({x:310,y:220});}}>⌂</button>
+            </div>
+            <div className="db-map-world" style={{
+              transform:'scale('+mapZoom+')',
+              transformOrigin:(mapOrigin.x/620*100)+'% '+(mapOrigin.y/440*100)+'%',
+            }}>
+              <svg viewBox="0 0 620 440" xmlns="http://www.w3.org/2000/svg"
+                aria-label="France métropolitaine d'après le tracé public IGN">
+                <defs>
+                  <pattern id="db-geo-dots" patternUnits="userSpaceOnUse" width="22" height="22">
+                    <circle cx="1" cy="1" r=".6" fill="#7c94ad" opacity=".23"/>
+                  </pattern>
+                </defs>
+                <rect width="620" height="440" fill="url(#db-geo-dots)"/>
+                <path d={francePath} fill="#e9f1f9" stroke="#91aac5" strokeWidth="1.5" strokeLinejoin="round"/>
+              </svg>
+              {clusters.map((cluster,i)=>{
+                const hasSingle=cluster.cities.length===1;
+                const active=hasSingle && filters.city===cluster.cities[0];
+                const size=25+Math.min(23,Math.sqrt(cluster.count)*3.8);
+                return <button type="button" key={cluster.cities.join('|')+i}
+                  className={'db-map-pin db-map-cluster'+(active?' selected':'')}
+                  style={{left:(cluster.x/620*100)+'%',top:(cluster.y/440*100)+'%',width:size,height:size}}
+                  aria-label={hasSingle?'Filtrer ville '+cluster.cities[0]+' ('+cluster.count+' dossiers)':'Zoomer sur '+cluster.cities.slice(0,3).join(', ')}
+                  title={cluster.cities.join(' · ')+' — '+cluster.count+' dossier(s)'}
+                  aria-pressed={active} onClick={()=>{
+                    if(hasSingle) toggleFilter('city',cluster.cities[0]);
+                    else{setMapOrigin({x:cluster.x,y:cluster.y});setMapZoom(z=>Math.min(4,Math.max(2,z*1.8)));}
+                  }}>{cluster.count}</button>;
+              })}
+            </div>
+            <span className="db-map-attribution">Fond géographique : © IGN / France GeoJSON · Licence Ouverte</span>
           </div>
           <div className="db-map-cities">
-            <strong>Villes principales</strong>
-            {cityGroups.slice(0,7).map(row=><button className={'db-city-row'+(filters.city===row.city?' selected':'')} key={row.city} type="button"
+            <strong>Répartition par ville</strong>
+            {cityGroups.slice(0,9).map(row=><button className={'db-city-row'+(filters.city===row.city?' selected':'')}
+              key={row.city} type="button" aria-label={'Afficher les dossiers à '+row.city}
               onClick={()=>toggleFilter('city',row.city)} aria-pressed={filters.city===row.city}>
               <span>{row.city}</span><b>{number.format(row.count)}</b>
             </button>)}
-            {cityGroups.length===0 && <p className="db-empty">Aucune ville renseignée.</p>}
-            <small>{number.format(coveredPins)}/{number.format(shown.length)} dossiers localisables · {unknownPositions} non cartographié(s)</small>
+            {cityGroups.length===0&&<p className="db-empty">Aucune ville connue.</p>}
+            <small>{cityGroups.length} villes distinctes · {unknownPositions} dossier(s) sans localisation exploitable</small>
           </div>
         </div>
-        <p className="db-note">Carte schématique, repères de centres-villes uniquement. Les localisations non reconnues ne sont pas placées arbitrairement.</p>
+        <p className="db-note">Les points voisins sont regroupés au zoom général. Cliquez sur un groupe pour agrandir, ou sur une ville pour filtrer les KPIs et les dossiers. Les lieux ambigus restent non positionnés.</p>
       </section>
       <section className="db-panel db-trend">
-        <PanelHeader title="Chronologie des envois" detail="Uniquement les dates d’envoi enregistrées"/>
-        {sentMonths.length ? <div className="db-month-chart">
-          {sentMonths.map(row=><button key={row.month} type="button" aria-label={'Filtrer les envois de '+formatMonth(row.month)}
-            className={'db-month-col'+(filters.sentMonth===row.month?' selected':'')} onClick={()=>toggleFilter('sentMonth',row.month)}
-            aria-pressed={filters.sentMonth===row.month} title={row.count+' envoi(s) en '+formatMonth(row.month)}>
-            <strong>{row.count}</strong><span className="db-month-bar-wrap"><span className="db-month-bar" style={{height:(row.count/maxMonth*100)+'%'}}/></span>
-            <small>{formatMonth(row.month)}</small>
-          </button>)}
-        </div> : <p className="db-empty">Aucune date d’envoi disponible pour la sélection.</p>}
+        <PanelHeader title="Chronologie des envois" detail="12 semaines · Activité hebdomadaire réelle"/>
+        <div className="db-trend-summary">
+          <span><strong>{recentActivity}</strong> envois datés / 4 dernières semaines</span>
+          <span><strong>{Math.max(0,metrics.sent-datedSends)}</strong> envoi(s) sans date</span>
+        </div>
+        <div className="db-week-chart" role="group" aria-label="Histogramme hebdomadaire des candidatures">
+          <div className="db-week-grid" aria-hidden="true">
+            <span>{maxWeek}</span><span>{Math.round(maxWeek/2)}</span><span>0</span>
+          </div>
+          <div className="db-week-bars">
+            {activity.map(row=><button key={row.week} type="button"
+              className={'db-week-col'+(filters.sentWeek===row.week?' selected':'')}
+              title={row.count+' envoi(s) pour la semaine du '+new Date(row.week+'T12:00:00Z').toLocaleDateString('fr-FR')}
+              aria-label={'Filtrer les envois semaine du '+row.week}
+              aria-pressed={filters.sentWeek===row.week}
+              onClick={()=>toggleFilter('sentWeek',row.week)}>
+              <span className="db-week-plot"><span className="db-week-count">{row.count||''}</span>
+              <span className="db-week-fill" style={{height:(row.count/maxWeek*100)+'%'}}/></span>
+              <small>{new Date(row.week+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</small>
+            </button>)}
+          </div>
+        </div>
+        <p className="db-note">Semaines sans envoi affichées à zéro. Cliquez sur une semaine pour filtrer l’ensemble du Dashboard. Les envois sans date ne sont pas placés dans l’historique.</p>
         <div className="db-conversion">
-          <h3>Conversion des candidatures</h3>
+          <h3>Entonnoir de candidatures</h3>
           <div className="db-conversion-stages">
-            {[['Envoyées',metrics.sent],['Réponses',metrics.responses],['Entretiens',metrics.interviews],['Offres',metrics.offersReceived]].map(([name,value])=>
+            {[['Envoyées',metrics.sent],['Réponses',metrics.responses],['Entretiens',metrics.interviews],['Offres confirmées',metrics.offersReceived]].map(([name,value])=>
               <div key={name} className="db-conversion-stage"><strong>{value}</strong><span>{name}</span></div>)}
           </div>
-          <p className="db-note">Réponses = retours des recruteurs, entretiens, offres et refus ; une relance sortante n’est pas une réponse. Taux d’entretien : {percent(metrics.interviewRate)} des candidatures envoyées.</p>
+          <p className="db-note">{metrics.responses}/{metrics.sent} réponses de recruteurs · Taux de réponse : {percent(metrics.responseRate)} · Taux d’entretien : {percent(metrics.interviewRate)}. Les réponses et entretiens sont des sous-ensembles, pas des étapes additionnables.</p>
+          {metrics.unverifiedOutcomes>0&&<p className="db-conversion-warning">{metrics.unverifiedOutcomes} offre(s) signalées sans preuve d’envoi — exclues des offres confirmées.</p>}
         </div>
       </section>
     </div>
@@ -253,7 +315,7 @@ export function DashboardPage() {
             <td>{dashboardPlan(o)||'—'}</td>
             <td><span className="db-priority">{o.priority||'—'}</span></td>
             <td>{statusGroup(o)}</td>
-            <td>{followUpDue(o,today)?'Relancer maintenant':o.nextAction|| (statusGroup(o)==='À candidater'?'Préparer la candidature':'Suivre le dossier')}</td>
+            <td>{(hasSubmissionEvidence(o)&&followUpDue(o,today))?'Relancer maintenant':statusGroup(o)==='À vérifier'?'Vérifier le statut enregistré avant de compter une offre d’embauche':o.nextAction|| (statusGroup(o)==='À candidater'?'Préparer la candidature':'Suivre le dossier')}</td>
             <td><Link className="db-open" to={routeForOffer(o)}>Ouvrir <span aria-hidden="true">↗</span></Link></td>
           </tr>)}</tbody>
         </table>
