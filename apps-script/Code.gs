@@ -2344,13 +2344,20 @@ function ingestRunnerAtsPostings_(request) {
     }
     rows.push(row);
   });
-  // The runner may send one source at a time: merge by stable ID, never replace other employers.
-  if (jobs.length) {
+  // Batches are idempotent upserts. Replacing a whole source per request
+  // erased earlier chunks and could silently discard live vacancies.
+  // In merge mode keep every existing ID except those in this particular batch.
+  // Full source replacement remains available to legacy single-batch callers.
+  if (jobs.length && rows.length) {
     var old = sheet.getDataRange().getDisplayValues();
+    var merged = request.merge === true;
+    var incoming = {};
+    rows.forEach(function (row) { incoming[String(row[0])] = true; });
+    var prefix = provider === 'greenhouse' ? 'greenhouse:' + sourceId + ':' :
+      provider === 'workday' ? 'workday:' + sourceId + ':' : 'smartrecruiters:' + sourceId + ':';
     var base = old.length > 1 ? old.slice(1).filter(function (row) {
-      var prefix = provider === 'greenhouse' ? 'greenhouse:' + sourceId + ':' :
-        provider === 'workday' ? 'workday:' + sourceId + ':' : 'smartrecruiters:' + sourceId + ':';
-      return String(row[0] || '').indexOf(prefix) !== 0;
+      var id = String(row[0] || '');
+      return merged ? !incoming[id] : id.indexOf(prefix) !== 0;
     }) : [];
     var combined = base.concat(rows);
     writeExternalOfferRows_(sheet, combined);
