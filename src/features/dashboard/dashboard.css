@@ -373,3 +373,65 @@
  .db-insights-grid .db-panel,.db-wide-map>.db-panel{padding:17px 14px}
  .db-next-index{width:28px;height:28px}
 }
+
+
+/* Reference-aligned dashboard composition: analytics and illustrated action cards
+ * share the main column; a compact agenda occupies the secondary column. */
+.db-hero-grid{grid-template-columns:minmax(0,1.72fr) minmax(292px,.80fr);align-items:stretch;gap:15px}
+.db-hero-main{display:flex;flex-direction:column;gap:14px;min-width:0}
+.db-hero-main>.db-activity-card{flex:0 0 auto;min-width:0}
+.db-insight-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.db-insight-tile{min-width:0;min-height:185px;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:0;text-align:left;padding:0 15px 15px;border:1px solid #efedf7;border-radius:16px;background:#fff;color:#27283c;box-shadow:var(--db-shadow);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.db-insight-tile:hover{transform:translateY(-3px);box-shadow:0 14px 29px rgba(66,59,131,.12);border-color:#d7d1ff}
+.db-insight-tile:focus-visible{outline:3px solid #9188ff;outline-offset:3px}
+.db-insight-tile.selected{border-color:#9188f7;box-shadow:0 0 0 2px #edeaff,0 8px 24px rgba(112,103,207,.11)}
+.db-insight-artwork{display:block;width:100%;height:122px;overflow:visible;object-fit:contain;margin:0 auto 0;filter:saturate(1.1);transition:transform .24s ease}
+.db-insight-tile:hover .db-insight-artwork{transform:translateY(-3px) scale(1.045)}
+.db-insight-tile>div{position:relative;z-index:2;display:flex;flex-direction:column;gap:6px;min-width:0}
+.db-insight-tile>div strong{color:#28283e;font-size:.83rem;font-weight:850;letter-spacing:-.02em}
+.db-insight-tile>div small{font-size:.70rem;color:#87889b;line-height:1.35}
+.db-insight-arrow{position:absolute;right:13px;bottom:15px;border:1px solid #ebe9fa;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#f7f6ff;color:#655cc6;font-weight:800;font-size:.83rem}
+.db-insight-tile>div{padding-right:16px}
+.db-insight-tile--vision .db-insight-artwork{transform:rotate(-9deg)}
+.db-insight-tile--data .db-insight-artwork{transform:rotate(5deg)}
+.db-insight-tile--locations .db-insight-artwork{transform:rotate(-4deg)}
+.db-insight-tile--vision:hover .db-insight-artwork{transform:rotate(-7deg) translateY(-3px) scale(1.04)}
+.db-insight-tile--data:hover .db-insight-artwork{transform:rotate(7deg) translateY(-3px) scale(1.04)}
+.db-insight-tile--locations:hover .db-insight-artwork{transform:rotate(-2deg) translateY(-3px) scale(1.04)}
+.db-next-card{min-height:100%;align-self:stretch}
+.db-next-banner{min-height:186px}
+.db-next-banner h2{font-size:1.47rem}
+.db-next-header{margin-top:0;margin-bottom:11px}
+.db-next-list{padding:20px 18px 5px}
+.db-next-item{min-height:69px}
+.db-next-copy strong{font-size:.80rem}
+.db-next-copy small{font-size:.71rem}
+.db-next-action{display:grid;justify-items:end;gap:4px;white-space:nowrap}
+.db-next-action small{font-weight:680;font-size:.67rem;color:#61857b}
+.db-next-cta{margin-top:auto}
+.db-wide-map{scroll-margin-top:86px}
+@media(max-width:1160px){
+ .db-hero-grid{grid-template-columns:minmax(0,1.5fr) minmax(274px,.86fr)}
+ .db-insight-tile{min-height:175px;padding:0 12px 13px}
+ .db-insight-artwork{height:113px}
+ .db-insight-arrow{right:9px;bottom:13px}
+}
+@media(max-width:920px){
+ .db-hero-grid{grid-template-columns:minmax(0,1fr)}
+ .db-next-card{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
+ .db-next-banner{min-height:100%}
+ .db-next-cta{grid-column:1/-1}
+ .db-insight-tile{min-height:193px}
+ .db-insight-artwork{height:132px}
+}
+@media(max-width:620px){
+ .db-insight-tiles{gap:8px}
+ .db-insight-tile{min-height:151px;padding:0 9px 11px;border-radius:13px}
+ .db-insight-artwork{height:94px}
+ .db-insight-tile>div strong{font-size:.70rem}
+ .db-insight-tile>div small{font-size:.61rem}
+ .db-insight-arrow{width:18px;height:18px;right:6px;bottom:8px;font-size:.65rem}
+ .db-next-card{display:flex}
+ .db-next-banner{min-height:155px}
+ .db-next-action{font-size:.65rem}
+}
