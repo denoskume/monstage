@@ -230,9 +230,10 @@ jobs:
           if not any(counts.values()):
               print("Native ATS yielded zero; verifying alternate CI runner ingestion next.")
           PY
-      - name: Ingest official ATS listings from GitHub runner
-        if: steps.cloudflare.outputs.configured == 'true'
-        run: python scripts/ingest_public_ats.py
+      # Workday and SmartRecruiters ingestion is owned by sync-ats.yml,
+      # which runs hourly and after this deployment completes successfully.
+      # Do not run a second multi-minute import here: duplicate concurrent
+      # queries provoke ATS rate limits and delay deployment readiness.
 
       - name: Smoke test Apps Script offers backend
         if: steps.cloudflare.outputs.configured == 'true'
