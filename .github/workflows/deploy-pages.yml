@@ -326,8 +326,13 @@ jobs:
             echo "configured=true" >> "$GITHUB_OUTPUT"
           else
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Apps Script credentials unavailable; backend deployment skipped. Frontend can deploy separately."
+            echo "::error::Apps Script credentials unavailable. The updated backend CANNOT deploy."
           fi
+      - name: Fail when changed Apps Script cannot deploy
+        if: steps.apps_changed.outputs.changed == 'true' && steps.clasp.outputs.configured != 'true'
+        run: |
+          echo "::error::Set APPS_SCRIPT_SCRIPT_ID and CLASPRC_JSON, then rerun deployment."
+          exit 1
       - name: Deploy Apps Script
         if: steps.apps_changed.outputs.changed == 'true' && steps.clasp.outputs.configured == 'true'
         working-directory: apps-script
