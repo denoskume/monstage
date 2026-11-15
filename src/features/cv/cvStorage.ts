@@ -9,7 +9,7 @@ export function cvSummaryTitle(heading: CvSummaryHeading | undefined, language: 
     : (language === 'FR' ? 'Profil' : 'Profile');
 }
 
-export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords' | 'split' | 'sidebar';
+export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords' | 'split' | 'sidebar' | 'portrait';
 export type CvPageColor = 'white' | 'soft-gray' | 'soft-blue';
 export const cvPageColorOptions: { id: CvPageColor; fr: string; en: string; hex: string }[] = [
   { id: 'white', fr: 'Blanc', en: 'White', hex: '#FFFFFF' },
@@ -27,6 +27,7 @@ export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
   { id: 'keywords', fr: '4 · ATS / Compétences clés', en: '4 · ATS / Key Skills' },
   { id: 'split', fr: '5 · Double colonne / Équilibré', en: '5 · Two Columns / Balanced' },
   { id: 'sidebar', fr: '6 · Double colonne / Sidebar', en: '6 · Two Columns / Sidebar' },
+  { id: 'portrait', fr: '7 · Portrait / Colonnes verticales + photo', en: '7 · Portrait / Full-height columns + photo' },
 ];
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'certifications' | 'languages' | 'interests';
 export interface CvCertification {
@@ -246,6 +247,8 @@ export interface CvDraft {
   plan?: CvPlan;
   template?: CvTemplate;
   pageColor?: CvPageColor;
+  /** Optional user-uploaded cropped JPEG. Only embedded in the Portrait template. */
+  photoDataUrl?: string;
   // False hides the extra 'Missions' line in selected targeted CVs.
   showMissionLabels?: boolean;
   name: string;
