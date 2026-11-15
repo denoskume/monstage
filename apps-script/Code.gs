@@ -1032,11 +1032,13 @@ var WORKDAY_SOURCES_ = [
   { tenant: 'ag', host: 'wd3', site: 'Airbus', company: 'Airbus' },
   { tenant: 'thales', host: 'wd3', site: 'Careers', company: 'Thales' },
   { tenant: 'evoyageurs', host: 'wd3', site: 'jobs', company: 'SNCF Connect & Tech' },
-  { tenant: 'pernodricard', host: 'wd3', site: 'pernod-ricard', company: 'Pernod Ricard' },
-  { tenant: 'pfizer', host: 'wd1', site: 'PfizerCareers', company: 'Pfizer' },
   { tenant: 'airliquidehr', host: 'wd3', site: 'AirLiquideExternalCareer', company: 'Air Liquide' },
   { tenant: 'alliancewd', host: 'wd3', site: 'renault-group-careers', company: 'Renault Group' },
-  { tenant: 'integralads', host: 'wd1', site: 'IAScareers', company: 'Integral Ad Science' }
+  // Confirmed employer Workday feeds. Validate source identity in ingestRunnerAtsPostings_.
+  { tenant: 'ratp', host: 'wd3', site: 'RATP_Externe', company: 'RATP' },
+  { tenant: 'valeo', host: 'wd3', site: 'valeo_jobs', company: 'Valeo' },
+  { tenant: 'michelinhr', host: 'wd3', site: 'Michelin', company: 'Michelin' },
+  { tenant: 'gehc', host: 'wd5', site: 'GEHC_ExternalSite', company: 'GE HealthCare' }
 ];
 
 function workdayBaseUrl_(source) {
@@ -1114,14 +1116,16 @@ function fetchWorkdayDetails_(source, job) {
 }
 
 function workdayAsTargetPosting_(job, details) {
-  details = details || {};
+  // CI enrichment is carried as job.details. Previously the ingestion path
+  // ignored descriptions altogether, losing relevant Plan A/B internship leads.
+  details = details || job.details || {};
   return {
     text: details.title || job.title || '',
-    descriptionPlain: stripHtml_(details.jobDescription || ''),
+    descriptionPlain: stripHtml_(details.jobDescription || job.jobDescription || ''),
     categories: {
       location: details.location || details.locationText || job.locationsText || '',
-      team: details.jobFamily || '',
-      department: details.jobFamilyGroup || ''
+      team: details.jobFamily || job.jobFamily || '',
+      department: details.jobFamilyGroup || job.jobFamilyGroup || ''
     }
   };
 }
@@ -1153,12 +1157,16 @@ function workdayPublishedDate_(job, details) {
 }
 
 function workdayJobToRow_(source, job, details) {
+  details = details || job.details || null;
   var posting = workdayAsTargetPosting_(job, details);
   var fit = externalFitScores_(posting);
   var verified = new Date();
   var path = job.externalPath || '';
   var url = path ? workdayBaseUrl_(source) + '/en-US/' + source.site + path : workdayBaseUrl_(source) + '/' + source.site;
   var published = workdayPublishedDate_(job, details);
+  // Job-list visibility does NOT establish February 2027 eligibility.
+  var calendarFit = fit.start === 'Février 2027' && fit.duration === '6 mois';
+  var calendarStatus = calendarFit ? 'Oui probable — calendrier indiqué' : 'À confirmer';
 
   return [
     'workday:' + source.tenant + ':' + normalizeComparable_(path || job.title),
@@ -1167,7 +1175,7 @@ function workdayJobToRow_(source, job, details) {
     specializationForPosting_(posting),
     posting.categories.location || job.locationsText || '',
     null,
-    'Oui probable',
+    calendarStatus,
     fit.start,
     fit.duration,
     null,
@@ -1187,8 +1195,8 @@ function workdayJobToRow_(source, job, details) {
     'Vérifié <24h',
     verified.toISOString(),
     'Officiel / direct',
-    fit.priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
-    'À confirmer',
+    calendarFit && fit.priority === 'A' ? 'CANDIDATER 48H' : 'À ÉVALUER',
+    calendarFit ? 'Oui probable — six mois dès février 2027' : 'À confirmer',
     fit.signal >= 14 ? 'Haute' : 'Moyenne'
   ];
 }
@@ -2294,7 +2302,7 @@ function ingestRunnerAtsPostings_(request) {
   var spreadsheet = getSpreadsheet_();
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
-  var counters = { received: jobs.length, internship: 0, france: 0, relevant: 0 };
+  var counters = { received: jobs.length, internship: 0, france: 0, relevant: 0, enriched: 0 };
   jobs.forEach(function (job) {
     if (!job || typeof job !== 'object' || !(job.id || job.externalPath)) return;
     var posting;
@@ -2317,6 +2325,7 @@ function ingestRunnerAtsPostings_(request) {
       if (!strictCompany_(source.company) || !String(job.externalPath || '').startsWith('/job/')) return;
       if (!isWorkdayInternship_(job)) return;
       counters.internship++;
+      if (job.details && job.details.jobDescription) counters.enriched++;
       posting = workdayAsTargetPosting_(job, null);
       if (!isFranceLocation_(posting.categories.location)) return;
       counters.france++;
@@ -2345,8 +2354,21 @@ function ingestRunnerAtsPostings_(request) {
     }) : [];
     var combined = base.concat(rows);
     writeExternalOfferRows_(sheet, combined);
+    // Read back actual persisted row IDs before acknowledging a successful CI
+    // import; this is independent from API-level deduplication and UI filters.
+    if (rows.length) {
+      SpreadsheetApp.flush();
+      var savedIds = {};
+      sheet.getRange(2, 1, Math.max(1, sheet.getLastRow() - 1), 1).getDisplayValues()
+        .forEach(function (record) { if (record[0]) savedIds[record[0]] = true; });
+      var missing = rows.map(function (row) { return row[0]; })
+        .filter(function (id) { return !savedIds[id]; });
+      if (missing.length) throw new Error('ATS write verification failed: ' +
+        sourceId + ' / missing ' + missing.length + ' IDs');
+    }
   }
-  return { provider: provider, sourceId: sourceId, accepted: rows.length, counters: counters };
+  return { provider: provider, sourceId: sourceId, accepted: rows.length,
+    acceptedIds: rows.map(function (row) { return row[0]; }), persisted: true, counters: counters };
 }
 
 function updateApplicationStatus_(input) {

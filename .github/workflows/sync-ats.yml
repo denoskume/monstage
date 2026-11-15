@@ -10,7 +10,9 @@ on:
       - 'scripts/discover_successfactors.py'
       - 'scripts/test_discover_official_jobs.py'
       - 'scripts/ingest_public_ats.py'
+      - 'scripts/test_ingest_public_ats.py'
       - 'scripts/target_career_sources.json'
+      - 'apps-script/Code.gs'
   schedule:
     # Hourly, 24/7. Scheduled GitHub runners can start late.
     - cron: '17 * * * *'
@@ -24,7 +26,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test official-source discovery and ATS ingestion safety
+        run: |
+          python -m unittest discover -s scripts -p 'test_discover_official_jobs.py' -v
+          python -m unittest discover -s scripts -p 'test_ingest_public_ats.py' -v
+          cp apps-script/Code.gs /tmp/monstage-apps-script-check.js
+          node --check /tmp/monstage-apps-script-check.js
+
   refresh:
+    # Never write into the production Sheets from an unmerged feature branch.
+    if: github.ref == 'refs/heads/main'
+    needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 18
     env:

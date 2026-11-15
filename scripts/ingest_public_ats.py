@@ -18,6 +18,10 @@ WORKDAY = [
     ("evoyageurs", "wd3", "jobs"),
     ("alliancewd", "wd3", "renault-group-careers"),
     ("airliquidehr", "wd3", "AirLiquideExternalCareer"),
+    ("ratp", "wd3", "RATP_Externe"),
+    ("valeo", "wd3", "valeo_jobs"),
+    ("michelinhr", "wd3", "Michelin"),
+    ("gehc", "wd5", "GEHC_ExternalSite"),
 ]
 WORKDAY_TERMS = (
     "stage vision", "stage image", "stage data analyst",
@@ -47,6 +51,53 @@ def workday_search(tenant, host, site, phrase):
         if len(batch) < 20 or offset + len(batch) >= int(body.get("total") or 0):
             break
     return results
+
+
+def workday_details(tenant, host, site, external_path):
+    """Fetch canonical employer details, not guessed content or publication dates."""
+    if not re.match(r"^/job/[A-Za-z0-9_/%-]+$", str(external_path or "")):
+        return None
+    endpoint = (
+        f"https://{tenant}.{host}.myworkdayjobs.com/wday/cxs/"
+        f"{tenant}/{site}{external_path}"
+    )
+    request = urllib.request.Request(endpoint, headers={
+        "Accept": "application/json", "User-Agent": "Mozilla/5.0"
+    })
+    with urllib.request.urlopen(request, timeout=18) as response:
+        payload = json.load(response)
+    info = payload.get("jobPostingInfo")
+    if not isinstance(info, dict):
+        return None
+    # Keep the request payload bounded; no credentials, personal data or inferred dates.
+    allowed = ("title", "jobDescription", "postedDate", "location",
+               "locationText", "jobFamily", "jobFamilyGroup", "timeType")
+    clean = {k: info[k][:12000] if k == "jobDescription" and isinstance(info.get(k), str)
+             else info[k] for k in allowed if isinstance(info.get(k), (str, int, float))}
+    return clean
+
+
+def enrich_workday_candidates(tenant, host, site, jobs):
+    """Attach job-specific descriptions; report incomplete details separately."""
+    successes, failures = 0, 0
+    with ThreadPoolExecutor(max_workers=12) as pool:
+        futures = {
+            pool.submit(workday_details, tenant, host, site, job["externalPath"]): job
+            for job in jobs
+        }
+        for future in as_completed(futures):
+            job = futures[future]
+            try:
+                detail = future.result()
+                if detail and detail.get("jobDescription"):
+                    successes += 1
+                else:
+                    failures += 1
+                if detail:
+                    job["details"] = detail
+            except (OSError, ValueError):
+                failures += 1
+    return successes, failures
 
 
 def refresh_workday():
@@ -89,13 +140,20 @@ def refresh_workday():
         if len(candidates) > 200:
             failures.append(f"{tenant}: {len(candidates)} candidates exceed gateway batch; partial ingestion prohibited")
         elif successes:
+            enriched, incomplete = enrich_workday_candidates(tenant, host, site, candidates)
+            print("Workday", tenant, "job descriptions retrieved", enriched,
+                  "missing/blocked detail pages", incomplete)
             try:
                 accepted += ingest("workday", tenant, candidates)
             except Exception as exc:
                 failures.append(f"{tenant}/ingestion: {str(exc)[:150]}")
+        else:
+            failures.append(f"{tenant}: all search terms failed; previous snapshot must be preserved")
     print("Workday runner accepted", accepted, "warnings", len(failures))
     for message in failures[:12]:
         print("Workday warning:", message)
+    if any("/ingestion:" in m or "exceed gateway batch" in m or "all search terms failed" in m for m in failures):
+        raise RuntimeError("Workday partial failure: " + "; ".join(failures[:8]))
     if len(failures) >= len(WORKDAY) * len(WORKDAY_TERMS):
         raise RuntimeError("Every Workday query failed")
     return accepted
@@ -133,8 +191,16 @@ def ingest(provider, source_id, jobs):
     result = reply.get("ingestion")
     if not isinstance(result, dict):
         raise RuntimeError("Apps Script did not acknowledge ATS ingestion for " + source_id)
+    accepted = int(result.get("accepted", 0))
+    receipt = result.get("acceptedIds")
+    # New Apps Script acknowledges a source only after reading saved IDs back
+    # from the underlying Sheet. This deliberately fails on obsolete deployments.
+    if result.get("persisted") is not True or not isinstance(receipt, list) or len(receipt) != accepted:
+        raise RuntimeError("Backend ingestion not verified: deploy the updated Apps Script gateway")
+    if not all(isinstance(item, str) and item for item in receipt):
+        raise RuntimeError("Invalid persisted job IDs from gateway " + source_id)
     print(json.dumps(result, ensure_ascii=False))
-    return int(result.get("accepted", 0))
+    return accepted
 
 
 def main():
@@ -205,8 +271,8 @@ def main():
     print("ATS runner ingestion: accepted", accepted, "errors", len(errors))
     for error in errors:
         print("ATS source warning:", error)
-    if errors and not accepted:
-        raise SystemExit("ATS ingestion returned no accepted postings; inspect provider diagnostics")
+    if errors:
+        raise SystemExit("ATS ingestion incomplete: " + "; ".join(errors[:8]))
 
 
 if __name__ == "__main__":
