@@ -16,6 +16,8 @@ import {
 } from './decisionModel';
 import { cityPoint } from './franceGeo';
 import { GoogleFranceMap } from './GoogleFranceMap';
+import { CampaignLines, CampaignStatusPie } from './CampaignCharts';
+import { PIE_BUCKETS, statusBucket, type PieBucket } from './campaignVisuals';
 import './dashboard.css';
 
 const number = new Intl.NumberFormat('fr-FR');
@@ -90,6 +92,7 @@ export function DashboardPage() {
     sector: sectorId && sectors.some(s => s.id === sectorId) ? sectorId : '',
   }));
   const [showAll, setShowAll] = useState(false);
+  const [pieSelected, setPieSelected] = useState<PieBucket|null>(null);
   const [panel, setPanel] = useState<'filters'|'analytics'|'map'|'queue'|null>(null);
 
   useEffect(() => {
@@ -106,7 +109,7 @@ export function DashboardPage() {
     setFilters(f => ({...f, [key]:value}));
   const toggleFilter = (key: 'status'|'sector'|'city'|'sentMonth'|'sentWeek', value:string) =>
     setFilters(f => ({...f,[key]:f[key]===value?'':value}));
-  const clear = () => {setFilters(INITIAL_FILTERS);setShowAll(false);};
+  const clear = () => {setFilters(INITIAL_FILTERS);setShowAll(false);setPieSelected(null);};
   useEffect(() => {
     if (!panel) return;
     const close = (event:KeyboardEvent) => { if (event.key === 'Escape') setPanel(null); };
@@ -117,7 +120,10 @@ export function DashboardPage() {
   const all = useMemo(() => uniqueDashboardOffers(
     combineDossiers(withSavedManualOffers(data?.offers || []), local).filter(o => !actions.hidden[o.id])
   ), [data, local, actions.hidden]);
-  const shown = useMemo(() => filterDashboardOffers(all, filters, now), [all, filters, now]);
+  const baseShown = useMemo(() => filterDashboardOffers(all, filters, now), [all, filters, now]);
+  const shown = useMemo(() => pieSelected ? baseShown.filter(o => statusBucket(o) === pieSelected) : baseShown,
+    [baseShown,pieSelected]);
+  const selectPie = (bucket:PieBucket) => setPieSelected(current => current===bucket?null:bucket);
   const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
   const metrics = useMemo(() => dashboardMetrics(shown,today),[shown,today]);
   const statusGroups = useMemo(() => byStatus(shown),[shown]);
@@ -136,7 +142,7 @@ export function DashboardPage() {
   const companyOptions = [...new Set(all.map(o=>o.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
   const cityOptions = [...new Set(all.map(o=>o.city).filter((x): x is string => Boolean(x)))].sort((a,b)=>a.localeCompare(b,'fr'));
   const activeCount = (Object.keys(filters) as Array<keyof DashboardFilters>)
-    .filter(key => filters[key] !== INITIAL_FILTERS[key]).length;
+    .filter(key => filters[key] !== INITIAL_FILTERS[key]).length + Number(Boolean(pieSelected));
   // Keep the heading aligned with the exact same filter state used by all charts.
   // Location goes first, followed by other dimensions; long combinations retain
   // their complete text in the native title tooltip.
@@ -146,6 +152,7 @@ export function DashboardPage() {
     filters.plan !== 'all' ? 'Plan ' + filters.plan : '',
     filters.sector ? (sectors.find(s => s.id === filters.sector)?.name || 'Autres secteurs') : '',
     filters.status,
+    pieSelected ? (PIE_BUCKETS.find(b => b.id===pieSelected)?.label || '') : '',
     filters.priority ? 'Priorité ' + filters.priority : '',
     filters.period === '7d' ? '7 derniers jours' : filters.period === '30d' ? '30 derniers jours' : filters.period === '90d' ? '90 derniers jours' : '',
     filters.sentWeek ? 'Semaine du ' + new Date(filters.sentWeek+'T12:00:00Z').toLocaleDateString('fr-FR') : '',
@@ -237,7 +244,18 @@ export function DashboardPage() {
               <div><strong>{Math.max(0,metrics.sent-datedSends)}</strong><span>Envois non datés</span></div>
             </div>
           </section>
-          <div className="db-visual-space" aria-hidden="true" />
+          <div className="db-visual-panels">
+            <CampaignLines offers={shown} now={now}/>
+            <CampaignStatusPie offers={baseShown} selected={pieSelected} onSelect={selectPie}/>
+            <section className="db-mini-panel db-map-mini" aria-label="Google Maps des opportunités">
+              <div className="db-mini-panel-header">
+                <h2>Carte des opportunités</h2>
+                <button type="button" onClick={()=>setPanel('map')} aria-label="Agrandir Google Maps">Agrandir ↗</button>
+              </div>
+              <GoogleFranceMap cities={mapped} selectedCity={filters.city}
+                onCitySelect={city => toggleFilter('city',city)} compact/>
+            </section>
+          </div>
           <button className="db-primary-cta" type="button" onClick={()=>setPanel('queue')}>Voir toutes mes candidatures <span aria-hidden="true">↗</span></button>
         </div>
 
