@@ -314,7 +314,7 @@ def verify_html(source, requested, content, resolved=None, rejection_reasons=Non
             label = re.search(
                 r"\bIntitul[eé] du poste\s*:\s*"
                 r"(.{8,175}?)\s+(?:Lieu\s*:|[ÀA]\s+partir\s+de\s*:|"
-                r"[ÀA]\s+propos\s+du\s+poste|Principales responsabilit[eé]s)\b",
+                r"[ÀA]\s+propos\s+du\s+poste|Principales responsabilit[eé]s)(?=\s|$)",
                 body, re.I,
             )
             if label:
