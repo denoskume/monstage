@@ -111,6 +111,35 @@ class RemainingOfficialTests(unittest.TestCase):
         b = "https://dassault-aviation-cand.talent-soft.com/offre-de-emploi/emploi-stage-modeles-d-ia_15827.aspx"
         self.assertEqual(canonical_url(s, a), canonical_url(s, b))
 
+    def test_airfrance_official_metadata_not_generic_heading_is_authoritative(self):
+        s = BY_COMPANY["Air France-KLM"]
+        url = s["seed"][0]
+        page = ("""<html><h1>Détail de l'offre</h1>
+            <h2>Description du poste</h2>
+            <h3>Intitulé du poste</h3>
+            <p>STAGE - Data Analyst Logistique Opérationnelle Aéronautique F/H</p>
+            <h3>Métier</h3><p>Systèmes d'informations - Développement</p>
+            <h3>Type de contrat</h3><p>Convention de stage</p>
+            <h3>Durée du contrat (mois) :</h3><p>6</p>
+            <h3>Date de prise de poste souhaitée</h3><p>03/03/2027</p>
+            <h2>Localisation du poste</h2><h3>Localisation du poste</h3>
+            <p>France, Ile-de-France, Val d'Oise (95)</p>
+            <h3>Site</h3><p>45 rue de Paris 95747 ROISSY CEDEX</p>
+            </html>""")
+        job = verify_html(s, url, page)
+        self.assertIsNotNone(job)
+        self.assertEqual(job["title"],
+            "STAGE - Data Analyst Logistique Opérationnelle Aéronautique F/H")
+        self.assertEqual(job["location"], "Ile-de-France, France")
+        self.assertIsNone(job["publishedAt"])
+        self.assertIsNone(verify_html(s, url,
+            page.replace("Convention de stage", "CDI")))
+        self.assertIsNone(verify_html(s, url,
+            page.replace("France, Ile-de-France, Val d'Oise (95)",
+                         "United States, New York, Manhattan")))
+        self.assertIsNone(verify_html(s, url, page,
+            "https://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx?idOffre=999"))
+
     def test_airfrance_official_stage_contract_rss(self):
         s = BY_COMPANY["Air France-KLM"]
         self.assertEqual(s["rss"][0], "https://recrutement.airfrance.com/handlers/offerRss.ashx?LCID=1036&Rss_Contract=3442")
