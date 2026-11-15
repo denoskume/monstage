@@ -188,7 +188,8 @@ export function DashboardPage() {
             <Metric label="Entretiens" value={metrics.interviews} hint={metrics.due+' relance(s) échue(s)'} accent="#b898f1"/>
           </section>
           <div className="db-visual-panels">
-            <CampaignLines offers={shown} now={now}/>
+            <CampaignLines offers={shown} now={now} selectedMonth={filters.sentMonth}
+              onMonthSelect={month=>toggleFilter('sentMonth',month)}/>
             <CampaignStatusPie offers={baseShown} selected={pieSelected} onSelect={selectPie}/>
             <section className="db-mini-panel db-map-mini" aria-label="Google Maps des opportunités">
               <div className="db-mini-panel-header">

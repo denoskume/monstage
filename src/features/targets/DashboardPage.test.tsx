@@ -54,6 +54,8 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(document.querySelector('.db-campaign-chart svg')).toHaveTextContent('Date (mois)');
     expect(document.querySelector('.db-campaign-chart svg')).toHaveTextContent('Nombre de dossiers');
     expect(document.querySelectorAll('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveLength(3);
+    expect(screen.getByRole('group',{name:/Explorer le graphique des offres/})).toBeInTheDocument();
+    expect(screen.getByTestId('campaign-hover-area')).toBeInTheDocument();
     expect([...document.querySelectorAll('.db-campaign-chart svg path[stroke-width="3.5"]')].every(path=>path.getAttribute('d')?.includes(' C '))).toBe(true);
     expect(document.querySelector('.db-insight-tiles')).not.toBeInTheDocument();
     expect(screen.queryByRole('button',{name:/Computer Vision/})).not.toBeInTheDocument();
@@ -64,6 +66,41 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(screen.queryByRole('complementary',{name:'Mon agenda de candidatures'})).not.toBeInTheDocument();
     expect(screen.getByText('Opportunités').nextElementSibling).not.toHaveTextContent('0');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+  it('reveals 3 exact values on pointer hover, filters month on click and supports keyboard',()=>{
+    mount();
+    const area=screen.getByTestId('campaign-hover-area');
+    const chart=screen.getByRole('group',{name:/Explorer le graphique des offres/});
+    const getBounds=vi.spyOn(SVGSVGElement.prototype,'getBoundingClientRect').mockReturnValue({
+      x:0,y:0,width:640,height:325,left:0,top:0,right:640,bottom:325,toJSON:()=>({}),
+    } as DOMRect);
+    try {
+      fireEvent.pointerMove(area,{clientX:265,clientY:100});
+      expect(screen.getByRole('status')).toHaveTextContent('Offres repérées');
+      expect(screen.getByRole('status')).toHaveTextContent('Candidatures envoyées');
+      expect(screen.getByRole('status')).toHaveTextContent('Non postulées');
+      fireEvent.click(area);
+      expect(screen.getByRole('button',{name:'Effacer le filtre du mois'})).toBeInTheDocument();
+      expect(screen.getByRole('heading',{level:1})).toHaveTextContent('oct.');
+      fireEvent.click(screen.getByRole('button',{name:'Effacer le filtre du mois'}));
+      expect(screen.queryByRole('button',{name:'Effacer le filtre du mois'})).not.toBeInTheDocument();
+      chart.focus();
+      fireEvent.keyDown(chart,{key:'ArrowRight'});
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      fireEvent.keyDown(chart,{key:'ArrowRight'});
+      fireEvent.keyDown(chart,{key:'Enter'});
+      expect(screen.getByRole('button',{name:'Effacer le filtre du mois'})).toBeInTheDocument();
+    } finally {getBounds.mockRestore();}
+  });
+  it('toggles each campaign line from its legend',()=>{
+    mount();
+    const pending=screen.getByRole('button',{name:'Afficher la courbe Non postulées'});
+    expect(pending).toHaveAttribute('aria-pressed','true');
+    fireEvent.click(pending);
+    expect(pending).toHaveAttribute('aria-pressed','false');
+    expect(document.querySelectorAll('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveLength(2);
+    fireEvent.click(pending);
+    expect(document.querySelectorAll('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveLength(3);
   });
   it('filters all KPIs through the single header dropdown for Plan A and Plan B',()=>{
     mount();

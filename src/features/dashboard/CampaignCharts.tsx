@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { InternshipOffer } from '../../api/contract';
 import {
   CAMPAIGN_MONTHS, campaignTimeline, campaignAxisMax, smoothCampaignPath, pieSector,
   PIE_BUCKETS, statusPie, type PieBucket,
 } from './campaignVisuals';
 
-type LinesProps={ offers:InternshipOffer[]; now:Date };
+type LinesProps={ offers:InternshipOffer[]; now:Date; selectedMonth:string; onMonthSelect:(month:string)=>void };
 
 const SERIES=[
   {field:'total',label:'Offres repérées',color:'#766ef0'},
@@ -13,8 +13,12 @@ const SERIES=[
   {field:'pending',label:'Non postulées',color:'#ef807d'},
 ] as const;
 
-export function CampaignLines({offers,now}:LinesProps) {
+type SeriesField = typeof SERIES[number]['field'];
+
+export function CampaignLines({offers,now,selectedMonth,onMonthSelect}:LinesProps) {
   const {points,excluded,tracked}=useMemo(()=>campaignTimeline(offers,now),[offers,now]);
+  const [hovered,setHovered]=useState<number|null>(null);
+  const [visible,setVisible]=useState<SeriesField[]>(['total','applied','pending']);
   const max=campaignAxisMax(Math.max(0,...points.map(row=>row.total)));
   const left=68,right=610,top=24,bottom=262;
   const domainStart=Date.parse('2026-09-01T12:00:00Z');
@@ -23,18 +27,64 @@ export function CampaignLines({offers,now}:LinesProps) {
   const py=(n:number)=>bottom-n/max*(bottom-top);
   const observed=points.length>0;
   const todayX=observed?px(points[points.length-1].date):left;
+  const active=hovered===null ? null : points[hovered] || null;
+  const activeX=active?px(active.date):left;
+  const monthFor=(date:string)=>date.slice(0,7);
+  const toggleSeries=(field:SeriesField)=>{
+    setVisible(current=>current.includes(field)
+      ? current.length===1?current:current.filter(item=>item!==field)
+      : [...current,field]);
+  };
+  const selectIndex=(index:number)=>{
+    const row=points[index];
+    if(row)onMonthSelect(selectedMonth===monthFor(row.date)?'':monthFor(row.date));
+  };
+  const setNearest=(x:number)=>{
+    if(!points.length)return;
+    let index=0,dist=Infinity;
+    points.forEach((row,i)=>{
+      const difference=Math.abs(px(row.date)-x);
+      if(difference<dist){dist=difference;index=i;}
+    });
+    setHovered(index);
+  };
+  useEffect(()=>setHovered(null),[points]);
 
   return <section className="db-mini-panel db-campaign-lines" aria-label="Évolution de la campagne">
     <div className="db-mini-panel-header">
-      <h2>Campagne de stages</h2><span>Sept. 2026 – févr. 2027</span>
+      <h2>Campagne de stages</h2>
+      {selectedMonth
+        ? <button className="db-campaign-clear" type="button"
+            aria-label="Effacer le filtre du mois" onClick={()=>onMonthSelect('')}>
+            {new Date(selectedMonth+'-01T12:00:00Z').toLocaleDateString('fr-FR',{month:'short',year:'numeric'})} ×
+          </button>
+        : <span>Sept. 2026 – févr. 2027</span>}
     </div>
     <div className="db-campaign-legend" aria-label="Légende des trois courbes">
-      {SERIES.map(series=><span key={series.field}>
-        <i style={{backgroundColor:series.color}}/>{series.label}</span>)}
+      {SERIES.map(series=><button key={series.field} type="button"
+        className={'db-campaign-series'+(visible.includes(series.field)?'':' muted')}
+        aria-pressed={visible.includes(series.field)}
+        aria-label={'Afficher la courbe '+series.label}
+        onClick={()=>toggleSeries(series.field)}>
+        <i style={{backgroundColor:series.color}}/>{series.label}
+      </button>)}
     </div>
-    <div className="db-campaign-chart" role="img"
-      aria-label={'Graphique en courbes lissées avec axes X et Y de septembre 2026 à février 2027, '+tracked+' offres datées et '+excluded+' dossiers sans historique exploitable'}>
-      <svg viewBox="0 0 640 325" preserveAspectRatio="none" aria-hidden="true">
+    <div className="db-campaign-chart" role="group" tabIndex={0}
+      aria-label="Explorer le graphique des offres. Survolez pour voir les trois valeurs, flèches gauche et droite pour les dates, Entrée pour filtrer par mois d’envoi."
+      onKeyDown={event=>{
+        if(!points.length)return;
+        if(event.key==='ArrowRight'||event.key==='ArrowLeft'){
+          event.preventDefault();
+          setHovered(index=>Math.min(points.length-1,Math.max(0,(index??0)+(event.key==='ArrowRight'?1:-1))));
+        }else if((event.key==='Enter'||event.key===' ')&&hovered!==null){
+          event.preventDefault();
+          selectIndex(hovered);
+        }else if(event.key==='Escape'){
+          setHovered(null);
+        }
+      }}>
+      <svg viewBox="0 0 640 325" preserveAspectRatio="none" role="img"
+        aria-label={'Graphique en courbes lissées avec axes X et Y de septembre 2026 à février 2027, '+tracked+' offres datées et '+excluded+' dossiers sans historique exploitable'}>
         {observed&&todayX<right&&<rect x={todayX} y={top} width={right-todayX} height={bottom-top}
           fill="#faf9ff" opacity=".8"/>}
         {[0,1,2,3,4].map(index=>{
@@ -65,7 +115,7 @@ export function CampaignLines({offers,now}:LinesProps) {
             stroke="#b9aefa" strokeWidth="1.3" strokeDasharray="5 5"/>
           <text x={todayX+7} y={top+12} fill="#776ed1" fontSize="11">Aujourd’hui</text>
         </g>}
-        {SERIES.map(series=>{
+        {SERIES.filter(series=>visible.includes(series.field)).map(series=>{
           const coords=points.map(row=>({
             x:px(row.date),y:py(row[series.field]),value:row[series.field],date:row.date,
           }));
@@ -79,12 +129,38 @@ export function CampaignLines({offers,now}:LinesProps) {
               </circle>)}
           </g>;
         })}
+        {active&&<g className="db-campaign-crosshair" pointerEvents="none">
+          <line x1={activeX} x2={activeX} y1={top} y2={bottom}
+            stroke="#49485d" strokeWidth="1.5" strokeDasharray="5 4"/>
+          {SERIES.filter(series=>visible.includes(series.field)).map(series=>
+            <circle key={series.field} cx={activeX} cy={py(active[series.field])}
+              r="5.2" stroke={series.color} strokeWidth="3" fill="#fff"/>)}
+        </g>}
+        <rect className="db-campaign-hitarea" x={left} y={top} width={right-left} height={bottom-top}
+          fill="transparent" data-testid="campaign-hover-area"
+          onPointerMove={event=>{
+            const bounds=event.currentTarget.ownerSVGElement?.getBoundingClientRect();
+            if(!bounds?.width)return;
+            setNearest((event.clientX-bounds.left)/bounds.width*640);
+          }}
+          onPointerLeave={()=>setHovered(null)}
+          onClick={()=>{if(hovered!==null)selectIndex(hovered);}}
+        />
       </svg>
+      {active && <div className="db-campaign-tooltip" role="status" aria-live="polite"
+        style={{left:Math.max(30,Math.min(71,activeX/640*100))+'%'}}>
+        <strong>{new Date(active.date+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'})}</strong>
+        {SERIES.map(series=><div key={series.field} className="db-campaign-tooltip-row">
+          <i style={{backgroundColor:series.color}}/><span>{series.label}</span>
+          <b>{active[series.field]}</b>
+        </div>)}
+        <small>Cliquez pour filtrer les envois de ce mois</small>
+      </div>}
     </div>
     <p className="db-campaign-footnote">{excluded>0
       ? excluded+' dossier(s) sans dates historiques fiables : non représentés.'
       : 'Évolution cumulative calculée à partir des dates enregistrées.'}
-      {' '}Lissage visuel des observations, sans prévision future.</p>
+      {' '}Survolez les courbes pour comparer les valeurs. Cliquez pour filtrer le mois d’envoi.</p>
   </section>;
 }
 type PieProps={

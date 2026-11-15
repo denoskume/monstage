@@ -273,6 +273,20 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await expect(page.locator('.db-campaign-chart svg')).toContainText('Date (mois)');
   await expect(page.locator('.db-campaign-chart svg')).toContainText('Nombre de dossiers');
   await expect(page.locator('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveCount(3);
+  await page.locator('.db-campaign-hitarea').hover({position:{x:120,y:100}});
+  await expect(page.locator('.db-campaign-tooltip')).toBeVisible();
+  await expect(page.locator('.db-campaign-tooltip')).toContainText('Offres repérées');
+  await expect(page.locator('.db-campaign-tooltip')).toContainText('Candidatures envoyées');
+  await expect(page.locator('.db-campaign-tooltip')).toContainText('Non postulées');
+  await page.locator('.db-campaign-hitarea').click({position:{x:120,y:100}});
+  await expect(page.getByRole('button',{name:'Effacer le filtre du mois'})).toBeVisible();
+  await page.getByRole('button',{name:'Effacer le filtre du mois'}).click();
+  await expect(page.getByRole('button',{name:'Effacer le filtre du mois'})).toHaveCount(0);
+  await page.getByRole('button',{name:'Afficher la courbe Non postulées'}).click();
+  await expect(page.locator('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveCount(2);
+  await page.getByRole('button',{name:'Afficher la courbe Non postulées'}).click();
+  await expect(page.locator('.db-campaign-chart svg path[stroke-width="3.5"]')).toHaveCount(3);
+
   await expect(page.locator('.db-map-mini .db-google-map-shell')).toBeVisible();
   await planSelect.selectOption('B');
   await expect(planSelect).toHaveValue('B');

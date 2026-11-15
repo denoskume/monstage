@@ -937,3 +937,45 @@
   .db-screen .db-campaign-months{font-size:.43rem}
   .db-screen .db-pie-item{font-size:.43rem;min-height:18px}
 }
+
+
+/* Live campaign chart: hover crosshair + actual numeric readings, selectable
+   series and accessible keyboard navigation, without changing panel height. */
+.db-screen .db-campaign-chart{position:relative;isolation:isolate;outline-offset:-2px}
+.db-screen .db-campaign-chart:focus-visible{outline:2px solid #9687f4;border-radius:9px}
+.db-screen .db-campaign-legend .db-campaign-series{
+  display:inline-flex;gap:6px;align-items:center;min-height:22px;padding:3px 5px;
+  border:1px solid transparent;border-radius:6px;background:transparent;
+  font:inherit;color:inherit;cursor:pointer;white-space:nowrap;
+}
+.db-screen .db-campaign-legend .db-campaign-series:hover,
+.db-screen .db-campaign-legend .db-campaign-series:focus-visible{
+  border-color:#dcd5ff;background:#f3f1ff;outline:none;
+}
+.db-screen .db-campaign-series.muted{opacity:.37;text-decoration:line-through}
+.db-screen .db-campaign-series.muted i{filter:grayscale(.6)}
+.db-campaign-hitarea{cursor:crosshair;touch-action:pan-y}
+.db-campaign-crosshair{transition:opacity .12s ease}
+.db-screen .db-campaign-tooltip{
+  position:absolute;z-index:12;top:11%;transform:translateX(-50%);
+  width:min(217px,calc(100% - 15px));max-width:100%;padding:10px 12px;
+  border:1px solid #ddd8f3;border-radius:10px;background:#ffffffef;
+  box-shadow:0 11px 28px #32314d30;backdrop-filter:blur(9px);
+  font-size:.71rem;color:#48475a;pointer-events:none;
+}
+.db-campaign-tooltip strong{display:block;color:#29283c;font-weight:820;font-size:.73rem;margin-bottom:8px}
+.db-campaign-tooltip-row{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:7px;
+  align-items:center;padding:3px 0}
+.db-campaign-tooltip-row i{width:8px;height:8px;border-radius:50%}
+.db-campaign-tooltip-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-campaign-tooltip-row b{font-weight:840;color:#282741;font-variant-numeric:tabular-nums}
+.db-campaign-tooltip small{display:block;margin-top:7px;padding-top:6px;border-top:1px solid #ece9f5;
+  font-size:.63rem;color:#817a9c}
+.db-screen .db-campaign-clear{border:1px solid #ded8ff;border-radius:20px;background:#f0edff;
+  color:#6358b9;padding:5px 10px;font-size:.7rem;font-weight:780;cursor:pointer;white-space:nowrap}
+.db-screen .db-campaign-clear:hover{background:#ded9ff}
+@media(max-width:850px){
+ .db-screen .db-campaign-tooltip{font-size:.61rem;padding:7px;top:9%}
+ .db-screen .db-campaign-tooltip strong{font-size:.62rem}
+ .db-screen .db-campaign-tooltip small{font-size:.57rem}
+}
