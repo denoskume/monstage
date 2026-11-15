@@ -1050,7 +1050,21 @@ var OFFICIAL_PAGE_SOURCES_ = [
   { id: 'bel', company: 'Bel Group', host: 'jobs.groupe-bel.com' },
   { id: 'essilor', company: 'EssilorLuxottica', host: 'careers.essilorluxottica.com' },
   { id: 'engie', company: 'ENGIE', host: 'jobs.engie.com' },
-  { id: 'forvia', company: 'FORVIA HELLA', host: 'jobs.faurecia.com' }
+  { id: 'forvia', company: 'FORVIA HELLA', host: 'jobs.faurecia.com' },
+  // Employer-hosted listings require individual canonical URLs, not portal HTTP 200.
+  { id: "safran", company: "Safran", host: "www.safran-group.com", path: "^/fr/offres/[^/?#]+" },
+  { id: "dassault", company: "Dassault Aviation", host: "carriere.dassault-aviation.com", path: "^/(?:fr/)?(?:offre|job|emploi)/[^?#]+" },
+  { id: "airfrance", company: "Air France-KLM", host: "recrutement.airfrance.com", path: "^/Pages/Offre/detailoffre\\.aspx$" },
+  { id: "siemensmobility", company: "Siemens Mobility", host: "jobs.siemens.com", path: "^/(?:careers/)?job/[^?#]+" },
+  { id: "hitachirail", company: "Hitachi Rail", host: "careers.hitachi.com", path: "^/(?:fr/)?[^?#]*/job/R\\d+$" },
+  { id: "stellantis", company: "Stellantis", host: "careers.stellantis.com", path: "^/job/\\d+/[^?#]+" },
+  { id: "danone", company: "Danone", host: "careers.danone.com", path: "^/fr-global/jobs/[^?#]+\\.html$" },
+  { id: "sanofi", company: "Sanofi", host: "jobs.sanofi.com", path: "^/fr/emploi/[^/]+/[^/]+/\\d+/\\d+$" },
+  { id: "siemenshealthineers", company: "Siemens Healthineers", host: "careers.siemens-healthineers.com", path: "^/(?:fr/fr/|en-us/)?job/[^?#]+" },
+  { id: "schneider", company: "Schneider Electric", host: "careers.se.com", path: "^/jobs/\\d+$" },
+  { id: "saintgobain", company: "Saint-Gobain", host: "joinus.saint-gobain.com", path: "^/fr/fra/is/i/\\d+/\\d+/[^?#]+" },
+  { id: "edf", company: "EDF", host: "www.edf.fr", path: "^/edf-recrute/offre/detail/\\d{4}-\\d+$" },
+  { id: "loreal", company: "L’Oréal", host: "careers.loreal.com", path: "^/fr/emploi/[^/]+/[^/]+/\\d+/\\d+$" }
 ];
 
 function officialPageJobToRow_(source, job, posting) {
@@ -2467,11 +2481,14 @@ function ingestRunnerAtsPostings_(request) {
       // runner must independently fetch that individual page and confirm
       // its title, FR location and canonical URL before sending it here.
       var url = String(job.url || '');
-      var host = /^https:\/\/([^/:?#]+)(?:\/|$)/i.exec(url);
-      if (!strictCompany_(source.company) || !host ||
-          host[1].toLowerCase() !== source.host ||
-          !/^https:\/\/[^/]+\/(?:job|jobdetails)\//i.test(url) ||
+      var parts = /^https:\/\/([^/:?#]+)(\/[^?#]*)(?:\?[^#]*)?$/i.exec(url);
+      var pattern = new RegExp(source.path || '^/(?:job|jobdetails)/[^?#]+', 'i');
+      if (!strictCompany_(source.company) || !parts ||
+          parts[1].toLowerCase() !== source.host ||
+          !pattern.test(parts[2]) ||
           !/^[a-f0-9]{20}$/.test(String(job.id || ''))) return;
+      if (source.id === 'airfrance' &&
+          !/[?&]idOffre=\d+(?:&|$)/i.test(url)) return;
       var title = normalizeText_(job.title) || '';
       if (!/\b(stage|stagiaire|internship|intern|pfe)\b/i.test(normalizeComparable_(title))) return;
       counters.internship++;
