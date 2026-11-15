@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "notes": "Paths and seeds grounded in employer-hosted individual job pages; registry presence never implies full job-feed coverage. Existing or historic listings may have expired. Dassault's Talentsoft official stage RSS endpoint is exposed from its own career site (Rss_Contract=4161).",
+  "notes": "Paths and seeds grounded in employer-hosted individual job pages; registry presence never implies full job-feed coverage. Existing or historic listings may have expired. Dassault's Talentsoft official stage RSS endpoint is exposed from its own career site (Rss_Contract=4161). Air France Talentsoft contract RSS 3442 is linked from its published official 'Flux RSS et autres flux' page.",
   "sources": [
     {
       "company": "Safran",
@@ -33,12 +33,16 @@
       "company": "Air France-KLM",
       "id": "airfrance",
       "host": "recrutement.airfrance.com",
-      "path": "^/Pages/Offre/detailoffre\\.aspx$",
+      "path": "^/(?:Pages/Offre/detailoffre\\.aspx|offre-de-emploi/emploi-[^/?#]+_\\d+\\.aspx)$",
       "listing": [
-        "https://recrutement.airfrance.com/Pages/Offre/ListeOffre.aspx?facet_JobDescription_Contract=3442&lcid=1036"
+        "https://recrutement.airfrance.com/pages/offre/listeoffre.aspx?facet_Country=79&facet_JobDescription_Contract=3442&lcid=1036"
       ],
       "seed": [
-        "https://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx?LCID=3082&idOffre=25467&idOrigine=502&offerReference=2026-25467"
+        "https://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx?LCID=3082&idOffre=25467&idOrigine=502&offerReference=2026-25467",
+        "https://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx?LCID=1036&idOffre=25738&idOrigine=3289&offerReference=2026-25738"
+      ],
+      "rss": [
+        "https://recrutement.airfrance.com/handlers/offerRss.ashx?LCID=1036&Rss_Contract=3442"
       ]
     },
     {
