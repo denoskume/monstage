@@ -1,38 +1,64 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from '../dashboard/DashboardPage';
 
-vi.mock('../../hooks/useOffers', () => ({ useOffers: () => ({ data: {offers: []}, loading: false, error: null, retry: vi.fn() }) }));
-vi.mock('../../auth/useAuth', () => ({ useAuth: () => ({ token: 'test' }) }));
+const makeOffer=(id:string, company:string, title:string, city:string, status:string, publishedAt='2026-11-10')=>({
+  id, company, title, city, domain:'Plan A/B', specialization:title, region:null, m2Fit:'Oui',
+  start:'Février 2027',duration:'6 mois',compensation:null, skills:['Python'],
+  publishedAt,offerStatus:'Active', applicationStatus:status, nextAction:'Préparer dossier',
+  applicationUrl:null, shortlist:false, appliedAt:status==='À candidater'?null:'10/11/2026',
+  followUpAt:status==='Candidature envoyée'?'12/11/2026':null,
+  technicalFit:95, decisionScore:95, priority:'A',freshness:null,verifiedAt:null,
+  sourceQuality:'Officiel',actionLevel:null,calendarFit:null,confidence:null,relevance:null,gaps:null,
+});
+const feed = [
+  makeOffer('test-airbus','Airbus','Stage Computer Vision - inspection','Paris','À candidater'),
+  makeOffer('test-alstom','Alstom','Stage Data Analyst Power BI','Nantes','Candidature envoyée'),
+  makeOffer('test-sncf','SNCF','Stage Computer Vision - sécurité','Nantes','Entretien'),
+  makeOffer('test-renault','Renault Group','Stage Data Analyst - performance','Lyon','Refus'),
+];
+vi.mock('../../hooks/useOffers', () => ({useOffers:()=>({data:{
+  source:'Stage Intelligence France',generatedAt:'2026-11-15T07:00:00Z',offers:feed
+},loading:false,error:null,retry:vi.fn()})}));
 
-describe('company-first dashboard', () => {
-  it('shows eight sectors and exactly thirty company dossiers', () => {
-    render(<MemoryRouter initialEntries={['/dashboard']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(screen.getByRole('heading', {name:'Vue d’ensemble'})).toBeInTheDocument();
-    expect(screen.getAllByText('5 entreprises')).toHaveLength(3);
-    expect(screen.getAllByText('4 entreprises')).toHaveLength(3);
-    expect(screen.getByText('2 entreprises')).toBeInTheDocument();
-    expect(screen.getByText('1 entreprises')).toBeInTheDocument();
-    expect(screen.getByRole('heading', {name:'30 entreprises · deux plans'})).toBeInTheDocument();
-    expect(screen.getAllByText('Fiche entreprise et préparation d’appel')).toHaveLength(30);
-    expect(screen.getByText('Candidatures envoyées').nextElementSibling).toHaveTextContent('0');
+function mount(path='/dashboard') {
+  return render(<MemoryRouter initialEntries={[path]}>
+    <Routes><Route path="/dashboard" element={<DashboardPage/>}/><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes>
+  </MemoryRouter>);
+}
+
+describe('interactive decision dashboard',()=>{
+  beforeEach(()=>localStorage.clear());
+  it('replaces the old dashboard with KPI, charts, France map, filters and decision queue',()=>{
+    mount();
+    expect(screen.getByRole('heading',{name:'Dashboard'})).toBeInTheDocument();
+    for (const title of ['Avancement des candidatures','Opportunités par secteur','Carte des opportunités','Chronologie des envois','À traiter en priorité']) {
+      expect(screen.getByRole('heading',{name:title})).toBeInTheDocument();
+    }
+    expect(screen.getByLabelText('Filtres du Dashboard')).toBeInTheDocument();
+    expect(screen.queryByRole('heading',{name:'30 entreprises · deux plans'})).not.toBeInTheDocument();
+    expect(screen.getByText('Dossiers analysés').nextElementSibling).not.toHaveTextContent('0');
   });
-  it('shows the exact same companies under A and B, and no B1/B2 tabs', () => {
-    const first = render(<MemoryRouter initialEntries={['/dashboard?plan=A']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(within(screen.getByRole('navigation',{name:'Parcours professionnels'})).getByRole('link',{name:/Plan A/})).toHaveAttribute('aria-current','page');
-    expect(screen.getByRole('heading',{name:'SNCF'})).toBeInTheDocument();
-    first.unmount();
-    render(<MemoryRouter initialEntries={['/dashboard?plan=B']}><Routes><Route path="/dashboard" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    expect(within(screen.getByRole('navigation',{name:'Parcours professionnels'})).getByRole('link',{name:/Plan B/})).toHaveAttribute('aria-current','page');
-    expect(screen.getByRole('heading',{name:'SNCF'})).toBeInTheDocument();
-    expect(screen.queryByRole('link',{name:/Plan B1|Plan B2/})).not.toBeInTheDocument();
+  it('cross-filters the KPIs, sector chart and map from a sector click',()=>{
+    mount();
+    fireEvent.click(screen.getByRole('button',{name:'Filtrer secteur Ferroviaire & transport public'}));
+    expect(screen.getByLabelText('Filtrer par secteur')).toHaveValue('ferroviaire');
+    expect(screen.getByText('Dossiers analysés').nextElementSibling).toHaveTextContent('2');
+    expect(screen.getByRole('button',{name:/Filtrer ville Nantes/})).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:/Filtrer ville Nantes/}));
+    expect(screen.getByLabelText('Filtrer par ville')).toHaveValue('Nantes');
+    fireEvent.click(screen.getByRole('button',{name:'Réinitialiser'}));
+    expect(screen.getByLabelText('Filtrer par secteur')).toHaveValue('');
+    expect(screen.getByLabelText('Filtrer par ville')).toHaveValue('');
   });
-  it('supports railway company dossiers for both plans', () => {
-    render(<MemoryRouter initialEntries={['/dashboard/ferroviaire?plan=B']}><Routes><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes></MemoryRouter>);
-    for(const name of ['Alstom','SNCF','RATP','Siemens Mobility','Hitachi Rail']) expect(screen.getByRole('heading',{name})).toBeInTheDocument();
-    expect(screen.getAllByText('Site carrières')).toHaveLength(5);
-    expect(screen.getAllByText('Candidature Plan A')).toHaveLength(5);
-    expect(screen.getAllByText('Candidature Plan B')).toHaveLength(5);
+  it('supports Plan B and exact status filtering, without modifying source data',()=>{
+    mount();
+    fireEvent.change(screen.getByLabelText('Filtrer par plan'),{target:{value:'B'}});
+    expect(screen.getByLabelText('Filtrer par plan')).toHaveValue('B');
+    fireEvent.click(screen.getByRole('button',{name:'Filtrer statut Envoyée'}));
+    expect(screen.getByLabelText('Filtrer par statut')).toHaveValue('Envoyée');
+    expect(screen.getByText('Dossiers analysés').nextElementSibling).toHaveTextContent('1');
+    expect(feed[1].applicationStatus).toBe('Candidature envoyée');
   });
 });
