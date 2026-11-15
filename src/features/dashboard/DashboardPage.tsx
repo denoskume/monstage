@@ -32,6 +32,49 @@ function PanelHeader({title,detail}: {title:string;detail?:string}) {
   return <header className="db-panel-header"><h2>{title}</h2>{detail && <span>{detail}</span>}</header>;
 }
 
+
+function ActivityGraph({weeks, selected, onSelect}:{
+  weeks:Array<{week:string;count:number}>; selected:string; onSelect:(week:string)=>void;
+}) {
+  const peak=Math.max(1,...weeks.map(w=>w.count));
+  const points=weeks.map((item,index)=>({
+    ...item, x:52+(index*822/Math.max(1,weeks.length-1)),
+    y:207-item.count/peak*152,
+  }));
+  const path=points.map((p,i)=>{
+    if(i===0)return 'M '+p.x.toFixed(1)+' '+p.y.toFixed(1);
+    const q=points[i-1],mid=(q.x+p.x)/2;
+    return 'C '+mid.toFixed(1)+' '+q.y.toFixed(1)+' '+mid.toFixed(1)+' '+p.y.toFixed(1)+' '+p.x.toFixed(1)+' '+p.y.toFixed(1);
+  }).join(' ');
+  const area=path+' L '+(points.at(-1)?.x||874)+' 219 L '+(points[0]?.x||52)+' 219 Z';
+  return <div className="db-activity-chart" role="group" aria-label="Activité hebdomadaire des candidatures">
+    <svg viewBox="0 0 920 255" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="db-activity-gradient" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7772f7" stopOpacity=".23"/>
+          <stop offset="100%" stopColor="#7772f7" stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      {[55,131,207].map((y,i)=><g key={y}><line x1="51" y1={y} x2="883" y2={y} stroke="#e9e8f1" strokeDasharray="5 6"/><text x="19" y={y+4} fontSize="13" fill="#a1a4b2">{Math.round(peak*(1-i/2))}</text></g>)}
+      <path d={area} fill="url(#db-activity-gradient)"/>
+      <path d={path} fill="none" stroke="#7772f7" strokeWidth="3.1" strokeLinecap="round" strokeLinejoin="round"/>
+      {points.map(p=><circle key={p.week} cx={p.x} cy={p.y} r={selected===p.week?7:4.2} fill={selected===p.week?'#5348d7':'#fff'} stroke="#7772f7" strokeWidth="2.5"/>)}
+    </svg>
+    <div className="db-activity-clicks">
+      {points.map(p=><button key={p.week} type="button"
+        className={'db-activity-point'+(selected===p.week?' selected':'')}
+        style={{left:(p.x/920*100)+'%',top:(p.y/255*100)+'%'}}
+        title={p.count+' candidature(s) envoyée(s) · semaine du '+p.week}
+        aria-label={'Filtrer les envois semaine du '+p.week}
+        aria-pressed={selected===p.week}
+        onClick={()=>onSelect(p.week)}><span>{p.count} envoi(s)</span></button>)}
+    </div>
+    <div className="db-activity-axis">{weeks.filter((_,i)=>i%2===0).map(row=><span key={row.week}>
+      {new Date(row.week+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}
+    </span>)}</div>
+  </div>;
+}
+
 export function DashboardPage() {
   const { sectorId } = useParams();
   const [params] = useSearchParams();
@@ -78,7 +121,6 @@ export function DashboardPage() {
   const queue = useMemo(() => priorityQueue(shown,today),[shown,today]);
   const maxStatus = Math.max(...statusGroups.map(x=>x.count), 1);
   const maxSector = Math.max(...sectorGroups.map(x=>x.A+x.B+x.other), 1);
-  const maxWeek = Math.max(...activity.map(x=>x.count),1);
   const mapped = cityGroups.map(row => ({...row, point:cityPoint(row.city)}))
     .filter((row): row is typeof row & {point:{lon:number;lat:number}} => row.point!==null);
   // Cluster city points near one another on overview; split when zooming in.
@@ -112,7 +154,7 @@ export function DashboardPage() {
     <div className="db-heading">
       <div>
         <h1>Dashboard</h1>
-        <p>Décisions de candidature · Données MonStage · Actualisation : {sourceTime}</p>
+        <p>Votre activité de candidature en un coup d’œil · Données actualisées : {sourceTime}</p>
       </div>
       <div className="db-header-actions">
         <span className="db-source-chip">{number.format(metrics.companies)}/30 entreprises cibles présentes</span>
@@ -121,9 +163,27 @@ export function DashboardPage() {
     </div>
     {error && <div className="db-warning" role="alert">Actualisation impossible : données précédemment chargées affichées.</div>}
 
+
+    <div className="db-quick-filters" aria-label="Filtres rapides">
+      <label><span>Parcours</span><select aria-label="Parcours · filtre rapide" value={filters.plan}
+        onChange={e=>setFilter('plan',e.target.value as DashboardPlan)}>
+        <option value="all">Tous les plans</option><option value="A">Plan A · Vision</option><option value="B">Plan B · Data</option>
+      </select></label>
+      <label><span>Période</span><select aria-label="Période · filtre rapide" value={filters.period}
+        onChange={e=>setFilter('period',e.target.value as DashboardPeriod)}>
+        <option value="all">Toutes les dates</option><option value="7d">7 derniers jours</option><option value="30d">30 derniers jours</option><option value="90d">90 derniers jours</option>
+      </select></label>
+      <label className="db-quick-search"><span>Rechercher</span>
+        <input type="search" aria-label="Recherche rapide dans le Dashboard" value={filters.search}
+          placeholder="Entreprise, mission, compétence..." onChange={e=>setFilter('search',e.target.value)}/>
+      </label>
+      <button className="db-quick-reset" type="button" onClick={clear}>Réinitialiser</button>
+    </div>
+    <details className="db-filter-drawer">
+      <summary>Filtres avancés {activeCount>0&&<span>{activeCount} actifs</span>}</summary>
     <section className="db-filters" aria-label="Filtres du Dashboard">
       <div className="db-filters-heading"><strong>Filtres d’analyse</strong><span>{activeCount ? String(activeCount)+' actif(s)' : 'Vue complète'}</span>
-        <button type="button" onClick={clear}>Réinitialiser</button></div>
+        <button type="button" onClick={clear}>Effacer les filtres avancés</button></div>
       <div className="db-filter-grid">
         <label className="db-field"><span>Plan</span>
           <select aria-label="Filtrer par plan" value={filters.plan} onChange={e=>setFilter('plan',e.target.value as DashboardPlan)}>
@@ -167,16 +227,53 @@ export function DashboardPage() {
       <p>Ces annonces sont exclues des offres d’embauche confirmées et du taux de conversion tant que leur statut n’a pas été vérifié.</p></div>
       <button type="button" onClick={()=>setFilter('status','À vérifier')}>Examiner les dossiers</button>
     </aside>}
+    </details>
+
     <section className="db-kpis" aria-label="Indicateurs clés">
-      <Metric label="Dossiers analysés" value={metrics.total} hint="Dans la sélection actuelle" />
-      <Metric label="À candidater" value={metrics.toApply} hint={number.format(metrics.priority)+' de priorité A / A+'} accent="#b97b10"/>
-      <Metric label="Candidatures envoyées" value={metrics.sent} hint="Envois déclarés ou statut avancé" accent="#4c70ca"/>
-      <Metric label="Entretiens & suites" value={metrics.interviews} hint="Entretiens, tests ou offre" accent="#765ac7"/>
-      <Metric label="Taux de réponse" value={percent(metrics.responseRate)} hint={number.format(metrics.responses)+' réponses / '+number.format(metrics.sent)+' envois'} accent="#168776"/>
-      <Metric label="Relances échues" value={metrics.due} hint="Date de relance renseignée" accent="#d05a46"/>
+      <Metric label="Dossiers analysés" value={metrics.total} hint={number.format(metrics.companies)+' entreprises cibles représentées'} accent="#8881ef"/>
+      <Metric label="Candidatures envoyées" value={metrics.sent} hint="Envois déclarés ou états confirmés" accent="#6e81dd"/>
+      <Metric label="Taux de réponse" value={percent(metrics.responseRate)} hint={metrics.responses+' retours recruteur · '+metrics.sent+' envois'} accent="#5bb9a4"/>
+      <Metric label="Entretiens & suites" value={metrics.interviews} hint="Entretiens, tests et offres confirmées" accent="#eea76a"/>
     </section>
 
-    <div className="db-analytics-grid">
+    <div className="db-hero-grid">
+      <section className="db-panel db-activity-card">
+        <div className="db-hero-panel-title">
+          <div><h2>Chronologie des envois</h2><p>Activité réelle sur les 12 dernières semaines</p></div>
+          <span className="db-chart-tag">12 semaines</span>
+        </div>
+        <ActivityGraph weeks={activity} selected={filters.sentWeek} onSelect={week=>toggleFilter('sentWeek',week)}/>
+        <div className="db-activity-footer">
+          <div><strong>{recentActivity}</strong><span>envois · 4 dernières semaines</span></div>
+          <div><strong>{metrics.sent-datedSends}</strong><span>envois sans date enregistrée</span></div>
+          <div><strong>{metrics.interviewRate}%</strong><span>taux d’entretien</span></div>
+        </div>
+        {filters.sentWeek && <button type="button" className="db-trend-clear" onClick={()=>setFilter('sentWeek','')}>
+          Semaine du {new Date(filters.sentWeek+'T12:00:00Z').toLocaleDateString('fr-FR')} sélectionnée · Effacer
+        </button>}
+      </section>
+      <aside className="db-next-card" aria-label="Prochaines actions">
+        <div className="db-next-banner">
+          <span className="db-next-kicker">MON PLAN D’ACTION</span>
+          <h2>À faire maintenant</h2>
+          <p>{metrics.due} relance(s) échue(s) · {metrics.priority} candidature(s) prioritaires A/A+</p>
+          <span className="db-next-decor" aria-hidden="true"></span>
+        </div>
+        <div className="db-next-list">
+          <div className="db-next-header"><h3>Priorités du moment</h3><span>{queue.length} dossier(s)</span></div>
+          {queue.slice(0,4).map((o,i)=><Link to={routeForOffer(o)} key={o.id} className="db-next-item">
+            <span className="db-next-index">{String(i+1).padStart(2,'0')}</span>
+            <span className="db-next-copy"><strong>{o.company}</strong><small>{o.title}</small></span>
+            <span className="db-next-action">{hasSubmissionEvidence(o)&&followUpDue(o,today)?'Relancer':statusGroup(o)==='À vérifier'?'Vérifier':'Postuler'}</span>
+          </Link>)}
+          {!queue.length&&<p className="db-empty">Aucune candidature ou relance en attente.</p>}
+        </div>
+        <a href="#dashboard-queue" className="db-next-cta" onClick={e=>{
+          e.preventDefault();document.getElementById('dashboard-queue')?.scrollIntoView({behavior:'smooth'});
+        }}>Consulter toutes les priorités <span aria-hidden="true">↗</span></a>
+      </aside>
+    </div>
+    <div className="db-analytics-grid db-insights-grid">
       <section className="db-panel db-status">
         <PanelHeader title="Avancement des candidatures" detail="Clique sur un statut pour filtrer"/>
         <div className="db-status-list">
@@ -207,9 +304,7 @@ export function DashboardPage() {
       </section>
     </div>
 
-    <div className="db-analytics-grid db-analytics-grid--second">
-
-      <section className="db-panel db-map-panel">
+    <div className="db-wide-map">      <section className="db-panel db-map-panel">
         <PanelHeader title="Carte des opportunités" detail="France métropolitaine · Points géographiques réels"/>
         <div className="db-geo-summary"><span><strong>{coveredPins}</strong> dossiers localisés</span>
           <span><strong>{unknownPositions}</strong> non positionnés</span>
@@ -267,43 +362,8 @@ export function DashboardPage() {
         </div>
         <p className="db-note">Les points voisins sont regroupés au zoom général. Cliquez sur un groupe pour agrandir, ou sur une ville pour filtrer les KPIs et les dossiers. Les lieux ambigus restent non positionnés.</p>
       </section>
-      <section className="db-panel db-trend">
-        <PanelHeader title="Chronologie des envois" detail="12 semaines · Activité hebdomadaire réelle"/>
-        <div className="db-trend-summary">
-          <span><strong>{recentActivity}</strong> envois datés / 4 dernières semaines</span>
-          <span><strong>{Math.max(0,metrics.sent-datedSends)}</strong> envoi(s) sans date</span>
-        </div>
-        <div className="db-week-chart" role="group" aria-label="Histogramme hebdomadaire des candidatures">
-          <div className="db-week-grid" aria-hidden="true">
-            <span>{maxWeek}</span><span>{Math.round(maxWeek/2)}</span><span>0</span>
-          </div>
-          <div className="db-week-bars">
-            {activity.map(row=><button key={row.week} type="button"
-              className={'db-week-col'+(filters.sentWeek===row.week?' selected':'')}
-              title={row.count+' envoi(s) pour la semaine du '+new Date(row.week+'T12:00:00Z').toLocaleDateString('fr-FR')}
-              aria-label={'Filtrer les envois semaine du '+row.week}
-              aria-pressed={filters.sentWeek===row.week}
-              onClick={()=>toggleFilter('sentWeek',row.week)}>
-              <span className="db-week-plot"><span className="db-week-count">{row.count||''}</span>
-              <span className="db-week-fill" style={{height:(row.count/maxWeek*100)+'%'}}/></span>
-              <small>{new Date(row.week+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</small>
-            </button>)}
-          </div>
-        </div>
-        <p className="db-note">Semaines sans envoi affichées à zéro. Cliquez sur une semaine pour filtrer l’ensemble du Dashboard. Les envois sans date ne sont pas placés dans l’historique.</p>
-        <div className="db-conversion">
-          <h3>Entonnoir de candidatures</h3>
-          <div className="db-conversion-stages">
-            {[['Envoyées',metrics.sent],['Réponses',metrics.responses],['Entretiens',metrics.interviews],['Offres confirmées',metrics.offersReceived]].map(([name,value])=>
-              <div key={name} className="db-conversion-stage"><strong>{value}</strong><span>{name}</span></div>)}
-          </div>
-          <p className="db-note">{metrics.responses}/{metrics.sent} réponses de recruteurs · Taux de réponse : {percent(metrics.responseRate)} · Taux d’entretien : {percent(metrics.interviewRate)}. Les réponses et entretiens sont des sous-ensembles, pas des étapes additionnables.</p>
-          {metrics.unverifiedOutcomes>0&&<p className="db-conversion-warning">{metrics.unverifiedOutcomes} offre(s) signalées sans preuve d’envoi — exclues des offres confirmées.</p>}
-        </div>
-      </section>
     </div>
-
-    <section className="db-panel db-actions">
+    <section id="dashboard-queue" className="db-panel db-actions">
       <div className="db-panel-header"><div><h2>À traiter en priorité</h2><span>Relances échues, puis offres à candidater selon la priorité et la publication</span></div>
         <button className="db-button" type="button" onClick={()=>setShowAll(!showAll)}>{showAll?'Voir les priorités':'Voir tous les dossiers'}</button>
       </div>
