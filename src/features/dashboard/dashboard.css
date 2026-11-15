@@ -46,11 +46,12 @@
 .db-status-bar { display:block; min-width:0; height:100%; border-radius:10px; background:#8aa7d8; transition:width .22s ease; }
 .db-status-bar--0 { background:#aebbd1; }
 .db-status-bar--1 { background:#4c78c3; }
-.db-status-bar--2 { background:#4b9aab; }
-.db-status-bar--3 { background:#7164c5; }
-.db-status-bar--4 { background:#26947c; }
-.db-status-bar--5 { background:#cf776b; }
-.db-status-bar--6 { background:#b4a3a3; }
+.db-status-bar--2 { background:#c99843; }
+.db-status-bar--3 { background:#4b9aab; }
+.db-status-bar--4 { background:#7164c5; }
+.db-status-bar--5 { background:#26947c; }
+.db-status-bar--6 { background:#cf776b; }
+.db-status-bar--7 { background:#b4a3a3; }
 .db-legend { display:flex; gap:15px; align-items:center; flex-wrap:wrap; margin:-4px 0 12px; font-size:.72rem; color:var(--text-muted); }
 .db-legend span { display:inline-flex; align-items:center; gap:5px; }
 .db-dot { display:inline-block; width:9px; height:9px; border-radius:2px; background:#4473bd; }
