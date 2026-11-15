@@ -8,7 +8,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from ingest_remaining_official import (
     CONFIG, source_matches, canonical_url, extract_listing_links, verify_html,
-    publication_from_page, visible_location, JobHTML
+    publication_from_page, visible_location, JobHTML, extract_rss_job_links
 )
 
 REGISTRY=json.loads(CONFIG.read_text(encoding="utf-8"))["sources"]
@@ -41,6 +41,50 @@ class RemainingOfficialTests(unittest.TestCase):
         self.assertFalse(source_matches(s,"http://recrutement.airfrance.com/Pages/Offre/detailoffre.aspx?idOffre=1"))
         self.assertIsNone(verify_html(s,link,'<h1>Stage Data Analyst</h1><p>Location: Paris, France</p>',
                      "https://example.com/job/fake"))
+
+    def test_dassault_uses_employer_talentsoft_exact_host(self):
+        s = BY_COMPANY["Dassault Aviation"]
+        self.assertEqual(s["host"], "dassault-aviation-cand.talent-soft.com")
+        self.assertEqual(len(s["rss"]), 1)
+        self.assertTrue("Rss_Contract=4161" in s["rss"][0])
+        self.assertFalse(source_matches(s, "https://dassault-aviation-cand.talent-soft.com.evil.net/offre-de-emploi/emploi-stage-data_15827.aspx"))
+        self.assertFalse(source_matches(s, "https://dassault-aviation-cand.talent-soft.com/Pages/Offre/detailoffre.aspx"))
+        self.assertTrue(source_matches(s, s["seed"][0]))
+
+    def test_dassault_rss_filters_cross_domain_and_deduplicates(self):
+        s = BY_COMPANY["Dassault Aviation"]
+        xml = """<rss version="2.0"><channel>
+            <item><title>Stage Modèles IA</title>
+              <link>https://dassault-aviation-cand.talent-soft.com/offre-de-emploi/emploi-stage-modeles-d-ia_15827.aspx</link></item>
+            <item><title>Stage Modèles IA duplicate</title>
+              <link>https://dassault-aviation-cand.talent-soft.com/Pages/Offre/detailoffre.aspx?idOffre=15827&amp;LCID=1036</link></item>
+            <item><title>Stage frauduleux</title>
+              <link>https://dassault-aviation-cand.talent-soft.com.evil.net/offre-de-emploi/emploi-stage-ia_9999.aspx</link></item>
+        </channel></rss>"""
+        jobs = extract_rss_job_links(s, s["rss"][0], xml)
+        self.assertEqual(len(jobs), 1)
+        self.assertIn("15827.aspx", jobs[0])
+
+    def test_dassault_talentsoft_stage_metadata_and_location(self):
+        s = BY_COMPANY["Dassault Aviation"]
+        page = """<html><h1>Stage : Intelligence Artificielle (IA) au service de la maintenance aéronautique F/H</h1>
+           <p>Projet de machine learning et LLM pour la maintenance des Falcon.</p>
+           <section>Informations générales Localisation France, Nouvelle Aquitaine, 33 - Mérignac
+             Domaine professionnel / métier Conception des systèmes
+             Type de contrat Stage Durée du stage 6 mois Niveau du stage M2/Ingé3</section></html>"""
+        url = "https://dassault-aviation-cand.talent-soft.com/offre-de-emploi/emploi-stage-intelligence-artificielle-ia-au-service-de-la-maintenance-aeronautique-f-h_15900.aspx"
+        result = verify_html(s, url, page)
+        self.assertIsNotNone(result)
+        self.assertEqual(result["location"], "Mérignac, France")
+        self.assertIn("Intelligence Artificielle", result["title"])
+        self.assertIsNone(result["publishedAt"])
+        self.assertIsNone(verify_html(s, url, page.replace("Type de contrat Stage", "Type de contrat CDI")))
+
+    def test_dassault_public_url_variants_share_stable_job_id(self):
+        s = BY_COMPANY["Dassault Aviation"]
+        a = "https://dassault-aviation-cand.talent-soft.com/Pages/Offre/detailoffre.aspx?LCID=1036&idOffre=15827&idOrigine=502"
+        b = "https://dassault-aviation-cand.talent-soft.com/offre-de-emploi/emploi-stage-modeles-d-ia_15827.aspx"
+        self.assertEqual(canonical_url(s, a), canonical_url(s, b))
 
     def test_air_france_identity_keeps_offer_number(self):
         s=BY_COMPANY["Air France-KLM"]
