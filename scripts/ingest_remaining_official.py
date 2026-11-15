@@ -135,6 +135,21 @@ def extract_rss_job_links(source, feed_url, document):
 
 def visible_location(parsed, company):
     text = " ".join(parsed.content)
+    if company == "Air France-KLM":
+        # Official Talentsoft job detail pages separate title/contract/site in
+        # labeled fields, and often give a French *region* rather than city.
+        # This explicit employer field is valid France evidence; never infer
+        # a specific city from a region or the portal footer.
+        area = re.search(
+            r"\bLocalisation du poste\s+(?:Localisation du poste\s+)?"
+            r"France\s*,\s*([^,]{2,60})\s*,\s*"
+            r"([^,]{2,90})",
+            text, re.I,
+        )
+        if area:
+            region = area.group(1).strip()
+            if len(region) >= 3 and "france" not in normalized(region)[:8]:
+                return region + ", France"
     if company == "Safran":
         # The official Safran job card states:
         # "Emplacement : Blagnac , Occitanie , France" rather than
@@ -246,6 +261,10 @@ def verify_html(source, requested, content, resolved=None):
     resolved = resolved or requested
     if not source_matches(source, requested) or not source_matches(source, resolved):
         return None
+    # Reject redirects to another vacancy of the same employer, not only
+    # cross-domain redirects, to keep stable employer references intact.
+    if canonical_url(source, requested) != canonical_url(source, resolved):
+        return None
     parsed = JobHTML()
     # Header navigation and footer office addresses are not job locations.
     # Exclude them before extracting the H1-adjacent workplace; otherwise a
@@ -264,6 +283,24 @@ def verify_html(source, requested, content, resolved=None):
     for posting in (structured or [{}]):
         title = re.sub(r"\s+", " ", str(posting.get("title") or headline)).strip()
         body = " ".join(parsed.content)[:10000]
+        if source["id"] == "airfrance":
+            # The actual job title can live under "Intitulé du poste" while
+            # the H1 is the generic "Détail de l'offre" on Talentsoft pages.
+            labelled = re.search(
+                r"\bIntitul[eé] du poste\s*:?\s*"
+                r"(.{8,200}?)\s+(?:M[eé]tier|Type de contrat|"
+                r"Description de la mission|Domaine professionnel)\b",
+                body, re.I,
+            )
+            if labelled:
+                title = labelled.group(1).strip()
+            # A stage-only RSS link is a lead; the detail must independently
+            # state the internship contract before it enters Google Sheets.
+            if not re.search(
+                r"\bType de contrat\s*:?\s*(?:Convention de stage|Stage)\b",
+                body, re.I,
+            ):
+                continue
         if source["id"] == "dassault":
             # Talentsoft sometimes omits "Stage" from the H1 although the
             # employer detail explicitly states "Type de contrat Stage".
@@ -283,8 +320,13 @@ def verify_html(source, requested, content, resolved=None):
         if not title or not relevant or clearly_ineligible_calendar(title):
             continue
         if headline and normalized(title) not in normalized(headline) and normalized(headline) not in normalized(title):
-            # The explicit 'Stage -' prefix above must not break H1 matching.
-            if normalized(title).replace("stage ", "", 1) not in normalized(headline):
+            # Air France can use generic H1 "Détail de l'offre"; the
+            # employer's explicit "Intitulé du poste" field then wins.
+            generic_af_heading = source["id"] == "airfrance" and (
+                normalized(headline) in ("detail de l offre", "detail de l'offre")
+                or "detail de l offre" in normalized(headline)
+            )
+            if not generic_af_heading and normalized(title).replace("stage ", "", 1) not in normalized(headline):
                 continue
         if source.get("entity") and not any(normalized(name) in normalized(body)
                                             for name in source["entity"]):
