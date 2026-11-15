@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from '../dashboard/DashboardPage';
+import { AuthContext, type AuthContextValue } from '../../auth/useAuth';
+const authValue:AuthContextValue={status:'authenticated',token:'test',user:{email:'test@example.test',name:'Candidate',picture:null},signInWithCredential:async()=>undefined,signOut:()=>undefined,invalidateSession:()=>undefined};
 
 const makeOffer=(id:string, company:string, title:string, city:string, status:string, publishedAt='2026-11-10')=>({
   id, company, title, city, domain:'Plan A/B', specialization:title, region:null, m2Fit:'Oui',
@@ -23,57 +25,55 @@ vi.mock('../../hooks/useOffers', () => ({useOffers:()=>({data:{
 },loading:false,error:null,retry:vi.fn()})}));
 
 function mount(path='/dashboard') {
-  return render(<MemoryRouter initialEntries={[path]}>
+  return render(<AuthContext.Provider value={authValue}><MemoryRouter initialEntries={[path]}>
     <Routes><Route path="/dashboard" element={<DashboardPage/>}/><Route path="/dashboard/:sectorId" element={<DashboardPage/>}/></Routes>
-  </MemoryRouter>);
+  </MemoryRouter></AuthContext.Provider>);
 }
 
-describe('interactive decision dashboard',()=>{
+describe('single-screen MonStage decision dashboard',()=>{
   beforeEach(()=>localStorage.clear());
-  it('replaces the old dashboard with KPI, charts, France map, filters and decision queue',()=>{
+  it('shows four KPIs, graph, illustrated cards, agenda and rail without page-level secondary content',()=>{
     mount();
     expect(screen.getByRole('heading',{name:'Dashboard'})).toBeInTheDocument();
-    for (const title of ['Avancement des candidatures','Opportunités par secteur','Carte des opportunités','Chronologie des envois','À traiter en priorité']) {
-      expect(screen.getByRole('heading',{name:title})).toBeInTheDocument();
-    }
-    expect(screen.getByLabelText('Filtres du Dashboard')).toBeInTheDocument();
-    expect(screen.queryByRole('heading',{name:'30 entreprises · deux plans'})).not.toBeInTheDocument();
-    expect(screen.getByText('Dossiers analysés').nextElementSibling).not.toHaveTextContent('0');
-  });
-  it('renders the three illustrated decision cards and filters Plan B directly',()=>{
-    mount();
+    expect(screen.getByRole('group',{name:'Activité hebdomadaire des candidatures'})).toBeInTheDocument();
+    expect(screen.getByRole('navigation',{name:'Navigation MonStage'})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:/Computer Vision/})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:/Data & BI/})).toBeInTheDocument();
     expect(screen.getByRole('button',{name:/Explorer les villes/})).toBeInTheDocument();
-    expect(screen.getByRole('heading',{name:'Mon agenda de candidatures'})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Mon agenda'})).toBeInTheDocument();
+    expect(screen.getByText('Opportunités').nextElementSibling).not.toHaveTextContent('0');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+  it('filters Plan B from the illustrated tile and clears it using the top toolbar',()=>{
+    mount();
     fireEvent.click(screen.getByRole('button',{name:/Data & BI/}));
-    expect(screen.getByLabelText('Parcours · filtre rapide')).toHaveValue('B');
     expect(screen.getByRole('button',{name:/Data & BI/})).toHaveAttribute('aria-pressed','true');
+    expect(screen.getByText('Opportunités').nextElementSibling).not.toHaveTextContent('0');
     fireEvent.click(screen.getByRole('button',{name:/Data & BI/}));
-    expect(screen.getByLabelText('Parcours · filtre rapide')).toHaveValue('all');
+    expect(screen.getByRole('button',{name:/Data & BI/})).toHaveAttribute('aria-pressed','false');
   });
-  it('cross-filters the KPIs, sector chart and map from a sector click',()=>{
+  it('opens advanced filters as a dialog and retains cross-filtering without page scroll',()=>{
     mount();
-    fireEvent.click(screen.getByRole('button',{name:'Filtrer secteur Ferroviaire & transport public'}));
-    expect(screen.getByLabelText('Filtrer par secteur')).toHaveValue('ferroviaire');
-    expect(screen.getByText('Dossiers analysés').nextElementSibling).toHaveTextContent('2');
-    expect(screen.getByRole('button',{name:/Filtrer ville Nantes/})).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button',{name:/Filtrer ville Nantes/}));
-    expect(screen.getByLabelText('Filtrer par ville')).toHaveValue('Nantes');
-    fireEvent.click(screen.getByRole('button',{name:'Réinitialiser'}));
-    expect(screen.getByLabelText('Filtrer par secteur')).toHaveValue('');
-    expect(screen.getByLabelText('Filtrer par ville')).toHaveValue('');
-  });
-  it('supports Plan B and exact status filtering, without modifying source data',()=>{
-    mount();
+    fireEvent.click(screen.getByRole('button',{name:'Ouvrir les filtres'}));
+    const dialog=screen.getByRole('dialog',{name:'Filtres du Dashboard'});
+    expect(dialog).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Filtrer par plan'),{target:{value:'B'}});
-    expect(screen.getByLabelText('Filtrer par plan')).toHaveValue('B');
-    fireEvent.click(screen.getByRole('button',{name:'Filtrer statut Envoyée'}));
-    expect(screen.getByLabelText('Filtrer par statut')).toHaveValue('Envoyée');
-    // Another saved manual application may also have been sent in Plan B.
-    // Company drill-down isolates the Alstom source record.
     fireEvent.change(screen.getByLabelText('Filtrer par entreprise'),{target:{value:'Alstom'}});
-    expect(screen.getByText('Dossiers analysés').nextElementSibling).toHaveTextContent('1');
+    expect(screen.getByText('Opportunités').nextElementSibling).toHaveTextContent('1');
+    fireEvent.click(screen.getByRole('button',{name:'Fermer le panneau'}));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(feed[1].applicationStatus).toBe('Candidature envoyée');
+  });
+  it('opens the map from the illustrated tile and analytics from the rail',()=>{
+    mount();
+    fireEvent.click(screen.getByRole('button',{name:/Explorer les villes/}));
+    expect(screen.getByRole('dialog',{name:'Carte des opportunités'})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'Fermer le panneau'}));
+    fireEvent.click(screen.getByRole('button',{name:'Analyses avancées'}));
+    expect(screen.getByRole('heading',{name:'Avancement des candidatures'})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Opportunités par secteur'})).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button',{name:'Filtrer secteur Ferroviaire & transport public'}));
+    expect(screen.getByText('Opportunités').nextElementSibling).toHaveTextContent('2');
   });
 });

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { AccountMenu } from '../auth/AccountMenu';
 import { useOffers } from '../../hooks/useOffers';
 import { ErrorState } from '../../components/ErrorState';
 import { LoadingSkeleton } from '../../components/LoadingSkeleton';
@@ -134,6 +135,7 @@ export function DashboardPage() {
     sector: sectorId && sectors.some(s => s.id === sectorId) ? sectorId : '',
   }));
   const [showAll, setShowAll] = useState(false);
+  const [panel, setPanel] = useState<'filters'|'analytics'|'map'|'queue'|null>(null);
   const [mapZoom, setMapZoom] = useState(1);
   const [mapOrigin, setMapOrigin] = useState({x:310,y:220});
 
@@ -152,6 +154,12 @@ export function DashboardPage() {
   const toggleFilter = (key: 'status'|'sector'|'city'|'sentMonth'|'sentWeek', value:string) =>
     setFilters(f => ({...f,[key]:f[key]===value?'':value}));
   const clear = () => {setFilters(INITIAL_FILTERS);setShowAll(false);};
+  useEffect(() => {
+    if (!panel) return;
+    const close = (event:KeyboardEvent) => { if (event.key === 'Escape') setPanel(null); };
+    window.addEventListener('keydown',close);
+    return () => window.removeEventListener('keydown',close);
+  },[panel]);
 
   const all = useMemo(() => uniqueDashboardOffers(
     combineDossiers(withSavedManualOffers(data?.offers || []), local).filter(o => !actions.hidden[o.id])
@@ -196,38 +204,129 @@ export function DashboardPage() {
   if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
   if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
 
-  return <section className="page db-root">
-    <div className="db-heading">
-      <div>
-        <h1>Dashboard</h1>
-        <p>Votre activité de candidature en un coup d’œil · Données actualisées : {sourceTime}</p>
+  return <section className="db-root db-screen" aria-label="Dashboard MonStage">
+    <nav className="db-left-rail" aria-label="Navigation MonStage">
+      <Link className="db-rail-brand" to="/offers" title="MonStage — Offers" aria-label="MonStage — Offers">✦</Link>
+      <div className="db-rail-group">
+        <Link to="/offers" aria-label="Offers" title="Offers" className="db-rail-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.7"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.7"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.7"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.7"/></svg>
+        </Link>
+        <Link to="/dashboard" aria-current="page" aria-label="Dashboard" title="Dashboard" className="db-rail-icon active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 17V7m0 10h18M7 14l4-4 3 3 5-7" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </Link>
+        <Link to="/studio" aria-label="Studio" title="Studio" className="db-rail-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m9 15 3-7 3 7M10 13h4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </Link>
+        <Link to="/shortlist" aria-label="Saved jobs" title="Saved jobs" className="db-rail-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 3.5h12v17l-6-4-6 4z" strokeLinejoin="round"/></svg>
+        </Link>
+        <button type="button" aria-label="Analyses avancées" title="Analyses avancées" className="db-rail-icon" onClick={()=>setPanel('analytics')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 20V11m5 9V6m5 14v-8m5 8V4" strokeLinecap="round"/></svg>
+        </button>
+        <button type="button" aria-label="Carte géographique" title="Carte" className="db-rail-icon" onClick={()=>setPanel('map')}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15" strokeLinejoin="round"/></svg>
+        </button>
       </div>
-      <div className="db-header-actions">
-        <span className="db-source-chip">{number.format(metrics.companies)}/30 entreprises cibles présentes</span>
-        <button type="button" className="db-button" onClick={() => {setNow(new Date());retry();}}>↻ Actualiser</button>
+      <div className="db-rail-bottom">
+        <button type="button" className="db-rail-icon" title="Filtres" aria-label="Filtres avancés" onClick={()=>setPanel('filters')}>⚙</button>
+        <Link to="/offers" className="db-rail-icon" aria-label="Retour aux offres" title="Retour aux offres">↩</Link>
       </div>
+    </nav>
+    <div className="db-stage">
+      <header className="db-topbar">
+        <div className="db-topsearch">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="10.8" cy="10.8" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          <input type="search" aria-label="Rechercher dans le Dashboard" placeholder="Search" value={filters.search} onChange={e=>setFilter('search',e.target.value)}/>
+        </div>
+        <div className="db-topbar-actions">
+          {activeCount>0&&<button type="button" onClick={clear} className="db-clear-chip" aria-label="Réinitialiser">Effacer {activeCount} filtre(s) ×</button>}
+          <button type="button" title="Filtres et période" onClick={()=>setPanel('filters')} className="db-mini-tool" aria-label="Ouvrir les filtres">☷</button>
+          <button type="button" title="Actualiser les données" onClick={()=>{setNow(new Date());retry();}} className="db-mini-tool" aria-label="Actualiser">↻</button>
+          <span className="db-topbar-identity"><strong>MonStage</strong><small>Suivi de candidatures</small></span>
+          <AccountMenu/>
+        </div>
+      </header>
+      <main className="db-stage-content">
+        <div className="db-primary">
+          <div className="db-mobile-section-title"><h1>Dashboard</h1><span>Vue d’ensemble</span></div>
+          <h1 className="sr-only">Dashboard</h1>
+          <section className="db-kpis" aria-label="Indicateurs clés">
+            <Metric label="Opportunités" value={metrics.total} hint={metrics.toApply+' à candidater'} accent="#9d86f6"/>
+            <Metric label="Progression" value={metrics.sent} hint="Candidatures envoyées" accent="#7679dc"/>
+            <Metric label="Taux de réponse" value={percent(metrics.responseRate)} hint={metrics.responses+' retour(s) recruteur'} accent="#7dc4ad"/>
+            <Metric label="Entretiens" value={metrics.interviews} hint={metrics.due+' relance(s) échue(s)'} accent="#b898f1"/>
+          </section>
+          <section className="db-panel db-activity-card">
+            <div className="db-hero-panel-title">
+              <div><h2>Activité des candidatures</h2><p>12 dernières semaines · envois datés</p></div>
+              <button className="db-chart-tag" type="button" aria-label="Filtrer par plan" onClick={()=>setPanel('filters')}>{filters.plan==='all'?'Tous les plans':filters.plan==='A'?'Plan A':'Plan B'}⌄</button>
+            </div>
+            <ActivityGraph weeks={activity} selected={filters.sentWeek} onSelect={week=>toggleFilter('sentWeek',week)}/>
+            <div className="db-activity-footer">
+              <div><strong>{recentActivity}</strong><span>Envois / 4 semaines</span></div>
+              <div><strong>{metrics.responses}</strong><span>Réponses recruteur</span></div>
+              <div><strong>{Math.max(0,metrics.sent-datedSends)}</strong><span>Envois non datés</span></div>
+            </div>
+          </section>
+                <div className="db-insight-tiles" aria-label="Explorer mes parcours et mes opportunités">
+        <button type="button" className={'db-insight-tile db-insight-tile--vision'+(filters.plan==='A'?' selected':'')}
+          onClick={()=>setFilter('plan',filters.plan==='A'?'all':'A')} aria-pressed={filters.plan==='A'}>
+          <InsightArtwork variant="vision"/>
+          <div><strong>Computer Vision</strong><small>{all.filter(o=>dashboardPlan(o)==='A').length} dossiers détectés · Plan A</small></div>
+          <span className="db-insight-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button type="button" className={'db-insight-tile db-insight-tile--data'+(filters.plan==='B'?' selected':'')}
+          onClick={()=>setFilter('plan',filters.plan==='B'?'all':'B')} aria-pressed={filters.plan==='B'}>
+          <InsightArtwork variant="data"/>
+          <div><strong>Data & BI</strong><small>{all.filter(o=>dashboardPlan(o)==='B').length} dossiers détectés · Plan B</small></div>
+          <span className="db-insight-arrow" aria-hidden="true">↗</span>
+        </button>
+        <button type="button" className="db-insight-tile db-insight-tile--locations"
+          onClick={()=>setPanel('map')}>
+          <InsightArtwork variant="locations"/>
+          <div><strong>Explorer les villes</strong><small>{mapped.length} villes identifiées · Carte</small></div>
+          <span className="db-insight-arrow" aria-hidden="true">↗</span>
+        </button>
+      </div>
+          <button className="db-primary-cta" type="button" onClick={()=>setPanel('queue')}>Voir toutes mes candidatures <span aria-hidden="true">↗</span></button>
+        </div>
+        <aside className="db-side-area" aria-label="Mon agenda de candidatures">
+          <section className="db-side-promo">
+            <div className="db-side-promo-head"><span>MonStage Intelligence</span><span className="db-side-tag">Plan A + B</span></div>
+            <h2>Vos opportunités.<br/>Vos prochaines étapes.</h2>
+            <p>Une vue claire pour suivre les candidatures, anticiper les relances et préparer les entretiens.</p>
+            <div className="db-mini-avatars" aria-hidden="true"><span>CV</span><span>BI</span><span>ML</span><span>AI</span><b>+{metrics.companies}</b><small>entreprises suivies</small></div>
+            <button type="button" onClick={()=>setPanel('analytics')}>Explorer les analyses</button>
+          </section>
+          <section className="db-side-schedule">
+            <div className="db-side-schedule-header"><h2>Mon agenda</h2><button type="button" onClick={()=>setPanel('queue')} aria-label="Voir tous les dossiers">Semaine ⌄</button></div>
+            <div className="db-schedule-items">
+              {queue.slice(0,5).map((o,i)=><Link to={routeForOffer(o)} className="db-schedule-row" key={o.id}>
+                <span className={'db-schedule-glyph db-schedule-glyph--'+i%3} aria-hidden="true">{['✦','◈','✳','✧','◆'][i]}</span>
+                <span className="db-schedule-copy"><strong>{o.company}</strong><small>{o.title}</small></span>
+                <span className="db-schedule-meta"><b>{hasSubmissionEvidence(o)&&followUpDue(o,today)?'Relancer':statusGroup(o)==='À vérifier'?'Vérifier':'Postuler'}</b>
+                  <small>{canonicalDate(o.followUpAt)?new Date(canonicalDate(o.followUpAt)+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}):o.priority||'Priorité'}</small>
+                </span>
+              </Link>)}
+              {!queue.length&&<p className="db-empty">Aucune action prioritaire.</p>}
+            </div>
+            {metrics.unverifiedOutcomes>0&&<button type="button" className="db-small-alert" onClick={()=>{setFilter('status','À vérifier');setPanel('queue')}}>{metrics.unverifiedOutcomes} statut(s) à vérifier <span>→</span></button>}
+            <button type="button" className="db-schedule-bottom" onClick={()=>setPanel('queue')}>Voir toutes mes actions <span>↗</span></button>
+          </section>
+        </aside>
+      </main>
+      <span className="db-sync-caption" aria-label="Dernière synchronisation">Données MonStage · {sourceTime}</span>
     </div>
-    {error && <div className="db-warning" role="alert">Actualisation impossible : données précédemment chargées affichées.</div>}
-
-
-    <div className="db-quick-filters" aria-label="Filtres rapides">
-      <label><span>Parcours</span><select aria-label="Parcours · filtre rapide" value={filters.plan}
-        onChange={e=>setFilter('plan',e.target.value as DashboardPlan)}>
-        <option value="all">Tous les plans</option><option value="A">Plan A · Vision</option><option value="B">Plan B · Data</option>
-      </select></label>
-      <label><span>Période</span><select aria-label="Période · filtre rapide" value={filters.period}
-        onChange={e=>setFilter('period',e.target.value as DashboardPeriod)}>
-        <option value="all">Toutes les dates</option><option value="7d">7 derniers jours</option><option value="30d">30 derniers jours</option><option value="90d">90 derniers jours</option>
-      </select></label>
-      <label className="db-quick-search"><span>Rechercher</span>
-        <input type="search" aria-label="Recherche rapide dans le Dashboard" value={filters.search}
-          placeholder="Entreprise, mission, compétence..." onChange={e=>setFilter('search',e.target.value)}/>
-      </label>
-      <button className="db-quick-reset" type="button" onClick={clear}>Réinitialiser</button>
-    </div>
-    <details className="db-filter-drawer">
-      <summary>Filtres avancés {activeCount>0&&<span>{activeCount} actifs</span>}</summary>
-    <section className="db-filters" aria-label="Filtres du Dashboard">
+    {panel!==null&&<div className="db-dialog-backdrop" onMouseDown={e=>{if(e.currentTarget===e.target)setPanel(null);}}>
+      <section className="db-dialog" role="dialog" aria-modal="true" aria-label={panel==='map'?'Carte des opportunités':panel==='filters'?'Filtres du Dashboard':panel==='analytics'?'Analyses avancées':'Dossiers prioritaires'}>
+        <header className="db-dialog-header">
+          <div><strong>{panel==='filters'?'Filtres avancés':panel==='analytics'?'Analyses des candidatures':panel==='map'?'Carte des opportunités':'Mes candidatures'}</strong>
+            <small>Ces vues s’ouvrent sans faire défiler le Dashboard</small>
+          </div>
+          <button type="button" aria-label="Fermer le panneau" onClick={()=>setPanel(null)}>×</button>
+        </header>
+        <div className="db-dialog-body">
+          {panel==='filters'&&    <section className="db-filters" aria-label="Filtres du Dashboard">
       <div className="db-filters-heading"><strong>Filtres d’analyse</strong><span>{activeCount ? String(activeCount)+' actif(s)' : 'Vue complète'}</span>
         <button type="button" onClick={clear}>Effacer les filtres avancés</button></div>
       <div className="db-filter-grid">
@@ -265,86 +364,8 @@ export function DashboardPage() {
       </div>
       {filters.sentWeek && <button className="db-filter-chip" type="button" onClick={()=>setFilter('sentWeek','')}>Semaine du {new Date(filters.sentWeek+'T12:00:00Z').toLocaleDateString('fr-FR')} ×</button>}
       {filters.period !== 'all' && <p className="db-caveat">Le filtre temporel exclut les offres sans date de publication fiable. La date de vérification ne remplace jamais la publication.</p>}
-    </section>
-
-    {metrics.unverifiedOutcomes > 0 && <aside className="db-integrity" role="status">
-      <span className="db-integrity__mark">!</span>
-      <div><strong>{metrics.unverifiedOutcomes} statut(s) « Offre reçue » sans envoi daté</strong>
-      <p>Ces annonces sont exclues des offres d’embauche confirmées et du taux de conversion tant que leur statut n’a pas été vérifié.</p></div>
-      <button type="button" onClick={()=>setFilter('status','À vérifier')}>Examiner les dossiers</button>
-    </aside>}
-    </details>
-
-    <section className="db-kpis" aria-label="Indicateurs clés">
-      <Metric label="Dossiers analysés" value={metrics.total} hint={number.format(metrics.companies)+' entreprises cibles représentées'} accent="#8881ef"/>
-      <Metric label="Candidatures envoyées" value={metrics.sent} hint="Envois déclarés ou états confirmés" accent="#6e81dd"/>
-      <Metric label="Taux de réponse" value={percent(metrics.responseRate)} hint={metrics.responses+' retours recruteur · '+metrics.sent+' envois'} accent="#5bb9a4"/>
-      <Metric label="Entretiens & suites" value={metrics.interviews} hint="Entretiens, tests et offres confirmées" accent="#eea76a"/>
-    </section>
-
-    <div className="db-hero-grid">
-      <div className="db-hero-main">
-      <section className="db-panel db-activity-card">
-        <div className="db-hero-panel-title">
-          <div><h2>Chronologie des envois</h2><p>Activité réelle sur les 12 dernières semaines</p></div>
-          <span className="db-chart-tag">12 semaines</span>
-        </div>
-        <ActivityGraph weeks={activity} selected={filters.sentWeek} onSelect={week=>toggleFilter('sentWeek',week)}/>
-        <div className="db-activity-footer">
-          <div><strong>{recentActivity}</strong><span>envois · 4 dernières semaines</span></div>
-          <div><strong>{metrics.sent-datedSends}</strong><span>envois sans date enregistrée</span></div>
-          <div><strong>{metrics.interviewRate}%</strong><span>taux d’entretien</span></div>
-        </div>
-        {filters.sentWeek && <button type="button" className="db-trend-clear" onClick={()=>setFilter('sentWeek','')}>
-          Semaine du {new Date(filters.sentWeek+'T12:00:00Z').toLocaleDateString('fr-FR')} sélectionnée · Effacer
-        </button>}
-      </section>
-      <div className="db-insight-tiles" aria-label="Explorer mes parcours et mes opportunités">
-        <button type="button" className={'db-insight-tile db-insight-tile--vision'+(filters.plan==='A'?' selected':'')}
-          onClick={()=>setFilter('plan',filters.plan==='A'?'all':'A')} aria-pressed={filters.plan==='A'}>
-          <InsightArtwork variant="vision"/>
-          <div><strong>Computer Vision</strong><small>{all.filter(o=>dashboardPlan(o)==='A').length} dossiers détectés · Plan A</small></div>
-          <span className="db-insight-arrow" aria-hidden="true">↗</span>
-        </button>
-        <button type="button" className={'db-insight-tile db-insight-tile--data'+(filters.plan==='B'?' selected':'')}
-          onClick={()=>setFilter('plan',filters.plan==='B'?'all':'B')} aria-pressed={filters.plan==='B'}>
-          <InsightArtwork variant="data"/>
-          <div><strong>Data & BI</strong><small>{all.filter(o=>dashboardPlan(o)==='B').length} dossiers détectés · Plan B</small></div>
-          <span className="db-insight-arrow" aria-hidden="true">↗</span>
-        </button>
-        <button type="button" className="db-insight-tile db-insight-tile--locations"
-          onClick={()=>document.getElementById('dashboard-map')?.scrollIntoView({behavior:'smooth',block:'start'})}>
-          <InsightArtwork variant="locations"/>
-          <div><strong>Explorer les villes</strong><small>{mapped.length} villes identifiées · Carte</small></div>
-          <span className="db-insight-arrow" aria-hidden="true">↗</span>
-        </button>
-      </div>
-      </div>
-      <aside className="db-next-card" aria-label="Prochaines actions">
-        <div className="db-next-banner">
-          <span className="db-next-kicker">MON PLAN D’ACTION</span>
-          <h2>À faire maintenant</h2>
-          <p>{metrics.due} relance(s) échue(s) · {metrics.priority} candidature(s) prioritaires A/A+</p>
-          <span className="db-next-decor" aria-hidden="true"></span>
-        </div>
-        <div className="db-next-list">
-          <div className="db-next-header"><h3>Mon agenda de candidatures</h3><span>{queue.length} dossier(s)</span></div>
-          {queue.slice(0,5).map((o,i)=><Link to={routeForOffer(o)} key={o.id} className="db-next-item">
-            <span className="db-next-index">{String(i+1).padStart(2,'0')}</span>
-            <span className="db-next-copy"><strong>{o.company}</strong><small>{o.title}</small></span>
-            <span className="db-next-action">
-              {hasSubmissionEvidence(o)&&followUpDue(o,today)?'Relancer':statusGroup(o)==='À vérifier'?'Vérifier':'Postuler'}
-              {canonicalDate(o.followUpAt) && <small>{new Date(canonicalDate(o.followUpAt)+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}</small>}
-            </span>
-          </Link>)}
-          {!queue.length&&<p className="db-empty">Aucune candidature ou relance en attente.</p>}
-        </div>
-        <a href="#dashboard-queue" className="db-next-cta" onClick={e=>{
-          e.preventDefault();document.getElementById('dashboard-queue')?.scrollIntoView({behavior:'smooth'});
-        }}>Consulter toutes les priorités <span aria-hidden="true">↗</span></a>
-      </aside>
-    </div>
-    <div className="db-analytics-grid db-insights-grid">
+    </section>}
+          {panel==='analytics'&&    <div className="db-analytics-grid db-insights-grid">
       <section className="db-panel db-status">
         <PanelHeader title="Avancement des candidatures" detail="Clique sur un statut pour filtrer"/>
         <div className="db-status-list">
@@ -375,7 +396,8 @@ export function DashboardPage() {
       </section>
     </div>
 
-    <div id="dashboard-map" className="db-wide-map">      <section className="db-panel db-map-panel">
+}
+          {panel==='map'&&    <div id="dashboard-map-panel" className="db-wide-map">      <section className="db-panel db-map-panel">
         <PanelHeader title="Carte des opportunités" detail="France métropolitaine · Points géographiques réels"/>
         <div className="db-geo-summary"><span><strong>{coveredPins}</strong> dossiers localisés</span>
           <span><strong>{unknownPositions}</strong> non positionnés</span>
@@ -434,7 +456,8 @@ export function DashboardPage() {
         <p className="db-note">Les points voisins sont regroupés au zoom général. Cliquez sur un groupe pour agrandir, ou sur une ville pour filtrer les KPIs et les dossiers. Les lieux ambigus restent non positionnés.</p>
       </section>
     </div>
-    <section id="dashboard-queue" className="db-panel db-actions">
+}
+          {panel==='queue'&&    <section id="dashboard-queue-panel" className="db-panel db-actions">
       <div className="db-panel-header"><div><h2>À traiter en priorité</h2><span>Relances échues, puis offres à candidater selon la priorité et la publication</span></div>
         <button className="db-button" type="button" onClick={()=>setShowAll(!showAll)}>{showAll?'Voir les priorités':'Voir tous les dossiers'}</button>
       </div>
@@ -454,9 +477,9 @@ export function DashboardPage() {
       </div>
       {showAll&&shown.length>150&&<p className="db-note">Les 150 premiers dossiers sont affichés ; affinez les filtres pour voir les autres.</p>}
     </section>
-    <footer className="db-footer">
-      <span>Données : MonStage / Google Sheets et candidatures spontanées locales. Les filtres s’appliquent à tous les visuels.</span>
-      <span>Dernière synchronisation connue : {sourceTime}</span>
-    </footer>
+}
+        </div>
+      </section>
+    </div>}
   </section>;
 }
