@@ -1,3 +1,4 @@
+import './portrait.css';
 import { useAuth } from '../../auth/useAuth';
 import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
