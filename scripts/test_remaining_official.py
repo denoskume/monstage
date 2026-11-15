@@ -81,6 +81,40 @@ class RemainingOfficialTests(unittest.TestCase):
         self.assertIsNone(result["publishedAt"])
         self.assertIsNone(verify_html(s, url, page.replace("Type de contrat Stage", "Type de contrat CDI")))
 
+    def test_sanofi_labeled_title_matches_verified_stage_not_generic_h1(self):
+        s = BY_COMPANY["Sanofi"]
+        url = s["seed"][0]
+        page = """<html><h1>Postulez chez Sanofi à Gentilly</h1>
+            <div>Gentilly, France Apprentice/Intern (Fixed Term)</div>
+            <section>Intitulé du poste:stage 6 mois – data analyst audit interne
+                Lieu : Gentilly A partir de : mars 2027
+                À propos du poste</section>
+            <p>Python, SQL et Power BI; suivi des audits du groupe.</p>
+            </html>"""
+        result = verify_html(s, url, page)
+        self.assertIsNotNone(result)
+        self.assertEqual(result["title"], "stage 6 mois – data analyst audit interne")
+        self.assertEqual(result["location"], "Gentilly, France")
+        self.assertIsNone(verify_html(
+            s, url, page.replace("stage 6 mois – data analyst audit interne",
+                                 "Technicien support CDI")))
+
+    def test_danone_explicit_job_header_country_and_city(self):
+        s = BY_COMPANY["Danone"]
+        url = s["seed"][0]
+        page = """<h1>INTERNSHIP – Compliance Data Analyst - March 2027 (M/F)</h1>
+            <p>France</p><p>PARIS</p><p>On-site</p><p>Temporary Full-Time</p>
+            <h2>About the offer</h2><p>Compliance reporting and SQL data analysis.</p>"""
+        good = verify_html(s, url, page)
+        self.assertIsNotNone(good)
+        self.assertEqual(good["location"], "Paris, France")
+        self.assertIsNone(verify_html(
+            s, url, page.replace("<p>France</p><p>PARIS</p>",
+                                "<p>United States</p><p>NEW YORK</p>")))
+        self.assertIsNone(verify_html(
+            s, url, """<h1>INTERNSHIP – Compliance Data Analyst - March 2027</h1>
+                        <p>New York, USA</p><footer>France PARIS On-site</footer>"""))
+
     def test_sanofi_location_next_to_h1_not_page_header(self):
         s = BY_COMPANY["Sanofi"]
         url = s["seed"][0]
