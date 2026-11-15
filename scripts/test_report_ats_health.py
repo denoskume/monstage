@@ -26,13 +26,15 @@ class CoverageTests(unittest.TestCase):
         payload=report(TARGETS,audit,{}, {}, offers,NOW)
         summary=payload["summary"]
         self.assertEqual(summary["target_groups"],30)
-        self.assertEqual(summary["groups_with_a_configured_ingestion"],17)
-        self.assertEqual(summary["groups_without_configured_ingestion"],13)
+        # A configured adapter is not a verified job-feed extraction.
+        self.assertEqual(summary["groups_with_a_configured_ingestion"],30)
+        self.assertEqual(summary["groups_without_configured_ingestion"],0)
+        self.assertEqual(summary["remaining_13_with_verified_job_detail"],0)
         self.assertEqual(summary["official_rows_saved"],1)
         self.assertEqual(summary["groups_with_official_listings_verified_48h"],1)
         self.assertFalse(summary["full_30_group_ats_coverage_verified"])
         missing=next(x for x in payload["companies"] if x["company"]=="Safran")
-        self.assertEqual(missing["status"],"portal_only_no_ingestion")
+        self.assertEqual(missing["status"],"connector_configured_no_recent_saved_listing")
         self.assertEqual(missing["saved_official"],0)
 
     def test_unknown_publication_not_substituted_with_verification(self):
