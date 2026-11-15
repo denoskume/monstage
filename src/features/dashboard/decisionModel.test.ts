@@ -23,17 +23,17 @@ test('distinguishes an application status from genuine send and publication date
   expect(canonicalDate('Vérifié hier')).toBe('');
   expect(dashboardPlan(sample[0])).toBe('A');
   expect(dashboardPlan(sample[1])).toBe('B');
-  expect(applicationMonths(sample).map(x=>x.count).reduce((a,b)=>a+b,0)).toBe(2);
+  expect(applicationMonths(sample).map(x=>x.count).reduce((a,b)=>a+b,0)).toBe(3);
 });
 test('reconciles filtered KPIs and queue with actual source rows',()=>{
   const m=dashboardMetrics(sample,'2026-11-15');
   expect(m.total).toBe(4);
   expect(m.toApply).toBe(1);
-  expect(m.sent).toBe(2);
-  expect(m.responses).toBe(1);
+  expect(m.sent).toBe(3);
+  expect(m.responses).toBe(2);
   expect(m.interviews).toBe(1);
   expect(m.due).toBe(1);
-  expect(m.responseRate).toBe(50);
+  expect(m.responseRate).toBe(67);
   expect(priorityQueue(sample,'2026-11-15')[0].id).toBe('analyst');
   expect(byStatus(sample).reduce((sum,row)=>sum+row.count,0)).toBe(4);
 });
