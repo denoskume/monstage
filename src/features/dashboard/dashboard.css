@@ -857,3 +857,83 @@
  .db-campaign-months{font-size:.38rem}
  .db-pie-item{font-size:.39rem}
 }
+
+
+/* Three-panel dashboard: the campaign line chart, status pie and Google Maps
+   REPLACE the obsolete weekly Activity card. One spacious row; no page scroll. */
+.db-screen .db-primary{
+  grid-template-rows:minmax(82px,92px) minmax(0,1fr) 37px;
+  gap:10px;
+}
+.db-screen .db-visual-panels{
+  grid-template-columns:minmax(0,1.30fr) minmax(0,1.02fr) minmax(0,1.10fr);
+  gap:12px;
+}
+.db-screen .db-mini-panel{
+  padding:17px 18px 12px;
+  border-radius:15px;
+  gap:12px;
+}
+.db-screen .db-mini-panel-header h2{font-size:clamp(.87rem,1.04vw,1.06rem)}
+.db-screen .db-mini-panel-header>span{font-size:.72rem}
+.db-screen .db-campaign-legend{font-size:clamp(.67rem,.75vw,.80rem);gap:9px 15px}
+.db-screen .db-campaign-legend i{width:10px;height:10px;flex-basis:10px}
+.db-screen .db-campaign-chart{gap:8px}
+.db-screen .db-campaign-chart svg{flex:1;min-height:0}
+.db-screen .db-campaign-months{height:19px;font-size:clamp(.62rem,.68vw,.72rem)}
+.db-screen .db-campaign-footnote{
+  white-space:normal;line-height:1.4;
+  font-size:clamp(.62rem,.69vw,.74rem);
+  max-height:3.2em;overflow:hidden;
+}
+.db-screen .db-pie-panel{align-items:stretch}
+.db-screen .db-pie-layout{
+  display:grid;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;
+  align-items:stretch;gap:12px;
+}
+.db-screen .db-pie-graphic{min-height:0}
+.db-screen .db-pie-graphic svg{
+  height:100%;width:100%;
+  max-height:clamp(175px,34dvh,315px);max-width:315px;
+}
+.db-screen .db-pie-legend{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:center;gap:4px 9px;
+}
+.db-screen .db-pie-item{
+  min-height:28px;padding:5px 6px;
+  grid-template-columns:9px minmax(0,1fr) 25px;
+  gap:6px;font-size:clamp(.62rem,.69vw,.74rem);
+}
+.db-screen .db-pie-caption{
+  white-space:normal;line-height:1.3;font-size:.67rem;
+}
+.db-screen .db-map-mini{padding:11px;gap:9px}
+.db-screen .db-map-mini .db-mini-panel-header{padding:0 5px 0 3px}
+.db-screen .db-map-mini .db-google-map-shell--compact{height:100%!important}
+@media(max-width:1100px){
+  .db-screen .db-visual-panels{gap:8px;grid-template-columns:minmax(0,1.28fr) minmax(0,1.05fr) minmax(0,1.05fr)}
+  .db-screen .db-mini-panel{padding:12px 9px 9px;gap:9px}
+  .db-screen .db-campaign-legend{gap:6px;font-size:.63rem}
+  .db-screen .db-pie-legend{gap:2px 4px}
+}
+@media(max-width:780px){
+  .db-screen .db-primary{grid-template-rows:minmax(75px,83px) minmax(0,1fr) 32px;gap:7px}
+  .db-screen .db-visual-panels{grid-template-columns:minmax(0,1.13fr) minmax(0,1fr) minmax(0,1fr);gap:5px}
+  .db-screen .db-mini-panel{padding:8px 6px 7px;gap:5px}
+  .db-screen .db-mini-panel-header h2{font-size:.7rem}
+  .db-screen .db-campaign-legend{font-size:.57rem;gap:4px}
+  .db-screen .db-campaign-months{font-size:.52rem}
+  .db-screen .db-pie-layout{gap:5px}
+  .db-screen .db-pie-legend{grid-template-columns:1fr;gap:0}
+  .db-screen .db-pie-item{font-size:.56rem;min-height:20px;padding:2px}
+  .db-screen .db-pie-caption,.db-screen .db-campaign-footnote{font-size:.52rem}
+}
+@media(max-width:480px){
+  .db-screen .db-primary{grid-template-rows:minmax(75px,80px) minmax(0,1fr) 30px;gap:5px}
+  .db-screen .db-mini-panel{padding:6px 4px;gap:3px}
+  .db-screen .db-mini-panel-header h2{font-size:.56rem}
+  .db-screen .db-campaign-legend{font-size:.47rem;gap:2px 4px}
+  .db-screen .db-campaign-months{font-size:.43rem}
+  .db-screen .db-pie-item{font-size:.43rem;min-height:18px}
+}

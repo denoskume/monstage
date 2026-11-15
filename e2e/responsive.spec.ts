@@ -257,7 +257,8 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await signIn(page);
   await page.goto('#/dashboard');
   await expect(page.locator('.db-screen')).toBeVisible();
-  await expect(page.getByRole('group', {name:'Activité hebdomadaire des candidatures'})).toBeVisible();
+  await expect(page.locator('.db-activity-card')).toHaveCount(0);
+  await expect(page.getByRole('heading', {name:'Activité des candidatures'})).toHaveCount(0);
   const planSelect=page.getByRole('combobox',{name:'Choisir un plan'});
   const dynamicHeading=page.locator('.db-dynamic-heading');
   await expect(dynamicHeading).toHaveText('Dashboard');
@@ -265,6 +266,7 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   await expect(page.locator('.db-insight-tile')).toHaveCount(0);
   await expect(page.locator('.db-visual-panels')).toHaveCount(1);
   await expect(page.locator('.db-visual-panels > .db-mini-panel')).toHaveCount(3);
+  await expect(page.locator('.db-primary > .db-visual-panels')).toBeVisible();
   await expect(page.getByRole('img',{name:/Trois courbes cumulatives de septembre 2026 à février 2027/})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Statut des dossiers'})).toBeVisible();
   await expect(page.locator('.db-map-mini .db-google-map-shell')).toBeVisible();
@@ -311,6 +313,16 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
     expect(tiles[0].right).toBeLessThanOrEqual(tiles[1].left+1);
     expect(tiles[1].right).toBeLessThanOrEqual(tiles[2].left+1);
     expect(Math.max(...tiles.map(x=>x.bottom))).toBeLessThanOrEqual(size.height+1);
+    const layout = await page.evaluate(() => ({
+      kpiBottom:document.querySelector('.db-kpis')!.getBoundingClientRect().bottom,
+      visualTop:document.querySelector('.db-visual-panels')!.getBoundingClientRect().top,
+      visualHeight:document.querySelector('.db-visual-panels')!.getBoundingClientRect().height,
+      ctaTop:document.querySelector('.db-primary-cta')!.getBoundingClientRect().top,
+      visualBottom:document.querySelector('.db-visual-panels')!.getBoundingClientRect().bottom,
+    }));
+    expect(layout.visualTop).toBeGreaterThanOrEqual(layout.kpiBottom);
+    expect(layout.visualHeight).toBeGreaterThan(size.height*0.5);
+    expect(layout.visualBottom).toBeLessThanOrEqual(layout.ctaTop);
   }
   await page.getByRole('button',{name:'Carte géographique'}).click();
   await expect(page.getByRole('dialog',{name:'Carte des opportunités'})).toBeVisible();

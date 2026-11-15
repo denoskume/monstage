@@ -10,7 +10,7 @@ import { combineDossiers, PROSPECTION_EVENT, readProspectionOffers } from '../ta
 import { sectors, followUpDue } from '../targets/targets';
 import {
   INITIAL_FILTERS, filterDashboardOffers, uniqueDashboardOffers, dashboardMetrics,
-  bySector, byStatus, byCity, applicationWeeks, priorityQueue, hasSubmissionEvidence, canonicalDate,
+  bySector, byStatus, byCity, priorityQueue, hasSubmissionEvidence, canonicalDate,
   routeForOffer, statusGroup, dashboardPlan, type DashboardFilters, type DashboardPeriod,
   type DashboardPlan,
 } from './decisionModel';
@@ -36,48 +36,6 @@ function PanelHeader({title,detail}: {title:string;detail?:string}) {
   return <header className="db-panel-header"><h2>{title}</h2>{detail && <span>{detail}</span>}</header>;
 }
 
-
-function ActivityGraph({weeks, selected, onSelect}:{
-  weeks:Array<{week:string;count:number}>; selected:string; onSelect:(week:string)=>void;
-}) {
-  const peak=Math.max(1,...weeks.map(w=>w.count));
-  const points=weeks.map((item,index)=>({
-    ...item, x:52+(index*822/Math.max(1,weeks.length-1)),
-    y:207-item.count/peak*152,
-  }));
-  const path=points.map((p,i)=>{
-    if(i===0)return 'M '+p.x.toFixed(1)+' '+p.y.toFixed(1);
-    const q=points[i-1],mid=(q.x+p.x)/2;
-    return 'C '+mid.toFixed(1)+' '+q.y.toFixed(1)+' '+mid.toFixed(1)+' '+p.y.toFixed(1)+' '+p.x.toFixed(1)+' '+p.y.toFixed(1);
-  }).join(' ');
-  const area=path+' L '+(points.at(-1)?.x||874)+' 219 L '+(points[0]?.x||52)+' 219 Z';
-  return <div className="db-activity-chart" role="group" aria-label="Activité hebdomadaire des candidatures">
-    <svg viewBox="0 0 920 255" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="db-activity-gradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7772f7" stopOpacity=".23"/>
-          <stop offset="100%" stopColor="#7772f7" stopOpacity="0"/>
-        </linearGradient>
-      </defs>
-      {[55,131,207].map((y,i)=><g key={y}><line x1="51" y1={y} x2="883" y2={y} stroke="#e9e8f1" strokeDasharray="5 6"/><text x="19" y={y+4} fontSize="13" fill="#a1a4b2">{Math.round(peak*(1-i/2))}</text></g>)}
-      <path d={area} fill="url(#db-activity-gradient)"/>
-      <path d={path} fill="none" stroke="#7772f7" strokeWidth="3.1" strokeLinecap="round" strokeLinejoin="round"/>
-      {points.map(p=><circle key={p.week} cx={p.x} cy={p.y} r={selected===p.week?7:4.2} fill={selected===p.week?'#5348d7':'#fff'} stroke="#7772f7" strokeWidth="2.5"/>)}
-    </svg>
-    <div className="db-activity-clicks">
-      {points.map(p=><button key={p.week} type="button"
-        className={'db-activity-point'+(selected===p.week?' selected':'')}
-        style={{left:(p.x/920*100)+'%',top:(p.y/255*100)+'%'}}
-        title={p.count+' candidature(s) envoyée(s) · semaine du '+p.week}
-        aria-label={'Filtrer les envois semaine du '+p.week}
-        aria-pressed={selected===p.week}
-        onClick={()=>onSelect(p.week)}><span>{p.count} envoi(s)</span></button>)}
-    </div>
-    <div className="db-activity-axis">{weeks.filter((_,i)=>i%2===0).map(row=><span key={row.week}>
-      {new Date(row.week+'T12:00:00Z').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})}
-    </span>)}</div>
-  </div>;
-}
 
 export function DashboardPage() {
   const { sectorId } = useParams();
@@ -129,14 +87,11 @@ export function DashboardPage() {
   const statusGroups = useMemo(() => byStatus(shown),[shown]);
   const sectorGroups = useMemo(() => bySector(shown),[shown]);
   const cityGroups = useMemo(() => byCity(shown),[shown]);
-  const activity = useMemo(() => applicationWeeks(shown, now, 12),[shown,now]);
-  const datedSends = shown.filter(o => hasSubmissionEvidence(o) && Boolean(canonicalDate(o.appliedAt))).length;
   const queue = useMemo(() => priorityQueue(shown,today),[shown,today]);
   const maxStatus = Math.max(...statusGroups.map(x=>x.count), 1);
   const maxSector = Math.max(...sectorGroups.map(x=>x.A+x.B+x.other), 1);
   const mapped = cityGroups.map(row => ({...row, point:cityPoint(row.city)}))
     .filter((row): row is typeof row & {point:{lon:number;lat:number}} => row.point!==null);
-  const recentActivity=activity.slice(-4).reduce((sum,row)=>sum+row.count,0);
   const coveredPins = mapped.reduce((sum,row)=>sum+row.count,0);
   const unknownPositions = shown.length-coveredPins;
   const companyOptions = [...new Set(all.map(o=>o.company).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
@@ -231,18 +186,6 @@ export function DashboardPage() {
             <Metric label="Progression" value={metrics.sent} hint="Candidatures envoyées" accent="#7679dc"/>
             <Metric label="Taux de réponse" value={percent(metrics.responseRate)} hint={metrics.responses+' retour(s) recruteur'} accent="#7dc4ad"/>
             <Metric label="Entretiens" value={metrics.interviews} hint={metrics.due+' relance(s) échue(s)'} accent="#b898f1"/>
-          </section>
-          <section className="db-panel db-activity-card">
-            <div className="db-hero-panel-title">
-              <div><h2>Activité des candidatures</h2><p>12 dernières semaines · envois datés</p></div>
-              <span className="db-chart-tag">12 semaines</span>
-            </div>
-            <ActivityGraph weeks={activity} selected={filters.sentWeek} onSelect={week=>toggleFilter('sentWeek',week)}/>
-            <div className="db-activity-footer">
-              <div><strong>{recentActivity}</strong><span>Envois / 4 semaines</span></div>
-              <div><strong>{metrics.responses}</strong><span>Réponses recruteur</span></div>
-              <div><strong>{Math.max(0,metrics.sent-datedSends)}</strong><span>Envois non datés</span></div>
-            </div>
           </section>
           <div className="db-visual-panels">
             <CampaignLines offers={shown} now={now}/>

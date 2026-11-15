@@ -32,13 +32,16 @@ function mount(path='/dashboard') {
 
 describe('single-screen MonStage decision dashboard',()=>{
   beforeEach(()=>localStorage.clear());
-  it('shows three campaign decision visuals in the bottom row',()=>{
+  it('shows three decision visuals in the main space and no obsolete Activity card',()=>{
     mount();
     expect(screen.getByRole('heading',{name:'Dashboard'})).toBeInTheDocument();
-    expect(screen.getByRole('group',{name:'Activité hebdomadaire des candidatures'})).toBeInTheDocument();
+    expect(screen.queryByRole('group',{name:'Activité hebdomadaire des candidatures'})).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading',{name:'Activité des candidatures'})).not.toBeInTheDocument();
+    expect(document.querySelector('.db-activity-card')).not.toBeInTheDocument();
     expect(screen.getByRole('navigation',{name:'Navigation MonStage'})).toBeInTheDocument();
     expect(screen.getByRole('combobox',{name:'Choisir un plan'})).toHaveValue('all');
     expect(document.querySelector('.db-visual-panels')).toBeInTheDocument();
+    expect(document.querySelectorAll('.db-primary > .db-visual-panels > .db-mini-panel')).toHaveLength(3);
     expect(screen.getByRole('heading',{name:'Campagne de stages'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Statut des dossiers'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
