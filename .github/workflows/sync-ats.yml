@@ -21,6 +21,13 @@ on:
       - 'scripts/test_apps_script_runner.cjs'
       - 'scripts/target_career_sources.json'
       - 'apps-script/Code.gs'
+  workflow_run:
+    # Import only after the UI/backend deployment workflow has completed.
+    # The prior push-triggered import raced against clasp and lost the first
+    # official offers as "Unknown authorized ATS source".
+    workflows: ['Deploy MonStage to GitHub Pages']
+    types: [completed]
+    branches: [main]
   schedule:
     # Hourly, 24/7. Scheduled GitHub runners can start late.
     - cron: '17 * * * *'
@@ -51,7 +58,13 @@ jobs:
 
   refresh:
     # Never write into the production Sheets from an unmerged feature branch.
-    if: github.ref == 'refs/heads/main'
+    # Push runs validate code only. Scheduled/manual runs, or a completed
+    # successful deployment, can write to production after credentials exist.
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'))
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 18
