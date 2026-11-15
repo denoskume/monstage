@@ -10,6 +10,7 @@ type Props = {
   cities: GoogleMapCity[];
   selectedCity: string;
   onCitySelect: (city: string) => void;
+  compact?: boolean;
 };
 
 const API_KEY = (import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '').trim();
@@ -41,7 +42,7 @@ function loadGoogleMaps(key: string): Promise<void> {
   return pending;
 }
 
-export function GoogleFranceMap({ cities, selectedCity, onCitySelect }: Props) {
+export function GoogleFranceMap({ cities, selectedCity, onCitySelect, compact=false }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
   const markers = useRef<google.maps.Marker[]>([]);
@@ -104,17 +105,17 @@ export function GoogleFranceMap({ cities, selectedCity, onCitySelect }: Props) {
     + (selectedCity ? '11' : '6') + '&q=' + encodeURIComponent(city);
   const external = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(city);
 
-  return <div className="db-google-map-shell">
+  return <div className={'db-google-map-shell'+(compact?' db-google-map-shell--compact':'')}>
     {API_KEY && !failed
       ? <div ref={host} data-testid="google-maps-js" className="db-google-canvas"
           role="application" aria-label="Google Maps avec marqueurs interactifs des candidatures"/>
       : <iframe data-testid="google-maps-iframe" className="db-google-iframe" title="Google Maps réel"
           src={embed} loading="eager" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen/>}
-    <a className="db-google-external" href={external} target="_blank" rel="noopener noreferrer">
+    {!compact && <a className="db-google-external" href={external} target="_blank" rel="noopener noreferrer">
       Ouvrir dans Google Maps ↗
-    </a>
-    {!API_KEY && <div className="db-google-map-note">Sélectionnez une ville pour centrer Google Maps.
+    </a>}
+    {!compact && !API_KEY && <div className="db-google-map-note">Sélectionnez une ville pour centrer Google Maps.
       Les marqueurs de toutes les offres nécessitent la clé Google Maps du site.</div>}
-    {failed && <div className="db-google-map-note">Carte intégrée affichée : API Google Maps indisponible.</div>}
+    {!compact && failed && <div className="db-google-map-note">Carte intégrée affichée : API Google Maps indisponible.</div>}
   </div>;
 }
