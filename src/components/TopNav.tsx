@@ -5,8 +5,6 @@ const links = [
   ['/offers', 'Jobs'],
   ['/dashboard', 'Tableau de bord'],
   ['/studio', 'Studio'],
-  ['/prospection', 'Prospection'],
-  ['/stages', 'Stages'],
 ] as const;
 
 function BookmarkIcon() {

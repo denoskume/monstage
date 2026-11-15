@@ -186,16 +186,6 @@
   height: 2px;
   background: var(--accent);
 }
-/* Keep the two requested navigation entries free of underline accents. */
-.top-nav .nav-link[href="/prospection"],
-.top-nav .nav-link[href="/stages"] {
-  text-decoration: none;
-  border-bottom: 0;
-}
-.top-nav .nav-link[href="/prospection"]::after,
-.top-nav .nav-link[href="/stages"]::after {
-  content: none;
-}
 .top-nav__meta {
   margin-left: auto;
   color: var(--text-subtle);
