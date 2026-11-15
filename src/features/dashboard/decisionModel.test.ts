@@ -2,7 +2,7 @@ import { expect,test } from 'vitest';
 import type { InternshipOffer } from '../../api/contract';
 import {
   INITIAL_FILTERS, canonicalDate, dashboardMetrics, dashboardPlan, filterDashboardOffers,
-  uniqueDashboardOffers, byStatus, applicationMonths, priorityQueue,
+  uniqueDashboardOffers, byStatus, applicationMonths, priorityQueue, statusGroup, hasSubmissionEvidence,
 } from './decisionModel';
 const offer = (id:string, title:string, company:string, status:string, partial:Partial<InternshipOffer>={}): InternshipOffer => ({
   id,company,title,domain:null,city:'Nantes',region:null,m2Fit:'Oui',start:null,duration:null,
@@ -23,17 +23,17 @@ test('distinguishes an application status from genuine send and publication date
   expect(canonicalDate('Vérifié hier')).toBe('');
   expect(dashboardPlan(sample[0])).toBe('A');
   expect(dashboardPlan(sample[1])).toBe('B');
-  expect(applicationMonths(sample).map(x=>x.count).reduce((a,b)=>a+b,0)).toBe(3);
+  expect(applicationMonths(sample).map(x=>x.count).reduce((a,b)=>a+b,0)).toBe(2);
 });
 test('reconciles filtered KPIs and queue with actual source rows',()=>{
   const m=dashboardMetrics(sample,'2026-11-15');
   expect(m.total).toBe(4);
   expect(m.toApply).toBe(1);
-  expect(m.sent).toBe(3);
-  expect(m.responses).toBe(2);
+  expect(m.sent).toBe(2);
+  expect(m.responses).toBe(1);
   expect(m.interviews).toBe(1);
   expect(m.due).toBe(1);
-  expect(m.responseRate).toBe(67);
+  expect(m.responseRate).toBe(50);
   expect(priorityQueue(sample,'2026-11-15')[0].id).toBe('analyst');
   expect(byStatus(sample).reduce((sum,row)=>sum+row.count,0)).toBe(4);
 });
@@ -53,6 +53,16 @@ test('a follow-up sent is not a recruiter reply',()=>{
   expect(metrics.responses).toBe(0);
   expect(metrics.responseRate).toBe(0);
   expect(byStatus(rows).find(row=>row.label==='Relance')?.count).toBe(1);
+});
+test('a job advert incorrectly marked "Offre reçue" is not an employment offer',()=>{
+  const wrong=offer('listing','Stage Data Analyst','Michelin','Offre reçue',{appliedAt:null});
+  const right=offer('real','Stage Data Analyst','Michelin','Offre reçue',{appliedAt:'2026-11-10'});
+  expect(statusGroup(wrong)).toBe('À vérifier');
+  expect(hasSubmissionEvidence(wrong)).toBe(false);
+  const m=dashboardMetrics([wrong,right],'2026-11-15');
+  expect(m.sent).toBe(1);
+  expect(m.offersReceived).toBe(1);
+  expect(m.unverifiedOutcomes).toBe(1);
 });
 test('does not duplicate source records and excludes untracked unrelated jobs',()=>{
   const extras=[...sample,sample[0],offer('noise','Stage Computer Vision','Unrelated Co','À candidater')];

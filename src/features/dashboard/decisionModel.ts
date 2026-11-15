@@ -3,7 +3,7 @@ import { getOfferPlan, isDataAnalystMission, isVisionMission, targetCompany } fr
 import { sectors, dateKey, followUpDue, wasSent, matchesCompany } from '../targets/targets';
 
 export type DashboardPlan = 'all' | 'A' | 'B';
-export type DashboardStatus = 'À candidater' | 'Envoyée' | 'Relance' | 'Réponse' | 'Entretien' | 'Offre' | 'Refus' | 'Archivée';
+export type DashboardStatus = 'À candidater' | 'À qualifier' | 'À vérifier' | 'Envoyée' | 'Relance' | 'Réponse' | 'Entretien' | 'Offre' | 'Refus' | 'Archivée';
 export type DashboardPeriod = 'all' | '7d' | '30d' | '90d';
 export interface DashboardFilters {
   plan: DashboardPlan;
@@ -20,7 +20,7 @@ export const INITIAL_FILTERS: DashboardFilters = {
   plan: 'all', sector: '', company: '', city: '', priority: '', status: '',
   period: 'all', search: '', sentMonth: '',
 };
-export const statusOrder: DashboardStatus[] = ['À candidater', 'Envoyée', 'Relance', 'Réponse', 'Entretien', 'Offre', 'Refus', 'Archivée'];
+export const statusOrder: DashboardStatus[] = ['À candidater', 'À qualifier', 'À vérifier', 'Envoyée', 'Relance', 'Réponse', 'Entretien', 'Offre', 'Refus', 'Archivée'];
 
 function normalize(s: string | null | undefined) {
   return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -45,16 +45,28 @@ export function offerSector(offer: InternshipOffer): string {
   const sector = sectors.find(s => s.companies.some(company => company[0] === group || matchesCompany(offer, company[2])));
   return sector?.id || 'autres';
 }
+/** Eligibility is not proof of submission. The legacy Sheet occasionally labels
+ * published job adverts "Offre reçue", even when no application was sent.
+ * Keep those records visible for reconciliation without inflating outcomes.
+ */
+export function hasSubmissionEvidence(offer: InternshipOffer) {
+  const status = normalize(offer.applicationStatus);
+  const dated = Boolean(dateKey(offer.appliedAt));
+  if (status === 'offre recue') return dated;
+  return dated || ['candidature envoyee','reponse recruteur','relance','entretien','test technique','accepte'].includes(status);
+}
 export function statusGroup(offer: InternshipOffer): DashboardStatus {
   const status = normalize(offer.applicationStatus);
-  if (status === 'offre recue' || status === 'accepte') return 'Offre';
+  if (status === 'offre recue') return hasSubmissionEvidence(offer) ? 'Offre' : 'À vérifier';
+  if (status === 'accepte') return hasSubmissionEvidence(offer) ? 'Offre' : 'À vérifier';
   if (status === 'refus') return 'Refus';
-  if (status === 'abandonne' || status === 'expire') return 'Archivée';
+  if (status === 'abandonne' || status === 'expire' || status.startsWith('ecarte')) return 'Archivée';
   if (status === 'entretien' || status === 'test technique') return 'Entretien';
   if (status === 'reponse recruteur') return 'Réponse';
   if (status === 'relance') return 'Relance';
-  if (wasSent(offer)) return 'Envoyée';
-  return 'À candidater';
+  if (hasSubmissionEvidence(offer)) return 'Envoyée';
+  if (status.startsWith('a candidater')) return 'À candidater';
+  return 'À qualifier';
 }
 export function uniqueDashboardOffers(offers: InternshipOffer[]): InternshipOffer[] {
   const ids = new Set<string>(); const knownLinks = new Set<string>();
@@ -64,10 +76,11 @@ export function uniqueDashboardOffers(offers: InternshipOffer[]): InternshipOffe
     const url = (offer.applicationUrl || '').split('?')[0].replace(/\/$/, '');
     const normalizedUrl = url && url.toLowerCase();
     if (normalizedUrl && knownLinks.has(normalizedUrl)) return false;
-    if (normalizedUrl) knownLinks.add(normalizedUrl);
     // Keep the 30-company feed and explicitly saved / tracked applications.
-    return Boolean(targetCompany(offer.company) || offer.id === 'BNP-RHG27-002' ||
-      offer.id.startsWith('prospection:') || wasSent(offer) || statusGroup(offer) === 'Refus');
+    const eligible = Boolean(targetCompany(offer.company) || offer.id === 'BNP-RHG27-002' ||
+      offer.id.startsWith('prospection:') || hasSubmissionEvidence(offer) || statusGroup(offer) === 'Refus');
+    if (eligible && normalizedUrl) knownLinks.add(normalizedUrl);
+    return eligible;
   });
 }
 export function filterDashboardOffers(offers: InternshipOffer[], filters: DashboardFilters, now = new Date()): InternshipOffer[] {
@@ -93,17 +106,19 @@ export function filterDashboardOffers(offers: InternshipOffer[], filters: Dashbo
   });
 }
 export function dashboardMetrics(offers: InternshipOffer[], today: string) {
-  const sent = offers.filter(wasSent);
+  const sent = offers.filter(hasSubmissionEvidence);
   const response = sent.filter(o => ['Réponse', 'Entretien', 'Offre', 'Refus'].includes(statusGroup(o)));
   const interviews = sent.filter(o => ['Entretien', 'Offre'].includes(statusGroup(o)));
   const opportunities = offers.filter(o => statusGroup(o) === 'À candidater');
-  const due = offers.filter(o => followUpDue(o, today));
+  const due = offers.filter(o => hasSubmissionEvidence(o) && followUpDue(o, today));
   const withCompany = new Set(offers.map(o => targetCompany(o.company)).filter(Boolean));
   return {
     total: offers.length, toApply: opportunities.length, sent: sent.length, interviews: interviews.length,
     responses: response.length, responseRate: sent.length ? Math.round(100 * response.length / sent.length) : 0,
     interviewRate: sent.length ? Math.round(100 * interviews.length / sent.length) : 0,
     due: due.length, offersReceived: sent.filter(o => statusGroup(o) === 'Offre').length,
+    unverifiedOutcomes: offers.filter(o => statusGroup(o) === 'À vérifier').length,
+    unqualified: offers.filter(o => statusGroup(o) === 'À qualifier').length,
     priority: opportunities.filter(o => ['A+', 'A'].includes(o.priority)).length,
     companies: withCompany.size,
   };
@@ -141,7 +156,7 @@ export function byCity(offers: InternshipOffer[]) {
 export function applicationMonths(offers: InternshipOffer[]) {
   const counts = new Map<string, number>();
   for (const o of offers) {
-    if (!wasSent(o)) continue;
+    if (!hasSubmissionEvidence(o)) continue;
     const month = canonicalDate(o.appliedAt).slice(0, 7);
     if (!/^\d{4}-\d{2}$/.test(month)) continue;
     counts.set(month, (counts.get(month) || 0) + 1);
@@ -150,8 +165,9 @@ export function applicationMonths(offers: InternshipOffer[]) {
 }
 export function priorityQueue(offers: InternshipOffer[], today: string) {
   const rank: Record<string, number> = {'A+':4, A:3, 'B+':2, B:1};
-  return offers.filter(o => followUpDue(o, today) || statusGroup(o) === 'À candidater')
+  return offers.filter(o => (hasSubmissionEvidence(o) && followUpDue(o, today)) || statusGroup(o) === 'À candidater' || statusGroup(o) === 'À vérifier')
     .sort((a,b) => Number(followUpDue(b,today)) - Number(followUpDue(a,today)) ||
+      Number(statusGroup(b)==='À vérifier') - Number(statusGroup(a)==='À vérifier') ||
       (rank[b.priority] || 0) - (rank[a.priority] || 0) ||
       (canonicalDate(b.publishedAt).localeCompare(canonicalDate(a.publishedAt))) ||
       a.company.localeCompare(b.company, 'fr')).slice(0, 12);
