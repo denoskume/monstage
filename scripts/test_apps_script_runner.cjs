@@ -73,4 +73,12 @@ assert.equal(new Set(sheet.rows.slice(1).map(r=>r[0])).size,61);
 const zero=context.upsertRunnerOfferRows_(sheet,[]);
 assert.equal(zero.appended,0);
 assert.equal(sheet.rows.length,62);
+assert.equal(context.clearlyIneligibleStageSchedule_(
+  '4-MONTH INTERNSHIP - Starting January 2027 - Data Analyst & Visualisation'), true);
+assert.equal(context.clearlyIneligibleStageSchedule_(
+  'Stage 5 mois Data Analyst'), true);
+assert.equal(context.clearlyIneligibleStageSchedule_(
+  'Stage 6 mois - Starting February 2027 - Data Analyst'), false);
+assert.equal(context.clearlyIneligibleStageSchedule_(
+  'Stage Data Analyst - dates à confirmer'), false);
 console.log('ATS incremental upserts: 61 preserved, idempotent, saved applications unchanged');
