@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DashboardPage } from '../dashboard/DashboardPage';
@@ -32,13 +32,20 @@ function mount(path='/dashboard') {
 
 describe('single-screen MonStage decision dashboard',()=>{
   beforeEach(()=>localStorage.clear());
-  it('shows full-width KPIs and chart with space reserved for new visuals',()=>{
+  it('shows three campaign decision visuals in the bottom row',()=>{
     mount();
     expect(screen.getByRole('heading',{name:'Dashboard'})).toBeInTheDocument();
     expect(screen.getByRole('group',{name:'Activité hebdomadaire des candidatures'})).toBeInTheDocument();
     expect(screen.getByRole('navigation',{name:'Navigation MonStage'})).toBeInTheDocument();
     expect(screen.getByRole('combobox',{name:'Choisir un plan'})).toHaveValue('all');
-    expect(document.querySelector('.db-visual-space')).toBeInTheDocument();
+    expect(document.querySelector('.db-visual-panels')).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Campagne de stages'})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Statut des dossiers'})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
+    expect(screen.getByRole('img',{name:/Trois courbes cumulatives de septembre 2026 à février 2027/})).toBeInTheDocument();
+    expect(screen.getByTestId('google-maps-iframe')).toBeInTheDocument();
+    expect(screen.getByText('sept. 26')).toBeInTheDocument();
+    expect(screen.getByText('févr. 27')).toBeInTheDocument();
     expect(document.querySelector('.db-insight-tiles')).not.toBeInTheDocument();
     expect(screen.queryByRole('button',{name:/Computer Vision/})).not.toBeInTheDocument();
     expect(screen.queryByRole('button',{name:/Data & BI/})).not.toBeInTheDocument();
@@ -97,12 +104,25 @@ describe('single-screen MonStage decision dashboard',()=>{
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(feed[1].applicationStatus).toBe('Candidature envoyée');
   });
-  it('opens the map from the illustrated tile and analytics from the rail',()=>{
+  it('applies an interactive pie-category filter to all KPIs and clears it',()=>{
+    mount();
+    const before=Number(screen.getByText('Opportunités').nextElementSibling?.textContent);
+    fireEvent.click(screen.getByRole('button',{name:'Filtrer statut Clôturées'}));
+    expect(screen.getByRole('button',{name:'Filtrer statut Clôturées'})).toHaveAttribute('aria-pressed','true');
+    const after=Number(screen.getByText('Opportunités').nextElementSibling?.textContent);
+    expect(after).toBeGreaterThan(0);
+    expect(after).toBeLessThan(before);
+    expect(screen.getByRole('heading',{level:1})).toHaveTextContent('Clôturées');
+    fireEvent.click(screen.getByRole('button',{name:'Filtrer statut Clôturées'}));
+    expect(screen.getByText('Opportunités').nextElementSibling).toHaveTextContent(String(before));
+  });
+  it('opens Google Maps full-screen view and analytics from the rail',()=>{
     mount();
     fireEvent.click(screen.getByRole('button',{name:'Carte géographique'}));
     expect(screen.getByRole('dialog',{name:'Carte des opportunités'})).toBeInTheDocument();
-    expect(screen.getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
-    const realMap = screen.queryByTestId('google-maps-js') || screen.queryByTestId('google-maps-iframe');
+    const dialog=screen.getByRole('dialog',{name:'Carte des opportunités'});
+    expect(within(dialog).getByRole('heading',{name:'Carte des opportunités'})).toBeInTheDocument();
+    const realMap = within(dialog).queryByTestId('google-maps-js') || within(dialog).queryByTestId('google-maps-iframe');
     expect(realMap).toBeInTheDocument();
     if (realMap?.getAttribute('data-testid') === 'google-maps-iframe') {
       expect(realMap).toHaveAttribute('src',expect.stringContaining('maps.google.com/maps?output=embed'));
