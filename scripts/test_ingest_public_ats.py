@@ -57,6 +57,34 @@ class AtsIngestionTests(TestCase):
         self.assertNotIn("details", jobs[1])
 
     @mock.patch.dict(os.environ, {"APPS_SCRIPT_GATEWAY_SECRET": "test-secret", "APPS_SCRIPT_URL": "https://example.invalid/exec"})
+    def test_batches_are_idempotent_and_never_send_more_than_thirty(self):
+        calls = []
+        def backend_reply(req, timeout=90):
+            sent = json.loads(req.data)
+            calls.append(sent)
+            ids = ["workday:ratp:job-" + str(job["id"]) for job in sent["jobs"]]
+            return fake_response({"ingestion": {
+                "accepted": len(ids), "persisted": True, "acceptedIds": ids,
+            }})
+        jobs = [{"id": i, "externalPath": "/job/" + str(i)} for i in range(75)]
+        with mock.patch.object(ats.urllib.request, "urlopen", side_effect=backend_reply):
+            self.assertEqual(ats.ingest("workday", "ratp", jobs), 75)
+        self.assertEqual([len(p["jobs"]) for p in calls], [30, 30, 15])
+        self.assertTrue(all(p["merge"] is True for p in calls))
+        self.assertEqual([i for p in calls for i in [j["id"] for j in p["jobs"]]], list(range(75)))
+
+    def test_retries_only_transient_429_errors(self):
+        from urllib.error import HTTPError
+        limited = HTTPError("https://ratp.example", 429, "Too Many Requests", {}, None)
+        with mock.patch.object(ats.urllib.request, "urlopen", side_effect=[
+            limited, fake_response({"jobPostings": [{"title": "Stage Data Analyst"}], "total": 1}),
+        ]) as fetch, mock.patch.object(ats.time, "sleep") as sleep:
+            jobs = ats.workday_search("ratp", "wd3", "RATP_Externe", "stage data")
+        self.assertEqual(jobs[0]["title"], "Stage Data Analyst")
+        self.assertEqual(fetch.call_count, 2)
+        sleep.assert_called_once()
+
+    @mock.patch.dict(os.environ, {"APPS_SCRIPT_GATEWAY_SECRET": "test-secret", "APPS_SCRIPT_URL": "https://example.invalid/exec"})
     def test_backend_acknowledgement_requires_persisted_ids(self):
         old_backend = {"ingestion": {"provider": "workday", "sourceId": "ratp", "accepted": 1}}
         with mock.patch.object(ats.urllib.request, "urlopen", return_value=fake_response(old_backend)):
