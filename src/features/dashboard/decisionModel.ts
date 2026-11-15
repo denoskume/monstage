@@ -3,7 +3,7 @@ import { getOfferPlan, isDataAnalystMission, isVisionMission, targetCompany } fr
 import { sectors, dateKey, followUpDue, wasSent, matchesCompany } from '../targets/targets';
 
 export type DashboardPlan = 'all' | 'A' | 'B';
-export type DashboardStatus = 'À candidater' | 'Envoyée' | 'Réponse' | 'Entretien' | 'Offre' | 'Refus' | 'Archivée';
+export type DashboardStatus = 'À candidater' | 'Envoyée' | 'Relance' | 'Réponse' | 'Entretien' | 'Offre' | 'Refus' | 'Archivée';
 export type DashboardPeriod = 'all' | '7d' | '30d' | '90d';
 export interface DashboardFilters {
   plan: DashboardPlan;
@@ -20,7 +20,7 @@ export const INITIAL_FILTERS: DashboardFilters = {
   plan: 'all', sector: '', company: '', city: '', priority: '', status: '',
   period: 'all', search: '', sentMonth: '',
 };
-export const statusOrder: DashboardStatus[] = ['À candidater', 'Envoyée', 'Réponse', 'Entretien', 'Offre', 'Refus', 'Archivée'];
+export const statusOrder: DashboardStatus[] = ['À candidater', 'Envoyée', 'Relance', 'Réponse', 'Entretien', 'Offre', 'Refus', 'Archivée'];
 
 function normalize(s: string | null | undefined) {
   return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
@@ -51,7 +51,8 @@ export function statusGroup(offer: InternshipOffer): DashboardStatus {
   if (status === 'refus') return 'Refus';
   if (status === 'abandonne' || status === 'expire') return 'Archivée';
   if (status === 'entretien' || status === 'test technique') return 'Entretien';
-  if (status === 'reponse recruteur' || status === 'relance') return 'Réponse';
+  if (status === 'reponse recruteur') return 'Réponse';
+  if (status === 'relance') return 'Relance';
   if (wasSent(offer)) return 'Envoyée';
   return 'À candidater';
 }
