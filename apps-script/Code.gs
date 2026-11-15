@@ -2280,6 +2280,95 @@ function doGet() {
 
 
 /**
+ * Insert or update only the official vacancy IDs delivered by a runner batch.
+ * Never clear a provider sheet during a partial import: clearing and rewriting
+ * the whole sheet for every 30 candidates caused timeouts and lost snapshots.
+ * All read/merge/write operations are protected from overlapping runner calls.
+ */
+function upsertRunnerOfferRows_(sheet, inputRows) {
+  var columns = EXTERNAL_SOURCE_HEADERS_.length;
+  var byId = {};
+  inputRows.forEach(function (row) {
+    var id = String(row[0] || '');
+    if (id && strictEligible_(row[1], row[2], row[3])) byId[id] = row;
+  });
+  var ids = Object.keys(byId);
+  if (!ids.length) return { ids: [], appended: 0, updated: 0 };
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(25000);
+  try {
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 1) {
+      sheet.getRange(1, 1, 1, columns).setValues([EXTERNAL_SOURCE_HEADERS_]);
+      sheet.setFrozenRows(1);
+      lastRow = 1;
+    }
+    var oldIds = lastRow > 1 ?
+      sheet.getRange(2, 1, lastRow - 1, 1).getDisplayValues() : [];
+    var positions = {};
+    oldIds.forEach(function (cell, index) {
+      if (cell[0]) positions[cell[0]] = index + 2;
+    });
+
+    var updates = [];
+    var inserts = [];
+    ids.forEach(function (id) {
+      var row = byId[id].slice(0, columns);
+      while (row.length < columns) row.push('');
+      var rowNumber = positions[id];
+      if (rowNumber) {
+        var old = sheet.getRange(rowNumber, 1, 1, columns).getDisplayValues()[0];
+        // Publication date from the employer must not be replaced by an
+        // unverified relative Workday timestamp.
+        if (!publicationDateScore_({ publishedAt: row[11] }) &&
+            publicationDateScore_({ publishedAt: old[11] })) row[11] = old[11];
+        // Preserve independently tracked application state and shortlist.
+        [13, 16, 17, 18].forEach(function (index) {
+          if (old[index] !== null && old[index] !== undefined && old[index] !== '' &&
+              (index !== 13 || old[index] !== 'À candidater')) row[index] = old[index];
+        });
+        updates.push({ number: rowNumber, values: row });
+      } else {
+        inserts.push(row);
+      }
+    });
+
+    // Write adjacent updates as one range where possible, reducing Sheets RPCs.
+    updates.sort(function (a, b) { return a.number - b.number; });
+    for (var i = 0; i < updates.length;) {
+      var start = i;
+      while (i + 1 < updates.length && updates[i + 1].number === updates[i].number + 1) i++;
+      var batch = updates.slice(start, i + 1);
+      sheet.getRange(batch[0].number, 1, batch.length, columns)
+        .setValues(batch.map(function (item) { return item.values; }));
+      i++;
+    }
+    if (inserts.length) {
+      var neededLast = lastRow + inserts.length;
+      if (sheet.getMaxRows() < neededLast) {
+        sheet.insertRowsAfter(sheet.getMaxRows(), neededLast - sheet.getMaxRows());
+      }
+      sheet.getRange(lastRow + 1, 1, inserts.length, columns).setValues(inserts);
+    }
+    SpreadsheetApp.flush();
+
+    // Confirm persistence against the sheet, not merely a successful API call.
+    var saved = {};
+    var finalLast = sheet.getLastRow();
+    if (finalLast > 1) {
+      sheet.getRange(2, 1, finalLast - 1, 1).getDisplayValues()
+        .forEach(function (record) { if (record[0]) saved[record[0]] = true; });
+    }
+    var missing = ids.filter(function (id) { return !saved[id]; });
+    if (missing.length) throw new Error('Runner upsert missing ' + missing.length + ' stored IDs');
+    return { ids: ids, appended: inserts.length, updated: updates.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
  * Authenticated ingestion of public ATS feeds fetched by GitHub Actions.
  * The runner is used when Google's outbound UrlFetch returns empty results.
  * Re-run all relevance filters on the Apps Script side before persisting.
@@ -2344,38 +2433,13 @@ function ingestRunnerAtsPostings_(request) {
     }
     rows.push(row);
   });
-  // Batches are idempotent upserts. Replacing a whole source per request
-  // erased earlier chunks and could silently discard live vacancies.
-  // In merge mode keep every existing ID except those in this particular batch.
-  // Full source replacement remains available to legacy single-batch callers.
-  if (jobs.length && rows.length) {
-    var old = sheet.getDataRange().getDisplayValues();
-    var merged = request.merge === true;
-    var incoming = {};
-    rows.forEach(function (row) { incoming[String(row[0])] = true; });
-    var prefix = provider === 'greenhouse' ? 'greenhouse:' + sourceId + ':' :
-      provider === 'workday' ? 'workday:' + sourceId + ':' : 'smartrecruiters:' + sourceId + ':';
-    var base = old.length > 1 ? old.slice(1).filter(function (row) {
-      var id = String(row[0] || '');
-      return merged ? !incoming[id] : id.indexOf(prefix) !== 0;
-    }) : [];
-    var combined = base.concat(rows);
-    writeExternalOfferRows_(sheet, combined);
-    // Read back actual persisted row IDs before acknowledging a successful CI
-    // import; this is independent from API-level deduplication and UI filters.
-    if (rows.length) {
-      SpreadsheetApp.flush();
-      var savedIds = {};
-      sheet.getRange(2, 1, Math.max(1, sheet.getLastRow() - 1), 1).getDisplayValues()
-        .forEach(function (record) { if (record[0]) savedIds[record[0]] = true; });
-      var missing = rows.map(function (row) { return row[0]; })
-        .filter(function (id) { return !savedIds[id]; });
-      if (missing.length) throw new Error('ATS write verification failed: ' +
-        sourceId + ' / missing ' + missing.length + ' IDs');
-    }
-  }
-  return { provider: provider, sourceId: sourceId, accepted: rows.length,
-    acceptedIds: rows.map(function (row) { return row[0]; }), persisted: true, counters: counters };
+  // All CI runner calls use an upsert. Do not rewrite entire provider tabs.
+  var stored = upsertRunnerOfferRows_(sheet, rows);
+  return {
+    provider: provider, sourceId: sourceId, accepted: stored.ids.length,
+    acceptedIds: stored.ids, appended: stored.appended, updated: stored.updated,
+    persisted: true, counters: counters
+  };
 }
 
 function updateApplicationStatus_(input) {
