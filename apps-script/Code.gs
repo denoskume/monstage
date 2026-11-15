@@ -283,7 +283,7 @@ function strictAnalyst_(title) {
   return !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
     !SCOPE_NON_ANALYST_.test(name) && SCOPE_ANALYST_.test(name);
 }
-var SCOPE_INDUSTRIAL_ML_TITLE_ = /\b(machine learning|apprentissage automatique|deep learning|apprentissage profond|modeles? predictifs?|predictive modeling|predictive modelling|ia predictive|intelligence artificielle pour la maintenance)\b/;
+var SCOPE_INDUSTRIAL_ML_TITLE_ = /\b(machine learning|apprentissage automatique|deep learning|apprentissage profond|modeles? predictifs?|modeles? d ia|predictive modeling|predictive modelling|ia predictive|intelligence artificielle.{0,45}maintenance)\b/;
 var SCOPE_INDUSTRIAL_ML_CONTEXT_ = /\b(maintenance|fiabilite|reliability|pannes?|defaillances?|fault detection|condition monitoring|prognostic|inspection industrielle|aeronautique|ferroviaire|railway|capteurs industriels|industrial maintenance)\b/;
 function strictRelevant_(title, context) {
   var full = scopeNorm_(title + ' ' + (context || ''));
@@ -1053,7 +1053,7 @@ var OFFICIAL_PAGE_SOURCES_ = [
   { id: 'forvia', company: 'FORVIA HELLA', host: 'jobs.faurecia.com' },
   // Employer-hosted listings require individual canonical URLs, not portal HTTP 200.
   { id: "safran", company: "Safran", host: "www.safran-group.com", path: "^/fr/offres/[^/?#]+" },
-  { id: "dassault", company: "Dassault Aviation", host: "carriere.dassault-aviation.com", path: "^/(?:fr/)?(?:offre|job|emploi)/[^?#]+" },
+  { id: "dassault", company: "Dassault Aviation", host: "dassault-aviation-cand.talent-soft.com", path: "^/(?:offre-de-emploi/emploi-[^/?#]+_\\d+\\.aspx|Pages/Offre/detailoffre\\.aspx)$" },
   { id: "airfrance", company: "Air France-KLM", host: "recrutement.airfrance.com", path: "^/Pages/Offre/detailoffre\\.aspx$" },
   { id: "siemensmobility", company: "Siemens Mobility", host: "jobs.siemens.com", path: "^/(?:careers/)?job/[^?#]+" },
   { id: "hitachirail", company: "Hitachi Rail", host: "careers.hitachi.com", path: "^/(?:fr/)?[^?#]*/job/R\\d+$" },
@@ -2487,7 +2487,8 @@ function ingestRunnerAtsPostings_(request) {
           parts[1].toLowerCase() !== source.host ||
           !pattern.test(parts[2]) ||
           !/^[a-f0-9]{20}$/.test(String(job.id || ''))) return;
-      if (source.id === 'airfrance' &&
+      if ((source.id === 'airfrance' ||
+           (source.id === 'dassault' && /\/detailoffre\.aspx$/i.test(parts[2]))) &&
           !/[?&]idOffre=\d+(?:&|$)/i.test(url)) return;
       var title = normalizeText_(job.title) || '';
       if (!/\b(stage|stagiaire|internship|intern|pfe)\b/i.test(normalizeComparable_(title))) return;
