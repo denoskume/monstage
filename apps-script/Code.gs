@@ -1054,7 +1054,7 @@ var OFFICIAL_PAGE_SOURCES_ = [
   // Employer-hosted listings require individual canonical URLs, not portal HTTP 200.
   { id: "safran", company: "Safran", host: "www.safran-group.com", path: "^/fr/offres/[^/?#]+" },
   { id: "dassault", company: "Dassault Aviation", host: "dassault-aviation-cand.talent-soft.com", path: "^/(?:offre-de-emploi/emploi-[^/?#]+_\\d+\\.aspx|Pages/Offre/detailoffre\\.aspx)$" },
-  { id: "airfrance", company: "Air France-KLM", host: "recrutement.airfrance.com", path: "^/Pages/Offre/detailoffre\\.aspx$" },
+  { id: "airfrance", company: "Air France-KLM", host: "recrutement.airfrance.com", path: "^/(?:Pages/Offre/detailoffre\\.aspx|offre-de-emploi/emploi-[^/?#]+_\\d+\\.aspx)$" },
   { id: "siemensmobility", company: "Siemens Mobility", host: "jobs.siemens.com", path: "^/(?:careers/)?job/[^?#]+" },
   { id: "hitachirail", company: "Hitachi Rail", host: "careers.hitachi.com", path: "^/(?:fr/)?[^?#]*/job/R\\d+$" },
   { id: "stellantis", company: "Stellantis", host: "careers.stellantis.com", path: "^/job/\\d+/[^?#]+" },
@@ -2487,8 +2487,10 @@ function ingestRunnerAtsPostings_(request) {
           parts[1].toLowerCase() !== source.host ||
           !pattern.test(parts[2]) ||
           !/^[a-f0-9]{20}$/.test(String(job.id || ''))) return;
-      if ((source.id === 'airfrance' ||
-           (source.id === 'dassault' && /\/detailoffre\.aspx$/i.test(parts[2]))) &&
+      // Talentsoft slug URLs encode the offer ID in _12345.aspx;
+      // generic detailoffre.aspx pages require a numeric idOffre parameter.
+      if ((source.id === 'airfrance' || source.id === 'dassault') &&
+          /\/detailoffre\.aspx$/i.test(parts[2]) &&
           !/[?&]idOffre=\d+(?:&|$)/i.test(url)) return;
       var title = normalizeText_(job.title) || '';
       if (!/\b(stage|stagiaire|internship|intern|pfe)\b/i.test(normalizeComparable_(title))) return;
