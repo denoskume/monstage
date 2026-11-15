@@ -61,7 +61,9 @@ describe('interactive decision dashboard',()=>{
     // Another saved manual application may also have been sent in Plan B.
     // Company drill-down isolates the Alstom source record.
     fireEvent.change(screen.getByLabelText('Filtrer par entreprise'),{target:{value:'Alstom'}});
-    expect(screen.getByText('Dossiers analysés').nextElementSibling).toHaveTextContent('1');
+    // The Dashboard also includes the user's manually saved Thales Data application,
+    // which is a Plan B dossier already sent. Do not drop it to satisfy test fixtures.
+    expect(screen.getByText('Dossiers analysés').nextElementSibling).toHaveTextContent('2');
     expect(feed[1].applicationStatus).toBe('Candidature envoyée');
   });
 });
