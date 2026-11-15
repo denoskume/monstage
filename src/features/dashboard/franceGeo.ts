@@ -23,7 +23,7 @@ const cityCenters: Record<string, [number, number]> = {
   bayonne:[-1.47,43.49], biarritz:[-1.56,43.48], toulon:[5.93,43.12],
   rouen:[1.10,49.44], caen:[-0.37,49.18], limoges:[1.26,45.83],
   orleans:[1.90,47.90], besancon:[6.02,47.24], nancy:[6.18,48.69],
-  le mans:[0.20,48.00], lemans:[0.20,48.00], saintetienne:[4.39,45.44],
+  lemans:[0.20,48.00], saintetienne:[4.39,45.44],
   poitiers:[0.34,46.58], mulhouse:[7.34,47.75], evry:[2.43,48.63],
   cergy:[2.07,49.04], dunkerque:[2.38,51.03], cholet:[-0.88,47.06],
   tassinlademilune:[4.78,45.76], guyancourt:[2.07,48.77],
