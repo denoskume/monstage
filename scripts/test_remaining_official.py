@@ -163,6 +163,31 @@ class RemainingOfficialTests(unittest.TestCase):
         self.assertIsNone(verify_html(s,s["seed"][0],html))
         self.assertIsNotNone(verify_html(s,s["seed"][0],html+"<div>Hitachi Rail RCS France SAS</div>"))
 
+    def test_safran_official_stage_detail_location_and_real_publication_date(self):
+        s = BY_COMPANY["Safran"]
+        self.assertEqual(len(s["seed"]), 4)
+        for job_url in s["seed"]:
+            with self.subTest(url=job_url):
+                self.assertTrue(source_matches(s, job_url))
+        page = ('''<h1>Stage Data Analyst : Modélisation et Prévision de la Demande Aéronautique</h1>
+          <section>Société : Safran Ventilation Systems
+          Domaine d'activité : Data
+          Emplacement : Blagnac , Occitanie , France
+          Type de contrat : Stage
+          Diplôme requis : BAC+5
+          Publié 14.11.2026
+          Parlons de votre future mission : prévision de la demande
+          et modèles prédictifs de production aéronautique</section>''')
+        job = verify_html(s, s["seed"][0], page)
+        self.assertIsNotNone(job)
+        self.assertEqual(job["location"], "Blagnac, France")
+        self.assertEqual(job["publishedAt"], "2026-11-14")
+        self.assertIsNone(verify_html(s, s["seed"][0],
+                     page.replace("Blagnac , Occitanie , France",
+                                  "Blagnac , Occitanie , Allemagne")))
+        self.assertIsNone(verify_html(s, s["seed"][0],
+                     page.replace("Stage Data Analyst", "CDI Ingénieur logiciel")))
+
     def test_explicitly_incompatible_start_or_duration_never_enters_monstage(self):
         s = BY_COMPANY["L’Oréal"]
         url = s["seed"][0]
