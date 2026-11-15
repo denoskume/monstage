@@ -9,6 +9,9 @@ on:
       - 'scripts/discover_additional_workday.py'
       - 'scripts/discover_successfactors.py'
       - 'scripts/ingest_successfactors.py'
+      - 'scripts/remaining_official_sources.json'
+      - 'scripts/ingest_remaining_official.py'
+      - 'scripts/test_remaining_official.py'
       - 'scripts/test_successfactors_verified.py'
       - 'scripts/report_ats_health.py'
       - 'scripts/test_report_ats_health.py'
@@ -40,6 +43,7 @@ jobs:
           python -m unittest discover -s scripts -p 'test_discover_official_jobs.py' -v
           python -m unittest discover -s scripts -p 'test_ingest_public_ats.py' -v
           python -m unittest discover -s scripts -p 'test_successfactors_verified.py' -v
+          python -m unittest discover -s scripts -p 'test_remaining_official.py' -v
           python -m unittest discover -s scripts -p 'test_report_ats_health.py' -v
           cp apps-script/Code.gs /tmp/monstage-apps-script-check.js
           node --check /tmp/monstage-apps-script-check.js
@@ -70,6 +74,10 @@ jobs:
         id: official_pages
         continue-on-error: true
         run: python scripts/ingest_successfactors.py
+      - name: Validate and ingest employer-hosted listings for the remaining 13 target groups
+        id: remaining_official
+        continue-on-error: true
+        run: python scripts/ingest_remaining_official.py
       - name: Discover additional verified Workday tenants (read-only pending gateway authorization)
         id: additional_workday
         continue-on-error: true
@@ -129,6 +137,7 @@ jobs:
             artifacts/career-additional-workday-leads.json
             artifacts/career-successfactors-leads.json
             artifacts/career-verified-official-jobs.json
+            artifacts/career-remaining-13-verified.json
             artifacts/career-source-coverage.md
             artifacts/career-jobboard-leads.json
             artifacts/ats-health-30.json
@@ -137,7 +146,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Fail visibly if source audit or ATS runner failed
-        if: ${{ steps.audit.outcome == 'failure' || steps.additional_workday.outcome == 'failure' || steps.successfactors.outcome == 'failure' || steps.official_pages.outcome == 'failure' || steps.health.outcome == 'failure' || steps.ingest.outcome == 'failure' }}
+        if: ${{ steps.audit.outcome == 'failure' || steps.additional_workday.outcome == 'failure' || steps.successfactors.outcome == 'failure' || steps.official_pages.outcome == 'failure' || steps.remaining_official.outcome == 'failure' || steps.health.outcome == 'failure' || steps.ingest.outcome == 'failure' }}
         run: |
           echo "::error::One or more source checks/ingestions failed; review coverage artifact."
           exit 1
