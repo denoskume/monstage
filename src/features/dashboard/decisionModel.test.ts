@@ -46,6 +46,14 @@ test('filters by plan, city, status and reliable publication rather than verific
   expect(recent).toHaveLength(3);
   expect(recent.some(x=>x.id==='refus')).toBe(false);
 });
+test('a follow-up sent is not a recruiter reply',()=>{
+  const rows=[offer('followup','Stage Data Analyst','Alstom','Relance',{appliedAt:'2026-11-02'})];
+  const metrics=dashboardMetrics(rows,'2026-11-15');
+  expect(metrics.sent).toBe(1);
+  expect(metrics.responses).toBe(0);
+  expect(metrics.responseRate).toBe(0);
+  expect(byStatus(rows).find(row=>row.label==='Relance')?.count).toBe(1);
+});
 test('does not duplicate source records and excludes untracked unrelated jobs',()=>{
   const extras=[...sample,sample[0],offer('noise','Stage Computer Vision','Unrelated Co','À candidater')];
   expect(uniqueDashboardOffers(extras)).toHaveLength(4);
