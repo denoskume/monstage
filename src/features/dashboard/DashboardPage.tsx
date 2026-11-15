@@ -248,7 +248,7 @@ export function DashboardPage() {
       </header>
       <main className="db-stage-content">
         <div className="db-primary">
-          <div className="db-mobile-section-title"><h1>Dashboard</h1><span>Vue d’ensemble</span></div>
+          <div className="db-mobile-section-title"><strong>Dashboard</strong><span>Vue d’ensemble</span></div>
           <h1 className="sr-only">Dashboard</h1>
           <section className="db-kpis" aria-label="Indicateurs clés">
             <Metric label="Opportunités" value={metrics.total} hint={metrics.toApply+' à candidater'} accent="#9d86f6"/>
@@ -259,7 +259,7 @@ export function DashboardPage() {
           <section className="db-panel db-activity-card">
             <div className="db-hero-panel-title">
               <div><h2>Activité des candidatures</h2><p>12 dernières semaines · envois datés</p></div>
-              <button className="db-chart-tag" type="button" aria-label="Filtrer par plan" onClick={()=>setPanel('filters')}>{filters.plan==='all'?'Tous les plans':filters.plan==='A'?'Plan A':'Plan B'}⌄</button>
+              <button className="db-chart-tag" type="button" aria-label="Afficher les filtres de parcours" onClick={()=>setPanel('filters')}>{filters.plan==='all'?'Tous les plans':filters.plan==='A'?'Plan A':'Plan B'}⌄</button>
             </div>
             <ActivityGraph weeks={activity} selected={filters.sentWeek} onSelect={week=>toggleFilter('sentWeek',week)}/>
             <div className="db-activity-footer">
