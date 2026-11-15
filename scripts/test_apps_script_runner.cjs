@@ -93,4 +93,22 @@ assert.equal(context.showSavedOfferInFeed_({...januaryOld, appliedAt:'2026-11-14
 assert.equal(context.showSavedOfferInFeed_({...januaryOld, id:'manual:legacy'}), true);
 assert.equal(context.showSavedOfferInFeed_({...januaryOld,
   title:'Stage 6 mois Data Analyst – Février 2027'}), true);
+// Keep the user's non-finance analyst target roles: incidental collaboration
+// with a finance team must not erase a Power BI/SQL internship.
+assert.equal(context.strictRelevant_(
+  'Stage Data Analyst RH Power BI',
+  'Analyser les données des RH, achats et finances avec Python et SQL'), true);
+assert.equal(context.strictRelevant_(
+  'Stage Data Analyst Audit Interne',
+  'Exploiter Python, SQL et les tableaux de bord pour différents systèmes du groupe dont la finance et les RH'), true);
+// Exclude genuine finance roles as originally requested.
+assert.equal(context.strictRelevant_(
+  'Stage Data Analyst Finance',
+  'Analyser les coûts financiers avec Power BI'), false);
+assert.equal(context.strictRelevant_(
+  'Stage Data Analyst',
+  'Finance Department. Financial reports et consolidation comptable'), false);
+assert.equal(context.strictRelevant_(
+  'Stage Data Scientist',
+  'Python et tableaux de bord'), false);
 console.log('ATS incremental upserts: 61 preserved, idempotent, saved applications unchanged');
