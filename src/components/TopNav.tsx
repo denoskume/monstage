@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom';
 import { AccountMenu } from '../features/auth/AccountMenu';
 
 const links = [
-  ['/offers', 'Jobs'],
-  ['/dashboard', 'Tableau de bord'],
+  ['/offers', 'Offers'],
+  ['/dashboard', 'Dashboard'],
   ['/studio', 'Studio'],
 ] as const;
 
@@ -23,7 +23,7 @@ export function TopNav() {
   return (
     <header className="top-nav">
       <div className="top-nav__inner">
-        <NavLink to="/offers" className="brand" aria-label="MonStage — Jobs home">
+        <NavLink to="/offers" className="brand" aria-label="MonStage — Offers home">
           <span className="brand__name" aria-hidden="true">MonSt<span className="brand__at">@</span>ge</span>
         </NavLink>
 
