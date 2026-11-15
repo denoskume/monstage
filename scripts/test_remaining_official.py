@@ -99,6 +99,22 @@ class RemainingOfficialTests(unittest.TestCase):
             s, url, page.replace("stage 6 mois – data analyst audit interne",
                                  "Technicien support CDI")))
 
+    def test_danone_country_supplied_by_exact_flag_alt_near_job_title(self):
+        s = BY_COMPANY["Danone"]
+        url = s["seed"][0]
+        page = ("""<h1>INTERNSHIP – Compliance Data Analyst - March 2027 (M/F)</h1>
+            <img src="/flags/fr.svg" alt="France"/>
+            <span>PARIS</span><span>On-site</span>
+            <h2>About the offer</h2><p>Python SQL analytics</p>""")
+        job = verify_html(s, url, page)
+        self.assertIsNotNone(job)
+        self.assertEqual(job["location"], "Paris, France")
+        self.assertIsNone(verify_html(s, url,
+            page.replace('alt="France"', 'alt="United States"')))
+        self.assertIsNone(verify_html(s, url,
+            page.replace('<img src="/flags/fr.svg" alt="France"/>', '')
+            + '<footer><img alt="France"/> PARIS On-site</footer>'))
+
     def test_danone_explicit_job_header_country_and_city(self):
         s = BY_COMPANY["Danone"]
         url = s["seed"][0]
