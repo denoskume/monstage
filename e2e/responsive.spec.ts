@@ -273,6 +273,13 @@ test('Dashboard fills laptop viewports without vertical document scrolling', asy
   }
   await page.getByRole('button',{name:'Carte géographique'}).click();
   await expect(page.getByRole('dialog',{name:'Carte des opportunités'})).toBeVisible();
+  const googleFrame = page.getByTestId('google-maps-iframe');
+  const googleJs = page.getByTestId('google-maps-js');
+  await expect(googleFrame.or(googleJs)).toHaveCount(1);
+  if (await googleFrame.count()) {
+    await expect(googleFrame).toHaveAttribute('src', /maps\.google\.com\/maps\?output=embed/);
+  }
+  await expect(page.getByRole('link',{name:'Ouvrir dans Google Maps ↗'})).toHaveAttribute('href', /google\.com\/maps\/search/);
   await page.getByRole('button',{name:'Fermer le panneau'}).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
