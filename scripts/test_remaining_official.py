@@ -111,6 +111,32 @@ class RemainingOfficialTests(unittest.TestCase):
         b = "https://dassault-aviation-cand.talent-soft.com/offre-de-emploi/emploi-stage-modeles-d-ia_15827.aspx"
         self.assertEqual(canonical_url(s, a), canonical_url(s, b))
 
+    def test_official_detail_rejection_reasons_are_explicit(self):
+        s = BY_COMPANY["Air France-KLM"]
+        url = s["seed"][0]
+        generic = ("<h1>Détail de l'offre</h1>"
+                   "<h3>Intitulé du poste</h3><p>Stage Data Analyst Logistique</p>"
+                   "<h3>Métier</h3><p>Data</p>"
+                   "<h3>Type de contrat</h3><p>Convention de stage</p>"
+                   "<h3>Localisation du poste</h3>"
+                   "<p>France, Ile-de-France, Val d'Oise (95)</p>")
+        reasons = []
+        self.assertIsNone(verify_html(
+            s, url, generic.replace("Convention de stage", "CDI"),
+            rejection_reasons=reasons))
+        self.assertEqual(reasons, ["stage_contract_not_confirmed"])
+        reasons = []
+        self.assertIsNone(verify_html(
+            s, url, generic.replace("France, Ile-de-France, Val d'Oise (95)",
+                                    "United States, New York, Manhattan"),
+            rejection_reasons=reasons))
+        self.assertEqual(reasons, ["french_job_location_not_confirmed"])
+        reasons = []
+        self.assertIsNone(verify_html(
+            s, url, generic.replace("Stage Data Analyst Logistique", "Vendeur Retail"),
+            rejection_reasons=reasons))
+        self.assertEqual(reasons, ["title_outside_plans_a_b"])
+
     def test_airfrance_official_metadata_not_generic_heading_is_authoritative(self):
         s = BY_COMPANY["Air France-KLM"]
         url = s["seed"][0]
