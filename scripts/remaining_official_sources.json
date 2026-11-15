@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "notes": "Paths and seeds grounded in employer-hosted individual job pages; registry presence never implies full job-feed coverage. Existing or historic listings may have expired. Dassault's Talentsoft official stage RSS endpoint is exposed from its own career site (Rss_Contract=4161). Air France Talentsoft contract RSS 3442 is linked from its published official 'Flux RSS et autres flux' page.",
+  "notes": "Paths and seeds grounded in employer-hosted individual job pages; registry presence never implies full job-feed coverage. Existing or historic listings may have expired. Dassault's Talentsoft official stage RSS endpoint is exposed from its own career site (Rss_Contract=4161). Air France Talentsoft contract RSS 3442 is linked from its published official 'Flux RSS et autres flux' page. Safran official indexed job IDs seeded as backup leads for access-recovery only; 403 from GitHub Actions remains a real coverage blocker and no seed is considered saved without re-fetching the individual page.",
   "sources": [
     {
       "company": "Safran",
@@ -8,10 +8,16 @@
       "host": "www.safran-group.com",
       "path": "^/fr/offres/[^/?#]+",
       "listing": [
-        "https://www.safran-group.com/fr/offres?contracts%5B0%5D=42-stage&job_fields%5B0%5D=1578-data&sort=relevance",
-        "https://www.safran-group.com/fr/offres?contracts%5B0%5D=42-stage&job_fields%5B0%5D=1608-systemes-informations&sort=relevance"
+        "https://www.safran-group.com/fr/offres?contracts%5B0%5D=42-stage&job_fields%5B0%5D=1578-data&page=0",
+        "https://www.safran-group.com/fr/offres?contracts%5B0%5D=42-stage&job_fields%5B0%5D=1578-data&page=1",
+        "https://www.safran-group.com/fr/offres?contracts%5B0%5D=42-stage&job_fields%5B0%5D=1578-data&page=2"
       ],
-      "seed": []
+      "seed": [
+        "https://www.safran-group.com/fr/offres/france/blagnac/stage-data-analyst-modelisation-prevision-demande-aeronautique-191200",
+        "https://www.safran-group.com/fr/offres/france/bordes/stage-data-analyst-reporting-supply-chain-fh-189789",
+        "https://www.safran-group.com/fr/offres/france/102-avenue-paris-91344-massy-france/stage-ingenieure-ia-llmrag-fh-192224",
+        "https://www.safran-group.com/fr/offres/france/tarnos/stage-data-analyst-developpement-cockpit-digital-pilotage-performance-fh-189829"
+      ]
     },
     {
       "company": "Dassault Aviation",
