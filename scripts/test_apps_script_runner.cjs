@@ -81,4 +81,16 @@ assert.equal(context.clearlyIneligibleStageSchedule_(
   'Stage 6 mois - Starting February 2027 - Data Analyst'), false);
 assert.equal(context.clearlyIneligibleStageSchedule_(
   'Stage Data Analyst - dates à confirmer'), false);
+// Legacy imported candidate remains archived in Sheets but is not presented
+// as a matching stage unless the user explicitly tracks that candidature.
+const januaryOld = {id:'official:loreal:legacy2026',title:
+  '4-MONTH INTERNSHIP - Starting January 2027 – Data Analyst & Visualisation',
+  applicationStatus:'À candidater',shortlist:false,appliedAt:'',followUpAt:null};
+assert.equal(context.showSavedOfferInFeed_(januaryOld), false);
+assert.equal(context.showSavedOfferInFeed_({...januaryOld, shortlist:true}), true);
+assert.equal(context.showSavedOfferInFeed_({...januaryOld, applicationStatus:'Entretien'}), true);
+assert.equal(context.showSavedOfferInFeed_({...januaryOld, appliedAt:'2026-11-14'}), true);
+assert.equal(context.showSavedOfferInFeed_({...januaryOld, id:'manual:legacy'}), true);
+assert.equal(context.showSavedOfferInFeed_({...januaryOld,
+  title:'Stage 6 mois Data Analyst – Février 2027'}), true);
 console.log('ATS incremental upserts: 61 preserved, idempotent, saved applications unchanged');
