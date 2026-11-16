@@ -35,3 +35,13 @@ it('keeps Apps Script ingestion aligned with the same 30-company A/B scope', () 
     expect(isTargetOffer({company,title})).toBe(expected);
   }
 });
+it('surfaces explicitly vetted engineering-titled Data Analyst offers without unlocking arbitrary other companies', () => {
+  expect(isTargetOffer({ id: 'MST-JR10446777', company: 'Airbus Atlantic',
+    title: 'STAGE 2027 - Ingénieur data et qualité fournisseurs', domain: 'Data Analyst / BI' })).toBe(true);
+  expect(isTargetOffer({ id: 'MST-ATLANTIC-FVMOM', company: 'Groupe Atlantic',
+    title: 'Stage Ingénieur Data / BI', domain: 'Data Analyst / BI' })).toBe(true);
+  expect(isTargetOffer({ id: 'MST-SATELLITE-001', company: 'Grand Groupe Industriel',
+    title: 'Stage traitement images', domain: 'Computer Vision / traitement d’images' })).toBe(true);
+  expect(isTargetOffer({ company: 'Grand Groupe Industriel',
+    title: 'Stage traitement images', domain: 'Computer Vision' })).toBe(false);
+});
