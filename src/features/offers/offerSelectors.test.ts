@@ -237,3 +237,32 @@ test('Most recent compares French, ISO and ISO timestamps by actual date', () =>
   ];
   expect(sortOffers(offers, 'recent').map(offer => offer.id)).toEqual(['timestamp', 'iso', 'fr']);
 });
+
+
+test('recently added sort never confuses publication, verification and insertion', () => {
+  const offers = [
+    { ...base, id: 'published-new', publishedAt: '2026-11-15', verifiedAt: '2026-11-16T11:00:00Z', addedAt: '2026-11-10' },
+    { ...base, id: 'added-today', publishedAt: '2026-10-10', verifiedAt: '2026-11-16T08:00:00Z', addedAt: '2026-11-16' },
+    { ...base, id: 'legacy', publishedAt: '2026-11-16', verifiedAt: '2026-11-16T11:00:00Z', addedAt: null },
+  ];
+  expect(sortOffers(offers, 'added').map((x) => x.id)).toEqual(['added-today', 'published-new', 'legacy']);
+});
+
+test('canonical duplicate URLs collapse source IDs but separate job references remain distinct', () => {
+  const candidate = { ...base, id: 'legacy:1', company: 'Safran', applicationUrl: 'https://example.com/jobs/JR104?utm_source=mail', addedAt: '2026-11-01' };
+  const imported = { ...base, id: 'workday:abc', company: 'Safran', applicationUrl: 'https://example.com/jobs/JR104', addedAt: '2026-11-16', updatedAt: '2026-11-16' };
+  const differentVacancy = { ...base, id: 'other:2', company: 'Safran', applicationUrl: 'https://example.com/jobs/JR105' };
+  const deduped = dedupeOffers([candidate, imported, differentVacancy]);
+  expect(deduped).toHaveLength(2);
+  expect(deduped[0].addedAt).toBe('2026-11-01');
+  expect(deduped[0].updatedAt).toBe('2026-11-16');
+  expect(dedupeOffers([{ ...candidate, addedAt: null }, imported])[0].addedAt).toBeNull();
+});
+
+test('duplicate candidates preserve a tracked application, without treating it as new', () => {
+  const tracked = { ...base, id: 'historic', applicationStatus: 'Entretien', applicationUrl: 'https://example.com/jobs/JR88', addedAt: null };
+  const discovered = { ...base, id: 'fresh', applicationStatus: 'À candidater', applicationUrl: 'https://example.com/jobs/JR88', addedAt: '2026-11-16' };
+  const [offer] = dedupeOffers([discovered, tracked]);
+  expect(offer.applicationStatus).toBe('Entretien');
+  expect(offer.addedAt).toBeNull();
+});
