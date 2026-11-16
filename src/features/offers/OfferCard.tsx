@@ -122,10 +122,12 @@ export function OfferCard({
             </div>
             <h2 className="offer-card__title">{offer.title}</h2>
             <p className="offer-card__location">{meta || 'Location not specified'}</p>
-            <p className="offer-card__tracking-dates">
-              <span>Ajoutée le : {addedLabel || 'historique · date inconnue'}</span>
-              <span>Dernière mise à jour : {updatedLabel || 'non renseignée'}</span>
-            </p>
+            {(addedLabel || updatedLabel) ? (
+              <p className="offer-card__tracking-dates" aria-label="Suivi de l'offre dans MonStage">
+                {addedLabel ? <span>Ajoutée le {addedLabel}</span> : null}
+                {updatedLabel ? <span title="Dernière mise à jour effective de la fiche">Mise à jour le {updatedLabel}</span> : null}
+              </p>
+            ) : null}
             <div className="offer-card__facts">
               {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
               {offer.compensation ? <span>{offer.compensation}</span> : null}
