@@ -97,7 +97,7 @@ def workday_details(tenant, host, site, external_path):
 def enrich_workday_candidates(tenant, host, site, jobs):
     """Attach job-specific descriptions; report incomplete details separately."""
     successes, failures = 0, 0
-    with ThreadPoolExecutor(max_workers=5) as pool:
+    with ThreadPoolExecutor(max_workers=2) as pool:
         futures = {
             pool.submit(workday_details, tenant, host, site, job["externalPath"]): job
             for job in jobs
@@ -118,39 +118,61 @@ def enrich_workday_candidates(tenant, host, site, jobs):
 
 
 def refresh_workday():
-    """Restore postings from all configured employer Workday feeds."""
+    """Restore postings from all feeds with rate-limit-aware term rotation.
+
+    Avoid firing 12 simultaneous keyword searches (plus extra pages and detail
+    requests) at each Workday tenant every hour. Rotate A/B search vocabulary
+    across 3 cycles; every run still covers BOTH plans and all nine configured
+    tenants. Never mistake a rate-limited source for 'no internships'.
+    """
+    term_groups = (
+        ("stage vision", "stage image", "stage data analyst", "power bi"),
+        ("stage computer vision", "stage traitement image", "stage data", "analyse de données"),
+        ("stage machine learning", "stage maintenance", "stage 2027", "stage data analyste"),
+    )
+    rotation = int(time.time() // 3600) % len(term_groups)
+    selected_terms = term_groups[rotation]
+    print("Workday throttled keyword rotation", rotation, "of", len(term_groups),
+          "terms", len(selected_terms), "covering Plans A/B")
     accepted = 0
     failures = []
     for tenant, host, site in WORKDAY:
         jobs = {}
         successes = 0
-        with ThreadPoolExecutor(max_workers=3) as pool:
-            futures = {pool.submit(workday_search, tenant, host, site, phrase): phrase
-                       for phrase in WORKDAY_TERMS}
-            for future in as_completed(futures):
-                phrase = futures[future]
-                try:
-                    batch = future.result()
-                    successes += 1
-                    for job in batch:
-                        path = job.get("externalPath")
-                        if path and path.startswith("/job/"):
-                            jobs[path] = {
-                                "id": path,
-                                "externalPath": path,
-                                "title": job.get("title", ""),
-                                "locationsText": job.get("locationsText", ""),
-                                "postedOn": job.get("postedOn", ""),
-                            }
-                except (OSError, ValueError) as exc:
-                    failures.append(f"{tenant}/{phrase}: {str(exc)[:90]}")
+        throttled = False
+        for phrase in selected_terms:
+            try:
+                batch = workday_search(tenant, host, site, phrase)
+                successes += 1
+                for job in batch:
+                    path = job.get("externalPath")
+                    if path and path.startswith("/job/"):
+                        jobs[path] = {
+                            "id": path,
+                            "externalPath": path,
+                            "title": job.get("title", ""),
+                            "locationsText": job.get("locationsText", ""),
+                            "postedOn": job.get("postedOn", ""),
+                        }
+            except (OSError, ValueError) as exc:
+                error_text = str(exc)[:120]
+                failures.append(f"{tenant}/{phrase}: {error_text}")
+                if isinstance(exc, urllib.error.HTTPError) and exc.code == 429:
+                    # A portal that still sends 429 after bounded retries needs
+                    # cooling off, not another burst of searches from this IP.
+                    throttled = True
+                    print("Workday rate-limited", tenant,
+                          "- stopping this tenant's queries; retry next hourly run")
+                    break
+            # Polite spacing between keyword requests: no concurrent burst
+            # against the same employer's gateway.
+            time.sleep(0.8)
         print("Workday", tenant, "successful searches", successes,
-              "unique job postings", len(jobs))
-        # The gateway now performs idempotent small-batch upserts.
-        # No empty/partial provider response can erase previous records.
+              "unique job postings", len(jobs), "rate_limited", throttled)
         candidates = [
             job for job in jobs.values()
-            if re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b", str(job.get("title", "")), re.I)
+            if re.search(r"\\b(stage|stagiaire|internship|intern|pfe)\\b",
+                         str(job.get("title", "")), re.I)
         ]
         print("Workday", tenant, "internship-title candidates", len(candidates))
         if successes:
@@ -162,14 +184,13 @@ def refresh_workday():
             except Exception as exc:
                 failures.append(f"{tenant}/ingestion: {str(exc)[:150]}")
         else:
-            failures.append(f"{tenant}: all search terms failed; previous snapshot must be preserved")
+            failures.append(f"{tenant}: no successful searches; preserving previous snapshot")
     print("Workday runner accepted", accepted, "warnings", len(failures))
     for message in failures[:12]:
         print("Workday warning:", message)
     if failures:
         raise RuntimeError("Workday degraded / partial failure: " + "; ".join(failures[:8]))
     return accepted
-
 
 GREENHOUSE = []
 SMARTRECRUITERS = ["veoliaenvironnementsa"]
