@@ -34,6 +34,10 @@ export interface InternshipOffer {
   priority: Priority;
   freshness: string | null;
   verifiedAt: string | null;
+  /** First recorded insertion in MonStage, never overwritten by sync. */
+  addedAt?: string | null;
+  /** Last material change to offer facts/status, not a verification timestamp. */
+  updatedAt?: string | null;
   sourceQuality: string | null;
   actionLevel: string | null;
   calendarFit: string | null;
