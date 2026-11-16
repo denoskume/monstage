@@ -1538,7 +1538,14 @@ function dedupeOffersServerSide_(offers) {
     var candidateScore = publicationDateScore_(offer);
     // A tracked application wins over a second importer copy; otherwise
     // retain the most precise official publication metadata.
-    var takeCandidate = actuallyTracked(offer) && !actuallyTracked(current) ||
+    // An imported duplicate must not replace a final recruiting outcome with
+    // an earlier "sent"/"pending" stage merely because its date is newer.
+    var terminal = function (o) {
+      return ['Refus', 'Offre reçue', 'Abandonné'].indexOf(normalizeText_(o.applicationStatus)) !== -1;
+    };
+    var takeCandidate = terminal(offer) !== terminal(current) ? terminal(offer) :
+      terminal(current) ? false :
+      actuallyTracked(offer) && !actuallyTracked(current) ||
       (actuallyTracked(offer) === actuallyTracked(current) &&
         (publicationPrecision_(offer) > publicationPrecision_(current) ||
           (publicationPrecision_(offer) === publicationPrecision_(current) &&
@@ -1975,6 +1982,10 @@ function applyDetectedStatus_(spreadsheet, offerId, definition, detectedAt) {
     if (String(values[i][idIndex]).trim() !== offerId) continue;
 
     var current = normalizeText_(values[i][statusIndex]) || 'À candidater';
+    // Automated email/agenda parsing must NEVER undo a manually verified
+    // terminal outcome, even if a delayed older message is parsed later.
+    if (['Refus', 'Offre reçue', 'Abandonné'].indexOf(current) !== -1 &&
+        current !== definition.status) return;
     if (statusRank_(definition.status) >= statusRank_(current) || definition.status === 'Refus') {
       sheet.getRange(i + 1, statusIndex + 1).setValue(definition.status);
       var changedIndex = headerMap['Dernière mise à jour'];
@@ -2671,6 +2682,10 @@ function ingestRunnerAtsPostings_(request) {
 }
 
 function updateApplicationStatus_(input) {
+  // Serialize user status updates with incoming ATS imports and verify readback.
+  var lock = LockService.getScriptLock();
+  lock.waitLock(25000);
+  try {
   input = input || {};
   var offerId = normalizeText_(input.offerId);
   var status = normalizeText_(input.status);
@@ -2704,7 +2719,14 @@ function updateApplicationStatus_(input) {
     status === 'Entretien' ? 'Préparer l’entretien' :
     status === 'Refus' ? 'Candidature clôturée' : 'Suivre le dossier'
   );
-  return { status: 200, payload: { updated: true, offerId: offerId, applicationStatus: status } };
+  SpreadsheetApp.flush();
+  var savedStatus = normalizeText_(sheet.getRange(index, statusCol + 1).getDisplayValue());
+  if (savedStatus !== status)
+    return { status: 503, payload: { error: 'STATUS_NOT_PERSISTED', message: 'Le statut n’a pas été confirmé après la sauvegarde.' } };
+  return { status: 200, payload: { updated: true, offerId: offerId, applicationStatus: savedStatus } };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 
