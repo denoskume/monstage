@@ -171,7 +171,7 @@ def refresh_workday():
               "unique job postings", len(jobs), "rate_limited", throttled)
         candidates = [
             job for job in jobs.values()
-            if re.search(r"\\b(stage|stagiaire|internship|intern|pfe)\\b",
+            if re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b",
                          str(job.get("title", "")), re.I)
         ]
         print("Workday", tenant, "internship-title candidates", len(candidates))
