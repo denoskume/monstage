@@ -1,4 +1,5 @@
 import type { InternshipOffer } from '../../api/contract';
+import { trackedTimestamp } from './offerDates';
 import { getCvMatch } from '../workspace/intelligence';
 import type { SortMode } from '../../storage/preferences';
 import type { OfferFilters } from './offerTypes';
@@ -15,25 +16,72 @@ export function verifiedCvMatchScore(offer: InternshipOffer): number | null {
   return score;
 }
 
+/** Stable identity for an original vacancy despite tracking parameters,
+ * source-specific IDs and repeated imports. Distinct ATS job URLs are kept.
+ */
+function canonicalOfferUrl(input: string | null | undefined): string | null {
+  if (!input) return null;
+  try {
+    const url = new URL(input);
+    if (!['https:', 'http:'].includes(url.protocol)) return null;
+    const path = decodeURIComponent(url.pathname).replace(/\/+$/, '').toLowerCase();
+    // Generic employer landing pages are not individual job identities.
+    if (!path || /^\/(careers?|jobs?|emplois?|offres?|stages?|fr\/carriere[s]?)$/.test(path)) return null;
+    const tracking = /^(utm_|gclid$|fbclid$|dclid$|referrer$|source$|campaign$|originid$|boardid$)/i;
+    const params = [...url.searchParams.entries()]
+      .filter(([key]) => !tracking.test(key.toLowerCase()))
+      .sort(([a], [b]) => a.localeCompare(b));
+    const query = new URLSearchParams(params).toString();
+    return url.hostname.toLowerCase().replace(/^www\./, '') + path + (query ? '?' + query : '');
+  } catch { return null; }
+}
+
+function identityText(value: string | null | undefined): string {
+  return (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
 export function offerIdentity(offer: InternshipOffer): string {
-  return [
-    offer.id || '',
-    offer.company || '',
-    offer.title || '',
-    offer.city || '',
-    offer.publishedAt || '',
-    offer.applicationUrl || '',
-  ].join('::');
+  return offer.id + '::' + offer.company + '::' + offer.title + '::' + offer.city;
+}
+
+function duplicateKey(offer: InternshipOffer): string {
+  const canonical = canonicalOfferUrl(offer.applicationUrl);
+  return canonical ? 'url::' + canonical : 'role::' +
+    [offer.company, offer.title, offer.city].map(identityText).join('::');
+}
+
+function hasTracking(offer: InternshipOffer): boolean {
+  return Boolean(offer.appliedAt) || Boolean(offer.applicationStatus &&
+    !['À candidater', 'À qualifier', ''].includes(offer.applicationStatus));
+}
+
+function preferredDuplicate(a: InternshipOffer, b: InternshipOffer): InternshipOffer {
+  if (hasTracking(a) !== hasTracking(b)) return hasTracking(b) ? b : a;
+  const aOfficial = a.sourceQuality?.toLowerCase().includes('officiel') ? 1 : 0;
+  const bOfficial = b.sourceQuality?.toLowerCase().includes('officiel') ? 1 : 0;
+  if (aOfficial !== bOfficial) return bOfficial ? b : a;
+  if (b.skills.length !== a.skills.length) return b.skills.length > a.skills.length ? b : a;
+  return trackedTimestamp(b.verifiedAt) > trackedTimestamp(a.verifiedAt) ? b : a;
 }
 
 export function dedupeOffers(offers: InternshipOffer[]): InternshipOffer[] {
-  const seen = new Set<string>();
-  return offers.filter((offer) => {
-    const identity = offerIdentity(offer);
-    if (seen.has(identity)) return false;
-    seen.add(identity);
-    return true;
-  });
+  const seen = new Map<string, InternshipOffer>();
+  for (const offer of offers) {
+    const key = duplicateKey(offer);
+    const previous = seen.get(key);
+    if (!previous) { seen.set(key, offer); continue; }
+    const preferred = preferredDuplicate(previous, offer);
+    const addedDates = [previous.addedAt, offer.addedAt].filter(Boolean) as string[];
+    const updateDates = [previous.updatedAt, offer.updatedAt].filter(Boolean) as string[];
+    // An older historic copy with no recorded creation timestamp makes
+    // the actual first insertion unknowable. Never backdate it to now.
+    const earliestAdded = previous.addedAt && offer.addedAt
+      ? addedDates.sort((a, b) => trackedTimestamp(a) - trackedTimestamp(b))[0] : null;
+    const latestUpdated = updateDates.sort((a, b) => trackedTimestamp(b) - trackedTimestamp(a))[0] || null;
+    seen.set(key, { ...preferred, addedAt: earliestAdded, updatedAt: latestUpdated,
+      shortlist: previous.shortlist || offer.shortlist || preferred.shortlist });
+  }
+  return [...seen.values()];
 }
 
 function normalize(value: string | null | undefined): string {
@@ -184,6 +232,10 @@ function compareBest(a: InternshipOffer, b: InternshipOffer): number {
 export function sortOffers(offers: InternshipOffer[], sort: SortMode): InternshipOffer[] {
   const copy = [...offers];
   switch (sort) {
+    case 'added':
+      return copy.sort((a, b) => trackedTimestamp(b.addedAt) - trackedTimestamp(a.addedAt) || compareBest(a, b));
+    case 'updated':
+      return copy.sort((a, b) => trackedTimestamp(b.updatedAt) - trackedTimestamp(a.updatedAt) || compareBest(a, b));
     case 'recent':
       return copy.sort((a, b) => recentValue(b) - recentValue(a) || compareBest(a, b));
     case 'detected':
