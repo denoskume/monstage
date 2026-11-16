@@ -1669,6 +1669,10 @@ function syncHistoricalPublicationDates() {
         if (oldScore !== newScore ||
             publicationPrecision_({ publishedAt: current }) < publicationPrecision_({ publishedAt: date })) {
           source.sheet.getRange(rowNumber, dateIndex + 1).setValue(date);
+          var modifiedIndex = headers['Dernière mise à jour'];
+          if (modifiedIndex !== undefined) {
+            source.sheet.getRange(rowNumber, modifiedIndex + 1).setValue(new Date().toISOString());
+          }
           corrected++;
         }
       } catch (error) {
@@ -1973,6 +1977,10 @@ function applyDetectedStatus_(spreadsheet, offerId, definition, detectedAt) {
     var current = normalizeText_(values[i][statusIndex]) || 'À candidater';
     if (statusRank_(definition.status) >= statusRank_(current) || definition.status === 'Refus') {
       sheet.getRange(i + 1, statusIndex + 1).setValue(definition.status);
+      var changedIndex = headerMap['Dernière mise à jour'];
+      if (changedIndex !== undefined && definition.status !== current) {
+        sheet.getRange(i + 1, changedIndex + 1).setValue(new Date().toISOString());
+      }
       if (actionIndex !== undefined) sheet.getRange(i + 1, actionIndex + 1).setValue(definition.action);
 
       if (definition.type === 'submitted' && appliedIndex !== undefined && !normalizeText_(values[i][appliedIndex])) {
@@ -2395,6 +2403,9 @@ function addExternalApplication_(application) {
   setValue_('Lien direct', applicationUrl || '');
   setValue_('Qualité source', 'External');
   setValue_('Vérifié le', new Date());
+  var nowAdded = new Date().toISOString();
+  setValue_('Ajoutée le', nowAdded);
+  setValue_('Dernière mise à jour', nowAdded);
 
   var followUp = parseApplicationDate_(appliedAt);
   if (followUp) {
