@@ -11,9 +11,9 @@ import { useOffers } from '../../hooks/useOffers';
 import { displayValue } from '../../i18n/display';
 import { getFollowUpAdvice } from './intelligence';
 import { EDF_EOD_DOSSIER_ID } from '../applications/edfEodDossier';
-import { edfSavedOffer } from '../applications/edfSavedOffer';
 import { THALES_DATA_DOSSIER_ID } from '../applications/thalesDataDossier';
-import { thalesSavedOffer } from '../applications/thalesSavedOffer';
+import { withSavedManualOffers } from '../applications/thalesSavedOffer';
+import { useOfferActions } from '../offers/offerActions';
 import {
   getWorkspaceState,
   loadWorkspace,
@@ -136,6 +136,7 @@ function WorkspaceCard({ offer, state, onUpdate }: {
 
 export function WorkspacePage() {
   const { data, loading, error, retry } = useOffers();
+  useOfferActions(); // Subscribe to status changes made in My jobs and other tabs.
   const [searchParams] = useSearchParams();
   const selectedId = searchParams.get('offer');
   const [store, setStore] = useState<WorkspaceStore>(() => loadWorkspace());
@@ -143,7 +144,7 @@ export function WorkspacePage() {
   if (loading && !data && selectedId !== EDF_EOD_DOSSIER_ID && selectedId !== THALES_DATA_DOSSIER_ID) return <section className="page"><LoadingSkeleton /></section>;
   if (error && !data && selectedId !== EDF_EOD_DOSSIER_ID && selectedId !== THALES_DATA_DOSSIER_ID) return <section className="page"><ErrorState onRetry={retry} /></section>;
 
-  const offer = selectedId === EDF_EOD_DOSSIER_ID ? edfSavedOffer : selectedId === THALES_DATA_DOSSIER_ID ? thalesSavedOffer : selectedId ? data?.offers.find(item => item.id === selectedId) : undefined;
+  const offer = selectedId ? withSavedManualOffers(data?.offers ?? []).find(item => item.id === selectedId) : undefined;
   return (
     <section className="page workspace-page">
       <div className="page-header" style={{ maxWidth: 1080, margin: '0 auto 20px' }}>
