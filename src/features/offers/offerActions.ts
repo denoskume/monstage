@@ -9,6 +9,8 @@ interface OfferActionState {
   unsaved: string[];
   hidden: Record<string, HiddenReason>;
   stages: Record<string, ManualJobStage>;
+  // Exact statuses of manually imported/saved offers that are not in the Sheet.
+  manualStatuses: Record<string, string>;
 }
 
 // Explicitly curated applications. The source sheet's shortlist flag is a broad
@@ -27,7 +29,7 @@ const curatedSavedOffers = new Set([
 
 const KEY = 'monstage:offer-actions:v1';
 const EVENT = 'monstage:offer-actions-changed';
-const emptyState: OfferActionState = { saved: [], unsaved: [], hidden: {}, stages: {} };
+const emptyState: OfferActionState = { saved: [], unsaved: [], hidden: {}, stages: {}, manualStatuses: {} };
 
 function readState(): OfferActionState {
   try {
@@ -39,6 +41,7 @@ function readState(): OfferActionState {
       unsaved: Array.isArray(parsed.unsaved) ? parsed.unsaved.filter((id): id is string => typeof id === 'string') : [],
       hidden: parsed.hidden && typeof parsed.hidden === 'object' ? parsed.hidden as Record<string, HiddenReason> : {},
       stages: parsed.stages && typeof parsed.stages === 'object' ? parsed.stages as Record<string, ManualJobStage> : {},
+      manualStatuses: parsed.manualStatuses && typeof parsed.manualStatuses === 'object' && !Array.isArray(parsed.manualStatuses) ? parsed.manualStatuses as Record<string, string> : {},
     };
   } catch {
     return emptyState;
@@ -50,8 +53,14 @@ function writeState(state: OfferActionState) {
     localStorage.setItem(KEY, JSON.stringify(state));
     window.dispatchEvent(new CustomEvent(EVENT));
   } catch {
-    // Non-critical local persistence failure.
+    // Do not tell the user a status was saved if persistent storage failed.
+    throw new Error('Stockage local indisponible : le changement n’a pas été enregistré.');
   }
+}
+
+/** Read manually saved application status in all screens, not only My jobs. */
+export function readManualApplicationStatus(offerId: string): string | null {
+  return readState().manualStatuses[offerId] ?? null;
 }
 
 export function useOfferActions() {
@@ -68,8 +77,8 @@ export function useOfferActions() {
   }, []);
 
   const commit = useCallback((next: OfferActionState) => {
-    setState(next);
     writeState(next);
+    setState(next);
   }, []);
 
   const isSaved = useCallback((offerId: string, sourceSaved = false) => {
@@ -118,17 +127,27 @@ export function useOfferActions() {
     commit({ ...current, stages });
   }, [commit]);
 
+  const setManualApplicationStatus = useCallback((offerId: string, status: string | null) => {
+    const current = readState();
+    const manualStatuses = { ...current.manualStatuses };
+    if (status === null) delete manualStatuses[offerId];
+    else manualStatuses[offerId] = status;
+    commit({ ...current, manualStatuses });
+  }, [commit]);
+
   return {
     savedIds: state.saved,
     unsavedIds: state.unsaved,
     hidden: state.hidden,
     stages: state.stages,
+    manualStatuses: state.manualStatuses,
     isSaved,
     isHidden: (offerId: string) => Boolean(state.hidden[offerId]),
     toggleSaved,
     hideOffer,
     unhideOffer,
     setStage,
+    setManualApplicationStatus,
   };
 }
 
