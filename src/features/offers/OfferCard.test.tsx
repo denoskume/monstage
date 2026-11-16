@@ -80,6 +80,19 @@ test('shows insertion and actual update separately from the publication date', (
       onSelect={() => undefined} onToggleSave={() => undefined}
       onHide={() => undefined} onShare={() => undefined} />,
   );
-  expect(screen.getByText(/Ajoutée le : 16 nov. 2026/)).toBeInTheDocument();
-  expect(screen.getByText(/Dernière mise à jour : 16 nov. 2026/)).toBeInTheDocument();
+  expect(screen.getByText(/Ajoutée le 16 nov. 2026/)).toBeInTheDocument();
+  expect(screen.getByText(/Mise à jour le 16 nov. 2026/)).toBeInTheDocument();
+});
+
+test('legacy offers with missing insertion/update dates show no empty date placeholders', () => {
+  render(
+    <OfferCard offer={{ ...offer, addedAt: null, updatedAt: null }}
+      selected={false} saved={false}
+      onSelect={() => undefined} onToggleSave={() => undefined}
+      onHide={() => undefined} onShare={() => undefined} />,
+  );
+  expect(screen.queryByText(/historique · date inconnue/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/non renseignée/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Ajoutée le/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Mise à jour le/)).not.toBeInTheDocument();
 });
