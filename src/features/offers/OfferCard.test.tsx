@@ -71,3 +71,15 @@ test('supports French publication dates and shows a fallback when missing', () =
   );
   expect(screen.getByText('Date non communiquée')).toBeInTheDocument();
 });
+
+test('shows insertion and actual update separately from the publication date', () => {
+  render(
+    <OfferCard offer={{ ...offer, publishedAt: '2026-10-01',
+      addedAt: '2026-11-16', updatedAt: '2026-11-16T11:30:00Z' }}
+      selected={false} saved={false}
+      onSelect={() => undefined} onToggleSave={() => undefined}
+      onHide={() => undefined} onShare={() => undefined} />,
+  );
+  expect(screen.getByText(/Ajoutée le : 16 nov. 2026/)).toBeInTheDocument();
+  expect(screen.getByText(/Dernière mise à jour : 16 nov. 2026/)).toBeInTheDocument();
+});
