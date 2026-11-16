@@ -1,5 +1,6 @@
 import type { InternshipOffer } from '../../api/contract';
 import { withSavedEdfOffer } from './edfSavedOffer';
+import { readManualApplicationStatus } from '../offers/offerActions';
 import { THALES_DATA_DOSSIER_ID, THALES_DATA_TITLE } from './thalesDataDossier';
 
 // Explicitly saved by the user. Keep independent of the 30-company automated feed.
@@ -43,10 +44,21 @@ export function withSavedManualOffers(feed: InternshipOffer[]): InternshipOffer[
   const withEdf = withSavedEdfOffer(feed);
   // Prefer the stable manually saved record over a duplicate discovery-feed
   // record with a different numeric id, so the saved button and dossier work.
+  const existing = withEdf.find(offer => offer.id === thalesSavedOffer.id ||
+    (offer.company.toLowerCase().includes('thales') &&
+      ((offer.applicationUrl || '').includes('R0343178') || offer.title === thalesSavedOffer.title)));
   const unique = withEdf.filter(offer =>
     offer.id !== thalesSavedOffer.id &&
     !(offer.company.toLowerCase().includes('thales') &&
       ((offer.applicationUrl || '').includes('R0343178') || offer.title === thalesSavedOffer.title))
   );
-  return [...unique, thalesSavedOffer];
+  // A live backend record wins over bundled defaults. A user-selected local
+  // status wins when this manually maintained offer is not in the backend.
+  const manualStatus = readManualApplicationStatus(thalesSavedOffer.id);
+  const merged = {
+    ...thalesSavedOffer,
+    applicationStatus: manualStatus || existing?.applicationStatus || thalesSavedOffer.applicationStatus,
+    appliedAt: existing?.appliedAt || thalesSavedOffer.appliedAt,
+  };
+  return [...unique, merged];
 }
