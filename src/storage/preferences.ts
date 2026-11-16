@@ -1,4 +1,4 @@
-export type SortMode = 'best' | 'recent' | 'detected' | 'score' | 'priority' | 'city';
+export type SortMode = 'best' | 'recent' | 'added' | 'updated' | 'detected' | 'score' | 'priority' | 'city';
 
 export interface MonStagePreferences {
   query: string;
@@ -17,7 +17,7 @@ export interface MonStagePreferences {
 
 export const defaultPreferences: MonStagePreferences = {
   query: '',
-  sort: 'detected',
+  sort: 'added',
   onlyForMe: false,
   minScore: 0,
   specialization: null,
@@ -32,7 +32,7 @@ export const defaultPreferences: MonStagePreferences = {
 
 const KEY = 'monstage:preferences:v2';
 const LEGACY_KEY = 'monstage:preferences:v1';
-const validSortModes: SortMode[] = ['best', 'recent', 'detected', 'score', 'priority', 'city'];
+const validSortModes: SortMode[] = ['best', 'recent', 'added', 'updated', 'detected', 'score', 'priority', 'city'];
 
 export function loadPreferences(): MonStagePreferences {
   let raw: string | null = null;
