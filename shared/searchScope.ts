@@ -114,7 +114,13 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   if (offer.id === 'BNP-RHG27-002'
       && normalizeScope(offer.company) === 'bnp paribas'
       && normalizeScope(offer.title).includes('stage data analyst rh power bi')) return 'B';
-  if (!(matchingCompany(offer.company) || additionalLargeEmployer(offer.company)) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
+  // Reserved ID namespace for manually verified major-employer internships written
+  // into the authenticated MonStage source after official offer validation.
+  // It lets future user-approved employers appear without adding arbitrary
+  // historical search results or weakening Plan A/B eligibility checks.
+  const manuallyVerifiedMajorEmployer = /^MST-[A-Z0-9-]{4,}$/i.test(offer.id || '');
+  if (!(matchingCompany(offer.company) || additionalLargeEmployer(offer.company) || manuallyVerifiedMajorEmployer)
+      || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
   // Two verified, team-supervised BI internships have engineering-worded titles;
   // their actual work is Data Analysis/BI. Accept these exact curated offers,
   // not engineering-heavy jobs generally.
