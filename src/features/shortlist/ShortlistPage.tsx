@@ -104,7 +104,7 @@ export function ShortlistPage() {
       actions.isSaved(offer.id, offer.shortlist) &&
       resolvedStage(offer) === null
     ), 'best'),
-    [data, actions.savedIds, actions.unsavedIds, actions.hidden, actions.stages],
+    [data, actions.savedIds, actions.unsavedIds, actions.hidden, actions.stages, actions.manualStatuses],
   );
   function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'refused' | 'archived' | null {
     return resolveTrackingStage(
@@ -123,16 +123,16 @@ export function ShortlistPage() {
       };
       return dateKey(b.appliedAt).localeCompare(dateKey(a.appliedAt));
     }),
-    [data, actions.stages],
+    [data, actions.stages, actions.manualStatuses],
   );
   const interviews = useMemo(
     () => allOffers.filter((offer) => resolvedStage(offer) === 'interview'),
-    [data, actions.stages],
+    [data, actions.stages, actions.manualStatuses],
   );
-  const refused = useMemo(() => allOffers.filter(offer => resolvedStage(offer) === 'refused'), [data, actions.stages]);
+  const refused = useMemo(() => allOffers.filter(offer => resolvedStage(offer) === 'refused'), [data, actions.stages, actions.manualStatuses]);
   const archived = useMemo(
     () => allOffers.filter((offer) => resolvedStage(offer) === 'archived'),
-    [data, actions.stages],
+    [data, actions.stages, actions.manualStatuses],
   );
 
   function toggleSaved(offer: InternshipOffer) {
