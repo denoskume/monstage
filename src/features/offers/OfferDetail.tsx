@@ -114,8 +114,8 @@ export function OfferDetail({
           <DetailItem label="Next action" value={offer.nextAction ?? offer.actionLevel} />
           <DetailItem label="Source" value={offer.sourceQuality} />
           <DetailItem label="Date de publication" value={offer.publishedAt} />
-          <DetailItem label="Ajoutée le" value={formatOfferTrackingDate(offer.addedAt) || 'Historique — date exacte inconnue'} />
-          <DetailItem label="Dernière mise à jour" value={formatOfferTrackingDate(offer.updatedAt) || 'Non renseignée'} />
+          <DetailItem label="Ajoutée le" value={formatOfferTrackingDate(offer.addedAt)} />
+          <DetailItem label="Dernière mise à jour" value={formatOfferTrackingDate(offer.updatedAt)} />
           <DetailItem label="Vérifiée le" value={offer.verifiedAt} />
         </dl>
       </section>
