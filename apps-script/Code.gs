@@ -98,6 +98,8 @@ function mapOffer_(row, headerMap, autonomy) {
     priority: normalizeText_(valueByHeader_(row, headerMap, 'Priorité')) || '',
     freshness: normalizeText_(valueByHeader_(row, headerMap, 'Fraîcheur')),
     verifiedAt: normalizeText_(valueByHeader_(row, headerMap, 'Vérifié le')),
+    addedAt: normalizeText_(valueByHeader_(row, headerMap, 'Ajoutée le')),
+    updatedAt: normalizeText_(valueByHeader_(row, headerMap, 'Dernière mise à jour')),
     sourceQuality: normalizeText_(valueByHeader_(row, headerMap, 'Qualité source')),
     actionLevel: normalizeText_(valueByHeader_(row, headerMap, 'Niveau action')),
     calendarFit: normalizeText_(valueByHeader_(row, headerMap, 'Fit calendrier')),
@@ -190,8 +192,39 @@ var EXTERNAL_SOURCE_HEADERS_ = [
   "Statut de l'offre", 'Statut candidature', 'Prochaine action', 'Lien direct',
   '⭐ Shortlist', 'Date candidature', 'Relance prévue', 'Famille cible',
   'Fit technique /100', 'Score décision /100', 'Priorité', 'Fraîcheur',
-  'Vérifié le', 'Qualité source', 'Niveau action', 'Fit calendrier', 'Confiance'
+  'Vérifié le', 'Qualité source', 'Niveau action', 'Fit calendrier', 'Confiance',
+  'Ajoutée le', 'Dernière mise à jour'
 ];
+
+/** Insertion date never changes. The change date only reflects factual field
+ * changes, never a scheduled check of an otherwise identical listing.
+ * Legacy offers without known insertion history keep their dates blank.
+ */
+function applyOfferTrackingDates_(row, oldRow, timestamp) {
+  var count = EXTERNAL_SOURCE_HEADERS_.length;
+  while (row.length < count) row.push('');
+  var addedIndex = count - 2;
+  var updatedIndex = count - 1;
+  var existing = oldRow || null;
+  var materialChange = !existing;
+  if (existing) {
+    materialChange = false;
+    for (var i = 0; i < addedIndex; i++) {
+      // Ignore refresh-only fields: freshness label and verification time.
+      if (i === 23 || i === 24) continue;
+      if (String(row[i] == null ? '' : row[i]) !==
+          String(existing[i] == null ? '' : existing[i])) {
+        materialChange = true;
+        break;
+      }
+    }
+  }
+  row[addedIndex] = existing ? (existing[addedIndex] || '') : timestamp;
+  row[updatedIndex] = existing ?
+    (materialChange ? timestamp : (existing[updatedIndex] || '')) : timestamp;
+  return materialChange;
+}
+
 
 var LEVER_SOURCES_ = [
   { site: 'ekimetrics', company: 'Ekimetrics' },
@@ -596,6 +629,13 @@ function writeExternalOfferRows_(sheet, rows) {
   if (retained) console.warn(sheet.getName() + ': ' + retained +
     ' jobs temporarily missing from provider response; retained for verification');
 
+  var trackingTimestamp = new Date().toISOString();
+  rows.forEach(function (row) {
+    applyOfferTrackingDates_(row, previous[normalizeText_(row[0]) || ''] || null, trackingTimestamp);
+  });
+  if (sheet.getMaxColumns() < EXTERNAL_SOURCE_HEADERS_.length) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), EXTERNAL_SOURCE_HEADERS_.length - sheet.getMaxColumns());
+  }
   sheet.clearContents();
   sheet.getRange(1, 1, 1, EXTERNAL_SOURCE_HEADERS_.length).setValues([EXTERNAL_SOURCE_HEADERS_]);
   sheet.setFrozenRows(1);
@@ -2397,6 +2437,9 @@ function upsertRunnerOfferRows_(sheet, inputRows) {
   var lock = LockService.getScriptLock();
   lock.waitLock(25000);
   try {
+    if (sheet.getMaxColumns() < columns) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), columns - sheet.getMaxColumns());
+    }
     var lastRow = sheet.getLastRow();
     if (lastRow < 1) {
       sheet.getRange(1, 1, 1, columns).setValues([EXTERNAL_SOURCE_HEADERS_]);
@@ -2412,6 +2455,7 @@ function upsertRunnerOfferRows_(sheet, inputRows) {
 
     var updates = [];
     var inserts = [];
+    var trackingTimestamp = new Date().toISOString();
     ids.forEach(function (id) {
       var row = byId[id].slice(0, columns);
       while (row.length < columns) row.push('');
@@ -2427,8 +2471,10 @@ function upsertRunnerOfferRows_(sheet, inputRows) {
           if (old[index] !== null && old[index] !== undefined && old[index] !== '' &&
               (index !== 13 || old[index] !== 'À candidater')) row[index] = old[index];
         });
+        applyOfferTrackingDates_(row, old, trackingTimestamp);
         updates.push({ number: rowNumber, values: row });
       } else {
+        applyOfferTrackingDates_(row, null, trackingTimestamp);
         inserts.push(row);
       }
     });
@@ -2602,6 +2648,10 @@ function updateApplicationStatus_(input) {
   if (['Refus', 'Offre reçue'].indexOf(current) !== -1 && current !== status)
     return { status: 409, payload: { error: 'STATUS_LOCKED', message: 'Existing final status requires manual review.' } };
   sheet.getRange(index, statusCol + 1).setValue(status);
+  var updatedColumn = headers['Dernière mise à jour'];
+  if (current !== status && updatedColumn !== undefined) {
+    sheet.getRange(index, updatedColumn + 1).setValue(new Date().toISOString());
+  }
   if (status === 'Candidature envoyée' && dateCol !== undefined && !values[index - 1][dateCol])
     sheet.getRange(index, dateCol + 1).setValue(Utilities.formatDate(new Date(), 'Europe/Paris', 'dd/MM/yyyy'));
   if (actionCol !== undefined) sheet.getRange(index, actionCol + 1).setValue(
