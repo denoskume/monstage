@@ -21,6 +21,10 @@ export function resolveTrackingStage(
   if (status === 'Abandonné') return 'archived';
   if (isManuallySavedOffer && manualStage) return manualStage;
   if (status === 'Entretien' || status === 'Test technique') return 'interview';
+  // For Sheet-backed applications, a confirmed backend status always wins
+  // over a stale local tab left by an earlier client session.
+  if (['Candidature envoyée', 'Relance', 'Réponse recruteur', 'Offre reçue'].includes(status))
+    return 'application';
   if (manualStage === 'refused') return 'refused';
   if (manualStage === 'archived') return 'archived';
   if (manualStage === 'interview') return 'interview';
