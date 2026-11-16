@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 type HiddenReason = 'not_relevant' | 'wrong_location' | 'salary' | 'already_applied' | 'not_interested';
 
-type ManualJobStage = 'application' | 'interview' | 'archived';
+type ManualJobStage = 'application' | 'interview' | 'refused' | 'archived';
 
 interface OfferActionState {
   saved: string[];
