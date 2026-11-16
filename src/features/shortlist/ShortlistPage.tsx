@@ -17,6 +17,7 @@ import { getFollowUpAdvice } from '../workspace/intelligence';
 import { EDF_EOD_DOSSIER_ID } from '../applications/edfEodDossier';
 import { withSavedManualOffers } from '../applications/thalesSavedOffer';
 import { THALES_DATA_DOSSIER_ID } from '../applications/thalesDataDossier';
+import { resolveTrackingStage, trackingStageForStatus } from './trackingStage';
 
 type MyJobsTab = 'saved' | 'applications' | 'interviews' | 'refused' | 'archived';
 
@@ -49,7 +50,7 @@ function TrackingList({
             <h2>{offer.title}</h2>
             <p>{offer.company}</p>
             <span>{offer.city ?? 'City not specified'}</span>
-            <small>{offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus) ? displayValue(offer.applicationStatus) : stage === 'application' ? 'Postulé' : stage === 'interview' ? 'Entretien' : stage === 'refused' ? 'Refus' : 'Archivé'}{offer.appliedAt ? ' · ' + offer.appliedAt : ''}</small>
+            <small>{stage === 'refused' ? 'Refus' : stage === 'archived' ? 'Archivé' : stage === 'interview' ? (offer.applicationStatus === 'Test technique' ? 'Test technique' : 'Entretien') : offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus) ? displayValue(offer.applicationStatus) : 'Postulé'}{offer.appliedAt ? ' · ' + offer.appliedAt : ''}</small>
             {stage === 'application' ? <small>Suivi automatique : {getFollowUpAdvice(offer, getWorkspaceState(offer.id).followUpDate || undefined)}</small> : null}
             {stage === 'interview' && offer.nextAction ? <small>Prochaine étape : {offer.nextAction}</small> : null}
           </div>
@@ -57,7 +58,7 @@ function TrackingList({
           <div className="my-jobs-saved-row__actions">
             {stage === 'interview' ? <Link className="button button--primary my-jobs-apply" to={`/interview-prep?offer=${encodeURIComponent(offer.id)}`}>Préparer l’entretien</Link> : null}
             <Link className={stage === 'interview' ? 'button button--secondary' : 'button button--primary my-jobs-apply'} to={`/workspace?offer=${encodeURIComponent(offer.id)}`}>Dossier</Link>
-            <select aria-label={`Statut de ${offer.company}`} value={offer.applicationStatus === 'Test technique' ? 'Test technique' : stage === 'refused' ? 'Refus' : stage === 'interview' ? 'Entretien' : stage === 'archived' ? 'Abandonné' : offer.applicationStatus === 'Relance' ? 'Relance' : 'Candidature envoyée'} disabled={saving === offer.id} onChange={(event) => onStatus(offer, event.target.value)} className="button button--secondary">
+            <select aria-label={`Statut de ${offer.company}`} value={stage === 'refused' ? 'Refus' : stage === 'archived' ? 'Abandonné' : stage === 'interview' ? (offer.applicationStatus === 'Test technique' ? 'Test technique' : 'Entretien') : offer.applicationStatus === 'Offre reçue' ? 'Offre reçue' : offer.applicationStatus === 'Relance' ? 'Relance' : 'Candidature envoyée'} disabled={saving === offer.id} onChange={(event) => onStatus(offer, event.target.value)} className="button button--secondary">
               <option value="Candidature envoyée">En cours — sans réponse</option>
               <option value="Relance">Relance effectuée</option>
               <option value="Entretien">Entretien</option>
@@ -106,17 +107,12 @@ export function ShortlistPage() {
     [data, actions.savedIds, actions.unsavedIds, actions.hidden, actions.stages],
   );
   function resolvedStage(offer: InternshipOffer): 'application' | 'interview' | 'refused' | 'archived' | null {
-    const manual = actions.stages[offer.id];
-    const status = offer.applicationStatus ?? '';
-    if (status === 'Refus') return 'refused';
-    if (status === 'Entretien' || status === 'Test technique') return 'interview';
-    if (manual === 'archived') return 'archived';
-    if (manual === 'interview') return 'interview';
-    if (status === 'Abandonné') return 'archived';
-    if (manual === 'application' || getWorkspaceState(offer.id).submitted ||
-        Boolean(offer.appliedAt) ||
-        ['Candidature envoyée', 'Relance', 'Réponse recruteur', 'Offre reçue'].includes(status)) return 'application';
-    return null;
+    return resolveTrackingStage(
+      offer,
+      actions.stages[offer.id],
+      getWorkspaceState(offer.id).submitted,
+      offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID,
+    );
   }
 
   const applications = useMemo(
@@ -172,7 +168,7 @@ export function ShortlistPage() {
     setSavingId(offer.id);
     try {
       if (offer.id !== EDF_EOD_DOSSIER_ID && offer.id !== THALES_DATA_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
-      actions.setStage(offer.id, status === 'Entretien' || status === 'Test technique' ? 'interview' : status === 'Abandonné' ? 'archived' : status === 'Refus' ? null : 'application');
+      actions.setStage(offer.id, trackingStageForStatus(status));
       setNotice((offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) ? 'Statut de cette offre enregistrée localement.' : 'Statut actualisé et enregistré.');
       retry();
     } catch (error) {
