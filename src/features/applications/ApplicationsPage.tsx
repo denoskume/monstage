@@ -10,6 +10,8 @@ import type { InternshipOffer } from '../../api/contract';
 import { getFollowUpAdvice } from '../workspace/intelligence';
 import { getWorkspaceState, loadWorkspace } from '../workspace/workspaceStorage';
 import { ExternalApplicationForm } from './ExternalApplicationForm';
+import { withSavedManualOffers } from './thalesSavedOffer';
+import { useOfferActions } from '../offers/offerActions';
 
 const statusOrder = ['Candidature envoyée', 'Réponse recruteur', 'Relance', 'Entretien', 'Test technique', 'Offre reçue', 'Refus', 'Abandonné'];
 
@@ -42,12 +44,13 @@ function ApplicationRow({ offer }: { offer: InternshipOffer }) {
 
 export function ApplicationsPage() {
   const { data, loading, error, retry } = useOffers();
+  const actions = useOfferActions();
   const [externalFormOpen, setExternalFormOpen] = useState(false);
   const [createdNotice, setCreatedNotice] = useState(false);
   const [query, setQuery] = useState('');
   const grouped = useMemo(() => {
     const local = loadWorkspace();
-    const all = (data?.offers ?? []).filter(offer => {
+    const all = withSavedManualOffers(data?.offers ?? []).filter(offer => {
       const backendApplied = Boolean(offer.applicationStatus && !['À candidater', 'À qualifier'].includes(offer.applicationStatus));
       return backendApplied || Boolean(local[offer.id]?.submitted);
     }).map(offer => local[offer.id]?.submitted && (!offer.applicationStatus || ['À candidater', 'À qualifier'].includes(offer.applicationStatus))
@@ -55,7 +58,7 @@ export function ApplicationsPage() {
       : offer);
     const matching = all.filter(offer => [offer.company, offer.title, offer.city].join(' ').toLowerCase().includes(query.trim().toLowerCase()));
     return statusOrder.map(status => ({ status, offers: matching.filter(offer => offer.applicationStatus === status) })).filter(group => group.offers.length > 0);
-  }, [data, query]);
+  }, [data, query, actions.manualStatuses, actions.stages]);
 
   if (loading && !data) return <section className="page"><LoadingSkeleton /></section>;
   if (error && !data) return <section className="page"><ErrorState onRetry={retry} /></section>;
