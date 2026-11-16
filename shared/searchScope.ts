@@ -35,6 +35,23 @@ export const TARGET_COMPANIES = [
   ['EDF', 'edf'], ['ENGIE', 'engie', 'grdf'], ['L’Oréal', 'l oreal', 'loreal'],
 ] as const;
 
+/** Major employers outside the 30-group monitoring baseline, admitted after the
+ * user's 16 Nov 2026 expansion. Preserve TARGET_COMPANIES as the core 30.
+ * Only genuine Plan A/B internships qualify; this is not a blanket import of
+ * unrelated offers or already rejected applications.
+ */
+export const EXPANDED_LARGE_EMPLOYERS = [
+  ['Groupe Atlantic', 'groupe atlantic'],
+  ['Caterpillar', 'caterpillar'],
+  ['RTE', 'rte reseau de transport electricite', 'rte'],
+] as const;
+
+function additionalLargeEmployer(company: string | null | undefined): boolean {
+  const normalized = ' ' + normalizeScope(company) + ' ';
+  return EXPANDED_LARGE_EMPLOYERS.some(([, ...aliases]) =>
+    aliases.some(alias => normalized.includes(' ' + normalizeScope(alias) + ' ')));
+}
+
 function matchingCompany(company: string | null | undefined): string | null {
   const text = ' ' + normalizeScope(company) + ' ';
   return TARGET_COMPANIES.find(([, ...aliases]) => aliases.some(alias =>
@@ -97,7 +114,11 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   if (offer.id === 'BNP-RHG27-002'
       && normalizeScope(offer.company) === 'bnp paribas'
       && normalizeScope(offer.title).includes('stage data analyst rh power bi')) return 'B';
-  if (!matchingCompany(offer.company) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
+  if (!(matchingCompany(offer.company) || additionalLargeEmployer(offer.company)) || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
+  // Two verified, team-supervised BI internships have engineering-worded titles;
+  // their actual work is Data Analysis/BI. Accept these exact curated offers,
+  // not engineering-heavy jobs generally.
+  if (offer.id === 'MST-ATLANTIC-FVMOM' || offer.id === 'MST-SCHNEIDER-136746') return 'B';
   if (isDataAnalystMission(offer) || isDataDrivenMaintenanceMission(offer)) return 'B';
   if (isVisionMission(offer) || isIndustrialMachineLearningMission(offer)) return 'A';
   return null;
