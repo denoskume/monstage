@@ -1,6 +1,7 @@
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
 import { verifiedCvMatchScore } from './offerSelectors';
+import { formatOfferTrackingDate } from './offerDates';
 
 type Publication = { date: Date | null; hasTime: boolean; dateLabel: string; exact: boolean };
 
@@ -93,6 +94,8 @@ export function OfferCard({
   onShare: () => void;
 }) {
   const meta = [offer.city, offer.region].filter(Boolean).join(', ');
+  const addedLabel = formatOfferTrackingDate(offer.addedAt);
+  const updatedLabel = formatOfferTrackingDate(offer.updatedAt);
   const publication = parsePublishedDate(offer.publishedAt);
   const publishedLabel = relativePublishedDate(publication);
   const exactPublicationLabel = publication?.exact ? publication.dateLabel : null;
@@ -119,6 +122,10 @@ export function OfferCard({
             </div>
             <h2 className="offer-card__title">{offer.title}</h2>
             <p className="offer-card__location">{meta || 'Location not specified'}</p>
+            <p className="offer-card__tracking-dates">
+              <span>Ajoutée le : {addedLabel || 'historique · date inconnue'}</span>
+              <span>Dernière mise à jour : {updatedLabel || 'non renseignée'}</span>
+            </p>
             <div className="offer-card__facts">
               {offer.duration ? <span>{displayValue(offer.duration)}</span> : null}
               {offer.compensation ? <span>{offer.compensation}</span> : null}
