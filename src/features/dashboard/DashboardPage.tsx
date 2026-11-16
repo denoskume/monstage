@@ -77,7 +77,7 @@ export function DashboardPage() {
 
   const all = useMemo(() => uniqueDashboardOffers(
     combineDossiers(withSavedManualOffers(data?.offers || []), local).filter(o => !actions.hidden[o.id])
-  ), [data, local, actions.hidden]);
+  ), [data, local, actions.hidden, actions.manualStatuses, actions.stages]);
   const baseShown = useMemo(() => filterDashboardOffers(all, filters, now), [all, filters, now]);
   const shown = useMemo(() => pieSelected ? baseShown.filter(o => statusBucket(o) === pieSelected) : baseShown,
     [baseShown,pieSelected]);
