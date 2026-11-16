@@ -15,12 +15,12 @@ export function resolveTrackingStage(
   submitted: boolean,
   isManuallySavedOffer: boolean,
 ): ManualJobStage | null {
-  if (isManuallySavedOffer && manualStage) return manualStage;
-
   const status = offer.applicationStatus ?? '';
+  // Never allow an obsolete local tab to demote a persisted refusal.
   if (status === 'Refus') return 'refused';
-  if (status === 'Entretien' || status === 'Test technique') return 'interview';
   if (status === 'Abandonné') return 'archived';
+  if (isManuallySavedOffer && manualStage) return manualStage;
+  if (status === 'Entretien' || status === 'Test technique') return 'interview';
   if (manualStage === 'refused') return 'refused';
   if (manualStage === 'archived') return 'archived';
   if (manualStage === 'interview') return 'interview';
