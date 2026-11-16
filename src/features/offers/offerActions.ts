@@ -127,6 +127,18 @@ export function useOfferActions() {
     commit({ ...current, stages });
   }, [commit]);
 
+  // Save the exact status and its tab together so a reload cannot split them.
+  const setManualTracking = useCallback((offerId: string, status: string | null, stage: ManualJobStage | null) => {
+    const current = readState();
+    const manualStatuses = { ...current.manualStatuses };
+    const stages = { ...current.stages };
+    if (status === null) delete manualStatuses[offerId];
+    else manualStatuses[offerId] = status;
+    if (stage === null) delete stages[offerId];
+    else stages[offerId] = stage;
+    commit({ ...current, manualStatuses, stages });
+  }, [commit]);
+
   const setManualApplicationStatus = useCallback((offerId: string, status: string | null) => {
     const current = readState();
     const manualStatuses = { ...current.manualStatuses };
@@ -148,6 +160,7 @@ export function useOfferActions() {
     unhideOffer,
     setStage,
     setManualApplicationStatus,
+    setManualTracking,
   };
 }
 
