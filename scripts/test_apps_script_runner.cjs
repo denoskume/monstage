@@ -14,7 +14,9 @@ function makeSheet(width) {
     setFrozenRows() {},
     getLastRow() { return this.rows.length; },
     getMaxRows() { return Math.max(this.rows.length, 100); },
+    getMaxColumns() { return Math.max(width, this.rows[0].length); },
     insertRowsAfter() {},
+    insertColumnsAfter(start, count) { this.rows.forEach(row => row.splice(start, 0, ...Array(count).fill(''))); },
     getRange(row, col, height=1, columns=1) {
       return {
         getDisplayValues: () => Array.from({length:height}, (_, i) =>
@@ -56,6 +58,8 @@ const rows=(first,count)=>Array.from({length:count},(_,i)=>{
 const first=context.upsertRunnerOfferRows_(sheet,rows(0,30));
 assert.equal(first.appended,30);
 assert.equal(sheet.rows.length,31);
+assert.match(sheet.rows[5][cols-2], /^2026-11-16|^2026-\d{2}-\d{2}/);
+const firstAddedAt = sheet.rows[5][cols-2];
 sheet.rows[5][13]='Entretien';
 sheet.rows[5][16]='TRUE';
 sheet.rows[5][11]='2026-11-10';
@@ -69,6 +73,8 @@ assert.equal(sheet.rows.length,62);
 assert.equal(sheet.rows[5][13],'Entretien','Manually tracked application must survive ATS upsert');
 assert.equal(sheet.rows[5][16],'TRUE','Saved shortlist must survive ATS upsert');
 assert.equal(sheet.rows[5][11],'2026-11-10','Known publication date must survive missing new date');
+assert.equal(sheet.rows[5][cols-2], firstAddedAt, 'First insertion date must survive ATS upsert');
+assert.ok(sheet.rows[5][cols-1], 'Last meaningful update must be recorded');
 assert.equal(new Set(sheet.rows.slice(1).map(r=>r[0])).size,61);
 const zero=context.upsertRunnerOfferRows_(sheet,[]);
 assert.equal(zero.appended,0);
