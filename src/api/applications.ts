@@ -88,8 +88,13 @@ export async function saveApplicationStatus(token: string | null, offerId: strin
     body: JSON.stringify({ offerId, status }),
   });
   if (response.status === 401 || response.status === 403) throw new ApiAuthError(response.status);
-  if (!response.ok) {
-    const result = await response.json().catch(() => ({})) as { message?: string; error?: string };
-    throw new Error(result.message || result.error || 'Impossible de sauvegarder le statut.');
+  const result = await response.json().catch(() => ({})) as {
+    updated?: boolean; offerId?: string; applicationStatus?: string; message?: string; error?: string
+  };
+  if (!response.ok) throw new Error(result.message || result.error || 'Impossible de sauvegarder le statut.');
+  // HTTP 200 is not sufficient: verify the backing sheet acknowledged the
+  // exact offer and selected status before showing the success message.
+  if (result.updated !== true || result.offerId !== offerId || result.applicationStatus !== status) {
+    throw new Error('Le serveur n’a pas confirmé le statut demandé. Aucune réussite ne sera affichée.');
   }
 }
