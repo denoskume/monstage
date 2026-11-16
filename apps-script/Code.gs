@@ -1477,12 +1477,24 @@ function offerSourceSheets_(spreadsheet) {
   });
 }
 
+function canonicalJobUrl_(value) {
+  var text = String(value || '').trim().replace(/#.*$/, '');
+  if (!text) return '';
+  var parts = text.split('?');
+  var url = parts[0].replace(/^https?:\/\/(?:www\.)?/i, '').replace(/\/+$/, '').toLowerCase();
+  var query = (parts[1] || '').split('&').filter(function (part) {
+    if (!part) return false;
+    var name = part.split('=')[0].toLowerCase();
+    return !/^(utm_|gclid$|fbclid$|dclid$|referrer$|source$|originid$|boardid$)/.test(name);
+  }).sort().join('&');
+  return url + (query ? '?' + query : '');
+}
 function backendOfferIdentity_(offer) {
   return [
     normalizeComparable_(offer.company),
     normalizeComparable_(offer.title),
     normalizeComparable_(offer.city),
-    normalizeComparable_(offer.applicationUrl)
+    canonicalJobUrl_(offer.applicationUrl)
   ].join('::');
 }
 
@@ -1509,6 +1521,11 @@ function publicationPrecision_(offer) {
 function dedupeOffersServerSide_(offers) {
   var selected = {};
   var order = [];
+  function actuallyTracked(offer) {
+    return Boolean(offer.appliedAt || offer.followUpAt) ||
+      Boolean(offer.applicationStatus &&
+        offer.applicationStatus !== 'À candidater' && offer.applicationStatus !== 'À qualifier');
+  }
   offers.forEach(function (offer) {
     var key = backendOfferIdentity_(offer);
     if (!Object.prototype.hasOwnProperty.call(selected, key)) {
@@ -1519,14 +1536,31 @@ function dedupeOffersServerSide_(offers) {
     var current = selected[key];
     var currentScore = publicationDateScore_(current);
     var candidateScore = publicationDateScore_(offer);
-    // Prefer verified publication data, and newer official postings over stale duplicates.
-    // Do not use import/verification timestamps as a substitute for publication.
-    if (publicationPrecision_(offer) > publicationPrecision_(current) ||
-        (publicationPrecision_(offer) === publicationPrecision_(current) && candidateScore > currentScore)) selected[key] = offer;
+    // A tracked application wins over a second importer copy; otherwise
+    // retain the most precise official publication metadata.
+    var takeCandidate = actuallyTracked(offer) && !actuallyTracked(current) ||
+      (actuallyTracked(offer) === actuallyTracked(current) &&
+        (publicationPrecision_(offer) > publicationPrecision_(current) ||
+          (publicationPrecision_(offer) === publicationPrecision_(current) &&
+            candidateScore > currentScore)));
+    var retained = takeCandidate ? offer : current;
+    var addedA = Date.parse(current.addedAt || '');
+    var addedB = Date.parse(offer.addedAt || '');
+    // If either copy predates timestamp tracking, the *first* insertion date
+    // cannot be proved. Do not claim it was the newer import's timestamp.
+    retained.addedAt = Number.isFinite(addedA) && Number.isFinite(addedB)
+      ? (addedA <= addedB ? current.addedAt : offer.addedAt) : null;
+    var updatedA = Date.parse(current.updatedAt || '');
+    var updatedB = Date.parse(offer.updatedAt || '');
+    retained.updatedAt = Number.isFinite(updatedA) && Number.isFinite(updatedB)
+      ? (updatedA >= updatedB ? current.updatedAt : offer.updatedAt)
+      : Number.isFinite(updatedA) ? current.updatedAt
+      : Number.isFinite(updatedB) ? offer.updatedAt : null;
+    retained.shortlist = Boolean(current.shortlist || offer.shortlist);
+    selected[key] = retained;
   });
   return order.map(function (key) { return selected[key]; });
 }
-
 
 /**
  * Reconcile legacy offers against employer pages in bounded batches.
