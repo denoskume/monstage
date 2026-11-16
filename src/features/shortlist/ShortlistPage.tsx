@@ -145,15 +145,32 @@ export function ShortlistPage() {
         !['Candidature envoyée', 'Relance', 'Réponse recruteur', 'Entretien', 'Test technique', 'Offre reçue'].includes(offer.applicationStatus ?? '') &&
         !window.confirm('Confirmer que vous avez réellement envoyé cette candidature ?')) return;
     const status = next === 'interview' ? 'Entretien' : next === 'archived' ? (offer.applicationStatus === 'Refus' ? 'Refus' : 'Abandonné') : 'Candidature envoyée';
+    const isManual = offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID;
     if (next === null) {
-      actions.setStage(offer.id, null);
+      if (isManual) {
+        try {
+          actions.setManualTracking(offer.id, 'À candidater', null);
+          setNotice('Offre restaurée dans Enregistrées.');
+        } catch (error) {
+          setNotice(error instanceof Error ? error.message : 'Restauration impossible.');
+        }
+      } else {
+        setNotice('Cette candidature est enregistrée dans la base. Modifie son statut depuis le menu pour conserver un suivi synchronisé.');
+      }
       return;
     }
-    if (next === 'archived' && offer.applicationStatus === 'Refus') { actions.setStage(offer.id, 'archived'); return; }
+    if (next === 'archived' && offer.applicationStatus === 'Refus') {
+      if (isManual) actions.setManualTracking(offer.id, 'Abandonné', 'archived');
+      else actions.setStage(offer.id, 'archived');
+      return;
+    }
     setSavingId(offer.id);
     try {
-      if (offer.id !== EDF_EOD_DOSSIER_ID && offer.id !== THALES_DATA_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
-      actions.setStage(offer.id, next);
+      if (isManual) actions.setManualTracking(offer.id, status, next);
+      else {
+        await saveApplicationStatus(token, offer.id, status);
+        actions.setStage(offer.id, next);
+      }
       setNotice((offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) ? 'Statut de cette offre enregistrée localement.' : 'Statut enregistré et synchronisé.');
       retry();
     } catch (error) {
@@ -167,8 +184,12 @@ export function ShortlistPage() {
     if (savingId) return;
     setSavingId(offer.id);
     try {
-      if (offer.id !== EDF_EOD_DOSSIER_ID && offer.id !== THALES_DATA_DOSSIER_ID) await saveApplicationStatus(token, offer.id, status);
-      actions.setStage(offer.id, trackingStageForStatus(status));
+      if (offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) {
+        actions.setManualTracking(offer.id, status, trackingStageForStatus(status));
+      } else {
+        await saveApplicationStatus(token, offer.id, status);
+        actions.setStage(offer.id, trackingStageForStatus(status));
+      }
       setNotice((offer.id === EDF_EOD_DOSSIER_ID || offer.id === THALES_DATA_DOSSIER_ID) ? 'Statut de cette offre enregistrée localement.' : 'Statut actualisé et enregistré.');
       retry();
     } catch (error) {
