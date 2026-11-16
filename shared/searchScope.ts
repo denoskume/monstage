@@ -121,10 +121,15 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   const manuallyVerifiedMajorEmployer = /^MST-[A-Z0-9-]{4,}$/i.test(offer.id || '');
   if (!(matchingCompany(offer.company) || additionalLargeEmployer(offer.company) || manuallyVerifiedMajorEmployer)
       || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
-  // Two verified, team-supervised BI internships have engineering-worded titles;
-  // their actual work is Data Analysis/BI. Accept these exact curated offers,
-  // not engineering-heavy jobs generally.
-  if (offer.id === 'MST-ATLANTIC-FVMOM' || offer.id === 'MST-SCHNEIDER-136746') return 'B';
+  // Individually validated user-curated internships can have engineering
+  // titles even when the actual mission is BI / data analysis. The explicit
+  // domain stored in the verified MonStage record determines their plan;
+  // never promote generic Data Engineering/ML roles automatically.
+  if (manuallyVerifiedMajorEmployer) {
+    const curatedDomain = normalizeScope([offer.domain, offer.specialization].filter(Boolean).join(' '));
+    if (/\b(computer vision|traitement d images|imagerie|vision industrielle|image processing)\b/.test(curatedDomain)) return 'A';
+    if (/\b(data analyst|data analysis|analyse de donnees|business intelligence|bi)\b/.test(curatedDomain)) return 'B';
+  }
   if (isDataAnalystMission(offer) || isDataDrivenMaintenanceMission(offer)) return 'B';
   if (isVisionMission(offer) || isIndustrialMachineLearningMission(offer)) return 'A';
   return null;
