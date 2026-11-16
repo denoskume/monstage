@@ -1,5 +1,6 @@
 import type { InternshipOffer } from '../../api/contract';
 import { EDF_EOD_DOSSIER_ID, EDF_EOD_TITLE } from './edfEodDossier';
+import { readManualApplicationStatus } from '../offers/offerActions';
 
 // A manually selected offer is not an automatically discovered feed result.
 // Keep it in the user's saved area even if it is absent from the 30-group feed.
@@ -40,5 +41,8 @@ export const edfSavedOffer: InternshipOffer = {
 };
 
 export function withSavedEdfOffer(feed: InternshipOffer[]): InternshipOffer[] {
-  return feed.some(offer => offer.id === edfSavedOffer.id) ? feed : [...feed, edfSavedOffer];
+  return feed.some(offer => offer.id === edfSavedOffer.id) ? feed : [...feed, {
+    ...edfSavedOffer,
+    applicationStatus: readManualApplicationStatus(edfSavedOffer.id) || edfSavedOffer.applicationStatus,
+  }];
 }
