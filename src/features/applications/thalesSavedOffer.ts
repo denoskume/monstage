@@ -57,7 +57,8 @@ export function withSavedManualOffers(feed: InternshipOffer[]): InternshipOffer[
   const manualStatus = readManualApplicationStatus(thalesSavedOffer.id);
   const merged = {
     ...thalesSavedOffer,
-    applicationStatus: manualStatus || existing?.applicationStatus || thalesSavedOffer.applicationStatus,
+    applicationStatus: (existing && ['Refus', 'Offre reçue', 'Abandonné'].includes(existing.applicationStatus || ''))
+      ? existing.applicationStatus : manualStatus || existing?.applicationStatus || thalesSavedOffer.applicationStatus,
     appliedAt: existing?.appliedAt || thalesSavedOffer.appliedAt,
   };
   return [...unique, merged];
