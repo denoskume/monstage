@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { InternshipOffer } from '../../api/contract';
 import { displayValue } from '../../i18n/display';
+import { formatOfferTrackingDate } from './offerDates';
 import { getCvMatch } from '../workspace/intelligence';
 
 function DetailItem({ label, value }: { label: string; value: string | number | null }) {
@@ -112,7 +113,10 @@ export function OfferDetail({
           <DetailItem label="Application status" value={offer.applicationStatus} />
           <DetailItem label="Next action" value={offer.nextAction ?? offer.actionLevel} />
           <DetailItem label="Source" value={offer.sourceQuality} />
-          <DetailItem label="Verified" value={offer.verifiedAt} />
+          <DetailItem label="Date de publication" value={offer.publishedAt} />
+          <DetailItem label="Ajoutée le" value={formatOfferTrackingDate(offer.addedAt) || 'Historique — date exacte inconnue'} />
+          <DetailItem label="Dernière mise à jour" value={formatOfferTrackingDate(offer.updatedAt) || 'Non renseignée'} />
+          <DetailItem label="Vérifiée le" value={offer.verifiedAt} />
         </dl>
       </section>
 
