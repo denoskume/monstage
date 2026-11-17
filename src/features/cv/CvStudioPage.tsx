@@ -36,7 +36,7 @@ export function CvStudioPage() {
       <iframe
         ref={frameRef}
         title="Éditeur CV Thierry KUME — Plan A et Plan B"
-        src={import.meta.env.BASE_URL + 'cv/thierry-editor.html'}
+        src="/monstage/cv/thierry-editor.html"
         onLoad={onEditorLoad}
         style={{
           display: 'block',
