@@ -8,11 +8,12 @@ export type CvNarrativeField = { key: 'mission' | 'acquired' | 'results'; label:
 
 export function cvNarrativeFields(entry: CvNarrativeEntry, language: CvLanguage): CvNarrativeField[] {
   const fr = language === 'FR';
-  return [
-    { key: 'mission', label: fr ? 'Mission' : 'Mission', value: entry.mission?.trim() ?? '' },
+  const fields: CvNarrativeField[] = [
+    { key: 'mission', label: 'Mission', value: entry.mission?.trim() ?? '' },
     { key: 'acquired', label: fr ? 'Expériences acquises' : 'Skills gained', value: entry.acquired?.trim() ?? '' },
     { key: 'results', label: fr ? 'Résultats' : 'Results', value: entry.results?.trim() ?? '' },
-  ].filter((field): field is CvNarrativeField => Boolean(field.value));
+  ];
+  return fields.filter(field => Boolean(field.value));
 }
 
 function normalized(value: string): string {
