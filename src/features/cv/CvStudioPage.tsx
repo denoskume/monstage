@@ -920,10 +920,14 @@ export function CvStudioPage() {
           {draft.template === 'design01' ? ( <Design01Preview draft={draft} /> ) : draft.template === 'thierry' ? ( <ThierryCvPreview draft={draft} /> ) : draft.template === 'portrait' ? (
             <div className="cv-preview__portrait-grid">
               <aside className="cv-preview__portrait-sidebar">
-                <div className="cv-preview__portrait-photo" aria-label={draft.language === 'FR' ? 'Emplacement de la photo' : 'Photo area'}>
-                  {draft.photoDataUrl?.startsWith('data:image/') ? (
-                    <img src={draft.photoDataUrl} alt={draft.language === 'FR' ? 'Photo du candidat' : 'Candidate photo'} />
-                  ) : <span>{draft.language === 'FR' ? 'Photo facultative' : 'Optional photo'}</span>}
+                <div className="cv-preview__portrait-photo">
+                  <label className="cv-live-photo-upload" title={draft.language === 'FR' ? 'Cliquer pour changer la photo' : 'Click to change the photo'}>
+                    {draft.photoDataUrl?.startsWith('data:image/') ? (
+                      <img src={draft.photoDataUrl} alt={draft.language === 'FR' ? 'Photo du candidat' : 'Candidate photo'} />
+                    ) : <span>{draft.language === 'FR' ? '+ Ajouter une photo' : '+ Add a photo'}</span>}
+                    <input type="file" accept="image/jpeg,image/png,image/webp" aria-label={draft.language === 'FR' ? 'Changer la photo du CV' : 'Change CV photo'}
+                      onChange={event => { void uploadPortraitPhoto(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
+                  </label>
                 </div>
                 <section className="cv-preview__portrait-contact">
                   <h2>{draft.language === 'FR' ? 'Coordonnées' : 'Contact'}</h2>
