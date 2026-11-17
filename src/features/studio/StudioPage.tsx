@@ -129,8 +129,8 @@ export function StudioPage() {
       <div className="studio-grid">
         <article className="card studio-card">
           <div className="studio-card__icon" aria-hidden="true">CV</div>
-          <div><h2>CV</h2></div>
-          <Link className="button button--secondary" to={offer ? `/cv?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cv'} aria-label="Open CV Studio">Ouvrir le CV</Link>
+          <div><h2>CV — modèle Thierry KUME</h2><p>Éditeur direct · Plan A Vision / Plan B Data Scientist · PDF et Word</p></div>
+          <Link className="button button--secondary" to={offer ? `/cv?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cv'} aria-label="Open CV Studio">Ouvrir l'éditeur CV</Link>
         </article>
         <article className="card studio-card">
           <div className="studio-card__icon" aria-hidden="true">CL</div>
