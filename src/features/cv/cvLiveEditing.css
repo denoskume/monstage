@@ -107,3 +107,55 @@
   .cv-live-add, .cv-live-editor-help, .cv-live-placeholder { display: none !important; }
   .cv-live-trigger { outline: none !important; }
 }
+
+.cv-preview .cv-live-empty-narrative,
+.cv-preview .cv-live-reference-bullet-details {
+  font-family: Arial, sans-serif;
+  margin: 3px 0 5px;
+  padding: 0;
+  color: #315c7c;
+  font-size: 9px;
+  line-height: 1.2;
+}
+.cv-preview .cv-live-empty-narrative summary,
+.cv-preview .cv-live-reference-bullet-details summary {
+  display: inline-block;
+  cursor: pointer;
+  color: #315c7c;
+  font-size: 9px;
+  line-height: 1.2;
+  padding: 2px 3px;
+  border: 1px dotted transparent;
+  border-radius: 3px;
+}
+.cv-preview .cv-live-empty-narrative summary:hover,
+.cv-preview .cv-live-reference-bullet-details summary:hover {
+  border-color: #89b2d0;
+  background: #edf7ff;
+}
+.cv-preview .cv-live-empty-narrative[open] summary,
+.cv-preview .cv-live-reference-bullet-details[open] summary {
+  margin-bottom: 5px;
+}
+.cv-preview .cv-live-empty-narrative .cv-narrative-field {
+  font-family: inherit;
+  font-size: inherit;
+  color: #111;
+}
+.cv-preview .cv-live-reference-bullet-details .cv-live-bullets li {
+  font-size: 9px;
+  font-family: inherit;
+  color: #111;
+}
+.cv-preview--thierry .cv-live-reference-bullet-details,
+.cv-preview--design01 .cv-live-reference-bullet-details { margin-left: 18px; }
+.cv-preview--thierry .cv-live-reference-education p,
+.cv-preview--design01 .cv-live-reference-education p {
+  font: inherit;
+  margin: 0 0 4px;
+  overflow-wrap: anywhere;
+}
+.cv-preview .cv-live-inline--active textarea { white-space: pre-wrap; resize: vertical; }
+@media print {
+  .cv-live-empty-narrative, .cv-live-reference-bullet-details { display: none !important; }
+}
