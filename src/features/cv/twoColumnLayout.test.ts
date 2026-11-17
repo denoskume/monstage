@@ -5,10 +5,8 @@ import { cvColumnSections, isTwoColumnCv } from './twoColumnLayout';
 import { buildCvPdfBytes } from './pdfExport';
 
 describe('dual-column CV models', () => {
-  test('retain existing templates and add a full-height portrait option', () => {
-    expect(cvTemplateOptions.map(option => option.id)).toEqual([
-      'classic', 'modern', 'minimal', 'keywords', 'split', 'sidebar', 'portrait', 'thierry', 'design01',
-    ]);
+  test('only Thierry KUME remains selectable while legacy PDF builders stay available', () => {
+    expect(cvTemplateOptions.map(option => option.id)).toEqual(['thierry']);
     expect(isTwoColumnCv('split')).toBe(true);
     expect(isTwoColumnCv('sidebar')).toBe(true);
     expect(isTwoColumnCv('portrait')).toBe(true);
