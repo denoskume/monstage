@@ -531,7 +531,7 @@ function directPDF(sheet){
   const unicodeMap={128:0x20ac,130:0x201a,131:0x0192,132:0x201e,133:0x2026,134:0x2020,135:0x2021,136:0x02c6,137:0x2030,138:0x0160,139:0x2039,140:0x0152,142:0x017d,145:0x2018,146:0x2019,147:0x201c,148:0x201d,149:0x2022,150:0x2013,151:0x2014,152:0x02dc,153:0x2122,154:0x0161,155:0x203a,156:0x0153,158:0x017e,159:0x0178};
   const hex=n=>n.toString(16).toUpperCase().padStart(2,'0');
   const mapEntries=[];
-  for(let n=32;n<=255;n++)if(!(n>=127&&n<=159&&!unicodeMap[n]))mapEntries.push(`<${hex(n)}> <${unicodeMap[n]??n.toString(16).toUpperCase().padStart(4,'0')}>`);
+  for(let n=32;n<=255;n++)if(!(n>=127&&n<=159&&!unicodeMap[n])){const cp=unicodeMap[n]??n;mapEntries.push(`<${hex(n)}> <${cp.toString(16).toUpperCase().padStart(4,'0')}>`);}
   const cmapPieces=['/CIDInit /ProcSet findresource begin','12 dict begin','begincmap','/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def','/CMapName /Adobe-Identity-UCS def','/CMapType 2 def','1 begincodespacerange','<00> <FF>','endcodespacerange'];
   for(let i=0;i<mapEntries.length;i+=85)cmapPieces.push(`${Math.min(85,mapEntries.length-i)} beginbfchar`,...mapEntries.slice(i,i+85),'endbfchar');
   cmapPieces.push('endcmap','CMapName currentdict /CMap defineresource pop','end','end');
