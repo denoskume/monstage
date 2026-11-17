@@ -1,11 +1,12 @@
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { CvStudioPage } from './CvStudioPage';
 
 describe('Studio CV — éditeur HTML unique', () => {
   test('affiche uniquement le nouvel éditeur Thierry, sans ancienne interface React', () => {
-    render(<CvStudioPage />);
+    render(<MemoryRouter><CvStudioPage /></MemoryRouter>);
     const editor = screen.getByTitle('Éditeur CV Thierry KUME — Plan A et Plan B');
     expect(editor).toHaveAttribute('src', '/monstage/cv/thierry-editor.html?plan=A');
     expect(screen.queryByLabelText('Modèle de CV')).not.toBeInTheDocument();
