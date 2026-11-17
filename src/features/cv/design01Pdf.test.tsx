@@ -7,10 +7,8 @@ import { Design01Preview } from './Design01Preview';
 import { DESIGN01 } from './design01Template';
 
 describe('CV DESIGN 01 — full-width heading and ATS PDF', () => {
-  test('is separately selectable without replacing the Thierry template', () => {
-    expect(cvTemplateOptions.map(t => t.id)).toEqual([
-      'classic','modern','minimal','keywords','split','sidebar','portrait','thierry','design01',
-    ]);
+  test('legacy DESIGN 01 export stays readable but is no longer selectable in Studio', () => {
+    expect(cvTemplateOptions.map(t => t.id)).toEqual(['thierry']);
     expect(DESIGN01.frameBlue).toBe('#0F9ED5');
     expect(DESIGN01.railGray).toBe('#BFBFBF');
     expect(DESIGN01.darkBlue).toBe('#215F9A');
