@@ -235,114 +235,278 @@ const toast=s=>root.querySelector('#toast').textContent=s;
 // Track selection and switch plans through the mini-Word controller below.
 
  const fieldOf=n=>n?.nodeType===1?n.closest?.('[contenteditable="true"]'):n?.parentElement?.closest('[contenteditable="true"]');
- let savedRange=null;
- const formatStatus=root.querySelector('#format-status');
- function rememberSelection(){
-   const selection=window.getSelection();
-   if(!selection||!selection.rangeCount)return;
-   const field=fieldOf(selection.anchorNode);
-   if(field&&current().contains(field)){
-     lastField=field;
-     savedRange=selection.getRangeAt(0).cloneRange();
-   }
+let savedRange=null;
+const formatStatus=root.querySelector('#format-status');
+const storageKey=plan=>'monstage:thierry-miniword:v1:'+plan;
+const history={A:{undo:[],redo:[]},B:{undo:[],redo:[]}};
+let restoring=false;
+
+function note(message){formatStatus.innerHTML='<span class="status-pill">Édition directe</span> '+message;}
+function rememberSelection(){
+ const sel=window.getSelection();
+ if(!sel||!sel.rangeCount)return;
+ const field=fieldOf(sel.anchorNode);
+ if(field&&current().contains(field)){lastField=field;savedRange=sel.getRangeAt(0).cloneRange();}
+}
+document.addEventListener('selectionchange',rememberSelection);
+root.addEventListener('focusin',e=>{
+ const field=fieldOf(e.target);
+ if(field&&current().contains(field)){lastField=field;rememberSelection();}
+});
+function restoreRange(){
+ if(!lastField||!current().contains(lastField)){
+  note('Clique d’abord sur un texte ou sur un titre du CV.');return null;
  }
- document.addEventListener('selectionchange',rememberSelection);
- root.addEventListener('focusin',e=>{const f=fieldOf(e.target);if(f&&current().contains(f)){lastField=f;rememberSelection();}});
- function restoreRange(){
-   if(!lastField||!current().contains(lastField)){toast('Clique d’abord sur une zone du CV.');return false;}
-   lastField.focus({preventScroll:true});
-   if(savedRange&&lastField.contains(savedRange.commonAncestorContainer)){
-     const sel=window.getSelection();sel.removeAllRanges();sel.addRange(savedRange);
-   }
-   return true;
+ lastField.focus({preventScroll:true});
+ const range=document.createRange();
+ if(savedRange&&lastField.contains(savedRange.commonAncestorContainer)){
+   const sel=window.getSelection();
+   sel.removeAllRanges();sel.addRange(savedRange);
+   return savedRange.cloneRange();
  }
- function runCommand(cmd,value){
-   if(!restoreRange())return;
-   const ok=document.execCommand(cmd,false,value??null);
-   rememberSelection();
-   if(!ok)formatStatus.textContent='La commande n’est pas prise en charge par ce navigateur.';
-   persistCurrent();
+ range.selectNodeContents(lastField);
+ const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+ return range;
+}
+function capture(){
+ if(restoring)return;
+ const stack=history[chosen];
+ const last=stack.undo[stack.undo.length-1];
+ const html=current().outerHTML;
+ if(last!==html)stack.undo.push(html);
+ if(stack.undo.length>45)stack.undo.shift();
+ stack.redo=[];
+}
+function persistCurrent(){
+ try{localStorage.setItem(storageKey(chosen),current().outerHTML);root.querySelector('#save-notice').innerHTML='<span class="save-dot"></span> Modifications enregistrées';}
+ catch(e){root.querySelector('#save-notice').textContent='Sauvegarde locale indisponible';}
+}
+function replaceSheet(html){
+ const t=document.createElement('template');t.innerHTML=html;
+ const next=t.content.firstElementChild;
+ if(!next?.matches('.sheet[data-sheet="'+chosen+'"]'))return;
+ next.querySelectorAll('script,iframe,object,embed').forEach(n=>n.remove());
+ for(const el of next.querySelectorAll('*')){
+  for(const a of Array.from(el.attributes))if(/^on/i.test(a.name))el.removeAttribute(a.name);
  }
- function styleField(property,value){
-   if(!lastField||!current().contains(lastField)){toast('Clique d’abord sur une zone du CV.');return;}
-   lastField.style[property]=value;
-   persistCurrent();
+ current().replaceWith(next);lastField=null;savedRange=null;
+ persistCurrent();
+}
+function undo(){const h=history[chosen];if(!h.undo.length){note('Rien à annuler.');return;}h.redo.push(current().outerHTML);replaceSheet(h.undo.pop());note('Dernière modification annulée.');}
+function redo(){const h=history[chosen];if(!h.redo.length){note('Rien à rétablir.');return;}h.undo.push(current().outerHTML);replaceSheet(h.redo.pop());note('Modification rétablie.');}
+function styleField(property,value){
+ if(!lastField||!current().contains(lastField)){note('Sélectionne d’abord une zone du CV.');return;}
+ capture();lastField.style[property]=value;persistCurrent();note('Mise en forme appliquée au paragraphe.');
+}
+function selectedRange(){
+ const range=restoreRange();
+ if(!range||!lastField.contains(range.commonAncestorContainer))return null;
+ return range;
+}
+function setSelectionRange(range){
+ const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);rememberSelection();
+}
+function styleSelection(property,value){
+ const range=selectedRange();if(!range)return;
+ capture();
+ if(range.collapsed){
+  lastField.style[property]=value;
+  note('Aucune sélection : style appliqué à toute la zone active.');
+ }else{
+  const span=document.createElement('span');
+  span.style[property]=value;
+  const contents=range.extractContents();
+  span.appendChild(contents);range.insertNode(span);
+  const newRange=document.createRange();
+  newRange.selectNodeContents(span);setSelectionRange(newRange);
+  note('Mise en forme appliquée au texte sélectionné.');
  }
- function colorHex(rgb){
-   const nums=(rgb.match(/\d+(?:\.\d+)?/g)||[]).slice(0,3).map(Number);
-   return nums.length===3?'#'+nums.map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0')).join(''):'#000000';
+ persistCurrent();
+}
+function toggleText(property,active,off){
+ const range=selectedRange();if(!range)return;
+ const el=range.startContainer.nodeType===3?range.startContainer.parentElement:range.startContainer;
+ const computed=getComputedStyle(el);
+ const isOn=property==='fontWeight'?(Number.parseInt(computed.fontWeight)||400)>=600:
+            property==='textDecoration'?(computed.textDecorationLine.includes('underline')||computed.textDecorationLine.includes('line-through')):
+            computed[property]===active;
+ styleSelection(property,isOn?off:active);
+}
+function alignParagraph(align){styleField('textAlign',align);}
+function adjustIndent(direction){
+ if(!lastField)return note('Sélectionne un paragraphe avant de modifier son retrait.');
+ const margin=parseFloat(lastField.style.marginLeft)||0;
+ styleField('marginLeft',Math.max(0,margin+direction*12)+'px');
+}
+function formatList(kind){
+ const range=selectedRange();if(!range)return;
+ capture();
+ const field=lastField;
+ const existing=field.querySelector(':scope > ul,:scope > ol');
+ if(existing){
+  const frag=document.createDocumentFragment();
+  while(existing.firstChild){
+   const child=existing.firstChild;
+   if(child.tagName==='LI'){
+    while(child.firstChild)frag.appendChild(child.firstChild);
+    if(existing.childElementCount>1)frag.appendChild(document.createElement('br'));
+    child.remove();
+   }else{frag.appendChild(child);}
+  }
+  field.replaceChildren(frag);
+ }else{
+  const list=document.createElement(kind);
+  const rows=field.innerText.split(/\n/).filter(x=>x.trim());
+  for(const text of rows.length?rows:[' ']){
+   const li=document.createElement('li');li.textContent=text;list.appendChild(li);
+  }
+  field.replaceChildren(list);
  }
- root.querySelectorAll('.ribbon button').forEach(b=>b.addEventListener('mousedown',e=>e.preventDefault()));
- const commands={
-   bold:'bold',italic:'italic',underline:'underline',strike:'strikeThrough',
-   bullets:'insertUnorderedList',numbering:'insertOrderedList',
-   'align-left':'justifyLeft','align-center':'justifyCenter','align-right':'justifyRight','align-justify':'justifyFull',
-   indent:'indent',outdent:'outdent',undo:'undo',redo:'redo','clear-format':'removeFormat',
+ savedRange=null;persistCurrent();note('Liste '+(kind==='ul'?'à puces':'numérotée')+' actualisée.');
+}
+function copySelected(){
+ const r=savedRange;
+ const text=(r&&!r.collapsed?r.toString():(lastField?.innerText||'')).trim();
+ if(!text)return note('Sélectionne un passage à copier.');
+ const fallback=()=>{const area=document.createElement('textarea');area.value=text;document.body.appendChild(area);area.select();try{document.execCommand('copy');note('Texte copié.');}catch{note('Utilise Ctrl+C.');}area.remove();};
+ if(navigator.clipboard?.writeText)navigator.clipboard.writeText(text).then(()=>note('Texte copié.')).catch(fallback);
+ else fallback();
+}
+async function pasteSelected(){
+ if(!navigator.clipboard?.readText){note('Pour coller, utilise Ctrl+V dans la zone du CV.');return;}
+ try{
+  const text=await navigator.clipboard.readText();
+  const r=selectedRange();if(!r)return;
+  capture();r.deleteContents();const node=document.createTextNode(text);r.insertNode(node);
+  const caret=document.createRange();caret.setStartAfter(node);caret.collapse(true);setSelectionRange(caret);
+  persistCurrent();note('Texte collé.');
+ }catch{note('Le navigateur bloque le presse-papiers. Utilise Ctrl+V dans le CV.');}
+}
+function selectParagraph(){
+ if(!lastField||!current().contains(lastField))return note('Clique d’abord sur un paragraphe.');
+ const r=document.createRange();r.selectNodeContents(lastField);setSelectionRange(r);
+ note('Paragraphe sélectionné : tu peux appliquer une police, une couleur ou une taille.');
+}
+function findText(){
+ const query=prompt('Rechercher dans le CV :');
+ if(!query?.trim())return;
+ const walker=document.createTreeWalker(current(),NodeFilter.SHOW_TEXT);
+ let node;
+ while((node=walker.nextNode())){
+  const i=node.nodeValue.toLowerCase().indexOf(query.toLowerCase());
+  if(i<0)continue;
+  const field=fieldOf(node);if(!field)continue;
+  lastField=field;
+  const r=document.createRange();r.setStart(node,i);r.setEnd(node,i+query.length);
+  setSelectionRange(r);field.scrollIntoView({block:'center',behavior:'smooth'});
+  note('Texte trouvé et sélectionné.');return;
+ }
+ note('Aucune occurrence dans le CV sélectionné.');
+}
+function applyStyle(name){
+ const field=lastField;if(!field||!current().contains(field))return note('Clique d’abord sur le paragraphe à styliser.');
+ capture();
+ const props={
+  normal:{fontFamily:'Times New Roman',fontSize:'13px',fontWeight:'normal',color:'#090909',lineHeight:'1.19',marginBottom:''},
+  compact:{fontFamily:'Times New Roman',fontSize:'12px',fontWeight:'normal',color:'#090909',lineHeight:'1.05',marginBottom:'0'},
+  heading:{fontFamily:'Times New Roman',fontSize:'14px',fontWeight:'bold',color:'#0070b7',lineHeight:'1.18',marginBottom:'4px'}
  };
- for(const [id,cmd] of Object.entries(commands))root.querySelector('#'+id).addEventListener('click',()=>runCommand(cmd));
- root.querySelector('#font-family').addEventListener('change',e=>runCommand('fontName',e.target.value));
- root.querySelector('#font-size').addEventListener('change',e=>{
-   if(!restoreRange())return;
-   document.execCommand('fontSize',false,'7');
-   const px=Number(e.target.value)*96/72;
-   current().querySelectorAll('font[size="7"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=px+'px';});
-   rememberSelection();persistCurrent();
- });
- root.querySelector('#font-color').addEventListener('input',e=>runCommand('foreColor',e.target.value));
- root.querySelector('#highlight-color').addEventListener('input',e=>{
-   if(!restoreRange())return;
-   if(!document.execCommand('hiliteColor',false,e.target.value))document.execCommand('backColor',false,e.target.value);
-   rememberSelection();persistCurrent();
- });
- root.querySelector('#block-bg').addEventListener('input',e=>styleField('backgroundColor',e.target.value));
- root.querySelector('#line-height').addEventListener('change',e=>styleField('lineHeight',e.target.value));
- root.querySelector('#paper-bg').addEventListener('input',e=>{current().style.backgroundColor=e.target.value;persistCurrent();});
- root.querySelector('#sidebar-bg').addEventListener('input',e=>{current().querySelector('aside').style.backgroundColor=e.target.value;persistCurrent();});
- // Keep both CVs separately, including paragraph styles and renamed section titles.
- const storageKey=plan=>'monstage:thierry-miniword:v1:'+plan;
- function persistCurrent(){
-   try{localStorage.setItem(storageKey(chosen),current().outerHTML);root.querySelector('#save-notice').textContent='Modifications enregistrées';}
-   catch(e){root.querySelector('#save-notice').textContent='Sauvegarde locale indisponible';}
+ Object.assign(field.style,props[name]);
+ root.querySelectorAll('.style-tile').forEach(b=>b.classList.toggle('active',b.dataset.style===name));
+ persistCurrent();note('Style « '+(name==='normal'?'Normal':name==='compact'?'Sans espacement':'Titre')+' » appliqué.');
+}
+function changeSize(delta){
+ const select=root.querySelector('#font-size');
+ const options=Array.from(select.options).map(o=>Number(o.value));
+ const currentSize=Number(select.value)||10;
+ const index=options.findIndex(x=>x>=currentSize);
+ const next=options[Math.max(0,Math.min(options.length-1,index+delta))];
+ select.value=String(next);styleSelection('fontSize',next+'pt');
+}
+root.querySelectorAll('.word-group button:not(.large-tool)').forEach(b=>b.addEventListener('mousedown',e=>e.preventDefault()));
+const actionMap={
+ bold:()=>toggleText('fontWeight','700','400'),
+ italic:()=>toggleText('fontStyle','italic','normal'),
+ underline:()=>toggleText('textDecoration','underline','none'),
+ strike:()=>toggleText('textDecoration','line-through','none'),
+ 'clear-format':()=>{const r=selectedRange();if(!r)return;capture();if(r.collapsed){lastField.removeAttribute('style');}else{const frag=r.extractContents();const t=document.createElement('span');t.textContent=frag.textContent;r.insertNode(t);const rr=document.createRange();rr.selectNodeContents(t);setSelectionRange(rr);}persistCurrent();note('Mise en forme effacée.');},
+ 'align-left':()=>alignParagraph('left'),'align-center':()=>alignParagraph('center'),
+ 'align-right':()=>alignParagraph('right'),'align-justify':()=>alignParagraph('justify'),
+ bullets:()=>formatList('ul'),numbering:()=>formatList('ol'),
+ indent:()=>adjustIndent(1),outdent:()=>adjustIndent(-1),
+ undo,redo,'font-grow':()=>changeSize(1),'font-shrink':()=>changeSize(-1),
+ copy:copySelected,paste:pasteSelected,find:findText,'select-paragraph':selectParagraph,
+ 'add-skill':()=>{
+  capture();
+  const skills=current().querySelector('.skills');
+  const title=document.createElement('div');title.className='skill-title';
+  title.innerHTML='<span class="diamond">❖</span><span contenteditable="true">Nouvelle compétence</span>';
+  const bullet=document.createElement('div');bullet.className='skill-bullet';bullet.setAttribute('contenteditable','true');bullet.textContent='Décris une compétence concrète';
+  skills.append(title,bullet);title.querySelector('[contenteditable]').focus();persistCurrent();
  }
- root.addEventListener('input',e=>{if(e.target.closest('.sheet'))persistCurrent();});
- root.addEventListener('paste',e=>{
-   const target=fieldOf(e.target);
-   if(!target||!current().contains(target))return;
-   e.preventDefault();
-   document.execCommand('insertText',false,e.clipboardData?.getData('text/plain')||'');
-   persistCurrent();
- });
- root.addEventListener('click',e=>{
-   const f=fieldOf(e.target);
-   if(f&&current().contains(f)){
-     formatStatus.textContent='Zone sélectionnée : '+(f.textContent||'Texte').trim().slice(0,65);
-     rememberSelection();
-   }
- });
- for(const plan of ['A','B']){
-   const html=(()=>{try{return localStorage.getItem(storageKey(plan));}catch{return null;}})();
-   if(!html)continue;
-   const tpl=document.createElement('template');tpl.innerHTML=html;
-   const candidate=tpl.content.firstElementChild;
-   if(!candidate?.matches('.sheet[data-sheet="'+plan+'"]'))continue;
-   // The loaded node must be a CV sheet, never an arbitrary foreign element.
-   candidate.querySelectorAll('script,iframe,object,embed').forEach(n=>n.remove());
-   for(const el of candidate.querySelectorAll('*')){
-     for(const attr of Array.from(el.attributes))if(/^on/i.test(attr.name))el.removeAttribute(attr.name);
-   }
-   cont.querySelector('.sheet[data-sheet="'+plan+'"]').replaceWith(candidate);
- }
- // Switching tracks does not discard edits or the active local formatting.
- const switchBar=root.querySelectorAll('[data-tab]');
- switchBar.forEach(b=>b.onclick=()=>{
-   persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;
-   switchBar.forEach(t=>t.classList.toggle('selected',t===b));
-   root.querySelectorAll('.sheet').forEach(x=>x.hidden=x.dataset.sheet!==chosen);
-   root.querySelector('#paper-bg').value=colorHex(getComputedStyle(current()).backgroundColor);
-   root.querySelector('#sidebar-bg').value=colorHex(getComputedStyle(current().querySelector('aside')).backgroundColor);
-   toast('CV '+chosen+' sélectionné');closeMenu();
- });
-root.querySelector('#add').onclick=()=>{const s=document.createElement('section');s.className='experience';s.innerHTML=renderExp(['Nouvelle expérience – Intitulé','Dates – Localisation','Organisation : Nature de la mission','Objectif du projet','Réalisation concrète obtenue','Méthodes et responsabilités développées']);current().querySelector('.skills').before(s);s.querySelector('[contenteditable]').focus();persistCurrent();toast('Expérience ajoutée')};
+};
+for(const [id,action] of Object.entries(actionMap)){
+ const b=root.querySelector('#'+id);if(b)b.addEventListener('click',action);
+}
+root.querySelector('#font-family').addEventListener('change',e=>styleSelection('fontFamily',e.target.value));
+root.querySelector('#font-size').addEventListener('change',e=>styleSelection('fontSize',e.target.value+'pt'));
+root.querySelector('#font-color').addEventListener('input',e=>styleSelection('color',e.target.value));
+root.querySelector('#highlight-color').addEventListener('input',e=>styleSelection('backgroundColor',e.target.value));
+root.querySelector('#block-bg').addEventListener('input',e=>styleField('backgroundColor',e.target.value));
+root.querySelector('#line-height').addEventListener('change',e=>styleField('lineHeight',e.target.value));
+root.querySelector('#paper-bg').addEventListener('input',e=>{capture();current().style.backgroundColor=e.target.value;persistCurrent();});
+root.querySelector('#sidebar-bg').addEventListener('input',e=>{capture();current().querySelector('aside').style.backgroundColor=e.target.value;persistCurrent();});
+root.querySelectorAll('[data-style]').forEach(b=>b.addEventListener('click',()=>applyStyle(b.dataset.style)));
+root.querySelectorAll('[data-ribbon]').forEach(b=>b.addEventListener('click',()=>{
+ root.querySelectorAll('[data-ribbon]').forEach(x=>x.classList.toggle('active',x===b));
+ root.querySelectorAll('[data-ribbon-panel]').forEach(panel=>{panel.hidden=panel.dataset.ribbonPanel!==b.dataset.ribbon;panel.classList.toggle('active',!panel.hidden);});
+}));
+root.querySelector('#file-word').addEventListener('click',()=>root.querySelector('#export-docx').click());
+root.querySelector('#file-pdf').addEventListener('click',()=>root.querySelector('#export-pdf').click());
+root.addEventListener('beforeinput',e=>{if(e.target.closest('.sheet')&&!restoring)capture();});
+root.addEventListener('input',e=>{if(e.target.closest('.sheet'))persistCurrent();});
+root.addEventListener('paste',e=>{
+ const target=fieldOf(e.target);if(!target||!current().contains(target))return;
+ e.preventDefault();const text=e.clipboardData?.getData('text/plain')||'';
+ let r=selectedRange();if(!r){r=document.createRange();r.selectNodeContents(target);r.collapse(false);}
+ capture();r.deleteContents();const node=document.createTextNode(text);r.insertNode(node);
+ r.setStartAfter(node);r.collapse(true);setSelectionRange(r);persistCurrent();
+});
+root.addEventListener('click',e=>{
+ const f=fieldOf(e.target);
+ if(f&&current().contains(f)){rememberSelection();note('Zone active : '+(f.textContent||'Texte').trim().slice(0,65));}
+});
+root.addEventListener('keydown',e=>{
+ if(!((e.ctrlKey||e.metaKey)&&!e.altKey))return;
+ if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
+ if(e.key.toLowerCase()==='y'){e.preventDefault();redo();}
+});
+for(const plan of ['A','B']){
+ const html=(()=>{try{return localStorage.getItem(storageKey(plan));}catch{return null;}})();
+ if(!html)continue;
+ const t=document.createElement('template');t.innerHTML=html;
+ const candidate=t.content.firstElementChild;
+ if(!candidate?.matches('.sheet[data-sheet="'+plan+'"]'))continue;
+ candidate.querySelectorAll('script,iframe,object,embed').forEach(n=>n.remove());
+ for(const el of candidate.querySelectorAll('*'))for(const a of Array.from(el.attributes))if(/^on/i.test(a.name))el.removeAttribute(a.name);
+ cont.querySelector('.sheet[data-sheet="'+plan+'"]').replaceWith(candidate);
+}
+const switchBar=root.querySelectorAll('[data-tab]');
+switchBar.forEach(b=>b.onclick=()=>{
+ persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;
+ switchBar.forEach(t=>t.classList.toggle('selected',t===b));
+ root.querySelectorAll('.sheet').forEach(x=>x.hidden=x.dataset.sheet!==chosen);
+ const rgb=css=>{const nums=(css.match(/\d+(?:\.\d+)?/g)||[]).slice(0,3).map(Number);return nums.length===3?'#'+nums.map(x=>Math.round(x).toString(16).padStart(2,'0')).join(''):'#ffffff';};
+ root.querySelector('#paper-bg').value=rgb(getComputedStyle(current()).backgroundColor);
+ root.querySelector('#sidebar-bg').value=rgb(getComputedStyle(current().querySelector('aside')).backgroundColor);
+ note('CV '+chosen+' sélectionné.');closeMenu();
+});
+root.querySelector('#add').onclick=()=>{
+ capture();
+ const x=document.createElement('section');x.className='experience';
+ x.innerHTML=renderExp(['Nouvelle expérience – Intitulé','Dates – Localisation','Organisation : Nature de la mission','Objectif du projet','Réalisation concrète obtenue','Méthodes et responsabilités développées']);
+ current().querySelector('.skills').before(x);x.querySelector('[contenteditable]').focus();persistCurrent();note('Expérience ajoutée.');
+};
 const menu=root.querySelector('#download-menu');const toggle=root.querySelector('#download');function closeMenu(){menu.classList.remove('open');toggle.setAttribute('aria-expanded','false')}
 toggle.onclick=()=>{menu.classList.toggle('open');toggle.setAttribute('aria-expanded',menu.classList.contains('open')?'true':'false')};
 document.addEventListener('click',e=>{if(!root.querySelector('.download-wrap').contains(e.target))closeMenu()});
