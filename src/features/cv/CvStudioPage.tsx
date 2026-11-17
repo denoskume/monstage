@@ -710,7 +710,7 @@ export function CvStudioPage() {
                 <label>{draft.language === 'FR' ? 'Description courte de l’expérience' : 'Short experience description'}
                   <textarea rows={2} value={cvExperienceDescription(item, draft.language)} onChange={(e) => patch('experience', updateAt(draft.experience, index, { ...item, description: e.target.value }))} />
                 </label>
-                {<div className="cv-editor-grid cv-narrative-editor">
+                <div className="cv-editor-grid cv-narrative-editor">
                   <label>{draft.language === 'FR' ? 'Mission' : 'Mission'}<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, mission: e.target.value }))} /></label>
                   <label>{draft.language === 'FR' ? 'Expériences acquises' : 'Skills gained'}<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, acquired: e.target.value }))} /></label>
                   <label>{draft.language === 'FR' ? 'Résultats' : 'Results'}<textarea rows={2} value={item.results ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, results: e.target.value }))} /></label>
@@ -746,7 +746,7 @@ export function CvStudioPage() {
                 <label>{draft.language === 'FR' ? 'Description courte du projet' : 'Short project description'}
                   <textarea rows={2} value={cvProjectDescription(item, draft.language)} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, description: e.target.value }))} />
                 </label>
-                {<div className="cv-editor-grid cv-narrative-editor">
+                <div className="cv-editor-grid cv-narrative-editor">
                   <label>{draft.language === 'FR' ? 'Mission' : 'Mission'}<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, mission: e.target.value }))} /></label>
                   <label>{draft.language === 'FR' ? 'Expériences acquises' : 'Skills gained'}<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, acquired: e.target.value }))} /></label>
                   <label>{draft.language === 'FR' ? 'Résultats' : 'Results'}<textarea rows={2} value={item.results ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, results: e.target.value }))} /></label>
