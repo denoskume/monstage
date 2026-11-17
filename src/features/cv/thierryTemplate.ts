@@ -68,7 +68,7 @@ export function thierryEntries(draft: CvDraft): ThierryEntry[] {
   // One shared EXPERIENCES section, matching the original: academic work and
   // professional experience are not split into separate visual headings.
   const projects = draft.projects.map(item => structured(
-    item, item.name, draft.language === 'FR' ? 'Projet académique / personnel' : 'Academic / personal project',
+    item, item.name, item.description?.trim() || (draft.language === 'FR' ? 'Projet académique / personnel' : 'Academic / personal project'),
     cvProjectDescription(item, draft.language),
   ));
   const experiences = draft.experience.map(item => structured(
