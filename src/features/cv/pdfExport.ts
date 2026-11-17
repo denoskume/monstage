@@ -5,6 +5,7 @@ import { buildTwoColumnCvPdfBytes } from './twoColumnPdf';
 import { buildPortraitCvPdfBytes } from './portraitPdf';
 import { buildThierryCvPdfBytes } from './thierryPdf';
 import { buildDesign01CvPdfBytes } from './design01Pdf';
+import { cvNarrativeFields, cvNarrativeBullets } from './cvNarrative';
 import { isTwoColumnCv } from './twoColumnLayout';
 import { CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, cvPageColorHex, type CvDraft } from './cvStorage';
 
@@ -375,10 +376,12 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         drawEntryHeader(item.name, item.period || '');
         const description = cvProjectDescription(item, draft.language).trim();
         if (description) drawLines(description, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
-        if (draft.showMissionLabels !== false && item.bullets.some((value) => value.trim())) {
+        const fields = cvNarrativeFields(item, draft.language);
+        for (const field of fields) drawLines('**' + field.label + ' :** ' + field.value, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
+        if (!fields.length && draft.showMissionLabels !== false && item.bullets.some((value) => value.trim())) {
           drawLines(draft.language === 'FR' ? '**Missions :**' : '**Tasks:**', compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
         }
-        for (const bullet of item.bullets.filter((value) => value.trim())) drawProjectBullet(bullet.trim());
+        for (const bullet of cvNarrativeBullets(item)) drawProjectBullet(bullet.trim());
         y -= compact ? 5 : 6;
       }
     }
@@ -390,10 +393,12 @@ export async function buildCvPdfBytes(draft: CvDraft): Promise<Uint8Array> {
         if (item.location.trim()) drawLines(cvExperienceLocationForDisplay(item.location), compact ? 8.6 : 9.2, regular, 0, compact ? 10.5 : 12);
         const description = cvExperienceDescription(item, draft.language).trim();
         if (description) drawLines(description, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
-        if (draft.showMissionLabels !== false && item.bullets.some((value) => value.trim())) {
+        const fields = cvNarrativeFields(item, draft.language);
+        for (const field of fields) drawLines('**' + field.label + ' :** ' + field.value, compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
+        if (!fields.length && draft.showMissionLabels !== false && item.bullets.some((value) => value.trim())) {
           drawLines(draft.language === 'FR' ? '**Missions :**' : '**Tasks:**', compact ? 8.6 : 9.0, regular, 0, compact ? 10.5 : 11.5);
         }
-        for (const bullet of item.bullets.filter((value) => value.trim())) drawExperienceBullet(bullet.trim());
+        for (const bullet of cvNarrativeBullets(item)) drawExperienceBullet(bullet.trim());
         y -= compact ? 3 : 5;
       }
     }
