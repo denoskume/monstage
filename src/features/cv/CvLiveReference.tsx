@@ -63,13 +63,16 @@ export function CvLiveReferenceSkills({draft,kind}: {draft:CvDraft;kind:'thierry
   const name = kind === 'thierry' ? 'thierry' : 'design01';
   return <>
     {lines.map((line,i) => {
-      const separator = line.indexOf(':');
-      const title = separator < 0 ? line : line.slice(0,separator).trim();
-      const detail = separator < 0 ? '' : line.slice(separator+1).trim();
+      const richCategory=line.match(/^\*\*(.+?):\*\*\s*(.*)$/);
+      const separator=line.indexOf(':');
+      const title=richCategory ? richCategory[1].trim() : separator<0?line:line.slice(0,separator).trim();
+      const detail=richCategory ? richCategory[2].trim() : separator<0?'':line.slice(separator+1).trim();
       const changePart=(part:'title'|'detail', next:string)=>{
         if(!ctx) return;
-        const updated = ctx.draft.skills.split('\n');
-        updated[i] = part === 'title' ? (detail ? next + ': ' + detail : next) : title + ': ' + next;
+        const updated=ctx.draft.skills.split('\n');
+        const newTitle=part==='title'?next:title;
+        const newDetail=part==='detail'?next:detail;
+        updated[i]=richCategory ? '**'+newTitle+':** '+newDetail : newTitle+': '+newDetail;
         ctx.update({scope:'draft',field:'skills'},updated.join('\n'));
       };
       return <div className={name + '-skill-group'} key={i}>
