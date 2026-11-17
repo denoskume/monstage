@@ -167,7 +167,7 @@ export async function buildDesign01CvPdfBytes(draft:CvDraft):Promise<Uint8Array>
     for(const b of sideBlocks) {
       text(q,b.title,sideX,b.titleTop,sideWidth,12*fontScale,{bold:b.title.startsWith('DIPL')||b.accent,center:!!b.align,fill:b.accent?BLUE:INK});
       let cursor=b.bodyTop;
-      for(const line of b.content.map(safe).filter(Boolean))cursor=text(q,line,sideX,cursor,sideWidth,9.4*fontScale,{leading:1.14})+4*fontScale;
+      for(const line of b.content.filter(Boolean))cursor=text(q,line,sideX,cursor,sideWidth,9.4*fontScale,{leading:1.14})+4*fontScale;
       if(cursor>b.end) return false;
     }
     return true;
@@ -199,6 +199,9 @@ export async function buildDesign01CvPdfBytes(draft:CvDraft):Promise<Uint8Array>
       if(e.mission)top=labeled(q,'Mission',e.mission,mainX,top,mainW,9.35*scale)+1*scale;
       if(e.acquired)top=labeled(q,'Expériences acquises',e.acquired,mainX,top,mainW,9.35*scale)+1*scale;
       if(e.results)top=labeled(q,'Résultats',e.results,mainX,top,mainW,9.35*scale)+1*scale;
+      for(const bullet of e.extraBullets){
+        top=text(q,'• '+bullet,mainX+10,top,mainW-10,9.1*scale,{leading:1.15})+1*scale;
+      }
       top+=8.5*scale;
     }
     top=Math.max(656,top+3*scale);
