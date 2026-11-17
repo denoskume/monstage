@@ -24,7 +24,7 @@ export function CvLiveReferenceEntry({ draft, entry, kind }: {
     <p className={kind === 'thierry' ? 'thierry-entry-org' : ''}>
       {exp
         ? <strong><CvLiveText value={exp.company} target={{scope,id:entry.id,field:'company'}} placeholder="Entreprise" /> — <CvLiveText value={exp.location} target={{scope,id:entry.id,field:'location'}} placeholder="Localisation" /></strong>
-        : <strong>{entry.organization}</strong>}
+        : <strong><CvLiveText value={entry.organization} target={{scope:'projects',id:entry.id,field:'description'}} placeholder="Contexte du projet" multiline /></strong>}
     </p>
     {(['mission','results','acquired'] as const).map(key => {
       const label = key === 'mission' ? 'Mission' : key === 'acquired' ? 'Expériences acquises' : 'Résultats';
