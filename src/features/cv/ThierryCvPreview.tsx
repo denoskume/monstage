@@ -28,6 +28,8 @@ export function ThierryCvPreview({ draft }: { draft: CvDraft }) {
         <p><CvLiveText value={draft.email} target={{scope:'draft',field:'email'}} placeholder="Email" /></p>
         <p><CvLiveText value={draft.phone} target={{scope:'draft',field:'phone'}} placeholder="Téléphone" /></p>
         <p><CvLiveText value={draft.thierryAge ?? ''} target={{scope:'draft',field:'thierryAge'}} placeholder="Âge (facultatif)" /></p>
+        <p><CvLiveText value={draft.linkedin} target={{scope:'draft',field:'linkedin'}} placeholder="LinkedIn" /></p>
+        <p><CvLiveText value={draft.github} target={{scope:'draft',field:'github'}} placeholder="GitHub" /></p>
       </div>
       <SideBlock heading="DIPLÔMES / FORMATION" className="thierry-education">
         <CvLiveReferenceEducation draft={draft} />
@@ -36,9 +38,9 @@ export function ThierryCvPreview({ draft }: { draft: CvDraft }) {
       <SideBlock heading="LOGICIELS / OUTILS">
         <CvLiveReferenceLines field="thierryTools" value={draft.thierryTools?.trim() ? draft.thierryTools : thierryTools(draft).join('\n')} placeholder="Outils et logiciels" />
       </SideBlock>
-      <SideBlock heading="NORMES">
-        <CvLiveReferenceLines field="thierryStandards" value={draft.thierryStandards ?? ''} placeholder="Normes / méthodes" />
-      </SideBlock>
+      {draft.thierryStandards?.trim() ? <SideBlock heading="NORMES / MÉTHODES">
+        <CvLiveReferenceLines field="thierryStandards" value={draft.thierryStandards} placeholder="Normes / méthodes" />
+      </SideBlock> : null}
       <SideBlock heading="Atouts" className="thierry-accent">
         <CvLiveReferenceLines field="thierryAdvantages" value={draft.thierryAdvantages ?? ''} placeholder="Atouts" />
       </SideBlock>
