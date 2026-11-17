@@ -159,3 +159,27 @@
 @media print {
   .cv-live-empty-narrative, .cv-live-reference-bullet-details { display: none !important; }
 }
+
+.cv-preview__portrait-photo .cv-live-photo-upload {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+}
+.cv-preview__portrait-photo .cv-live-photo-upload img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cv-preview__portrait-photo .cv-live-photo-upload input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.cv-preview__portrait-photo .cv-live-photo-upload:focus-within {
+  outline: 2px solid #278ab5;
+  outline-offset: 2px;
+}
