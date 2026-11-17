@@ -209,45 +209,24 @@ test('mobile authenticated flow preserves navigation, detail, filters and no ove
 });
 
 
-test('CV Studio shows both two-column templates with intact ATS-readable sections', async ({ page }) => {
+test('CV Studio opens only the Thierry HTML editor with the requested A/B plan', async ({ page }) => {
   await openSignedOut(page);
   await signIn(page);
   await page.goto('#/cv?plan=B&language=FR');
-  const template = page.getByLabel('Modèle de CV');
-  await expect(template).toBeVisible();
-  await expect(template.locator('option')).toHaveCount(6);
-
-  await template.selectOption('split');
-  await expect(page.locator('.cv-preview--split .cv-preview__two-columns')).toHaveCSS('display', 'grid');
-  await expect(page.locator('.cv-preview__main')).toBeVisible();
-  await expect(page.locator('.cv-preview__sidebar')).toBeVisible();
-  const splitBounds = await Promise.all([
-    page.locator('.cv-preview__main').boundingBox(),
-    page.locator('.cv-preview__sidebar').boundingBox(),
-  ]);
-  expect(splitBounds[0]).not.toBeNull();
-  expect(splitBounds[1]).not.toBeNull();
-  expect(splitBounds[0]!.x).toBeLessThan(splitBounds[1]!.x);
-  await expect(page.locator('.cv-preview__sidebar')).toContainText(/Formation|Compétences/);
-  await expect(page.locator('.cv-preview__main')).toContainText(/Projets|Expérience/);
-
-  await template.selectOption('sidebar');
-  await expect(page.locator('.cv-preview--sidebar .cv-preview__two-columns')).toHaveCSS('display', 'grid');
-  const sidebarBounds = await Promise.all([
-    page.locator('.cv-preview__main').boundingBox(),
-    page.locator('.cv-preview__sidebar').boundingBox(),
-  ]);
-  expect(sidebarBounds[0]).not.toBeNull();
-  expect(sidebarBounds[1]).not.toBeNull();
-  expect(sidebarBounds[1]!.x).toBeLessThan(sidebarBounds[0]!.x);
-  await expect(page.locator('.cv-preview__sidebar')).toContainText(/Formation|Compétences/);
-
-  // Horizontal preview scrolling is allowed; the app itself must not overflow.
-  const documentOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  const iframe=page.locator('iframe[title="Éditeur CV Thierry KUME — Plan A et Plan B"]');
+  await expect(iframe).toBeVisible();
+  await expect(iframe).toHaveAttribute('src', '/monstage/cv/thierry-editor.html?plan=B');
+  const cv=page.frameLocator('iframe[title="Éditeur CV Thierry KUME — Plan A et Plan B"]');
+  await expect(cv.locator('.word-ribbon')).toBeVisible();
+  await expect(cv.locator('.sheet[data-sheet="B"]')).toBeVisible();
+  await expect(cv.locator('.sheet[data-sheet="A"]')).toBeHidden();
+  await expect(cv.locator('.sheet[data-sheet="B"]')).toContainText('Mission');
+  await expect(cv.locator('.sheet[data-sheet="B"]')).toContainText('Résultats');
+  await expect(cv.locator('.sheet[data-sheet="B"]')).toContainText('Expériences acquises');
+  await expect(cv.getByRole('button',{name:'Accueil'})).toBeVisible();
+  await expect(page.getByLabel('Modèle de CV')).toHaveCount(0);
+  const documentOverflow=await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(documentOverflow).toBe(false);
-
-  await template.selectOption('classic');
-  await expect(page.locator('.cv-preview__two-columns')).toHaveCount(0);
 });
 
 
