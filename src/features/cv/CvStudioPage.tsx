@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 /**
  * The CV Studio is the standalone Thierry KUME HTML editor, unchanged.
@@ -7,6 +8,8 @@ import { useRef, useState } from 'react';
  */
 export function CvStudioPage() {
   const frameRef = useRef<HTMLIFrameElement>(null);
+  const [searchParams] = useSearchParams();
+  const plan = searchParams.get('plan') === 'B' ? 'B' : 'A';
   const [editorHeight, setEditorHeight] = useState(1370);
 
   function fitEditor() {
@@ -36,7 +39,7 @@ export function CvStudioPage() {
       <iframe
         ref={frameRef}
         title="Éditeur CV Thierry KUME — Plan A et Plan B"
-        src="/monstage/cv/thierry-editor.html"
+        src={`/monstage/cv/thierry-editor.html?plan=${plan}`}
         onLoad={onEditorLoad}
         style={{
           display: 'block',
