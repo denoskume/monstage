@@ -122,7 +122,7 @@ export function CvLiveText({
       event.preventDefault();
       const field = fieldRef.current;
       if (field) {
-        const from = field.selectionStart, to = field.selectionEnd;
+        const from = field.selectionStart ?? buffer.length, to = field.selectionEnd ?? (field.selectionStart ?? buffer.length);
         const next = buffer.slice(0, from) + '**' + buffer.slice(from, to) + '**' + buffer.slice(to);
         change(next);
         requestAnimationFrame(() => field.setSelectionRange(from + 2, to + 2));
