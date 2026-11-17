@@ -41,7 +41,7 @@ describe('édition directement dans le CV', () => {
   test('clic sur heading, saisie immédiate et sauvegarde dans le draft', async () => {
     const user = userEvent.setup();
     render(<LiveHarness />);
-    await user.click(screen.getByRole('button',{name:/Nom — cliquer/}));
+    await user.click(screen.getByRole('button',{name:'Candidat Test'}));
     const field=screen.getByRole('textbox',{name:'Nom'});
     await user.clear(field);
     await user.type(field,'Nouveau Profil{Enter}');
@@ -52,7 +52,7 @@ describe('édition directement dans le CV', () => {
   test('**texte** affiche du gras et reste conservé dans les données', async () => {
     const user=userEvent.setup();
     const {container}=render(<LiveHarness />);
-    await user.click(screen.getByRole('button',{name:/Profil — cliquer/}));
+    await user.click(screen.getByRole('button',{name:'Mon profil initial'}));
     const field=screen.getByRole('textbox',{name:'Profil'});
     await user.clear(field);
     await user.type(field,'Je maîtrise **Python** et SQL.');
@@ -65,7 +65,7 @@ describe('édition directement dans le CV', () => {
   test('Entrée crée une puce sur le CV et le caractère • ne duplique pas le marqueur', async () => {
     const user=userEvent.setup();
     render(<LiveHarness />);
-    await user.click(screen.getByRole('button',{name:/Expérience 1 — cliquer/}));
+    await user.click(screen.getByRole('button',{name:'Analyse SQL'}));
     const first=screen.getByRole('textbox',{name:'Expérience 1'});
     await user.type(first,'{End}{Enter}');
     const draft=JSON.parse(screen.getByTestId('live-draft').textContent!);
@@ -78,7 +78,7 @@ describe('édition directement dans le CV', () => {
     const user=userEvent.setup();
     render(<LiveHarness custom={kind} />);
     const preview=screen.getByTestId(kind==='thierry'?'thierry-cv-preview':'design01-cv-preview');
-    await user.click(within(preview).getByRole('button',{name:/Nom — cliquer/}));
+    await user.click(within(preview).getByRole('button',{name:'Candidat Test'}));
     const input=within(preview).getByRole('textbox',{name:'Nom'});
     await user.clear(input);
     await user.type(input,'Candidat Modifié{Enter}');
