@@ -2,7 +2,7 @@ import './portrait.css';
 import { ThierryCvPreview } from './ThierryCvPreview';
 import { Design01Preview } from './Design01Preview';
 import {
-  CvLiveEditingProvider, CvLiveText, CvLiveBullets, CvLiveAddEntry, CvLiveDraftLine,
+  CvLiveEditingProvider, CvLiveText, CvLiveBullets, CvLiveAddEntry, CvLiveDraftLine, CvLiveAddLine,
   updateCvLiveTarget, updateCvLiveBullets, createCvLiveEntry,
 } from './cvLiveEditing';
 import { cvNarrativeFields, cvNarrativeBullets } from './cvNarrative';
@@ -107,6 +107,14 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
             <CvLiveText value={field.value} target={{scope:'projects',id:item.id,field:field.key}} multiline />
           </p>
         )}
+        <details className="cv-live-empty-narrative">
+          <summary>+ {draft.language === 'FR' ? 'Mission / acquis / résultats' : 'Mission / skills gained / results'}</summary>
+          {(['mission','acquired','results'] as const).filter(key => !item[key]?.trim()).map(key =>
+            <p key={key} className="cv-narrative-field">
+              <strong>{key==='mission'?'Mission':key==='acquired'?(draft.language==='FR'?'Expériences acquises':'Skills gained'):(draft.language==='FR'?'Résultats':'Results')} : </strong>
+              <CvLiveText value={item[key] ?? ''} target={{scope:'projects',id:item.id,field:key}} placeholder="Ajouter" multiline />
+            </p>)}
+        </details>
         <CvLiveBullets scope="projects" id={item.id} bullets={item.bullets} label="Projet" />
       </div>)}
       <CvLiveAddEntry scope="projects" label={draft.language === 'FR' ? 'Projet' : 'Project'} />
@@ -128,6 +136,14 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
             <CvLiveText value={field.value} target={{scope:'experience',id:item.id,field:field.key}} multiline />
           </p>
         )}
+        <details className="cv-live-empty-narrative">
+          <summary>+ {draft.language === 'FR' ? 'Mission / acquis / résultats' : 'Mission / skills gained / results'}</summary>
+          {(['mission','acquired','results'] as const).filter(key => !item[key]?.trim()).map(key =>
+            <p key={key} className="cv-narrative-field">
+              <strong>{key==='mission'?'Mission':key==='acquired'?(draft.language==='FR'?'Expériences acquises':'Skills gained'):(draft.language==='FR'?'Résultats':'Results')} : </strong>
+              <CvLiveText value={item[key] ?? ''} target={{scope:'experience',id:item.id,field:key}} placeholder="Ajouter" multiline />
+            </p>)}
+        </details>
         <CvLiveBullets scope="experience" id={item.id} bullets={item.bullets} label="Expérience" />
       </div>)}
       <CvLiveAddEntry scope="experience" label={draft.language === 'FR' ? 'Expérience' : 'Experience'} />
@@ -152,6 +168,7 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
       {draft.skills.split('\n').map((line,index) =>
         <p key={index}><CvLiveDraftLine field="skills" index={index} value={line} multiline label="Compétence technique" /></p>
       )}
+      <CvLiveAddLine field="skills" label={draft.language === 'FR' ? 'Compétence' : 'Skill'} />
     </section>
   );
 
