@@ -92,6 +92,12 @@ export function CvLiveText({
   const [editing, setEditing] = useState(autoEdit);
   const [buffer, setBuffer] = useState(value);
   const fieldRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+  const originalValue = useRef(value);
+  const previouslyAuto = useRef(autoEdit);
+  useEffect(() => {
+    if (autoEdit && !previouslyAuto.current) setEditing(true);
+    previouslyAuto.current = autoEdit;
+  }, [autoEdit]);
   useEffect(() => { if (!editing) setBuffer(value); }, [value, editing]);
   useEffect(() => {
     if (!editing) return;
@@ -108,8 +114,19 @@ export function CvLiveText({
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (event.key === 'Escape') {
       event.preventDefault();
-      change(value);
+      change(originalValue.current);
       setEditing(false);
+      return;
+    }
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'b') {
+      event.preventDefault();
+      const field = fieldRef.current;
+      if (field) {
+        const from = field.selectionStart, to = field.selectionEnd;
+        const next = buffer.slice(0, from) + '**' + buffer.slice(from, to) + '**' + buffer.slice(to);
+        change(next);
+        requestAnimationFrame(() => field.setSelectionRange(from + 2, to + 2));
+      }
       return;
     }
     if (event.key === 'Enter' && !event.shiftKey) {
@@ -142,7 +159,7 @@ export function CvLiveText({
     {editable
       ? <button
           type="button" className={'cv-live-trigger' + (!value.trim() ? ' cv-live-placeholder' : '')}
-          onClick={() => { setBuffer(value); setEditing(true); }}
+          onClick={() => { originalValue.current = value; setBuffer(value); setEditing(true); }}
           aria-label={(label ?? 'Modifier') + ' — cliquer pour éditer dans le CV'}
           title={label ? 'Modifier : ' + label : 'Modifier directement le texte'}
           style={style}
