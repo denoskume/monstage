@@ -1,6 +1,10 @@
 import './portrait.css';
 import { ThierryCvPreview } from './ThierryCvPreview';
 import { Design01Preview } from './Design01Preview';
+import {
+  CvLiveEditingProvider, CvLiveText, CvLiveBullets, CvLiveAddEntry, CvLiveDraftLine,
+  updateCvLiveTarget, updateCvLiveBullets, createCvLiveEntry,
+} from './cvLiveEditing';
 import { cvNarrativeFields, cvNarrativeBullets } from './cvNarrative';
 import { useAuth } from '../../auth/useAuth';
 import { useOffers } from '../../hooks/useOffers';
@@ -74,74 +78,101 @@ function cvExternalUrl(value: string, service: 'linkedin' | 'github'): string | 
 function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: CvDraft }) {
   if (section === 'education') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
-      {draft.education.map((item) => <div className="cv-entry cv-education-entry" key={item.id}>
-        <div className="cv-entry__top"><strong>{renderCvBold(cvEducationDisplay(item).school)}</strong><span>{renderCvBold(item.period)}</span></div>
-        {(item.degree.trim() || cvEducationDisplay(item).location) ? <div className="cv-entry__top"><span>{renderCvBold(item.degree)}</span><span>{renderCvBold(cvEducationDisplay(item).location)}</span></div> : null}
-        {item.bullets?.some(Boolean) ? <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : item.details ? <p>{renderCvBold(item.details)}</p> : null}
-        {item.keyCourses?.trim() ? <p><strong>{draft.language === 'FR' ? 'Cours pertinents :' : 'Relevant courses:'}</strong> {renderCvBold(item.keyCourses)}</p> : null}
+      {draft.education.map(item => <div className="cv-entry cv-education-entry" key={item.id}>
+        <div className="cv-entry__top">
+          <strong><CvLiveText value={cvEducationDisplay(item).school} target={{scope:'education',id:item.id,field:'school'}} placeholder="Établissement" label="Établissement" /></strong>
+          <span><CvLiveText value={item.period} target={{scope:'education',id:item.id,field:'period'}} placeholder="Période" /></span>
+        </div>
+        <div className="cv-entry__top">
+          <span><CvLiveText value={item.degree} target={{scope:'education',id:item.id,field:'degree'}} placeholder="Diplôme" /></span>
+          <span><CvLiveText value={cvEducationDisplay(item).location} target={{scope:'education',id:item.id,field:'location'}} placeholder="Ville" /></span>
+        </div>
+        <p><CvLiveText value={item.details ?? ''} target={{scope:'education',id:item.id,field:'details'}} placeholder="Description de la formation" multiline /></p>
+        {(item.bullets?.length || 0) > 0 ? <CvLiveBullets scope="education" id={item.id} bullets={item.bullets ?? []} label="Formation" /> : null}
+        <p><strong>{draft.language === 'FR' ? 'Cours pertinents : ' : 'Relevant courses: '}</strong><CvLiveText value={item.keyCourses ?? ''} target={{scope:'education',id:item.id,field:'keyCourses'}} placeholder="Ajouter des cours" multiline /></p>
       </div>)}
+      <CvLiveAddEntry scope="education" label={draft.language === 'FR' ? 'Formation' : 'Education'} />
     </section>
   );
 
   if (section === 'projects') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
-      {draft.projects.map((item) => <div className="cv-entry cv-project-entry" key={item.id}>
-        <div className="cv-entry__top"><strong>{renderCvBold(item.name)}</strong><span>{renderCvBold(item.period)}</span></div>
-        {cvProjectDescription(item, draft.language).trim() ? <p className="cv-project-description">{renderCvBold(cvProjectDescription(item, draft.language))}</p> : null}
-        {cvNarrativeFields(item, draft.language).map(field => (
-          <p key={field.key} className="cv-narrative-field"><strong>{field.label} :</strong> {renderCvBold(field.value)}</p>
-        ))}
-        {!cvNarrativeFields(item, draft.language).length && draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-project-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
-        {cvNarrativeBullets(item).length ? <ul>{cvNarrativeBullets(item).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : null}
+      {draft.projects.map(item => <div className="cv-entry cv-project-entry" key={item.id}>
+        <div className="cv-entry__top"><strong><CvLiveText value={item.name} target={{scope:'projects',id:item.id,field:'name'}} placeholder="Nom du projet" /></strong>
+          <span><CvLiveText value={item.period} target={{scope:'projects',id:item.id,field:'period'}} placeholder="Période" /></span></div>
+        <p className="cv-project-description"><CvLiveText value={cvProjectDescription(item, draft.language)} target={{scope:'projects',id:item.id,field:'description'}} placeholder="Description du projet" multiline /></p>
+        {cvNarrativeFields(item, draft.language).map(field =>
+          <p key={field.key} className="cv-narrative-field">
+            <strong>{field.label} : </strong>
+            <CvLiveText value={field.value} target={{scope:'projects',id:item.id,field:field.key}} multiline />
+          </p>
+        )}
+        <CvLiveBullets scope="projects" id={item.id} bullets={item.bullets} label="Projet" />
       </div>)}
+      <CvLiveAddEntry scope="projects" label={draft.language === 'FR' ? 'Projet' : 'Project'} />
     </section>
   );
 
   if (section === 'experience') return (
     <section><h2>{sectionLabel(section, draft.language)}</h2>
-      {draft.experience.map((item) => <div className="cv-entry cv-experience-entry" key={item.id}>
-        <div className="cv-entry__top"><strong>{renderCvBold(item.role)} — {renderCvBold(item.company)}</strong><span>{renderCvBold(item.period)}</span></div>
-        {item.location.trim() ? <div className="cv-entry__top"><span>{renderCvBold(cvExperienceLocationForDisplay(item.location))}</span><span /></div> : null}
-        {cvExperienceDescription(item, draft.language).trim() ? <p className="cv-experience-description">{renderCvBold(cvExperienceDescription(item, draft.language))}</p> : null}
-        {cvNarrativeFields(item, draft.language).map(field => (
-          <p key={field.key} className="cv-narrative-field"><strong>{field.label} :</strong> {renderCvBold(field.value)}</p>
-        ))}
-        {!cvNarrativeFields(item, draft.language).length && draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-experience-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
-        {cvNarrativeBullets(item).length ? <ul>{cvNarrativeBullets(item).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : null}
+      {draft.experience.map(item => <div className="cv-entry cv-experience-entry" key={item.id}>
+        <div className="cv-entry__top">
+          <strong><CvLiveText value={item.role} target={{scope:'experience',id:item.id,field:'role'}} placeholder="Poste" /> — <CvLiveText value={item.company} target={{scope:'experience',id:item.id,field:'company'}} placeholder="Entreprise" /></strong>
+          <span><CvLiveText value={item.period} target={{scope:'experience',id:item.id,field:'period'}} placeholder="Période" /></span>
+        </div>
+        <div className="cv-entry__top"><span><CvLiveText value={item.location} target={{scope:'experience',id:item.id,field:'location'}} placeholder="Localisation" /></span></div>
+        <p className="cv-experience-description"><CvLiveText value={cvExperienceDescription(item, draft.language)} target={{scope:'experience',id:item.id,field:'description'}} placeholder="Description de l'expérience" multiline /></p>
+        {cvNarrativeFields(item, draft.language).map(field =>
+          <p key={field.key} className="cv-narrative-field">
+            <strong>{field.label} : </strong>
+            <CvLiveText value={field.value} target={{scope:'experience',id:item.id,field:field.key}} multiline />
+          </p>
+        )}
+        <CvLiveBullets scope="experience" id={item.id} bullets={item.bullets} label="Expérience" />
       </div>)}
+      <CvLiveAddEntry scope="experience" label={draft.language === 'FR' ? 'Expérience' : 'Experience'} />
     </section>
   );
 
-  if (section === 'leadership') {
-    if (!draft.leadership.length) return null;
-    return (
-      <section><h2>{sectionLabel(section, draft.language)}</h2>
-        {draft.leadership.map((item) => <div className="cv-entry" key={item.id}>
-          <div className="cv-entry__top"><strong>{item.role}{item.organization ? ` — ${item.organization}` : ''}</strong><span>{item.period}</span></div>
-          <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
-        </div>)}
-      </section>
-    );
-  }
+  if (section === 'leadership') return (
+    <section><h2>{sectionLabel(section, draft.language)}</h2>
+      {draft.leadership.map(item => <div className="cv-entry" key={item.id}>
+        <div className="cv-entry__top">
+          <strong><CvLiveText value={item.role} target={{scope:'leadership',id:item.id,field:'role'}} placeholder="Fonction" /> — <CvLiveText value={item.organization} target={{scope:'leadership',id:item.id,field:'organization'}} placeholder="Organisation" /></strong>
+          <span><CvLiveText value={item.period} target={{scope:'leadership',id:item.id,field:'period'}} placeholder="Période" /></span>
+        </div>
+        <CvLiveBullets scope="leadership" id={item.id} bullets={item.bullets} label="Responsabilité" />
+      </div>)}
+      <CvLiveAddEntry scope="leadership" label={draft.language === 'FR' ? 'Responsabilité' : 'Leadership'} />
+    </section>
+  );
 
-  if (section === 'skills') {
-    if (!draft.skills.trim()) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2>{cvSkillsForDisplay(draft.skills, draft.language).map((line, index) => <p key={index}>{renderCvBold(line)}</p>)}</section>;
-  }
-  if (section === 'certifications') {
-    if (!draft.certifications?.some(cert => cert.visible !== false && cert.title.trim())) return null;
-    return <section><h2>{sectionLabel(section, draft.language)}</h2>
-      {draft.certifications.filter(cert => cert.visible !== false && cert.title.trim()).map(cert => <p key={cert.id}><strong>{renderCvBold(cert.title)}</strong>{cert.issuer ? ' — '+cert.issuer : ''}{cert.date ? ' · '+cert.date : ''}</p>)}
-    </section>;
-  }
+  if (section === 'skills') return (
+    <section><h2>{sectionLabel(section, draft.language)}</h2>
+      {draft.skills.split('\n').map((line,index) =>
+        <p key={index}><CvLiveDraftLine field="skills" index={index} value={line} multiline label="Compétence technique" /></p>
+      )}
+    </section>
+  );
 
+  if (section === 'certifications') return (
+    <section><h2>{sectionLabel(section, draft.language)}</h2>
+      {(draft.certifications ?? []).filter(cert => cert.visible !== false).map(cert =>
+        <p key={cert.id}>
+          <strong><CvLiveText value={cert.title} target={{scope:'certifications',id:cert.id,field:'title'}} placeholder="Certification" /></strong>
+          {' — '}<CvLiveText value={cert.issuer} target={{scope:'certifications',id:cert.id,field:'issuer'}} placeholder="Organisme" />
+          {' · '}<CvLiveText value={cert.date} target={{scope:'certifications',id:cert.id,field:'date'}} placeholder="Date" />
+        </p>
+      )}
+      <CvLiveAddEntry scope="certifications" label={draft.language === 'FR' ? 'Certification' : 'Certification'} />
+    </section>
+  );
   if (section === 'languages' || section === 'interests') {
-    const first = draft.sectionOrder.find((key) => key === 'languages' || key === 'interests');
-    if (section !== first || (!draft.languages.trim() && !draft.interests.trim())) return null;
-    return <section>
-      <h2>{draft.language === 'FR' ? 'Langues et centres d’intérêt' : 'Languages & Interests'}</h2>
-      {draft.languages.trim() ? <p>{draft.language === 'EN' ? <strong>Languages: </strong> : null}{renderCvBold(cvLanguagesForDisplay(draft.languages))}</p> : null}
-      {draft.interests.trim() ? <p><strong>{draft.language === 'FR' ? 'Centres d’intérêt :' : 'Interests:'}</strong> {renderCvBold(draft.interests)}</p> : null}
+    const first = draft.sectionOrder.find(key => key === 'languages' || key === 'interests');
+    if (section !== first) return null;
+    return <section><h2>{draft.language === 'FR' ? 'Langues et centres d’intérêt' : 'Languages & Interests'}</h2>
+      <p><strong>{draft.language === 'FR' ? 'Langues : ' : 'Languages: '}</strong><CvLiveText value={draft.languages} target={{scope:'draft',field:'languages'}} placeholder="Langues" multiline /></p>
+      <p><strong>{draft.language === 'FR' ? 'Centres d’intérêt : ' : 'Interests: '}</strong><CvLiveText value={draft.interests} target={{scope:'draft',field:'interests'}} placeholder="Centres d’intérêt" multiline /></p>
     </section>;
   }
   return null;
