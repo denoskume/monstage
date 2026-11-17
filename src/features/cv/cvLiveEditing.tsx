@@ -160,7 +160,7 @@ export function CvLiveText({
       ? <button
           type="button" className={'cv-live-trigger' + (!value.trim() ? ' cv-live-placeholder' : '')}
           onClick={() => { originalValue.current = value; setBuffer(value); setEditing(true); }}
-          aria-label={(label ?? 'Modifier') + ' — cliquer pour éditer dans le CV'}
+          aria-label={value.trim() || placeholder || label || 'Ajouter du texte'}
           title={label ? 'Modifier : ' + label : 'Modifier directement le texte'}
           style={style}
         >{value.trim() ? renderCvInlineMarkdown(value) : (placeholder ?? '+ Ajouter du texte')}</button>
