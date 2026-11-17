@@ -96,3 +96,14 @@ export function thierryMethods(draft: CvDraft): string[] {
 export function thierrySoftSkills(draft: CvDraft): string[] {
   return (draft.thierrySoftSkills ?? '').split(/\n|\|/).map(cleanThierryText).filter(Boolean);
 }
+
+export type ThierrySkillGroup = { title: string; bullets: string[] };
+export function thierrySkillGroups(draft: CvDraft): ThierrySkillGroup[] {
+  return draft.skills.split(/\n/).map(cleanThierryText).filter(Boolean).map(line => {
+    const pivot = line.indexOf(':');
+    if (pivot < 0) return { title: line, bullets: [] };
+    const title = line.slice(0, pivot).trim();
+    const detail = line.slice(pivot + 1).trim();
+    return { title, bullets: detail ? [detail] : [] };
+  }).filter(group => group.title);
+}
