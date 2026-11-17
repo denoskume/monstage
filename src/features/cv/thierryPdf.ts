@@ -23,8 +23,13 @@ function safe(text: string): string {
   return normalizeCvPdfText(cleanThierryText(text));
 }
 function segments(regular: PDFFont, bold: PDFFont, pieces: [string, boolean][]): Token[] {
-  return pieces.flatMap(([text, isBold]) =>
-    safe(text).split(/\s+/).filter(Boolean).map(word => ({ text: word, font: isBold ? bold : regular }))
+  return pieces.flatMap(([value, alwaysBold]) =>
+    value.split(/(\*\*[^*]+\*\*)/g).flatMap(part => {
+      const marked = part.startsWith('**') && part.endsWith('**') && part.length > 4;
+      const text = safe(marked ? part.slice(2, -2) : part);
+      return text.split(/\s+/).filter(Boolean)
+        .map(word => ({ text: word, font: alwaysBold || marked ? bold : regular }));
+    })
   );
 }
 function wrap(tokens: Token[], max: number, size: number, spaceFont: PDFFont): Token[][] {
