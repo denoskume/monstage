@@ -70,9 +70,8 @@ function xmlDocument(draft:CvDraft):string {
     right.push(para([{text:'❖  ',color:'0070C0',bold:true},{text:group.title,color:'0070C0',bold:true}],{before:85,after:22}));
     for(const b of group.bullets)right.push(p('• '+b,{indent:180,after:22},{size:16}));
   }
-  const blue='<w:color w:val="0070C0"/>';
   const borders='<w:tblBorders>'+['top','left','bottom','right','insideV'].map(edge=>
-    '<w:'+edge+' w:val="single" w:sz="5" '+blue+'/>').join('')+'</w:tblBorders>';
+    '<w:'+edge+' w:val="single" w:sz="5" w:color="0070C0"/>').join('')+'</w:tblBorders>';
   const cell=(width:number,content:string[],gray:boolean)=>
     '<w:tc><w:tcPr><w:tcW w:w="'+width+'" w:type="dxa"/>'
     +(gray?'<w:shd w:fill="BFBFBF"/>':'')
