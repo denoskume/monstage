@@ -6,6 +6,7 @@ import {
 } from './cvStorage';
 import { cvColumnSections } from './twoColumnLayout';
 import { normalizeCvPdfText } from './cvPdfText';
+import { cvNarrativeFields, cvNarrativeBullets } from './cvNarrative';
 
 // A true full-height two-column A4 design: the mint rail starts at the top,
 // while the teal name banner spans the page above both content columns.
@@ -187,7 +188,10 @@ export async function buildPortraitCvPdfBytes(draft: CvDraft): Promise<Uint8Arra
       heading(fr ? 'Parcours professionnel' : 'Professional experience');
       for (const exp of draft.experience) {
         item(exp.role + ' — ' + exp.company, [exp.period, cvExperienceLocationForDisplay(exp.location)].filter(Boolean).join(' | '), cvExperienceDescription(exp, draft.language));
-        for (const bullet of exp.bullets.filter(Boolean)) paragraph(bullet, { size: 8.15, step: 10.4, bullet: true, after: 2 });
+        for (const field of cvNarrativeFields(exp, draft.language)) {
+          paragraph('**' + field.label + ' :** ' + field.value, { size: 8.15, step: 10.4, after: 2 });
+        }
+        for (const bullet of cvNarrativeBullets(exp)) paragraph(bullet, { size: 8.15, step: 10.4, bullet: true, after: 2 });
         y -= 5;
       }
     }
@@ -195,7 +199,10 @@ export async function buildPortraitCvPdfBytes(draft: CvDraft): Promise<Uint8Arra
       heading(fr ? 'Projets sélectionnés' : 'Selected projects');
       for (const project of draft.projects) {
         item(project.name, project.period, cvProjectDescription(project, draft.language));
-        for (const bullet of project.bullets.filter(Boolean)) paragraph(bullet, { size: 8.15, step: 10.4, bullet: true, after: 2 });
+        for (const field of cvNarrativeFields(project, draft.language)) {
+          paragraph('**' + field.label + ' :** ' + field.value, { size: 8.15, step: 10.4, after: 2 });
+        }
+        for (const bullet of cvNarrativeBullets(project)) paragraph(bullet, { size: 8.15, step: 10.4, bullet: true, after: 2 });
         y -= 5;
       }
     }
