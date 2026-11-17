@@ -7,7 +7,7 @@ describe('Studio CV — éditeur HTML unique', () => {
   test('affiche uniquement le nouvel éditeur Thierry, sans ancienne interface React', () => {
     render(<CvStudioPage />);
     const editor = screen.getByTitle('Éditeur CV Thierry KUME — Plan A et Plan B');
-    expect(editor).toHaveAttribute('src', '/monstage/cv/thierry-editor.html');
+    expect(editor).toHaveAttribute('src', '/monstage/cv/thierry-editor.html?plan=A');
     expect(screen.queryByLabelText('Modèle de CV')).not.toBeInTheDocument();
     expect(screen.queryByText('Régénérer CV')).not.toBeInTheDocument();
   });
