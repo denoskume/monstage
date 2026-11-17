@@ -5,9 +5,9 @@ import { buildCvPdfBytes } from './pdfExport';
 import { thierryEntries, THIERRY_STYLE } from './thierryTemplate';
 
 describe('Thierry KUME CV template', () => {
-  test('is an additional template and preserves the seven originals', () => {
+  test('is the only template available in the CV Studio', () => {
     expect(cvTemplateOptions.find(option => option.id === 'thierry')).toBeDefined();
-    expect(cvTemplateOptions).toHaveLength(9);
+    expect(cvTemplateOptions.map(option => option.id)).toEqual(['thierry']);
     expect(THIERRY_STYLE.blue).toBe('#0070C0');
     expect(THIERRY_STYLE.gray).toBe('#BFBFBF');
     expect(THIERRY_STYLE.splitX).toBe(155.18);
