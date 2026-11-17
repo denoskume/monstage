@@ -910,7 +910,7 @@ export function CvStudioPage() {
             setSaved(false);
           },
         }}>
-        <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }} id="cv-print-area">
+        <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: '#ffffff' }} id="cv-print-area">
           <ThierryCvPreview draft={draft} />
         </article>
         </CvLiveEditingProvider>
