@@ -19,6 +19,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
+import { buildThierryWordBytes } from './thierryWord';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
@@ -427,6 +428,27 @@ export function CvStudioPage() {
     setSaved(false);
   }
 
+  function downloadPreparedWord() {
+    try {
+      const bytes = buildThierryWordBytes(draft);
+      const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const filename = cvPdfFileName(draft.name).replace(/\\.pdf$/i, '.docx');
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setDownloadError('');
+    } catch (error) {
+      setDownloadError(error instanceof Error ? error.message : 'Impossible de générer le fichier Word.');
+    }
+  }
+
   async function downloadPreparedPdf() {
     if (!pdfReady || !pdfBytes) return;
 
@@ -529,11 +551,13 @@ export function CvStudioPage() {
           <button className="button button--secondary" type="button" onClick={reset}>Réinitialiser</button>
           <button className="button button--secondary" type="button" onClick={save}>{saved ? 'Enregistré' : 'Enregistrer'}</button>
           {offerParam ? <button className="button button--secondary" type="button" onClick={() => { save(); navigate(`/workspace?offer=${encodeURIComponent(offerParam)}`); }}>Dossier</button> : null}
-          {pdfReady && pdfBytes ? (
-            <button className="button button--primary cv-download-button" type="button" onClick={() => void downloadPreparedPdf()} aria-label="Download CV PDF" title="Download CV PDF">⇩</button>
-          ) : (
-            <button className="button button--primary cv-download-button" type="button" disabled aria-label="Preparing CV PDF" title="Preparing CV PDF">…</button>
-          )}
+          <details className="cv-download-menu" style={{ position: 'relative' }}>
+            <summary className="button button--primary" style={{ cursor: 'pointer', listStyle: 'none' }} aria-label="Télécharger le CV au format PDF ou Word">Télécharger ▾</summary>
+            <div className="card" style={{ position: 'absolute', right: 0, top: '100%', zIndex: 40, padding: 8, minWidth: 170, display: 'grid', gap: 6, boxShadow: '0 8px 20px #0002' }}>
+              <button className="button button--secondary" type="button" disabled={!pdfReady || !pdfBytes} onClick={() => void downloadPreparedPdf()}>PDF (.pdf) — ATS</button>
+              <button className="button button--secondary" type="button" onClick={downloadPreparedWord}>Word (.docx) — modifiable</button>
+            </div>
+          </details>
           </div>
         </div>
       </div>
