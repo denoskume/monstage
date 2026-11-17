@@ -2,7 +2,7 @@ import { PDFDocument, StandardFonts, rgb, type PDFPage, type PDFFont } from 'pdf
 import type { CvDraft } from './cvStorage';
 import {
   cleanThierryText, thierryAdvantages, thierryEducation, thierryEntries,
-  thierryMethods, thierrySoftSkills, thierryTools, THIERRY_STYLE,
+  thierryMethods, thierrySoftSkills, thierryTools, thierrySkillGroups, THIERRY_STYLE,
 } from './thierryTemplate';
 import { normalizeCvPdfText } from './cvPdfText';
 
@@ -117,8 +117,9 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
       ['Savoir-être',thierrySoftSkills(draft).map(s=>'- '+s),false],
     ];
     for(const [title,lines,leftAligned] of blocks) {
-      if(!lines.filter(Boolean).length)continue;
-      top=paragraph(painter,[[title,true]],sideX,top,sideWidth,10.15*scale,1.12,draw,leftAligned?'left':'center',leftAligned?BLACK:BLUE)+4;
+      if(!lines.filter(Boolean).length && !['NORMES','Atouts','Savoir-être'].includes(title))continue;
+      const accent=['Atouts','Loisirs','Savoir-être'].includes(title);
+      top=paragraph(painter,[[title,leftAligned]],sideX,top,sideWidth,10.15*scale,1.12,draw,leftAligned?'left':'center',accent?BLUE:BLACK)+4;
       for(const line of lines.filter(Boolean)) top=paragraph(painter,[[line,false]],sideX,top,sideWidth,9.15*scale,1.2,draw)+4;
       top+=4;if(draw)rule(page,top);top+=7;
     }
@@ -129,7 +130,7 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
   paintSide(sideScale,true);
 
   const entries=thierryEntries(draft);
-  const skillLines=draft.skills.split(/\n/).map(safe).filter(Boolean);
+  const skillGroups=thierrySkillGroups(draft);
   function paintMain(scale:number,draw:boolean):number {
     let top=14;
     const s=9.96*scale;
@@ -149,11 +150,15 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
       if(e.results) top=paragraph(painter,[['Résultats :',true],[e.results,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
       top+=9*scale;
     }
-    if(skillLines.length) {
+    if(skillGroups.length) {
       top=heading(painter,'COMPETENCES',MAIN_X,top,9.96*scale,draw)+3*scale;
-      for(const skill of skillLines){
+      for(const group of skillGroups){
         diamond(page,192.5,top,9.6*scale,draw);
-        top=paragraph(painter,[[skill,true]],210.53,top,MAIN_W-(210.53-MAIN_X),9.3*scale,1.17,draw,'left',BLUE)+3*scale;
+        top=paragraph(painter,[[group.title,true]],210.53,top,MAIN_W-(210.53-MAIN_X),9.3*scale,1.17,draw,'left',BLUE)+2*scale;
+        for(const bullet of group.bullets){
+          top=paragraph(painter,[['• '+bullet,false]],210.53,top,MAIN_W-(210.53-MAIN_X),9.0*scale,1.15,draw)+2*scale;
+        }
+        top+=2*scale;
       }
     }
     return top;
