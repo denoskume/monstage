@@ -706,7 +706,7 @@ export function CvStudioPage() {
                   <label>Mission<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, mission: e.target.value }))} /></label>
                   <label>Expériences acquises<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, acquired: e.target.value }))} /></label>
                   <label>Résultats<textarea rows={2} value={item.results ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, results: e.target.value }))} /></label>
-                </div> : null>
+                </div> : null}
                 {item.bullets.map((bullet, bulletIndex) => (
                   <div className="cv-bullet-row" key={bulletIndex}>
                     <label>Bullet {bulletIndex + 1}
@@ -742,7 +742,7 @@ export function CvStudioPage() {
                   <label>Mission<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, mission: e.target.value }))} /></label>
                   <label>Expériences acquises<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, acquired: e.target.value }))} /></label>
                   <label>Résultats<textarea rows={2} value={item.results ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, results: e.target.value }))} /></label>
-                </div> : null>
+                </div> : null}
                 {item.bullets.map((bullet, bulletIndex) => (
                   <div className="cv-bullet-row" key={bulletIndex}>
                     <label>Bullet {bulletIndex + 1}
