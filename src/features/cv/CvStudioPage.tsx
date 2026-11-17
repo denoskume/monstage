@@ -433,7 +433,7 @@ export function CvStudioPage() {
       const bytes = buildThierryWordBytes(draft);
       const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-      const filename = cvPdfFileName(draft.name).replace(/\\.pdf$/i, '.docx');
+      const filename = cvPdfFileName(draft.name).replace('.pdf', '.docx');
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
