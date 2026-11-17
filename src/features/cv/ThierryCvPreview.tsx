@@ -42,10 +42,10 @@ export function ThierryCvPreview({ draft }: { draft: CvDraft }) {
       <SideBlock heading="DIPLÔMES / FORMATION" lines={thierryEducation(draft).map(line => '– ' + line)} className="thierry-education" />
       <SideBlock heading="LANGUE" lines={cleanThierryText(draft.languages).split('|')} className="thierry-language" />
       <SideBlock heading="LOGICIELS / OUTILS" lines={thierryTools(draft).map(line => '– ' + line)} className="thierry-tools" />
-      {thierryMethods(draft).length ? <SideBlock heading="NORMES / MÉTHODES" lines={thierryMethods(draft).map(line => '– ' + line)} /> : null}
-      {thierryAdvantages(draft).length ? <SideBlock heading="Atouts" lines={thierryAdvantages(draft).map(line => '– ' + line)} /> : null}
+      <SideBlock heading="NORMES" lines={thierryMethods(draft).map(line => '– ' + line)} />
+      <SideBlock heading="Atouts" lines={thierryAdvantages(draft).map(line => '– ' + line)} />
       <SideBlock heading="Loisirs" lines={cleanThierryText(draft.interests).split('|').map(line => '– ' + line)} />
-      {thierrySoftSkills(draft).length ? <SideBlock heading="Savoir-être" lines={thierrySoftSkills(draft).map(line => '– ' + line)} /> : null}
+      <SideBlock heading="Savoir-être" lines={thierrySoftSkills(draft).map(line => '– ' + line)} />
     </aside>
     <main className="thierry-main">
       {draft.thierryShowProfile !== false && draft.summary.trim() ? <section className="thierry-summary">
