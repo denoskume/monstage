@@ -378,7 +378,7 @@ function directPDF(sheet){
   const heightPx=Math.max(pagePx,box.height),pageCount=Math.ceil(heightPx/pagePx);
   const pages=Array.from({length:pageCount},()=>[]);
   const fmt=n=>(Math.round(n*1000)/1000).toString();
-  const color=(css)=>{let m=css.match(/rgba?\(([^)]+)\)/);if(!m)return [0,0,0];let p=m[1].split(',').map(t=>Number(t.trim()));return p.slice(0,3).map(a=>Math.max(0,Math.min(1,a/255)))};
+  const color=(css)=>{const hex=colorHex(css)||'000000';return [0,2,4].map(i=>parseInt(hex.slice(i,i+2),16)/255)};
   const fill=(page,r,g,b)=>pages[page].push(`${fmt(r)} ${fmt(g)} ${fmt(b)} rg`);
   const stroke=(page,r,g,b)=>pages[page].push(`${fmt(r)} ${fmt(g)} ${fmt(b)} RG`);
   function rect(page,x,y,w,h,r,g,b){
@@ -389,9 +389,11 @@ function directPDF(sheet){
     if(page<0||page>=pageCount)return;
     stroke(page,r,g,b);pages[page].push(`${fmt(th)} w ${fmt(x1)} ${fmt(H-y1)} m ${fmt(x2)} ${fmt(H-y2)} l S`);
   }
-  // Paint the same gray left column, light-blue rules and page border as the editor.
+  // Sample edited paper and sidebar background colors for every PDF page.
+  const paperColor=color(getComputedStyle(sheet).backgroundColor),railColor=color(getComputedStyle(sheet.querySelector('aside')).backgroundColor);
   for(let p=0;p<pageCount;p++){
-    rect(p,0,0,201*k,H,.7647,.7725,.7765);
+    rect(p,0,0,W,H,...paperColor);
+    rect(p,0,0,201*k,H,...railColor);
     line(p,201*k,0,201*k,H,.396,.666,.867,.58);
     line(p,.4,.4,W-.4,.4,.502,.737,.878,.48);
     line(p,.4,H-.4,W-.4,H-.4,.502,.737,.878,.48);
@@ -448,8 +450,12 @@ function directPDF(sheet){
     const fw=parseInt(cs.fontWeight)||400;
     const bold=fw>=600||cs.fontWeight==='bold';
     const italic=cs.fontStyle.includes('italic');
-    const face=bold?(italic?'F4':'F2'):(italic?'F3':'F1');
-    const ink=color(cs.color);
+    const family=cs.fontFamily.toLowerCase();
+    const fontBase=/courier|monospace/.test(family)?9:/arial|calibri|verdana|helvetica|sans-serif/.test(family)?5:1;
+    const face='F'+(fontBase+(bold?(italic?3:1):(italic?2:0)));
+    const ink=color(cs.color),highlight=shadeOf(el);
+    const shade=highlight?color('#'+highlight):null;
+    const underline=cs.textDecorationLine.includes('underline'),strike=cs.textDecorationLine.includes('line-through');
     // One line segment per line of each text node, including local emphasis edits.
     // Word boxes follow the browser's true line wrapping and justified spacing.
     const raw=node.nodeValue;
@@ -464,14 +470,19 @@ function directPDF(sheet){
         const page=Math.floor(y/pagePx);
         const x=(r.left-box.left)*k;
         const yy=(y-page*pagePx)*k;
-        textAt(page,x,yy,mt[0],fs,face,ink,false);
+        if(shade)rect(page,x,yy,r.width*k,Math.max(fs,r.height*k),...shade);
+        textAt(page,x,yy,mt[0],fs,face,ink,underline);
+        if(strike)line(page,x,yy+fs*.52,x+r.width*k,yy+fs*.52,...ink,.65);
       }else{
         // Rare long tokens that wrap inside the word: split by character ranges.
         for(let z=0;z<mt[0].length;z++){
           range.setStart(node,mt.index+z);range.setEnd(node,mt.index+z+1);
           const r=range.getBoundingClientRect(),y=r.top-box.top;
           const page=Math.floor(y/pagePx);
-          textAt(page,(r.left-box.left)*k,(y-page*pagePx)*k,mt[0][z],fs,face,ink);
+          const charX=(r.left-box.left)*k,charY=(y-page*pagePx)*k;
+          if(shade)rect(page,charX,charY,r.width*k,Math.max(fs,r.height*k),...shade);
+          textAt(page,charX,charY,mt[0][z],fs,face,ink,underline);
+          if(strike)line(page,charX,charY+fs*.52,charX+r.width*k,charY+fs*.52,...ink,.65);
         }
       }
     }
@@ -513,7 +524,10 @@ function directPDF(sheet){
   put('<< /Type /Font /Subtype /Type1 /BaseFont /Times-BoldItalic /Encoding /WinAnsiEncoding /ToUnicode 9 0 R >>');
   put('<< /Producer (Thierry CV Editor) /Title (Denos KUME - CV) >>');
   // Obj 8: resources; obj 9: Unicode character map; pages begin at obj 10.
-  put('<< /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R >> >>');
+  const extraFonts=['Helvetica','Helvetica-Bold','Helvetica-Oblique','Helvetica-BoldOblique','Courier','Courier-Bold','Courier-Oblique','Courier-BoldOblique'];
+  const fontStart=10+pages.length*2;
+  const fontResources=extraFonts.map((_,i)=>' /F'+(i+5)+' '+(fontStart+i)+' 0 R').join('');
+  put('<< /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R'+fontResources+' >> >>');
   const unicodeMap={128:0x20ac,130:0x201a,131:0x0192,132:0x201e,133:0x2026,134:0x2020,135:0x2021,136:0x02c6,137:0x2030,138:0x0160,139:0x2039,140:0x0152,142:0x017d,145:0x2018,146:0x2019,147:0x201c,148:0x201d,149:0x2022,150:0x2013,151:0x2014,152:0x02dc,153:0x2122,154:0x0161,155:0x203a,156:0x0153,158:0x017e,159:0x0178};
   const hex=n=>n.toString(16).toUpperCase().padStart(2,'0');
   const mapEntries=[];
@@ -529,6 +543,7 @@ function directPDF(sheet){
     const content=pages[p].join('\n')+'\n';
     put(`<< /Length ${content.length} >>\nstream\n${content}endstream`);
   }
+  for(const name of extraFonts)put('<< /Type /Font /Subtype /Type1 /BaseFont /'+name+' /Encoding /WinAnsiEncoding /ToUnicode 9 0 R >>');
   const pieces=['%PDF-1.4\n%PDF\n'],offsets=[0];
   let pos=pieces[0].length;
   objects.forEach((body,i)=>{offsets.push(pos);const s=`${i+1} 0 obj\n${body}\nendobj\n`;pieces.push(s);pos+=s.length;});
