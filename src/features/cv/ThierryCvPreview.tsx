@@ -1,7 +1,7 @@
 import type { CvDraft } from './cvStorage';
 import {
   cleanThierryText, thierryAdvantages, thierryEducation, thierryEntries,
-  thierryMethods, thierrySoftSkills, thierryTools, type ThierryEntry,
+  thierryMethods, thierrySoftSkills, thierryTools, thierrySkillGroups, type ThierryEntry,
 } from './thierryTemplate';
 import './thierryCv.css';
 
@@ -24,7 +24,7 @@ function SideBlock({ heading, lines, className = '' }: { heading: string; lines:
 }
 
 export function ThierryCvPreview({ draft }: { draft: CvDraft }) {
-  const skills = draft.skills.split(/\n/).map(cleanThierryText).filter(Boolean);
+  const skills = thierrySkillGroups(draft);
   return <div className="thierry-page" data-testid="thierry-cv-preview">
     <aside className="thierry-rail">
       <div className="thierry-identity">
@@ -43,9 +43,9 @@ export function ThierryCvPreview({ draft }: { draft: CvDraft }) {
       <SideBlock heading="LANGUE" lines={cleanThierryText(draft.languages).split('|')} className="thierry-language" />
       <SideBlock heading="LOGICIELS / OUTILS" lines={thierryTools(draft).map(line => '– ' + line)} className="thierry-tools" />
       <SideBlock heading="NORMES" lines={thierryMethods(draft).map(line => '– ' + line)} />
-      <SideBlock heading="Atouts" lines={thierryAdvantages(draft).map(line => '– ' + line)} />
-      <SideBlock heading="Loisirs" lines={cleanThierryText(draft.interests).split('|').map(line => '– ' + line)} />
-      <SideBlock heading="Savoir-être" lines={thierrySoftSkills(draft).map(line => '– ' + line)} />
+      <SideBlock heading="Atouts" lines={thierryAdvantages(draft).map(line => '– ' + line)} className="thierry-accent" />
+      <SideBlock heading="Loisirs" lines={cleanThierryText(draft.interests).split('|').map(line => '– ' + line)} className="thierry-accent" />
+      <SideBlock heading="Savoir-être" lines={thierrySoftSkills(draft).map(line => '– ' + line)} className="thierry-accent" />
     </aside>
     <main className="thierry-main">
       {draft.thierryShowProfile !== false && draft.summary.trim() ? <section className="thierry-summary">
@@ -57,7 +57,10 @@ export function ThierryCvPreview({ draft }: { draft: CvDraft }) {
       </section>
       {skills.length ? <section className="thierry-competences">
         <h2>COMPETENCES</h2>
-        {skills.map((line, i) => <p key={i} className="thierry-skill">❖ &nbsp; {line}</p>)}
+        {skills.map((group, i) => <div className="thierry-skill-group" key={i}>
+          <p className="thierry-skill">❖ &nbsp; {group.title}</p>
+          {group.bullets.length ? <ul>{group.bullets.map((line,j) => <li key={j}>{line}</li>)}</ul> : null}
+        </div>)}
       </section> : null}
     </main>
   </div>;
