@@ -267,7 +267,34 @@ toggle.onclick=()=>{menu.classList.toggle('open');toggle.setAttribute('aria-expa
 document.addEventListener('click',e=>{if(!root.querySelector('.download-wrap').contains(e.target))closeMenu()});
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const getText=e=>e?.innerText?.replace(/\u00a0/g,' ')||'';
-function segment(node,bold=false,italic=false){const a=[];function walk(n,b,i){if(n.nodeType===3){a.push({text:n.nodeValue,bold:b,italic:i});return}if(n.nodeType!==1)return;const tag=n.tagName.toLowerCase();if(tag==='br'){a.push({text:'\n',bold:b,italic:i});return}const bb=b||['strong','b'].includes(tag),ii=i||['em','i'].includes(tag);for(const c of n.childNodes)walk(c,bb,ii)}walk(node,bold,italic);return a}
+function colorHex(css){
+ if(!css||css==='transparent')return '';
+ if(css[0]==='#')return css.slice(1).toUpperCase();
+ const v=(css.match(/[\d.]+/g)||[]).map(Number);
+ if(v.length<3||(v.length>=4&&v[3]===0))return '';
+ return v.slice(0,3).map(n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function shadeOf(el){
+ const end=el.closest('[contenteditable="true"]');if(!end)return '';
+ for(let e=el;e;e=e.parentElement){const c=colorHex(getComputedStyle(e).backgroundColor);if(c)return c;if(e===end)break;}
+ return '';
+}
+function segment(node,bold=false,italic=false){
+ const parts=[];
+ function walk(n,b,i){
+  if(n.nodeType===3){
+   const cs=getComputedStyle(n.parentElement),weight=parseInt(cs.fontWeight)||400;
+   parts.push({text:n.nodeValue,bold:b||weight>=600||cs.fontWeight==='bold',italic:i||cs.fontStyle.includes('italic'),underline:cs.textDecorationLine.includes('underline'),strike:cs.textDecorationLine.includes('line-through'),font:cs.fontFamily.split(',')[0].replace(/["']/g,'').trim()||'Times New Roman',size:Math.max(12,Math.min(56,Math.round((parseFloat(cs.fontSize)||13)*1.5))),color:colorHex(cs.color),shade:shadeOf(n.parentElement)});
+   return;
+  }
+  if(n.nodeType!==1)return;
+  const tag=n.tagName.toLowerCase();
+  if(tag==='br'){parts.push({text:'\n',bold:b,italic:i});return;}
+  const bb=b||['strong','b'].includes(tag),ii=i||['em','i'].includes(tag);
+  for(const c of n.childNodes)walk(c,bb,ii);
+ }
+ if(node)walk(node,bold,italic);return parts;
+}
 function getBlocks(sheet){const left=[],right=[];for(const s of sheet.querySelectorAll('aside .ls')){for(const c of s.children){if(c.classList.contains('heading'))left.push({type:'sideHead',parts:segment(c)});else if(c.classList.contains('name'))left.push({type:'name',parts:segment(c)});else if(c.classList.contains('job'))left.push({type:'job',parts:segment(c)});else if(c.classList.contains('side-heading'))left.push({type:'center',parts:segment(c)});else if(c.classList.contains('blue-heading'))left.push({type:'blueSide',parts:segment(c)});else left.push({type:c.classList.contains('edu')?'edu':s.classList.contains('contacts')?'contact':'left',parts:segment(c)})}left.push({type:'sectionBreak',parts:[]})}
  const m=sheet.querySelector('main');for(const c of m.children){if(c.classList.contains('right-heading'))right.push({type:'rightHead',parts:segment(c)});if(c.classList.contains('experience')){const name=c.querySelector('.jobname [contenteditable]');right.push({type:'expTitle',parts:segment(name)});right.push({type:'meta',parts:segment(c.querySelector('.date'))});right.push({type:'company',parts:segment(c.querySelector('.company'))});for(const d of c.querySelectorAll('.desc'))right.push({type:'desc',parts:segment(d)});right.push({type:'expBreak',parts:[]})}if(c.classList.contains('skills')){right.push({type:'rightHead',parts:segment(c.querySelector('.right-heading'))});for(const e of c.children){if(e.classList.contains('skill-title'))right.push({type:'skillTitle',parts:segment(e.querySelector('[contenteditable]'))});if(e.classList.contains('skill-bullet'))right.push({type:'bullet',parts:segment(e)})}}}return{left,right}}
 function downloadBlob(bytes,mime,name){const blob=bytes instanceof Blob?bytes:new Blob([bytes],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}
