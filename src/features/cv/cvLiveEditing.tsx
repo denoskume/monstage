@@ -230,3 +230,20 @@ export function CvLiveDraftLine({
     onChange={ctx ? next => ctx.update({ scope: 'draft', field },
       updateCvSeparatedLine((ctx.draft[field] as string | undefined) ?? '', separator, index, next)) : undefined} />;
 }
+
+/** Add a skill/tool line directly on the CV; the same draft is used for PDF export. */
+export function CvLiveAddLine({ field, label, separator = '\n' }: {
+  field: 'skills' | 'thierryTools' | 'thierryAdvantages' | 'thierrySoftSkills' | 'thierryStandards';
+  label: string;
+  separator?: string;
+}) {
+  const ctx = useCvLiveEditing();
+  if (!ctx) return null;
+  return <button type="button" className="cv-live-add cv-live-add--entry"
+    onClick={() => ctx.update({scope:'draft',field}, 
+      ((ctx.draft[field] as string | undefined) ?? '') + 
+      ((ctx.draft[field] as string | undefined)?.trim() ? separator : '') +
+      (field === 'skills' ? '**Nouvelle catégorie :** Ajouter une compétence' : 'Nouvel élément'))}>
+    + {label}
+  </button>;
+}
