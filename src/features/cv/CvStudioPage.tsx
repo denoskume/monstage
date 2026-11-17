@@ -1,6 +1,4 @@
-import './portrait.css';
 import { ThierryCvPreview } from './ThierryCvPreview';
-import { Design01Preview } from './Design01Preview';
 import {
   CvLiveEditingProvider, CvLiveText, CvLiveBullets, CvLiveAddEntry, CvLiveDraftLine, CvLiveAddLine,
   updateCvLiveTarget, updateCvLiveBullets, createCvLiveEntry,
@@ -16,11 +14,10 @@ import { edfSavedOffer } from '../applications/edfSavedOffer';
 import { thalesSavedOffer } from '../applications/thalesSavedOffer';
 import { currentCvNoticeOffer } from './cvOfferNotice';
 import { CvEvidencePicker } from './CvEvidencePicker';
-import { cvColumnSections, isTwoColumnCv } from './twoColumnLayout';
 import { certificateCatalog, selectedCertifications } from './cvEvidenceCatalog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading, cvTemplateOptions, cvPageColorOptions, cvPageColorHex, type CvTemplate, type CvPageColor } from './cvStorage';
+import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
@@ -225,6 +222,20 @@ function AtsScore({ draft }: { draft: CvDraft }) {
   );
 }
 
+/** Enforce the unique approved CV template without deleting any previous draft data. */
+function thierryOnlyDraft(value: CvDraft, plan: CvPlan): CvDraft {
+  const oldTrack = /data analyst|business intelligence|industrial analytics|data analysis/i.test(value.headline);
+  const genericA = /^(data science|data science &|applied machine learning|computer vision & data science)/i.test(value.headline);
+  return {
+    ...value,
+    template: 'thierry',
+    pageColor: 'white',
+    thierryShowProfile: false,
+    headline: plan === 'B' && oldTrack ? 'Data Scientist'
+      : plan === 'A' && genericA ? 'Computer Vision Engineer' : value.headline,
+  };
+}
+
 export function CvStudioPage() {
   const { token } = useAuth();
   const { data: offersData } = useOffers();
@@ -233,7 +244,7 @@ export function CvStudioPage() {
   const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
   const offerParam = params.get('offer');
   const [plan, setPlan] = useState<CvPlan>(() => params.get('plan') === 'B' ? 'B' : 'A');
-  const [draft, setDraft] = useState<CvDraft>(() => loadCvDraft(languageParam, params.get('plan') === 'B' ? 'B' : 'A'));
+  const [draft, setDraft] = useState<CvDraft>(() => thierryOnlyDraft(loadCvDraft(languageParam, params.get('plan') === 'B' ? 'B' : 'A'), params.get('plan') === 'B' ? 'B' : 'A'));
   // A feed refresh must never rehydrate an already-open CV and overwrite typing.
   // The identity changes only when the user opens another CV or switches language/plan.
   const viewKey = offerParam ? 'offer:' + offerParam + ':' + languageParam : 'master:' + languageParam + ':' + plan;
@@ -262,7 +273,7 @@ export function CvStudioPage() {
       next = (loadApplicationDossier(selectedOffer.id, languageParam) ??
         prepareApplicationDossier(selectedOffer, languageParam)).cv;
     }
-    setDraft(next);
+    setDraft(thierryOnlyDraft(next, plan));
     setLoadedViewKey(viewKey);
     setSaved(true);
   }, [viewKey, loadedViewKey, selectedOfferId]);
@@ -340,7 +351,7 @@ export function CvStudioPage() {
     if (nextPlan === plan || offerParam) return;
     saveCvDraft(draft);
     setPlan(nextPlan);
-    setDraft(loadCvDraft(draft.language, nextPlan));
+    setDraft(thierryOnlyDraft(loadCvDraft(draft.language, nextPlan), nextPlan));
     setSaved(false);
   }
 
@@ -366,7 +377,8 @@ export function CvStudioPage() {
     // Regeneration refreshes the targeted content, not the chosen visual layout.
     const preserveLayout = (next: CvDraft): CvDraft => ({
       ...next,
-      template: draft.template ?? 'classic',
+      template: 'thierry',
+      thierryShowProfile: false,
       pageColor: draft.pageColor ?? 'white',
       photoDataUrl: draft.photoDataUrl,
     });
@@ -397,20 +409,20 @@ export function CvStudioPage() {
 
   function reset() {
     if (offerParam === THALES_DATA_DOSSIER_ID) {
-      const next = buildThalesDataCv(draft.language);
+      const next = thierryOnlyDraft(buildThalesDataCv(draft.language), plan);
       updateApplicationCv(THALES_DATA_DOSSIER_ID, draft.language, next);
       setDraft(next);
       setSaved(false);
       return;
     }
     if (offerParam === EDF_EOD_DOSSIER_ID) {
-      const next = buildEdfEodCv(draft.language);
+      const next = thierryOnlyDraft(buildEdfEodCv(draft.language), plan);
       updateApplicationCv(EDF_EOD_DOSSIER_ID, draft.language, next);
       setDraft(next);
       setSaved(false);
       return;
     }
-    const next = resetCvDraft(draft.language, plan);
+    const next = thierryOnlyDraft(resetCvDraft(draft.language, plan), plan);
     setDraft(next);
     setSaved(false);
   }
@@ -502,30 +514,12 @@ export function CvStudioPage() {
                   value={plan}
                   onChange={(event) => switchPlan(event.target.value as CvPlan)}>
                   <option value="A">A · Computer Vision</option>
-                  <option value="B">B · Data Analyst</option>
+                  <option value="B">B · Data Scientist</option>
                 </select>
               </label>
             ) : null}
-            <label className="cv-header-select">
-              <span>{draft.language === 'FR' ? 'Modèle' : 'Template'}</span>
-              <select aria-label={draft.language === 'FR' ? 'Modèle de CV' : 'CV template'}
-                value={draft.template ?? 'classic'}
-                onChange={(event) => patch('template', event.target.value as CvTemplate)}>
-                {cvTemplateOptions.map(({ id, fr, en }) =>
-                  <option key={id} value={id}>{draft.language === 'FR' ? fr : en}</option>
-                )}
-              </select>
-            </label>
-            <label className="cv-header-select">
-              <span>{draft.language === 'FR' ? 'Couleur' : 'Color'}</span>
-              <select aria-label={draft.language === 'FR' ? 'Couleur de page' : 'Page color'}
-                value={draft.pageColor ?? 'white'}
-                onChange={(event) => patch('pageColor', event.target.value as CvPageColor)}>
-                {cvPageColorOptions.map(({ id, fr, en }) =>
-                  <option key={id} value={id}>{draft.language === 'FR' ? fr : en}</option>
-                )}
-              </select>
-            </label>
+            <div className="cv-header-select" aria-label="Modèle de CV unique"><span>Modèle</span><strong>Thierry KUME</strong></div>    </label>
+    </label>
           </div>
           <div className="cv-studio-action-group">
           <div className="cl-language-toggle" aria-label="CV language">
@@ -545,7 +539,7 @@ export function CvStudioPage() {
         </div>
       </div>
 
-      {noticeOffer ? <p role="status" className="workspace-note"><strong>CV pour {noticeOffer.company} — {noticeOffer.title}.</strong> Vérifie le contenu et l’en-tête centré avant toute validation. Aucun envoi sans ton OK.</p> : null}
+      {noticeOffer ? <p role="status" className="workspace-note"><strong>CV pour {noticeOffer.company} — {noticeOffer.title}.</strong> Vérifie les missions, les résultats et les expériences acquises avant toute validation. Aucun envoi sans ton OK.</p> : null}
       {offerParam === THALES_DATA_DOSSIER_ID && !isCurrentThalesCv(draft) ? (
         <div role="status" className="workspace-note" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <span><strong>Nouvelle version du CV Thales disponible.</strong> Un seul projet MonStage (4 réalisations), cours ciblés et formation en premier.</span>
@@ -686,15 +680,15 @@ export function CvStudioPage() {
             </div>
           </section>
 
-          {(draft.template === 'thierry' || draft.template === 'design01') ? <section className="cv-editor-section" aria-label="Réglages du modèle Thierry KUME">
-            <h2>Modèles encadrés — Thierry KUME / CV DESIGN 01</h2>
-            <p className="cv-editor-hint">Modèles à colonne grise et cadre bleu. Tous les champs sont réutilisables ; aucune image ni capture n'est utilisée pour produire le PDF ATS.</p>
+          {(draft.template === 'thierry') ? <section className="cv-editor-section" aria-label="Réglages du modèle Thierry KUME">
+            <h2>Modèle Thierry KUME — éditeur direct</h2>
+            <p className="cv-editor-hint">Modèle unique : colonne grise, titres bleus, Mission → Résultats → Expériences acquises. Le PDF reste constitué de texte extractible.</p>
             <label>Âge (facultatif)<input value={draft.thierryAge ?? ''} onChange={e => patch('thierryAge', e.target.value)} /></label>
             <label>Logiciels / outils (une ligne par élément)<textarea rows={3} value={draft.thierryTools ?? ''} onChange={e => patch('thierryTools', e.target.value)} /></label>
             <label>Normes / méthodes<textarea rows={2} value={draft.thierryStandards ?? ''} onChange={e => patch('thierryStandards', e.target.value)} /></label>
             <label>Atouts<textarea rows={2} value={draft.thierryAdvantages ?? ''} onChange={e => patch('thierryAdvantages', e.target.value)} /></label>
             <label>Savoir-être<textarea rows={2} value={draft.thierrySoftSkills ?? ''} onChange={e => patch('thierrySoftSkills', e.target.value)} /></label>
-            <label><input type="checkbox" checked={draft.thierryShowProfile !== false} onChange={e => patch('thierryShowProfile', e.target.checked)} /> Afficher le PROFIL au-dessus des expériences</label>
+            
           </section> : null}
           <section className="cv-editor-section">
             <h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2>
@@ -917,84 +911,7 @@ export function CvStudioPage() {
           },
         }}>
         <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }} id="cv-print-area">
-          {draft.template === 'design01' ? ( <Design01Preview draft={draft} /> ) : draft.template === 'thierry' ? ( <ThierryCvPreview draft={draft} /> ) : draft.template === 'portrait' ? (
-            <div className="cv-preview__portrait-grid">
-              <aside className="cv-preview__portrait-sidebar">
-                <div className="cv-preview__portrait-photo">
-                  <label className="cv-live-photo-upload" title={draft.language === 'FR' ? 'Cliquer pour changer la photo' : 'Click to change the photo'}>
-                    {draft.photoDataUrl?.startsWith('data:image/') ? (
-                      <img src={draft.photoDataUrl} alt={draft.language === 'FR' ? 'Photo du candidat' : 'Candidate photo'} />
-                    ) : <span>{draft.language === 'FR' ? '+ Ajouter une photo' : '+ Add a photo'}</span>}
-                    <input type="file" accept="image/jpeg,image/png,image/webp" aria-label={draft.language === 'FR' ? 'Changer la photo du CV' : 'Change CV photo'}
-                      onChange={event => { void uploadPortraitPhoto(event.currentTarget.files?.[0]); event.currentTarget.value = ''; }} />
-                  </label>
-                </div>
-                <section className="cv-preview__portrait-contact">
-                  <h2>{draft.language === 'FR' ? 'Coordonnées' : 'Contact'}</h2>
-                  <p><CvLiveText value={draft.location} target={{scope:'draft',field:'location'}} placeholder="Localisation" /></p>
-                  <p><CvLiveText value={draft.phone} target={{scope:'draft',field:'phone'}} placeholder="Téléphone" /></p>
-                  <p><CvLiveText value={draft.email} target={{scope:'draft',field:'email'}} placeholder="Email" /></p>
-                  <p>LinkedIn : <CvLiveText value={draft.linkedin} target={{scope:'draft',field:'linkedin'}} placeholder="LinkedIn" /></p>
-                  <p>GitHub : <CvLiveText value={draft.github} target={{scope:'draft',field:'github'}} placeholder="GitHub" /></p>
-                </section>
-                {cvColumnSections(draft.sectionOrder).sidebar.map(section => (
-                  <CvPreviewSection key={section} section={section} draft={draft} />
-                ))}
-              </aside>
-              <div className="cv-preview__portrait-main">
-                <header className="cv-preview__portrait-banner">
-                  <h1><CvLiveText value={draft.name} target={{scope:'draft',field:'name'}} label="Nom" /></h1>
-                  <p><CvLiveText value={draft.headline || draft.academicHeadline || ''} target={{scope:'draft',field:'headline'}} label="Intitulé professionnel" /></p>
-                </header>
-                <section className="cv-preview__portrait-summary">
-                  <h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2>
-                  <p><CvLiveText value={draft.summary} target={{scope:'draft',field:'summary'}} multiline label="Profil" /></p>
-                </section>
-                {cvColumnSections(draft.sectionOrder).main.map(section => (
-                  <CvPreviewSection key={section} section={section} draft={draft} />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <>
-          <header className="cv-preview__header">
-            <h1><CvLiveText value={draft.name} target={{scope:'draft',field:'name'}} label="Nom" /></h1>
-            <p className="cv-preview__headline"><CvLiveText value={draft.academicHeadline ?? CV_ACADEMIC_HEADLINE} target={{scope:'draft',field:'academicHeadline'}} label="Formation principale" /></p>
-            <p className="cv-preview__headline"><CvLiveText value={draft.headline} target={{scope:'draft',field:'headline'}} label="Intitulé du CV" /></p>
-            <p className="cv-preview__contact">
-              <CvLiveText value={draft.location} target={{scope:'draft',field:'location'}} placeholder="Localisation" /> {' | '}
-              <CvLiveText value={draft.email} target={{scope:'draft',field:'email'}} placeholder="Email" /> {' | '}
-              <CvLiveText value={draft.phone} target={{scope:'draft',field:'phone'}} placeholder="Téléphone" />
-            </p>
-            <p className="cv-preview__contact cv-preview__contact--links">
-              <CvLiveText value={draft.linkedin} target={{scope:'draft',field:'linkedin'}} placeholder="LinkedIn" /> {' | '}
-              <CvLiveText value={draft.github} target={{scope:'draft',field:'github'}} placeholder="GitHub" />
-            </p>
-          </header>
-
-          <section><h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2><p><CvLiveText value={draft.summary} target={{scope:'draft',field:'summary'}} multiline label="Profil" /></p></section>
-          {draft.template === 'keywords' && cvKeySkillsForDisplay(draft) ? (
-            <section className="cv-keyskills"><h2>{draft.language === 'FR' ? 'Compétences clés' : 'Key Skills'}</h2>
-              <p><CvLiveText value={cvKeySkillsForDisplay(draft)} target={{scope:'draft',field:'keySkills'}} placeholder="Compétences clés" multiline label="Compétences clés" /></p>
-            </section>
-          ) : null}
-
-          {isTwoColumnCv(draft.template) ? (
-            <div className="cv-preview__two-columns">
-              <div role="region" className="cv-preview__main" aria-label={draft.language === 'FR' ? 'Parcours et réalisations' : 'Background and achievements'}>
-                {cvColumnSections(draft.sectionOrder).main.map(section => (
-                  <CvPreviewSection key={section} section={section} draft={draft} />
-                ))}
-              </div>
-              <aside className="cv-preview__sidebar" aria-label={draft.language === 'FR' ? 'Compétences et compléments' : 'Skills and additional details'}>
-                {cvColumnSections(draft.sectionOrder).sidebar.map(section => (
-                  <CvPreviewSection key={section} section={section} draft={draft} />
-                ))}
-              </aside>
-            </div>
-          ) : draft.sectionOrder.map(section => <CvPreviewSection key={section} section={section} draft={draft} />)}
-            </>
-          )}
+          <ThierryCvPreview draft={draft} />
         </article>
         </CvLiveEditingProvider>
         </div>
