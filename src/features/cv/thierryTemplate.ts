@@ -45,7 +45,7 @@ function structured(
   description: string,
 ): ThierryEntry {
   const bullets = entry.bullets.map(cleanThierryText).filter(Boolean);
-  const resultCandidate = bullets.findLastIndex(outcomeBullet);
+  const resultCandidate = bullets.reduce((index, bullet, i) => outcomeBullet(bullet) ? i : index, -1);
   const mission = cleanThierryText(entry.mission) || cleanThierryText(description) || bullets[0] || '';
   const acquired = cleanThierryText(entry.acquired) || bullets.filter((_, i) =>
     i !== resultCandidate && !(description === '' && i === 0)
