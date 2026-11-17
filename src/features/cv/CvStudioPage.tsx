@@ -884,6 +884,21 @@ export function CvStudioPage() {
         </aside>
 
         <div className="cv-preview-viewport">
+        <CvLiveEditingProvider value={{
+          draft,
+          update: (target, value) => {
+            setDraft(current => updateCvLiveTarget(current, target, value));
+            setSaved(false);
+          },
+          updateBullets: (scope, id, values) => {
+            setDraft(current => updateCvLiveBullets(current, scope, id, values));
+            setSaved(false);
+          },
+          addEntry: scope => {
+            setDraft(current => createCvLiveEntry(current, scope, uid(scope)));
+            setSaved(false);
+          },
+        }}>
         <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }} id="cv-print-area">
           {draft.template === 'design01' ? ( <Design01Preview draft={draft} /> ) : draft.template === 'thierry' ? ( <ThierryCvPreview draft={draft} /> ) : draft.template === 'portrait' ? (
             <div className="cv-preview__portrait-grid">
@@ -895,11 +910,11 @@ export function CvStudioPage() {
                 </div>
                 <section className="cv-preview__portrait-contact">
                   <h2>{draft.language === 'FR' ? 'Coordonnées' : 'Contact'}</h2>
-                  {draft.location ? <p>{renderCvBold(draft.location)}</p> : null}
-                  {draft.phone ? <p>{renderCvBold(draft.phone)}</p> : null}
-                  {draft.email ? <p>{renderCvBold(draft.email)}</p> : null}
-                  {draft.linkedin ? <p>LinkedIn : {renderCvBold(draft.linkedin.replace(/^https?:\/\//, ''))}</p> : null}
-                  {draft.github ? <p>GitHub : {renderCvBold(draft.github.replace(/^https?:\/\//, ''))}</p> : null}
+                  <p><CvLiveText value={draft.location} target={{scope:'draft',field:'location'}} placeholder="Localisation" /></p>
+                  <p><CvLiveText value={draft.phone} target={{scope:'draft',field:'phone'}} placeholder="Téléphone" /></p>
+                  <p><CvLiveText value={draft.email} target={{scope:'draft',field:'email'}} placeholder="Email" /></p>
+                  <p>LinkedIn : <CvLiveText value={draft.linkedin} target={{scope:'draft',field:'linkedin'}} placeholder="LinkedIn" /></p>
+                  <p>GitHub : <CvLiveText value={draft.github} target={{scope:'draft',field:'github'}} placeholder="GitHub" /></p>
                 </section>
                 {cvColumnSections(draft.sectionOrder).sidebar.map(section => (
                   <CvPreviewSection key={section} section={section} draft={draft} />
@@ -907,12 +922,12 @@ export function CvStudioPage() {
               </aside>
               <div className="cv-preview__portrait-main">
                 <header className="cv-preview__portrait-banner">
-                  <h1>{renderCvBold(draft.name)}</h1>
-                  <p>{renderCvBold(draft.headline || draft.academicHeadline || '')}</p>
+                  <h1><CvLiveText value={draft.name} target={{scope:'draft',field:'name'}} label="Nom" /></h1>
+                  <p><CvLiveText value={draft.headline || draft.academicHeadline || ''} target={{scope:'draft',field:'headline'}} label="Intitulé professionnel" /></p>
                 </header>
                 <section className="cv-preview__portrait-summary">
                   <h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2>
-                  <p>{renderCvBold(draft.summary)}</p>
+                  <p><CvLiveText value={draft.summary} target={{scope:'draft',field:'summary'}} multiline label="Profil" /></p>
                 </section>
                 {cvColumnSections(draft.sectionOrder).main.map(section => (
                   <CvPreviewSection key={section} section={section} draft={draft} />
@@ -922,22 +937,21 @@ export function CvStudioPage() {
           ) : (
             <>
           <header className="cv-preview__header">
-            <h1>{renderCvBold(draft.name)}</h1>
-            <p className="cv-preview__headline">{renderCvBold(draft.academicHeadline ?? CV_ACADEMIC_HEADLINE)}</p>
-            <p className="cv-preview__headline">{renderCvBold(draft.headline)}</p>
+            <h1><CvLiveText value={draft.name} target={{scope:'draft',field:'name'}} label="Nom" /></h1>
+            <p className="cv-preview__headline"><CvLiveText value={draft.academicHeadline ?? CV_ACADEMIC_HEADLINE} target={{scope:'draft',field:'academicHeadline'}} label="Formation principale" /></p>
+            <p className="cv-preview__headline"><CvLiveText value={draft.headline} target={{scope:'draft',field:'headline'}} label="Intitulé du CV" /></p>
             <p className="cv-preview__contact">
-              {draft.location ? <>{renderCvBold(draft.location)}{' | '}</> : null}
-              {draft.email ? <><a href={`mailto:${draft.email.trim()}`}>{renderCvBold(draft.email)}</a>{draft.phone ? ' | ' : ''}</> : null}
-              {draft.phone ? <a href={`tel:${draft.phone.replace(/[^+\d]/g, '')}`}>{renderCvBold(draft.phone)}</a> : null}
+              <CvLiveText value={draft.location} target={{scope:'draft',field:'location'}} placeholder="Localisation" /> {' | '}
+              <CvLiveText value={draft.email} target={{scope:'draft',field:'email'}} placeholder="Email" /> {' | '}
+              <CvLiveText value={draft.phone} target={{scope:'draft',field:'phone'}} placeholder="Téléphone" />
             </p>
             <p className="cv-preview__contact cv-preview__contact--links">
-              {draft.linkedin ? (cvExternalUrl(draft.linkedin, 'linkedin') ? <a href={cvExternalUrl(draft.linkedin, 'linkedin')!} target="_blank" rel="noopener noreferrer">LinkedIn</a> : renderCvBold(draft.linkedin)) : null}
-              {draft.linkedin && draft.github ? ' | ' : null}
-              {draft.github ? (cvExternalUrl(draft.github, 'github') ? <a href={cvExternalUrl(draft.github, 'github')!} target="_blank" rel="noopener noreferrer">GitHub</a> : renderCvBold(draft.github)) : null}
+              <CvLiveText value={draft.linkedin} target={{scope:'draft',field:'linkedin'}} placeholder="LinkedIn" /> {' | '}
+              <CvLiveText value={draft.github} target={{scope:'draft',field:'github'}} placeholder="GitHub" />
             </p>
           </header>
 
-          <section><h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2><p>{renderCvBold(draft.summary)}</p></section>
+          <section><h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2><p><CvLiveText value={draft.summary} target={{scope:'draft',field:'summary'}} multiline label="Profil" /></p></section>
           {draft.template === 'keywords' && cvKeySkillsForDisplay(draft) ? (
             <section className="cv-keyskills"><h2>{draft.language === 'FR' ? 'Compétences clés' : 'Key Skills'}</h2>
               <p>{renderCvBold(cvKeySkillsForDisplay(draft))}</p>
@@ -961,6 +975,7 @@ export function CvStudioPage() {
             </>
           )}
         </article>
+        </CvLiveEditingProvider>
         </div>
       </div>
     </section>
