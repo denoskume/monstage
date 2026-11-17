@@ -151,8 +151,8 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
       if(e.period) top=paragraph(painter,[[e.period,false]],MAIN_X,top,MAIN_W,s,1.19,draw)+1*scale;
       if(e.organization) top=paragraph(painter,[[e.organization,true]],MAIN_X,top,MAIN_W,s,1.19,draw)+0.8*scale;
       if(e.mission) top=paragraph(painter,[['Mission :',true],[e.mission,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
-      if(e.acquired) top=paragraph(painter,[['Expériences acquises :',true],[e.acquired,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
       if(e.results) top=paragraph(painter,[['Résultats :',true],[e.results,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
+      if(e.acquired) top=paragraph(painter,[['Expériences acquises :',true],[e.acquired,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
       for(const bullet of e.extraBullets) {
         top=paragraph(painter,[['• '+bullet,false]],MAIN_X+10,top,MAIN_W-10,s,1.18,draw)+1*scale;
       }
