@@ -7,6 +7,7 @@ import {
 } from './cvStorage';
 import { cvColumnSections } from './twoColumnLayout';
 import { normalizeCvPdfText } from './cvPdfText';
+import { cvNarrativeFields, cvNarrativeBullets } from './cvNarrative';
 
 const W = 595.28;
 const H = 841.89;
@@ -298,7 +299,10 @@ export async function buildTwoColumnCvPdfBytes(draft: CvDraft): Promise<Uint8Arr
         entry(item.role + ' - ' + item.company, item.period, cvExperienceLocationForDisplay(item.location));
         const desc = cvExperienceDescription(item, draft.language);
         if (desc) printParagraph(desc, { size: 8.3, leading: 10.5, after: 2 });
-        for (const bullet of item.bullets.filter(Boolean)) printParagraph(bullet, { bullet: true, after: 1 });
+        for (const field of cvNarrativeFields(item, draft.language)) {
+          printParagraph('**' + field.label + ' :** ' + field.value, { size: 8.2, leading: 10.5, after: 1 });
+        }
+        for (const bullet of cvNarrativeBullets(item)) printParagraph(bullet, { bullet: true, after: 1 });
         y -= 6;
       }
     }
@@ -306,10 +310,12 @@ export async function buildTwoColumnCvPdfBytes(draft: CvDraft): Promise<Uint8Arr
       sectionHeading(fr ? 'Projets sélectionnés' : 'Selected Projects');
       for (const item of draft.projects) {
         entry(item.name, item.period, cvProjectDescription(item, draft.language));
-        if (draft.showMissionLabels !== false && item.bullets.some(Boolean)) {
+        const fields = cvNarrativeFields(item, draft.language);
+        for (const field of fields) printParagraph('**' + field.label + ' :** ' + field.value, { size: 8.2, leading: 10.5, after: 1 });
+        if (!fields.length && draft.showMissionLabels !== false && item.bullets.some(Boolean)) {
           printParagraph(fr ? '**Missions :**' : '**Tasks:**', { size: 8.2, after: 1 });
         }
-        for (const bullet of item.bullets.filter(Boolean)) printParagraph(bullet, { bullet: true, after: 1 });
+        for (const bullet of cvNarrativeBullets(item)) printParagraph(bullet, { bullet: true, after: 1 });
         y -= 6;
       }
     }
