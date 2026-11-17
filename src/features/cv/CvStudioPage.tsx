@@ -1,5 +1,6 @@
 import './portrait.css';
 import { ThierryCvPreview } from './ThierryCvPreview';
+import { Design01Preview } from './Design01Preview';
 import { useAuth } from '../../auth/useAuth';
 import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
@@ -630,9 +631,9 @@ export function CvStudioPage() {
             </div>
           </section>
 
-          {draft.template === 'thierry' ? <section className="cv-editor-section" aria-label="Réglages du modèle Thierry KUME">
-            <h2>Modèle Thierry KUME — colonne grise</h2>
-            <p className="cv-editor-hint">Fond gris, cadre bleu et rubriques du modèle original. Ces réglages sont propres au CV courant.</p>
+          {(draft.template === 'thierry' || draft.template === 'design01') ? <section className="cv-editor-section" aria-label="Réglages du modèle Thierry KUME">
+            <h2>Modèles encadrés — Thierry KUME / CV DESIGN 01</h2>
+            <p className="cv-editor-hint">Modèles à colonne grise et cadre bleu. Tous les champs sont réutilisables ; aucune image ni capture n'est utilisée pour produire le PDF ATS.</p>
             <label>Âge (facultatif)<input value={draft.thierryAge ?? ''} onChange={e => patch('thierryAge', e.target.value)} /></label>
             <label>Logiciels / outils (une ligne par élément)<textarea rows={3} value={draft.thierryTools ?? ''} onChange={e => patch('thierryTools', e.target.value)} /></label>
             <label>Normes / méthodes<textarea rows={2} value={draft.thierryStandards ?? ''} onChange={e => patch('thierryStandards', e.target.value)} /></label>
@@ -702,7 +703,7 @@ export function CvStudioPage() {
                 <label>{draft.language === 'FR' ? 'Description courte de l’expérience' : 'Short experience description'}
                   <textarea rows={2} value={cvExperienceDescription(item, draft.language)} onChange={(e) => patch('experience', updateAt(draft.experience, index, { ...item, description: e.target.value }))} />
                 </label>
-                {draft.template === 'thierry' ? <div className="cv-editor-grid">
+                {(draft.template === 'thierry' || draft.template === 'design01') ? <div className="cv-editor-grid">
                   <label>Mission<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, mission: e.target.value }))} /></label>
                   <label>Expériences acquises<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, acquired: e.target.value }))} /></label>
                   <label>Résultats<textarea rows={2} value={item.results ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, results: e.target.value }))} /></label>
@@ -738,7 +739,7 @@ export function CvStudioPage() {
                 <label>{draft.language === 'FR' ? 'Description courte du projet' : 'Short project description'}
                   <textarea rows={2} value={cvProjectDescription(item, draft.language)} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, description: e.target.value }))} />
                 </label>
-                {draft.template === 'thierry' ? <div className="cv-editor-grid">
+                {(draft.template === 'thierry' || draft.template === 'design01') ? <div className="cv-editor-grid">
                   <label>Mission<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, mission: e.target.value }))} /></label>
                   <label>Expériences acquises<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, acquired: e.target.value }))} /></label>
                   <label>Résultats<textarea rows={2} value={item.results ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, results: e.target.value }))} /></label>
@@ -846,7 +847,7 @@ export function CvStudioPage() {
 
         <div className="cv-preview-viewport">
         <article className={`cv-preview cv-preview--${draft.template ?? 'classic'}`} style={{ backgroundColor: cvPageColorHex(draft.pageColor) }} id="cv-print-area">
-          {draft.template === 'thierry' ? ( <ThierryCvPreview draft={draft} /> ) : draft.template === 'portrait' ? (
+          {draft.template === 'design01' ? ( <Design01Preview draft={draft} /> ) : draft.template === 'thierry' ? ( <ThierryCvPreview draft={draft} /> ) : draft.template === 'portrait' ? (
             <div className="cv-preview__portrait-grid">
               <aside className="cv-preview__portrait-sidebar">
                 <div className="cv-preview__portrait-photo" aria-label={draft.language === 'FR' ? 'Emplacement de la photo' : 'Photo area'}>
