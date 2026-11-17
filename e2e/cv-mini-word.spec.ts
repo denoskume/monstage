@@ -32,9 +32,13 @@ test('mini-Word CV: ribbon compact, édition des titres, mise en forme et export
   await expect(mission.locator('span[style*="font-family"]')).toHaveCount(1);
   await expect(mission.locator('span[style*="color"]')).toHaveCount(1);
   await expect(page.locator('#format-status')).not.toContainText('pas prise en charge');
+  await page.getByRole('button',{name:'Centrer'}).click();
+  await expect(mission.locator('..')).toHaveCSS('text-align','center');
 
   await page.getByRole('button',{name:'Mise en page'}).click();
   await expect(page.locator('.ribbon-panel[data-ribbon-panel="layout"]')).toBeVisible();
+  await page.locator('#block-bg').fill('#e6eeff');
+  await expect(mission.locator('..')).toHaveCSS('background-color','rgb(230, 238, 255)');
   await page.locator('#sidebar-bg').fill('#cccccc');
   await expect(page.locator('.sheet[data-sheet="A"] aside')).toHaveCSS('background-color','rgb(204, 204, 204)');
   await page.getByRole('button',{name:'Insertion'}).click();
