@@ -296,7 +296,13 @@ function undo(){const h=history[chosen];if(!h.undo.length){note('Rien à annuler
 function redo(){const h=history[chosen];if(!h.redo.length){note('Rien à rétablir.');return;}h.undo.push(current().outerHTML);replaceSheet(h.redo.pop());note('Modification rétablie.');}
 function styleField(property,value){
  if(!lastField||!current().contains(lastField)){note('Sélectionne d’abord une zone du CV.');return;}
- capture();lastField.style[property]=value;persistCurrent();note('Mise en forme appliquée au paragraphe.');
+ // Text content inside Mission/Results is an inline span. Its block parent owns
+ // paragraph alignment, line spacing, indentation and paragraph shading.
+ const paragraphProps=['textAlign','lineHeight','marginLeft','backgroundColor'];
+ const target=paragraphProps.includes(property) &&
+              lastField.parentElement?.matches('.desc,.jobname,.skill-title,.company')
+   ? lastField.parentElement : lastField;
+ capture();target.style[property]=value;persistCurrent();note('Mise en forme appliquée au paragraphe.');
 }
 function selectedRange(){
  const range=restoreRange();
