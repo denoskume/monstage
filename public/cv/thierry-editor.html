@@ -501,6 +501,7 @@ switchBar.forEach(b=>b.onclick=()=>{
  root.querySelector('#sidebar-bg').value=rgb(getComputedStyle(current().querySelector('aside')).backgroundColor);
  note('CV '+chosen+' sélectionné.');closeMenu();
 });
+if(new URLSearchParams(window.location.search).get('plan')==='B')root.querySelector('[data-tab="B"]').click();
 root.querySelector('#add').onclick=()=>{
  capture();
  const x=document.createElement('section');x.className='experience';
