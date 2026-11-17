@@ -40,7 +40,7 @@ describe('Studio CV — éditeur HTML unique', () => {
     expect(html).toContain("const extraFonts=['Helvetica'");
     const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
     expect(script).toBeDefined();
-    expect(() => new Function(script)).not.toThrow();
+    expect(() => new Function(script ?? '')).not.toThrow();
   });
 
 });
