@@ -17,9 +17,10 @@ import { CvEvidencePicker } from './CvEvidencePicker';
 import { certificateCatalog, selectedCertifications } from './cvEvidenceCatalog';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { loadCvDraft, resetCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading } from './cvStorage';
+import { loadCvDraft, saveCvDraft, type CvDraft, type CvLanguage, type CvPlan, type CvSectionKey, CV_ACADEMIC_HEADLINE, cvProjectDescription, cvExperienceDescription, cvEducationDisplay, cvSkillsForDisplay, cvExperienceLocationForDisplay, cvLanguagesForDisplay, cvKeySkillsForDisplay, cvSummaryTitle, type CvSummaryHeading } from './cvStorage';
 import { buildCvPdfBytes, cvPdfFileName } from './pdfExport';
 import { buildThierryWordBytes } from './thierryWord';
+import { loadThierryStudioCv, resetThierryStudioCv } from './thierryStudioDefaults';
 import { saveApplicationDocument } from '../workspace/documentVault';
 
 function updateAt<T>(items: T[], index: number, next: T): T[] {
@@ -245,7 +246,7 @@ export function CvStudioPage() {
   const languageParam = params.get('language') === 'EN' ? 'EN' : 'FR';
   const offerParam = params.get('offer');
   const [plan, setPlan] = useState<CvPlan>(() => params.get('plan') === 'B' ? 'B' : 'A');
-  const [draft, setDraft] = useState<CvDraft>(() => thierryOnlyDraft(loadCvDraft(languageParam, params.get('plan') === 'B' ? 'B' : 'A'), params.get('plan') === 'B' ? 'B' : 'A'));
+  const [draft, setDraft] = useState<CvDraft>(() => thierryOnlyDraft((offerParam ? loadCvDraft(languageParam, params.get('plan') === 'B' ? 'B' : 'A') : loadThierryStudioCv(languageParam, params.get('plan') === 'B' ? 'B' : 'A')), params.get('plan') === 'B' ? 'B' : 'A'));
   // A feed refresh must never rehydrate an already-open CV and overwrite typing.
   // The identity changes only when the user opens another CV or switches language/plan.
   const viewKey = offerParam ? 'offer:' + offerParam + ':' + languageParam : 'master:' + languageParam + ':' + plan;
@@ -263,7 +264,7 @@ export function CvStudioPage() {
     if (loadedViewKey === viewKey) return;
     let next: CvDraft;
     if (!offerParam) {
-      next = loadCvDraft(languageParam, plan);
+      next = loadThierryStudioCv(languageParam, plan);
     } else if (offerParam === EDF_EOD_DOSSIER_ID) {
       next = prepareEdfEodDossier(languageParam).cv;
     } else if (offerParam === THALES_DATA_DOSSIER_ID) {
@@ -352,7 +353,7 @@ export function CvStudioPage() {
     if (nextPlan === plan || offerParam) return;
     saveCvDraft(draft);
     setPlan(nextPlan);
-    setDraft(thierryOnlyDraft(loadCvDraft(draft.language, nextPlan), nextPlan));
+    setDraft(thierryOnlyDraft(loadThierryStudioCv(draft.language, nextPlan), nextPlan));
     setSaved(false);
   }
 
@@ -423,7 +424,7 @@ export function CvStudioPage() {
       setSaved(false);
       return;
     }
-    const next = thierryOnlyDraft(resetCvDraft(draft.language, plan), plan);
+    const next = thierryOnlyDraft(resetThierryStudioCv(draft.language, plan), plan);
     setDraft(next);
     setSaved(false);
   }
