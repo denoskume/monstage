@@ -20,16 +20,11 @@ export function cvPageColorHex(color?: CvPageColor): string {
   return cvPageColorOptions.find(option => option.id === color)?.hex ?? '#FFFFFF';
 }
 
+// One approved CV presentation in MonStage Studio: Thierry KUME.
+// Legacy type literals are retained for backwards-compatible archived drafts,
+// but the Studio no longer exposes or renders their layouts.
 export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
-  { id: 'classic', fr: '1 · Classique', en: '1 · Classic' },
-  { id: 'modern', fr: '2 · Moderne', en: '2 · Modern' },
-  { id: 'minimal', fr: '3 · Épuré', en: '3 · Minimal' },
-  { id: 'keywords', fr: '4 · ATS / Compétences clés', en: '4 · ATS / Key Skills' },
-  { id: 'split', fr: '5 · Double colonne / Équilibré', en: '5 · Two Columns / Balanced' },
-  { id: 'sidebar', fr: '6 · Double colonne / Sidebar', en: '6 · Two Columns / Sidebar' },
-  { id: 'portrait', fr: '7 · Portrait / Colonnes verticales + photo', en: '7 · Portrait / Full-height columns + photo' },
-  { id: 'thierry', fr: '8 · Thierry KUME / Cadre bleu & colonne grise', en: '8 · Thierry KUME / Blue frame & gray column' },
-  { id: 'design01', fr: '9 · CV DESIGN 01 / En-tête centré & colonne grise', en: '9 · CV DESIGN 01 / Centered header & gray sidebar' },
+  { id: 'thierry', fr: 'Thierry KUME — CV A4', en: 'Thierry KUME — A4 CV' },
 ];
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'certifications' | 'languages' | 'interests';
 export interface CvCertification {
@@ -500,7 +495,7 @@ export function freshPlanBCvDraft(language: CvLanguage): CvDraft {
   draft.leadership = [];
   draft.certifications = selectedCertifications(cvPresets.B.certificates);
   draft.sectionOrder = ['education', 'projects', 'experience', 'skills', 'certifications', 'languages', 'interests'];
-  draft.template = 'modern';
+  draft.template = 'thierry';
   draft.pageColor = 'white';
   return draft;
 }
