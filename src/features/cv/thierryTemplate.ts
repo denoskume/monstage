@@ -28,6 +28,8 @@ export type ThierryEntry = {
   mission: string;
   acquired: string;
   results: string;
+  /** Additional keyboard-entered bullet points not already represented in the 3 fields. */
+  extraBullets: string[];
 };
 
 export function cleanThierryText(value: string | undefined): string {
@@ -44,15 +46,22 @@ function structured(
   organization: string,
   description: string,
 ): ThierryEntry {
-  const bullets = entry.bullets.map(cleanThierryText).filter(Boolean);
+  const bullets = entry.bullets.map(bullet=>bullet.trim()).filter(Boolean);
   const resultCandidate = bullets.reduce((index, bullet, i) => outcomeBullet(bullet) ? i : index, -1);
-  const mission = cleanThierryText(entry.mission) || cleanThierryText(description) || bullets[0] || '';
-  const acquired = cleanThierryText(entry.acquired) || bullets.filter((_, i) =>
+  const used = new Set<number>();
+  const raw = (value: string | undefined) => (value ?? '').trim();
+  const mission = raw(entry.mission) || raw(description) || bullets[0] || '';
+  if (!raw(entry.mission) && !raw(description) && bullets.length) used.add(0);
+  const acquiredIndices = bullets.map((_,i)=>i).filter(i =>
     i !== resultCandidate && !(description === '' && i === 0)
-  ).slice(0, 2).join(' ');
-  const results = cleanThierryText(entry.results) || (resultCandidate >= 0 ? bullets[resultCandidate] : '');
-  return { id: entry.id, title: cleanThierryText(title), period: entry.period,
-    organization: cleanThierryText(organization), mission, acquired, results };
+  ).slice(0, 2);
+  const acquired = raw(entry.acquired) || acquiredIndices.map(i=>bullets[i]).join(' ');
+  if(!raw(entry.acquired)) acquiredIndices.forEach(i=>used.add(i));
+  const results = raw(entry.results) || (resultCandidate >= 0 ? bullets[resultCandidate] : '');
+  if(!raw(entry.results) && resultCandidate >= 0)used.add(resultCandidate);
+  const extraBullets = bullets.filter((_,i)=>!used.has(i));
+  return { id: entry.id, title: raw(title), period: entry.period,
+    organization: raw(organization), mission, acquired, results, extraBullets };
 }
 
 export function thierryEntries(draft: CvDraft): ThierryEntry[] {
@@ -99,10 +108,10 @@ export function thierrySoftSkills(draft: CvDraft): string[] {
 
 export type ThierrySkillGroup = { title: string; bullets: string[] };
 export function thierrySkillGroups(draft: CvDraft): ThierrySkillGroup[] {
-  return draft.skills.split(/\n/).map(cleanThierryText).filter(Boolean).map(line => {
+  return draft.skills.split(/\n/).map(line=>line.trim()).filter(Boolean).map(line => {
     const pivot = line.indexOf(':');
     if (pivot < 0) return { title: line, bullets: [] };
-    const title = line.slice(0, pivot).trim();
+    const title = cleanThierryText(line.slice(0, pivot));
     const detail = line.slice(pivot + 1).trim();
     return { title, bullets: detail ? [detail] : [] };
   }).filter(group => group.title);
