@@ -53,7 +53,7 @@ export function createCvLiveEntry(draft: CvDraft, scope: CvLiveCollection, id: s
     certifications: { id, title: '', issuer: '', date: '' },
   };
   // The editor and PDF share the same draft, so changes stay across templates.
-  return { ...draft, [scope]: [...draft[scope], entries[scope]] };
+  return { ...draft, [scope]: [...(draft[scope] ?? []), entries[scope]] };
 }
 
 export function renderCvInlineMarkdown(text: string): ReactNode[] {
