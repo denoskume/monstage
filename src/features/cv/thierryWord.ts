@@ -81,7 +81,8 @@ function xmlDocument(draft:CvDraft):string {
   const table='<w:tbl><w:tblPr><w:tblW w:w="11560" w:type="dxa"/>'
     +'<w:tblLayout w:type="fixed"/>'+borders+'</w:tblPr>'
     +'<w:tblGrid><w:gridCol w:w="2960"/><w:gridCol w:w="8600"/></w:tblGrid>'
-    +'<w:tr>'+cell(2960,left,true)+cell(8600,right,false)+'</w:tr></w:tbl>';
+    +'<w:tr><w:trPr><w:trHeight w:val="16000" w:hRule="atLeast"/></w:trPr>'
+    +cell(2960,left,true)+cell(8600,right,false)+'</w:tr></w:tbl>';
   return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
     +'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
     +'<w:body>'+table
