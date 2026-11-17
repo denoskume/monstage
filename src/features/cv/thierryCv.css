@@ -56,3 +56,9 @@
   .cv-preview.cv-preview--thierry { min-width: 0; border: 0; box-shadow: none; }
   .thierry-rail { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
+
+.thierry-side-block.thierry-accent h2 { color: #0070C0 !important; }
+.thierry-competences .thierry-skill-group { margin-bottom: 6px; }
+.thierry-competences .thierry-skill { margin-left: 12px; color: #0070C0; font-weight: bold; }
+.thierry-competences .thierry-skill-group ul { margin: 0 0 0 33px; padding: 0; }
+.thierry-competences .thierry-skill-group li { color: #000; font-size: 12.5px; line-height: 1.16; list-style-type: disc; }
