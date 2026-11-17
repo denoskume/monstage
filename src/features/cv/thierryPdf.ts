@@ -22,9 +22,6 @@ type Painter = { page: PDFPage; regular: PDFFont; bold: PDFFont };
 function safe(text: string): string {
   return normalizeCvPdfText(cleanThierryText(text));
 }
-function colorHex(hex: string) {
-  return rgb(parseInt(hex.slice(1,3),16)/255,parseInt(hex.slice(3,5),16)/255,parseInt(hex.slice(5,7),16)/255);
-}
 function segments(regular: PDFFont, bold: PDFFont, pieces: [string, boolean][]): Token[] {
   return pieces.flatMap(([text, isBold]) =>
     safe(text).split(/\s+/).filter(Boolean).map(word => ({ text: word, font: isBold ? bold : regular }))
@@ -114,10 +111,10 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
       ['DIPLOMES / FORMATION',thierryEducation(draft).map(s=>'- '+s),true],
       ['LANGUE',safe(draft.languages).split('|'),false],
       ['LOGICIELS / OUTILS',thierryTools(draft).map(s=>'- '+s),false],
-      ['NORMES / METHODES',thierryMethods(draft).map(s=>'- '+s),false],
+      ['NORMES',thierryMethods(draft).map(s=>'- '+s),false],
       ['Atouts',thierryAdvantages(draft).map(s=>'- '+s),false],
       ['Loisirs',safe(draft.interests).split('|').map(s=>'- '+s),false],
-      ['Savoir-etre',thierrySoftSkills(draft).map(s=>'- '+s),false],
+      ['Savoir-être',thierrySoftSkills(draft).map(s=>'- '+s),false],
     ];
     for(const [title,lines,leftAligned] of blocks) {
       if(!lines.filter(Boolean).length)continue;
@@ -132,7 +129,7 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
   paintSide(sideScale,true);
 
   const entries=thierryEntries(draft);
-  const skillLines=safe(draft.skills).split(/\n/).filter(Boolean);
+  const skillLines=draft.skills.split(/\n/).map(safe).filter(Boolean);
   function paintMain(scale:number,draw:boolean):number {
     let top=14;
     const s=9.96*scale;
@@ -148,8 +145,8 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
       if(e.period) top=paragraph(painter,[[e.period,false]],MAIN_X,top,MAIN_W,s,1.19,draw)+1*scale;
       if(e.organization) top=paragraph(painter,[[e.organization,true]],MAIN_X,top,MAIN_W,s,1.19,draw)+0.8*scale;
       if(e.mission) top=paragraph(painter,[['Mission :',true],[e.mission,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
-      if(e.acquired) top=paragraph(painter,[['Experiences acquises :',true],[e.acquired,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
-      if(e.results) top=paragraph(painter,[['Resultats :',true],[e.results,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
+      if(e.acquired) top=paragraph(painter,[['Expériences acquises :',true],[e.acquired,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
+      if(e.results) top=paragraph(painter,[['Résultats :',true],[e.results,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
       top+=9*scale;
     }
     if(skillLines.length) {
