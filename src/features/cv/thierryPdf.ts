@@ -23,8 +23,13 @@ function safe(text: string): string {
   return normalizeCvPdfText(cleanThierryText(text));
 }
 function segments(regular: PDFFont, bold: PDFFont, pieces: [string, boolean][]): Token[] {
-  return pieces.flatMap(([text, isBold]) =>
-    safe(text).split(/\s+/).filter(Boolean).map(word => ({ text: word, font: isBold ? bold : regular }))
+  return pieces.flatMap(([value, alwaysBold]) =>
+    value.split(/(\*\*[^*]+\*\*)/g).flatMap(part => {
+      const marked = part.startsWith('**') && part.endsWith('**') && part.length > 4;
+      const text = safe(marked ? part.slice(2, -2) : part);
+      return text.split(/\s+/).filter(Boolean)
+        .map(word => ({ text: word, font: alwaysBold || marked ? bold : regular }));
+    })
   );
 }
 function wrap(tokens: Token[], max: number, size: number, spaceFont: PDFFont): Token[][] {
@@ -148,6 +153,9 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
       if(e.mission) top=paragraph(painter,[['Mission :',true],[e.mission,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
       if(e.acquired) top=paragraph(painter,[['Expériences acquises :',true],[e.acquired,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
       if(e.results) top=paragraph(painter,[['Résultats :',true],[e.results,false]],MAIN_X,top,MAIN_W,s,1.20,draw)+1*scale;
+      for(const bullet of e.extraBullets) {
+        top=paragraph(painter,[['• '+bullet,false]],MAIN_X+10,top,MAIN_W-10,s,1.18,draw)+1*scale;
+      }
       top+=9*scale;
     }
     if(skillGroups.length) {
