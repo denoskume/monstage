@@ -518,8 +518,7 @@ export function CvStudioPage() {
                 </select>
               </label>
             ) : null}
-            <div className="cv-header-select" aria-label="Modèle de CV unique"><span>Modèle</span><strong>Thierry KUME</strong></div>    </label>
-    </label>
+            <div className="cv-header-select" aria-label="Modèle de CV unique"><span>Modèle</span><strong>Thierry KUME</strong></div>
           </div>
           <div className="cv-studio-action-group">
           <div className="cl-language-toggle" aria-label="CV language">
