@@ -49,7 +49,8 @@ describe('CV DESIGN 01 — full-width heading and ATS PDF', () => {
     expect(pdf.getPage(0).getHeight()).toBeCloseTo(DESIGN01.pageHeight,1);
     const resources=pdf.getPage(0).node.Resources()!;
     expect(resources.lookup(PDFName.of('Font'),PDFDict)).toBeDefined();
-    expect(resources.get(PDFName.of('XObject'))).toBeUndefined();
+    const images = resources.lookup(PDFName.of('XObject'), PDFDict);
+    expect(images?.keys().length ?? 0).toBe(0);
     expect(pdf.getTitle()).toContain('DESIGN 01');
   });
 
