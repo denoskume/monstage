@@ -44,37 +44,66 @@ function wrapped(value:string, font:PDFFont, size:number, width:number):string[]
   if(line)lines.push(line);
   return lines;
 }
+type RichWord = { value:string; font:PDFFont };
+function richWords(text:string, fonts:Fonts, alwaysBold=false):RichWord[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).flatMap(part=>{
+    const marked = part.startsWith('**') && part.endsWith('**') && part.length > 4;
+    return safe(marked ? part.slice(2,-2) : part)
+      .split(/\s+/).filter(Boolean)
+      .map(value=>({value,font:alwaysBold||marked?fonts.bold:fonts.regular}));
+  });
+}
+function richRows(words:RichWord[], width:number, size:number, fonts:Fonts):RichWord[][] {
+  const output:RichWord[][]=[];
+  const spacer=fonts.regular.widthOfTextAtSize(' ',size);
+  let row:RichWord[]=[];let used=0;
+  for(const word of words){
+    // Split very long URLs/identifiers without losing characters.
+    const chunks:RichWord[]=[];
+    if(word.font.widthOfTextAtSize(word.value,size)>width){
+      let chunk='';
+      for(const char of word.value){
+        if(chunk && word.font.widthOfTextAtSize(chunk+char,size)>width){
+          chunks.push({value:chunk,font:word.font});chunk='';
+        }
+        chunk+=char;
+      }
+      if(chunk)chunks.push({value:chunk,font:word.font});
+    } else chunks.push(word);
+    for(const candidate of chunks){
+      const w=candidate.font.widthOfTextAtSize(candidate.value,size);
+      if(row.length && used+spacer+w>width){output.push(row);row=[];used=0;}
+      used+=(row.length?spacer:0)+w;
+      row.push(candidate);
+    }
+  }
+  if(row.length)output.push(row);
+  return output;
+}
 function text(
   painter:Painter, value:string, x:number, top:number,
   width:number, size:number, opts?:{bold?:boolean;center?:boolean;fill?:ReturnType<typeof rgb>;leading?:number},
 ):number {
-  const font=opts?.bold?painter.fonts.bold:painter.fonts.regular;
   const leading=opts?.leading??1.14;
-  const lines=wrapped(value,font,size,width);
+  const lines=richRows(richWords(value,painter.fonts,Boolean(opts?.bold)),width,size,painter.fonts);
   if(painter.draw)lines.forEach((line,i)=>{
-    const shift=opts?.center?(width-font.widthOfTextAtSize(line,size))/2:0;
-    painter.page.drawText(line,{
-      x:x+shift,y:H-(top+i*size*leading)-size*0.90,
-      size,font,color:opts?.fill??INK,
-    });
+    const wordSpace=painter.fonts.regular.widthOfTextAtSize(' ',size);
+    const lineWidth=line.reduce((total,t)=>total+t.font.widthOfTextAtSize(t.value,size),0)+
+      Math.max(0,line.length-1)*wordSpace;
+    let cursor=x+(opts?.center?(width-lineWidth)/2:0);
+    for(const [j,token] of line.entries()){
+      painter.page.drawText(token.value,{
+        x:cursor,y:H-(top+i*size*leading)-size*0.90,
+        size,font:token.font,color:opts?.fill??INK,
+      });
+      cursor+=token.font.widthOfTextAtSize(token.value,size)+(j<line.length-1?wordSpace:0);
+    }
   });
   return top+size*leading*lines.length;
 }
 function labeled(p:Painter, label:string, value:string, x:number,top:number,width:number,size:number):number {
   if(!value.trim()) return top;
-  const prefix=safe(label)+': ';
-  const prefixW=p.fonts.bold.widthOfTextAtSize(prefix,size);
-  const available=Math.max(35,width-prefixW);
-  const lines=wrapped(value,p.fonts.regular,size,available);
-  if(p.draw){
-    p.page.drawText(prefix,{x,y:H-top-size*0.90,font:p.fonts.bold,size,color:INK});
-    if(lines[0]) p.page.drawText(lines[0],{x:x+prefixW,y:H-top-size*0.90,font:p.fonts.regular,size,color:INK});
-  }
-  let cursor=top+size*1.17;
-  // Subsequent lines resume at full width for natural reading flow.
-  const remaining=lines.slice(1).join(' ');
-  if(remaining) cursor=text(p,remaining,x,cursor,width,size,{leading:1.17});
-  return cursor;
+  return text(p,'**'+label+':** '+value,x,top,width,size,{leading:1.17});
 }
 function sectionTitle(p:Painter,title:string,x:number,top:number,size=11):number {
   const label=safe(title);
