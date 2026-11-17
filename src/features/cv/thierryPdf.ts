@@ -107,7 +107,7 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
     if(draw) rule(page,top); top+=7;
     top=paragraph(painter,[[draft.location,false]],sideX,top,sideWidth,9.7*scale,1.2,draw,'center')+6;
     if(draw)rule(page,top);top+=7;
-    for(const s of [draft.email,draft.phone,draft.thierryAge??''].filter(Boolean)) {
+    for(const s of [draft.email,draft.phone,draft.linkedin,draft.github,draft.thierryAge??''].filter(Boolean)) {
       top=paragraph(painter,[[s,false]],sideX,top,sideWidth,9.0*scale,1.15,draw,'center')+2;
     }
     top+=4;
@@ -122,7 +122,7 @@ export async function buildThierryCvPdfBytes(draft:CvDraft):Promise<Uint8Array> 
       ['Savoir-être',thierrySoftSkills(draft).map(s=>'- '+s),false],
     ];
     for(const [title,lines,leftAligned] of blocks) {
-      if(!lines.filter(Boolean).length && !['NORMES','Atouts','Savoir-être'].includes(title))continue;
+      if(!lines.filter(Boolean).length)continue;
       const accent=['Atouts','Loisirs','Savoir-être'].includes(title);
       top=paragraph(painter,[[title,leftAligned]],sideX,top,sideWidth,10.15*scale,1.12,draw,leftAligned?'left':'center',accent?BLUE:BLACK)+4;
       for(const line of lines.filter(Boolean)) top=paragraph(painter,[[line,false]],sideX,top,sideWidth,9.15*scale,1.2,draw)+4;
