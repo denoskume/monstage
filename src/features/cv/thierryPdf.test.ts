@@ -6,8 +6,8 @@ import { thierryEntries, THIERRY_STYLE } from './thierryTemplate';
 
 describe('Thierry KUME CV template', () => {
   test('is an additional template and preserves the seven originals', () => {
-    expect(cvTemplateOptions.at(-1)?.id).toBe('thierry');
-    expect(cvTemplateOptions).toHaveLength(8);
+    expect(cvTemplateOptions.find(option => option.id === 'thierry')).toBeDefined();
+    expect(cvTemplateOptions).toHaveLength(9);
     expect(THIERRY_STYLE.blue).toBe('#0070C0');
     expect(THIERRY_STYLE.gray).toBe('#BFBFBF');
     expect(THIERRY_STYLE.splitX).toBe(155.18);
