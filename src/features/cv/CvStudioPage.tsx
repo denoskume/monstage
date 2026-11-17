@@ -1,6 +1,7 @@
 import './portrait.css';
 import { ThierryCvPreview } from './ThierryCvPreview';
 import { Design01Preview } from './Design01Preview';
+import { cvNarrativeFields, cvNarrativeBullets } from './cvNarrative';
 import { useAuth } from '../../auth/useAuth';
 import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier, updateApplicationCv } from '../applications/applicationDossiers';
@@ -87,8 +88,11 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
       {draft.projects.map((item) => <div className="cv-entry cv-project-entry" key={item.id}>
         <div className="cv-entry__top"><strong>{renderCvBold(item.name)}</strong><span>{renderCvBold(item.period)}</span></div>
         {cvProjectDescription(item, draft.language).trim() ? <p className="cv-project-description">{renderCvBold(cvProjectDescription(item, draft.language))}</p> : null}
-        {draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-project-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
-        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
+        {cvNarrativeFields(item, draft.language).map(field => (
+          <p key={field.key} className="cv-narrative-field"><strong>{field.label} :</strong> {renderCvBold(field.value)}</p>
+        ))}
+        {!cvNarrativeFields(item, draft.language).length && draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-project-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
+        {cvNarrativeBullets(item).length ? <ul>{cvNarrativeBullets(item).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : null}
       </div>)}
     </section>
   );
@@ -99,8 +103,11 @@ function CvPreviewSection({ section, draft }: { section: CvSectionKey; draft: Cv
         <div className="cv-entry__top"><strong>{renderCvBold(item.role)} — {renderCvBold(item.company)}</strong><span>{renderCvBold(item.period)}</span></div>
         {item.location.trim() ? <div className="cv-entry__top"><span>{renderCvBold(cvExperienceLocationForDisplay(item.location))}</span><span /></div> : null}
         {cvExperienceDescription(item, draft.language).trim() ? <p className="cv-experience-description">{renderCvBold(cvExperienceDescription(item, draft.language))}</p> : null}
-        {draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-experience-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
-        <ul>{item.bullets.filter(Boolean).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul>
+        {cvNarrativeFields(item, draft.language).map(field => (
+          <p key={field.key} className="cv-narrative-field"><strong>{field.label} :</strong> {renderCvBold(field.value)}</p>
+        ))}
+        {!cvNarrativeFields(item, draft.language).length && draft.showMissionLabels !== false && item.bullets.some((bullet) => bullet.trim()) ? <p className="cv-experience-missions"><strong>{draft.language === 'FR' ? 'Missions :' : 'Tasks:'}</strong></p> : null}
+        {cvNarrativeBullets(item).length ? <ul>{cvNarrativeBullets(item).map((bullet, index) => <li key={index}>{renderCvBold(bullet)}</li>)}</ul> : null}
       </div>)}
     </section>
   );
@@ -703,11 +710,11 @@ export function CvStudioPage() {
                 <label>{draft.language === 'FR' ? 'Description courte de l’expérience' : 'Short experience description'}
                   <textarea rows={2} value={cvExperienceDescription(item, draft.language)} onChange={(e) => patch('experience', updateAt(draft.experience, index, { ...item, description: e.target.value }))} />
                 </label>
-                {(draft.template === 'thierry' || draft.template === 'design01') ? <div className="cv-editor-grid">
-                  <label>Mission<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, mission: e.target.value }))} /></label>
-                  <label>Expériences acquises<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, acquired: e.target.value }))} /></label>
-                  <label>Résultats<textarea rows={2} value={item.results ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, results: e.target.value }))} /></label>
-                </div> : null}
+                {<div className="cv-editor-grid cv-narrative-editor">
+                  <label>{draft.language === 'FR' ? 'Mission' : 'Mission'}<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, mission: e.target.value }))} /></label>
+                  <label>{draft.language === 'FR' ? 'Expériences acquises' : 'Skills gained'}<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, acquired: e.target.value }))} /></label>
+                  <label>{draft.language === 'FR' ? 'Résultats' : 'Results'}<textarea rows={2} value={item.results ?? ''} onChange={e => patch('experience', updateAt(draft.experience, index, { ...item, results: e.target.value }))} /></label>
+                </div>
                 {item.bullets.map((bullet, bulletIndex) => (
                   <div className="cv-bullet-row" key={bulletIndex}>
                     <label>Bullet {bulletIndex + 1}
@@ -739,11 +746,11 @@ export function CvStudioPage() {
                 <label>{draft.language === 'FR' ? 'Description courte du projet' : 'Short project description'}
                   <textarea rows={2} value={cvProjectDescription(item, draft.language)} onChange={(e) => patch('projects', updateAt(draft.projects, index, { ...item, description: e.target.value }))} />
                 </label>
-                {(draft.template === 'thierry' || draft.template === 'design01') ? <div className="cv-editor-grid">
-                  <label>Mission<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, mission: e.target.value }))} /></label>
-                  <label>Expériences acquises<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, acquired: e.target.value }))} /></label>
-                  <label>Résultats<textarea rows={2} value={item.results ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, results: e.target.value }))} /></label>
-                </div> : null}
+                {<div className="cv-editor-grid cv-narrative-editor">
+                  <label>{draft.language === 'FR' ? 'Mission' : 'Mission'}<textarea rows={2} value={item.mission ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, mission: e.target.value }))} /></label>
+                  <label>{draft.language === 'FR' ? 'Expériences acquises' : 'Skills gained'}<textarea rows={2} value={item.acquired ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, acquired: e.target.value }))} /></label>
+                  <label>{draft.language === 'FR' ? 'Résultats' : 'Results'}<textarea rows={2} value={item.results ?? ''} onChange={e => patch('projects', updateAt(draft.projects, index, { ...item, results: e.target.value }))} /></label>
+                </div>
                 {item.bullets.map((bullet, bulletIndex) => (
                   <div className="cv-bullet-row" key={bulletIndex}>
                     <label>Bullet {bulletIndex + 1}
