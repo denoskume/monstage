@@ -112,7 +112,7 @@ export function thierrySkillGroups(draft: CvDraft): ThierrySkillGroup[] {
     const pivot = line.indexOf(':');
     if (pivot < 0) return { title: line, bullets: [] };
     const title = cleanThierryText(line.slice(0, pivot));
-    const detail = line.slice(pivot + 1).trim();
+    const detail = line.slice(pivot + 1).trim().replace(/^\*\*\s*/, '');
     return { title, bullets: detail ? [detail] : [] };
   }).filter(group => group.title);
 }
