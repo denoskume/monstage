@@ -9,7 +9,7 @@ export function cvSummaryTitle(heading: CvSummaryHeading | undefined, language: 
     : (language === 'FR' ? 'Profil' : 'Profile');
 }
 
-export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords' | 'split' | 'sidebar' | 'portrait' | 'thierry';
+export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords' | 'split' | 'sidebar' | 'portrait' | 'thierry' | 'design01';
 export type CvPageColor = 'white' | 'soft-gray' | 'soft-blue';
 export const cvPageColorOptions: { id: CvPageColor; fr: string; en: string; hex: string }[] = [
   { id: 'white', fr: 'Blanc', en: 'White', hex: '#FFFFFF' },
@@ -29,6 +29,7 @@ export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
   { id: 'sidebar', fr: '6 · Double colonne / Sidebar', en: '6 · Two Columns / Sidebar' },
   { id: 'portrait', fr: '7 · Portrait / Colonnes verticales + photo', en: '7 · Portrait / Full-height columns + photo' },
   { id: 'thierry', fr: '8 · Thierry KUME / Cadre bleu & colonne grise', en: '8 · Thierry KUME / Blue frame & gray column' },
+  { id: 'design01', fr: '9 · CV DESIGN 01 / En-tête centré & colonne grise', en: '9 · CV DESIGN 01 / Centered header & gray sidebar' },
 ];
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'certifications' | 'languages' | 'interests';
 export interface CvCertification {
