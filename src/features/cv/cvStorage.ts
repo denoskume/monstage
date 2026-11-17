@@ -9,7 +9,7 @@ export function cvSummaryTitle(heading: CvSummaryHeading | undefined, language: 
     : (language === 'FR' ? 'Profil' : 'Profile');
 }
 
-export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords' | 'split' | 'sidebar' | 'portrait';
+export type CvTemplate = 'classic' | 'modern' | 'minimal' | 'keywords' | 'split' | 'sidebar' | 'portrait' | 'thierry';
 export type CvPageColor = 'white' | 'soft-gray' | 'soft-blue';
 export const cvPageColorOptions: { id: CvPageColor; fr: string; en: string; hex: string }[] = [
   { id: 'white', fr: 'Blanc', en: 'White', hex: '#FFFFFF' },
@@ -28,6 +28,7 @@ export const cvTemplateOptions: { id: CvTemplate; fr: string; en: string }[] = [
   { id: 'split', fr: '5 · Double colonne / Équilibré', en: '5 · Two Columns / Balanced' },
   { id: 'sidebar', fr: '6 · Double colonne / Sidebar', en: '6 · Two Columns / Sidebar' },
   { id: 'portrait', fr: '7 · Portrait / Colonnes verticales + photo', en: '7 · Portrait / Full-height columns + photo' },
+  { id: 'thierry', fr: '8 · Thierry KUME / Cadre bleu & colonne grise', en: '8 · Thierry KUME / Blue frame & gray column' },
 ];
 export type CvSectionKey = 'education' | 'projects' | 'experience' | 'leadership' | 'skills' | 'certifications' | 'languages' | 'interests';
 export interface CvCertification {
@@ -40,6 +41,10 @@ export interface CvCertification {
 }
 
 export interface CvExperience {
+  /** Optional editable fields for Thierry's Mission / Acquis / Résultats layout. */
+  mission?: string;
+  acquired?: string;
+  results?: string;
   id: string;
   role: string;
   company: string;
@@ -106,6 +111,10 @@ export function cvEducationDisplay(education: CvEducation): { school: string; lo
 }
 
 export interface CvProject {
+  /** Optional editable fields for Thierry's Mission / Acquis / Résultats layout. */
+  mission?: string;
+  acquired?: string;
+  results?: string;
   id: string;
   name: string;
   period: string;
@@ -247,6 +256,13 @@ export interface CvDraft {
   plan?: CvPlan;
   template?: CvTemplate;
   pageColor?: CvPageColor;
+  /** Thierry template supplementary sidebar content, editable per CV. */
+  thierryAge?: string;
+  thierryTools?: string;
+  thierryStandards?: string;
+  thierryAdvantages?: string;
+  thierrySoftSkills?: string;
+  thierryShowProfile?: boolean;
   /** Optional user-uploaded cropped JPEG. Only embedded in the Portrait template. */
   photoDataUrl?: string;
   // False hides the extra 'Missions' line in selected targeted CVs.
