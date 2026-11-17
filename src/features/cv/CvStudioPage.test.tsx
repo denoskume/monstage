@@ -22,4 +22,25 @@ describe('Studio CV — éditeur HTML unique', () => {
     expect(html).toContain('Résultats :');
     expect(html).toContain('Expériences acquises :');
   });
+  test('propose une barre mini-Word et permet l’édition de tous les titres de sections', () => {
+    const html = readFileSync(resolve('public/cv/thierry-editor.html'), 'utf8');
+    for (const control of [
+      'font-family','font-size','font-color','highlight-color','block-bg',
+      'paper-bg','sidebar-bg','underline','strike','align-left','align-center',
+      'align-right','align-justify','bullets','numbering','undo','redo','clear-format',
+    ]) {
+      expect(html).toContain('id="' + control + '"');
+    }
+    expect(html).toContain('class="heading" contenteditable="true"');
+    expect(html).toContain('class="right-heading" contenteditable="true"');
+    expect(html).toContain('class="side-heading" contenteditable="true"');
+    expect(html).toContain('class="blue-heading" contenteditable="true"');
+    expect(html).toContain('monstage:thierry-miniword:v1:');
+    expect(html).toContain('part.font,part.shade,part.strike');
+    expect(html).toContain("const extraFonts=['Helvetica'");
+    const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+    expect(script).toBeDefined();
+    expect(() => new Function(script)).not.toThrow();
+  });
+
 });
