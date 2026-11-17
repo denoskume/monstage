@@ -44,27 +44,84 @@
 #cvtool [contenteditable=true]:hover{background:#e6f5ff78}
 #cvtool [contenteditable=true]:focus{background:#e6f5ff;outline:1px dashed #2c81b9;outline-offset:1px}
 
-/* Mini Word ribbon: editor controls never become part of the exported A4 page. */
-#cvtool .ribbon{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;background:#fbfcfd;border:1px solid #d5dde4;border-radius:8px;padding:9px 10px;margin:0 0 11px;font:12px Arial,sans-serif;color:#263543}
-#cvtool .ribbon-group{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-right:10px;border-right:1px solid #d7dfe5}
-#cvtool .ribbon-group:last-child{border-right:none}
-#cvtool .ribbon-group label{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#3b5367}
-#cvtool .ribbon select{height:31px;max-width:160px;border:1px solid #bac8d3;border-radius:5px;background:white;color:#243644;font-size:12px;padding:4px}
-#cvtool .ribbon input[type=color]{height:29px;width:32px;border:1px solid #b9c8d4;border-radius:5px;padding:2px;background:white;cursor:pointer}
-#cvtool .ribbon input[type=color]:focus-visible{outline:2px solid #057cb7}
-#cvtool .ribbon button{min-width:31px;height:31px;padding:5px 7px;font-size:13px}
-#cvtool .ribbon button:focus-visible{outline:2px solid #057cb7}
-#cvtool .ribbon-caption{font:bold 11px Arial;color:#6a7e8e;width:100%;margin-bottom:2px}
-#cvtool .ribbon .section-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-#cvtool .ribbon .section-tools label{white-space:nowrap}
-#cvtool .format-status{font:11px Arial;color:#53677a;padding:1px 2px 8px}
-#cvtool .sheet [contenteditable=true]{white-space:pre-wrap}
-#cvtool .sheet .right-heading[contenteditable=true],
-#cvtool .sheet .heading[contenteditable=true],
-#cvtool .sheet .side-heading[contenteditable=true],
-#cvtool .sheet .blue-heading[contenteditable=true]{cursor:text}
-@media(max-width:750px){#cvtool .ribbon{gap:7px}#cvtool .ribbon-group{width:100%;padding:3px 0;border-right:0;border-bottom:1px solid #dce4eb}}
 
+/* Compact Word-inspired ribbon: one horizontal toolbar, no oversized form rows. */
+#cvtool{max-width:1320px;margin:0 auto;color:#202e3e}
+#cvtool .bar{min-height:57px;background:#fff;border:1px solid #d7dfe9;border-radius:9px 9px 0 0;display:flex;align-items:center;gap:18px;flex-wrap:nowrap;padding:7px 18px;margin:0}
+#cvtool .studio-brand{display:flex;align-items:center;gap:10px;font:13px Arial;min-width:127px;color:#1f3353}
+#cvtool .studio-brand strong{display:block;font-size:13px;letter-spacing:.15px}
+#cvtool .studio-brand small{display:block;font-size:11px;color:#7e8da2;margin-top:3px}
+#cvtool .brand-mark{display:grid;place-items:center;width:31px;height:34px;border-radius:6px;background:#e7effd;color:#265ea6}
+#cvtool .track-tabs{display:flex;gap:6px}
+#cvtool .track-tabs button{border:1px solid #cbd7e5;border-radius:5px;background:#fff;color:#27415c;font-size:12px;font-weight:600;padding:8px 12px;white-space:nowrap}
+#cvtool .track-tabs button span{font-weight:400;color:inherit}
+#cvtool .track-tabs button.selected{background:#1e63a3;color:#fff;border-color:#1e63a3}
+#cvtool .bar-spacer{flex:1}
+#cvtool .save-indicator{font-size:11px;color:#657587;white-space:nowrap}
+#cvtool .save-dot{width:6px;height:6px;display:inline-block;background:#22a06b;border-radius:50%;margin-right:4px}
+#cvtool .download-wrap{margin-left:0}
+#cvtool #download{background:#1d5c9c;color:white;border:1px solid #1d5c9c;border-radius:5px;display:flex;align-items:center;gap:8px;padding:9px 13px;font-size:12px;font-weight:600}
+#cvtool #download-menu{min-width:220px;border-radius:8px}
+#cvtool .word-ribbon{background:#fff;border:1px solid #d7dfe9;border-top:0;border-radius:0 0 9px 9px;box-shadow:0 2px 8px #14233e08}
+#cvtool .word-tabs{display:flex;gap:4px;height:37px;align-items:stretch;padding:0 13px;border-bottom:1px solid #ecf0f4}
+#cvtool .word-tabs button{font-size:12px;font-weight:500;background:transparent;border:0;border-radius:0;color:#3a4b61;padding:0 13px;height:36px}
+#cvtool .word-tabs button.active{color:#1d5c9c;border-bottom:2px solid #2369af;font-weight:700}
+#cvtool .word-tabs button:hover{background:#f1f5fb}
+#cvtool .ribbon-panel{display:flex;align-items:stretch;gap:0;padding:8px 9px 5px;overflow-x:auto;min-height:116px;scrollbar-width:thin}
+#cvtool .ribbon-panel[hidden]{display:none!important}
+#cvtool .word-group{display:flex;flex-direction:column;justify-content:space-between;min-width:0;padding:0 10px;border-right:1px solid #e3e8ef;flex-shrink:0}
+#cvtool .word-group:last-child{border:0}
+#cvtool .word-group-content{display:flex;flex-direction:column;justify-content:center;gap:5px;min-height:75px}
+#cvtool .word-group-label{font:10px Arial;color:#79869a;text-align:center;padding-top:3px;letter-spacing:.1px}
+#cvtool .font-row{display:flex;align-items:center;gap:4px;min-height:31px}
+#cvtool .font-row select{height:28px;font-size:11px;border:1px solid #c9d4e2;border-radius:3px;color:#1f2937;background:#fff;padding:2px 5px}
+#cvtool #font-family{width:145px}
+#cvtool #font-size{width:49px}
+#cvtool #line-height{width:55px}
+#cvtool .word-group button{border:1px solid transparent;border-radius:3px;background:transparent;color:#202f44;cursor:pointer}
+#cvtool .word-group button:hover,#cvtool .word-group button:focus-visible{background:#e9f1fd;border-color:#bad3f0;outline:none}
+#cvtool .tool-btn{height:28px;width:29px;min-width:29px;padding:4px!important;display:grid;place-items:center;font-size:13px}
+#cvtool .tool-btn b,#cvtool .tool-btn i,#cvtool .tool-btn u{font-family:Georgia,serif;font-size:15px}
+#cvtool .tool-btn sup{font-size:9px;color:#226cb0;vertical-align:top;margin-left:2px}
+#cvtool .swatch{display:inline-flex;align-items:center;gap:2px;height:28px;padding:3px 5px;border-radius:4px;cursor:pointer}
+#cvtool .swatch:hover{background:#eef3fb}
+#cvtool .swatch-icon{font:700 16px Georgia;line-height:18px}
+#cvtool .swatch input[type=color]{height:20px;width:20px;border:0;padding:0;background:none;cursor:pointer}
+#cvtool .ribbon-separator{height:22px;width:1px;background:#dce3ed;margin:0 2px}
+#cvtool .word-clipboard{width:82px}
+#cvtool .clipboard-row{display:flex;align-items:center;gap:7px;justify-content:center}
+#cvtool .large-tool{min-width:55px;min-height:67px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;padding:5px;color:#2b4565}
+#cvtool .large-tool span{font-size:11px}
+#cvtool .clipboard-stack{display:flex;flex-direction:column;align-items:center}
+#cvtool .tiny-caption{font-size:10px;color:#6b788a}
+#cvtool .word-font{width:314px}
+#cvtool .word-paragraph{width:286px}
+#cvtool .word-styles{width:283px}
+#cvtool .word-editing{width:115px}
+#cvtool .style-gallery{display:flex;gap:4px}
+#cvtool .style-tile{width:86px;height:62px;padding:7px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #e4e9f1!important;border-radius:4px!important;background:#fbfdff!important}
+#cvtool .style-tile.active{border-color:#a4c1e9!important;background:#f0f6ff!important}
+#cvtool .style-example{font-family:Georgia,serif;font-size:13px;white-space:nowrap}
+#cvtool .style-tile small{font-size:9px;color:#8a96a5;white-space:nowrap}
+#cvtool .style-example.heading-example{font-size:16px;color:#2564a6}
+#cvtool .edit-stack{display:flex;flex-direction:column;gap:8px}
+#cvtool .edit-tool{display:flex;align-items:center;gap:5px;text-align:left;font-size:10px}
+#cvtool .insertion-actions{display:flex;gap:12px}
+#cvtool .word-insert{width:210px}
+#cvtool .word-colors{width:255px}
+#cvtool .layout-colors{display:flex;gap:18px}
+#cvtool .layout-color{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:11px;cursor:pointer}
+#cvtool .layout-color input{width:35px;height:31px;border:1px solid #cad8e9;padding:3px;background:#fff;border-radius:4px}
+#cvtool .word-note{width:260px}
+#cvtool .helper-text{max-width:235px;font-size:11px;line-height:1.5;color:#627187}
+#cvtool .format-status{display:flex;align-items:center;gap:8px;font:11px Arial;color:#62758d;padding:9px 4px 12px}
+#cvtool .status-pill{font-size:10px;letter-spacing:.1px;padding:4px 7px;background:#e8f4ef;color:#207b51;border-radius:4px}
+#cvtool .viewport{padding:24px 12px 28px;background:#f3f5f9;border:1px solid #e6ebf2;border-radius:8px}
+#cvtool .sheet{box-shadow:0 12px 34px #142e4e20}
+#cvtool [contenteditable=true]:focus{background:#eef6ff;outline:1px dashed #4c83c2;outline-offset:1px}
+#cvtool .bar button:focus-visible,#cvtool .word-tabs button:focus-visible{outline:2px solid #2a6da8;outline-offset:1px}
+@media(max-width:1000px){#cvtool .bar{gap:9px;padding:7px 10px}#cvtool .save-indicator{display:none}#cvtool .studio-brand{min-width:auto}#cvtool .ribbon-panel{overflow-x:auto}}
+@media(max-width:600px){#cvtool .track-tabs button{font-size:11px;padding:6px 7px}#cvtool .studio-brand small{display:none}#cvtool .studio-brand strong{font-size:12px}#cvtool #download{padding:8px}}
 #cvtool .tip{font:12px Arial;color:#627184;padding:9px 3px}
 #cvtool .toast{font:12px Arial;color:#38657c;padding:0 7px}
 @page { size: A4 portrait; margin: 0; }
@@ -72,7 +129,7 @@
   html,body{margin:0!important;padding:0!important;width:210mm!important;background:white!important}
   body *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   #cvtool{margin:0!important;padding:0!important;max-width:none!important;width:210mm!important}
-  #cvtool .bar,#cvtool .ribbon,#cvtool .format-status,#cvtool .tip,#cvtool .toast{display:none!important}
+  #cvtool .bar,#cvtool .word-ribbon,#cvtool .format-status,#cvtool .tip,#cvtool .toast{display:none!important}
   #cvtool .viewport{overflow:visible!important;background:white!important;padding:0!important;width:210mm!important}
   #cvtool .sheet{box-shadow:none!important;border:1px solid #80bce0!important;width:210mm!important;min-height:297mm!important;margin:0!important;grid-template-columns:53.15mm minmax(0,1fr)!important;page-break-after:auto}
   #cvtool .sheet[hidden]{display:none!important}
@@ -81,40 +138,64 @@
   #cvtool .experience{break-inside:avoid}
 }
 </style></head><body><div id="cvtool">
-<div class="bar"><button data-tab="A" class="selected">CV A · Vision</button><button data-tab="B">CV B · Data Scientist</button><span class="split"></span><button id="add">+ Expérience</button><span class="toast" id="save-notice" aria-live="polite">Enregistrement local automatique</span><div class="download-wrap"><button id="download" aria-expanded="false">⬇ Télécharger ▾</button><div id="download-menu" role="menu"><button id="export-docx" role="menuitem">Word (.docx)</button><button id="export-pdf" role="menuitem">PDF (.pdf) · Téléchargement direct</button></div></div></div>
-<div class="ribbon" role="toolbar" aria-label="Accueil — outils de mise en forme du CV">
- <div class="ribbon-group" aria-label="Police">
-  <div class="ribbon-caption">Police</div>
-  <label>Famille <select id="font-family" aria-label="Choisir la police"><option>Times New Roman</option><option>Arial</option><option>Calibri</option><option>Cambria</option><option>Georgia</option><option>Garamond</option><option>Verdana</option><option>Courier New</option></select></label>
-  <label>Taille <select id="font-size" aria-label="Taille de police"><option value="8">8</option><option value="9">9</option><option value="10" selected>10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option></select></label>
-  <button type="button" id="bold" aria-label="Gras" title="Gras (Ctrl+B)"><b>G</b></button><button type="button" id="italic" aria-label="Italique" title="Italique (Ctrl+I)"><i>I</i></button><button type="button" id="underline" aria-label="Souligné" title="Souligné (Ctrl+U)"><u>S</u></button><button type="button" id="strike" aria-label="Barré" title="Barré"><s>ab</s></button>
-  <label title="Couleur de la police">Texte <input type="color" id="font-color" aria-label="Couleur du texte" value="#000000"></label>
-  <label title="Fond coloré derrière les caractères sélectionnés">Surlignage <input type="color" id="highlight-color" aria-label="Surligner le texte" value="#fff59d"></label>
+<div class="bar">
+ <div class="studio-brand"><span class="brand-mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg></span><span><strong>Studio CV</strong><small>MonStage</small></span></div>
+ <div class="track-tabs" aria-label="Version du CV"><button data-tab="A" class="selected">CV A <span>Vision</span></button><button data-tab="B">CV B <span>Data Scientist</span></button></div>
+ <div class="bar-spacer"></div><span class="save-indicator" id="save-notice" aria-live="polite"><span class="save-dot"></span> Modifications enregistrées</span>
+ <div class="download-wrap"><button id="download" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 18v3h14v-3"/></svg> Télécharger <span>⌄</span></button><div id="download-menu" role="menu"><button id="export-docx" role="menuitem">Word (.docx)</button><button id="export-pdf" role="menuitem">PDF (.pdf) · Texte sélectionnable</button></div></div>
  </div>
- <div class="ribbon-group" aria-label="Paragraphe">
-  <div class="ribbon-caption">Paragraphe</div>
-  <button id="align-left" title="Aligner à gauche" aria-label="Aligner à gauche">≡</button>
-  <button id="align-center" title="Centrer" aria-label="Centrer">☷</button>
-  <button id="align-right" title="Aligner à droite" aria-label="Aligner à droite">≡↦</button>
-  <button id="align-justify" title="Justifier" aria-label="Justifier">▤</button>
-  <button id="bullets" aria-label="Liste à puces" title="Ajouter des puces">• Liste</button>
-  <button id="numbering" aria-label="Liste numérotée" title="Liste numérotée">1. Liste</button>
-  <button id="indent" title="Augmenter le retrait" aria-label="Augmenter le retrait">→</button>
-  <button id="outdent" title="Diminuer le retrait" aria-label="Diminuer le retrait">←</button>
-  <label>Interligne <select id="line-height" aria-label="Interligne"><option value="1">1,0</option><option value="1.15" selected>1,15</option><option value="1.3">1,3</option><option value="1.5">1,5</option><option value="2">2,0</option></select></label>
+ <div class="word-ribbon"><nav class="word-tabs" aria-label="Menu du document"><button type="button" data-ribbon="file">Fichier</button><button type="button" class="active" data-ribbon="home">Accueil</button><button type="button" data-ribbon="insert">Insertion</button><button type="button" data-ribbon="layout">Mise en page</button></nav>
+ <div class="ribbon-panel active" data-ribbon-panel="home" role="toolbar" aria-label="Accueil"><div class="word-group word-clipboard"><div class="word-group-content">
+ <div class="clipboard-row"><button type="button" class="large-tool" id="paste" aria-label="Coller" title="Coller"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M7 6H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h6"/></svg><span>Coller</span></button>
+ <div class="clipboard-stack"><button type="button" class="tool-btn" id="copy" aria-label="Copier" title="Copier la sélection"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button><span class="tiny-caption">Copier</span></div></div></div><div class="word-group-label">Presse-papiers</div></div><div class="word-group word-font"><div class="word-group-content">
+ <div class="font-row"><select id="font-family" aria-label="Police"><option selected>Times New Roman</option><option>Calibri</option><option>Arial</option><option>Cambria</option><option>Georgia</option><option>Garamond</option><option>Verdana</option><option>Courier New</option></select>
+ <select id="font-size" aria-label="Taille de police" class="font-size-select"><option value="8">8</option><option value="9">9</option><option value="10" selected>10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option><option value="28">28</option><option value="32">32</option></select>
+ <button class="tool-btn" id="font-grow" title="Augmenter la taille" aria-label="Augmenter la taille">A<sup>↑</sup></button>
+ <button class="tool-btn" id="font-shrink" title="Réduire la taille" aria-label="Réduire la taille">A<sup>↓</sup></button></div>
+ <div class="font-row font-row-bottom">
+ <button type="button" class="tool-btn" id="bold" aria-label="Gras" title="Gras (Ctrl+B)"><b>G</b></button>
+ <button type="button" class="tool-btn" id="italic" aria-label="Italique" title="Italique (Ctrl+I)"><i>I</i></button>
+ <button type="button" class="tool-btn" id="underline" aria-label="Souligné" title="Souligné (Ctrl+U)"><u>S</u></button>
+ <button type="button" class="tool-btn" id="strike" aria-label="Barré" title="Barré"><s>ab</s></button>
+ <button type="button" class="tool-btn" id="clear-format" aria-label="Effacer la mise en forme" title="Effacer la mise en forme"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 4l-5 14M10 20h10M16 9l-5 5M11 9l5 5"/></svg></button>
+ <label class="swatch" title="Couleur du texte"><span class="swatch-icon">A</span><input id="font-color" aria-label="Couleur du texte" type="color" value="#000000"/></label>
+ <label class="swatch" title="Surligner la sélection"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4-9 9H6v-4l9-9zM4 21h16"/></svg><input id="highlight-color" aria-label="Surlignage" type="color" value="#fff59d"/></label></div>
+</div><div class="word-group-label">Police</div></div><div class="word-group word-paragraph"><div class="word-group-content">
+ <div class="font-row">
+ <button type="button" class="tool-btn" id="bullets" aria-label="Liste à puces" title="Liste à puces"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="4.5" cy="6" r=".9" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r=".9" fill="currentColor" stroke="none"/><path d="M9 6h12M9 12h12M9 18h12"/></svg></button>
+ <button type="button" class="tool-btn" id="numbering" aria-label="Liste numérotée" title="Liste numérotée"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h2v5M4 10h4M4 14h3l-3 4h3M11 6h10M11 12h10M11 18h10"/></svg></button>
+ <span class="ribbon-separator"></span>
+ <button type="button" class="tool-btn" id="outdent" aria-label="Diminuer le retrait" title="Diminuer le retrait"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M10 10h10M10 14h10M4 18h16M8 10l-4 2 4 2z"/></svg></button>
+ <button type="button" class="tool-btn" id="indent" aria-label="Augmenter le retrait" title="Augmenter le retrait"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M10 10h10M10 14h10M4 18h16M4 10l4 2-4 2z"/></svg></button>
+ <button type="button" class="tool-btn" id="undo" aria-label="Annuler" title="Annuler"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-7L3 13"/></svg></button>
+ <button type="button" class="tool-btn" id="redo" aria-label="Rétablir" title="Rétablir"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-7l3 3"/></svg></button>
+ </div><div class="font-row">
+ <button type="button" class="tool-btn" id="align-left" aria-label="Aligner à gauche" title="Aligner à gauche"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
+ <button type="button" class="tool-btn" id="align-center" aria-label="Centrer" title="Centrer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></button>
+ <button type="button" class="tool-btn" id="align-right" aria-label="Aligner à droite" title="Aligner à droite"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"/></svg></button>
+ <button type="button" class="tool-btn" id="align-justify" aria-label="Justifier" title="Justifier"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg></button>
+ <span class="ribbon-separator"></span>
+ <select id="line-height" aria-label="Interligne" title="Interligne"><option value="1">1,0</option><option value="1.15" selected>1,15</option><option value="1.3">1,3</option><option value="1.5">1,5</option><option value="2">2,0</option></select>
+ </div></div><div class="word-group-label">Paragraphe</div></div><div class="word-group word-styles"><div class="word-group-content"><div class="style-gallery">
+ <button type="button" class="style-tile active" data-style="normal"><span class="style-example">Normal</span><small>Corps du texte</small></button>
+ <button type="button" class="style-tile" data-style="compact"><span class="style-example">Sans espacement</span><small>Compact</small></button>
+ <button type="button" class="style-tile" data-style="heading"><span class="style-example heading-example">Titre</span><small>Titre de section</small></button>
+ </div></div><div class="word-group-label">Styles</div></div><div class="word-group word-editing"><div class="word-group-content"><div class="edit-stack">
+ <button type="button" class="edit-tool" id="find" aria-label="Rechercher"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><span>Rechercher</span></button>
+ <button type="button" class="edit-tool" id="select-paragraph" aria-label="Sélectionner le paragraphe"><span style="font-size:16px">▤</span><span>Sélectionner</span></button>
+ </div></div><div class="word-group-label">Édition</div></div></div>
+ <div class="ribbon-panel" data-ribbon-panel="insert" role="toolbar" aria-label="Insertion" hidden><div class="word-group word-insert"><div class="word-group-content"><div class="insertion-actions"><button type="button" class="large-tool" id="add"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Expérience</span></button><button type="button" class="large-tool" id="add-skill"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Compétence</span></button></div></div><div class="word-group-label">Insérer</div></div><div class="word-group word-note"><div class="word-group-content"><div class="helper-text">Clique directement sur un titre, un résultat ou une compétence pour le modifier.</div></div><div class="word-group-label">Conseil</div></div></div>
+ <div class="ribbon-panel" data-ribbon-panel="layout" role="toolbar" aria-label="Mise en page" hidden><div class="word-group word-colors"><div class="word-group-content"><div class="layout-colors">
+ <label class="layout-color"><input id="paper-bg" aria-label="Fond de page du CV" type="color" value="#ffffff"><span>Page</span></label>
+ <label class="layout-color"><input id="sidebar-bg" aria-label="Fond de colonne latérale" type="color" value="#c3c5c6"><span>Colonne</span></label>
+ <label class="layout-color"><input id="block-bg" aria-label="Fond de la zone sélectionnée" type="color" value="#ffffff"><span>Paragraphe</span></label>
+ </div></div><div class="word-group-label">Couleurs</div></div><div class="word-group word-note"><div class="word-group-content"><div class="helper-text">Format A4 · modèle Thierry KUME · colonnes conservées dans les exports.</div></div><div class="word-group-label">Mise en page</div></div></div>
+ <div class="ribbon-panel" data-ribbon-panel="file" role="toolbar" aria-label="Fichier" hidden><div class="word-group word-insert"><div class="word-group-content"><div class="insertion-actions">
+ <button type="button" class="large-tool" id="file-pdf"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg><span>PDF · texte</span></button>
+ <button type="button" class="large-tool" id="file-word"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg><span>Word .docx</span></button>
+ </div></div><div class="word-group-label">Exporter le CV actif</div></div></div>
  </div>
- <div class="ribbon-group" aria-label="Fond et mise en page">
-  <div class="ribbon-caption">Fond et mise en page</div>
-  <label title="Couleur de fond du paragraphe actif">Fond du bloc <input type="color" id="block-bg" value="#ffffff" aria-label="Fond de la zone sélectionnée"></label>
-  <label title="Couleur du fond du document">Page <input type="color" id="paper-bg" value="#ffffff" aria-label="Fond de page du CV"></label>
-  <label title="Couleur du panneau latéral">Colonne <input type="color" id="sidebar-bg" value="#c3c5c6" aria-label="Fond de colonne latérale"></label>
- </div>
- <div class="ribbon-group" aria-label="Édition">
-  <div class="ribbon-caption">Édition</div>
-  <button id="undo" title="Annuler" aria-label="Annuler">↶</button><button id="redo" title="Rétablir" aria-label="Rétablir">↷</button>
-  <button id="clear-format" title="Effacer la mise en forme de la sélection" aria-label="Effacer la mise en forme">Tx</button>
- </div>
-</div><div class="format-status" id="format-status" role="status">Clique sur un texte ou sur un titre de section pour le modifier et appliquer une mise en forme.</div>
+ <div class="format-status" id="format-status" role="status"><span class="status-pill">Édition directe</span> Sélectionne du texte pour appliquer une mise en forme, ou clique sur un titre pour le renommer.</div>
 <div class="viewport" id="paper-container"></div><div class="tip">Clique directement sur le texte pour le modifier. Les fichiers Word et PDF sont téléchargés directement à partir des modifications du CV sélectionné. Le PDF est un document A4 avec texte sélectionnable, et non une image.</div><div class="toast" id="toast" aria-live="polite"></div>
 </div><script>
 (function(){
