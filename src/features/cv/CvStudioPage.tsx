@@ -975,7 +975,7 @@ export function CvStudioPage() {
           <section><h2>{cvSummaryTitle(draft.summaryHeading, draft.language)}</h2><p><CvLiveText value={draft.summary} target={{scope:'draft',field:'summary'}} multiline label="Profil" /></p></section>
           {draft.template === 'keywords' && cvKeySkillsForDisplay(draft) ? (
             <section className="cv-keyskills"><h2>{draft.language === 'FR' ? 'Compétences clés' : 'Key Skills'}</h2>
-              <p>{renderCvBold(cvKeySkillsForDisplay(draft))}</p>
+              <p><CvLiveText value={cvKeySkillsForDisplay(draft)} target={{scope:'draft',field:'keySkills'}} placeholder="Compétences clés" multiline label="Compétences clés" /></p>
             </section>
           ) : null}
 
