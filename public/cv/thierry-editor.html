@@ -43,6 +43,28 @@
 #cvtool [contenteditable=true]{min-width:8px;outline:none;cursor:text;overflow-wrap:break-word}
 #cvtool [contenteditable=true]:hover{background:#e6f5ff78}
 #cvtool [contenteditable=true]:focus{background:#e6f5ff;outline:1px dashed #2c81b9;outline-offset:1px}
+
+/* Mini Word ribbon: editor controls never become part of the exported A4 page. */
+#cvtool .ribbon{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;background:#fbfcfd;border:1px solid #d5dde4;border-radius:8px;padding:9px 10px;margin:0 0 11px;font:12px Arial,sans-serif;color:#263543}
+#cvtool .ribbon-group{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding-right:10px;border-right:1px solid #d7dfe5}
+#cvtool .ribbon-group:last-child{border-right:none}
+#cvtool .ribbon-group label{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#3b5367}
+#cvtool .ribbon select{height:31px;max-width:160px;border:1px solid #bac8d3;border-radius:5px;background:white;color:#243644;font-size:12px;padding:4px}
+#cvtool .ribbon input[type=color]{height:29px;width:32px;border:1px solid #b9c8d4;border-radius:5px;padding:2px;background:white;cursor:pointer}
+#cvtool .ribbon input[type=color]:focus-visible{outline:2px solid #057cb7}
+#cvtool .ribbon button{min-width:31px;height:31px;padding:5px 7px;font-size:13px}
+#cvtool .ribbon button:focus-visible{outline:2px solid #057cb7}
+#cvtool .ribbon-caption{font:bold 11px Arial;color:#6a7e8e;width:100%;margin-bottom:2px}
+#cvtool .ribbon .section-tools{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+#cvtool .ribbon .section-tools label{white-space:nowrap}
+#cvtool .format-status{font:11px Arial;color:#53677a;padding:1px 2px 8px}
+#cvtool .sheet [contenteditable=true]{white-space:pre-wrap}
+#cvtool .sheet .right-heading[contenteditable=true],
+#cvtool .sheet .heading[contenteditable=true],
+#cvtool .sheet .side-heading[contenteditable=true],
+#cvtool .sheet .blue-heading[contenteditable=true]{cursor:text}
+@media(max-width:750px){#cvtool .ribbon{gap:7px}#cvtool .ribbon-group{width:100%;padding:3px 0;border-right:0;border-bottom:1px solid #dce4eb}}
+
 #cvtool .tip{font:12px Arial;color:#627184;padding:9px 3px}
 #cvtool .toast{font:12px Arial;color:#38657c;padding:0 7px}
 @page { size: A4 portrait; margin: 0; }
@@ -50,7 +72,7 @@
   html,body{margin:0!important;padding:0!important;width:210mm!important;background:white!important}
   body *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   #cvtool{margin:0!important;padding:0!important;max-width:none!important;width:210mm!important}
-  #cvtool .bar,#cvtool .tip,#cvtool .toast{display:none!important}
+  #cvtool .bar,#cvtool .ribbon,#cvtool .format-status,#cvtool .tip,#cvtool .toast{display:none!important}
   #cvtool .viewport{overflow:visible!important;background:white!important;padding:0!important;width:210mm!important}
   #cvtool .sheet{box-shadow:none!important;border:1px solid #80bce0!important;width:210mm!important;min-height:297mm!important;margin:0!important;grid-template-columns:53.15mm minmax(0,1fr)!important;page-break-after:auto}
   #cvtool .sheet[hidden]{display:none!important}
@@ -59,7 +81,40 @@
   #cvtool .experience{break-inside:avoid}
 }
 </style></head><body><div id="cvtool">
-<div class="bar"><button data-tab="A" class="selected">CV A · Vision</button><button data-tab="B">CV B · Data Scientist</button><span class="split"></span><button id="bold"><b>G</b></button><button id="italic"><i>I</i></button><button id="bullets">• Puces</button><button id="add">+ Expérience</button><div class="download-wrap"><button id="download" aria-expanded="false">⬇ Télécharger ▾</button><div id="download-menu" role="menu"><button id="export-docx" role="menuitem">Word (.docx)</button><button id="export-pdf" role="menuitem">PDF (.pdf) · Téléchargement direct</button></div></div></div>
+<div class="bar"><button data-tab="A" class="selected">CV A · Vision</button><button data-tab="B">CV B · Data Scientist</button><span class="split"></span><button id="add">+ Expérience</button><span class="toast" id="save-notice" aria-live="polite">Enregistrement local automatique</span><div class="download-wrap"><button id="download" aria-expanded="false">⬇ Télécharger ▾</button><div id="download-menu" role="menu"><button id="export-docx" role="menuitem">Word (.docx)</button><button id="export-pdf" role="menuitem">PDF (.pdf) · Téléchargement direct</button></div></div></div>
+<div class="ribbon" role="toolbar" aria-label="Accueil — outils de mise en forme du CV">
+ <div class="ribbon-group" aria-label="Police">
+  <div class="ribbon-caption">Police</div>
+  <label>Famille <select id="font-family" aria-label="Choisir la police"><option>Times New Roman</option><option>Arial</option><option>Calibri</option><option>Cambria</option><option>Georgia</option><option>Garamond</option><option>Verdana</option><option>Courier New</option></select></label>
+  <label>Taille <select id="font-size" aria-label="Taille de police"><option value="8">8</option><option value="9">9</option><option value="10" selected>10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option><option value="24">24</option></select></label>
+  <button type="button" id="bold" aria-label="Gras" title="Gras (Ctrl+B)"><b>G</b></button><button type="button" id="italic" aria-label="Italique" title="Italique (Ctrl+I)"><i>I</i></button><button type="button" id="underline" aria-label="Souligné" title="Souligné (Ctrl+U)"><u>S</u></button><button type="button" id="strike" aria-label="Barré" title="Barré"><s>ab</s></button>
+  <label title="Couleur de la police">Texte <input type="color" id="font-color" aria-label="Couleur du texte" value="#000000"></label>
+  <label title="Fond coloré derrière les caractères sélectionnés">Surlignage <input type="color" id="highlight-color" aria-label="Surligner le texte" value="#fff59d"></label>
+ </div>
+ <div class="ribbon-group" aria-label="Paragraphe">
+  <div class="ribbon-caption">Paragraphe</div>
+  <button id="align-left" title="Aligner à gauche" aria-label="Aligner à gauche">≡</button>
+  <button id="align-center" title="Centrer" aria-label="Centrer">☷</button>
+  <button id="align-right" title="Aligner à droite" aria-label="Aligner à droite">≡↦</button>
+  <button id="align-justify" title="Justifier" aria-label="Justifier">▤</button>
+  <button id="bullets" aria-label="Liste à puces" title="Ajouter des puces">• Liste</button>
+  <button id="numbering" aria-label="Liste numérotée" title="Liste numérotée">1. Liste</button>
+  <button id="indent" title="Augmenter le retrait" aria-label="Augmenter le retrait">→</button>
+  <button id="outdent" title="Diminuer le retrait" aria-label="Diminuer le retrait">←</button>
+  <label>Interligne <select id="line-height" aria-label="Interligne"><option value="1">1,0</option><option value="1.15" selected>1,15</option><option value="1.3">1,3</option><option value="1.5">1,5</option><option value="2">2,0</option></select></label>
+ </div>
+ <div class="ribbon-group" aria-label="Fond et mise en page">
+  <div class="ribbon-caption">Fond et mise en page</div>
+  <label title="Couleur de fond du paragraphe actif">Fond du bloc <input type="color" id="block-bg" value="#ffffff" aria-label="Fond de la zone sélectionnée"></label>
+  <label title="Couleur du fond du document">Page <input type="color" id="paper-bg" value="#ffffff" aria-label="Fond de page du CV"></label>
+  <label title="Couleur du panneau latéral">Colonne <input type="color" id="sidebar-bg" value="#c3c5c6" aria-label="Fond de colonne latérale"></label>
+ </div>
+ <div class="ribbon-group" aria-label="Édition">
+  <div class="ribbon-caption">Édition</div>
+  <button id="undo" title="Annuler" aria-label="Annuler">↶</button><button id="redo" title="Rétablir" aria-label="Rétablir">↷</button>
+  <button id="clear-format" title="Effacer la mise en forme de la sélection" aria-label="Effacer la mise en forme">Tx</button>
+ </div>
+</div><div class="format-status" id="format-status" role="status">Clique sur un texte ou sur un titre de section pour le modifier et appliquer une mise en forme.</div>
 <div class="viewport" id="paper-container"></div><div class="tip">Clique directement sur le texte pour le modifier. Les fichiers Word et PDF sont téléchargés directement à partir des modifications du CV sélectionné. Le PDF est un document A4 avec texte sélectionnable, et non une image.</div><div class="toast" id="toast" aria-live="polite"></div>
 </div><script>
 (function(){
@@ -83,24 +138,130 @@ function editable(s,cls=''){return '<div class="'+cls+'" contenteditable="true">
 function renderSide(d){return `<aside>
 <div class="ls identity">${editable('Denos KUME','name')}${editable(d.title,'job')}</div>
 <div class="ls contacts">${['Nantes, France','kamenan.kume@eleves.ec-nantes.fr','06.62.91.94.68','linkedin.com/in/denoskume','github.com/denoskume'].map(x=>editable(x)).join('')}</div>
-<div class="ls education"><div class="heading">DIPLÔMES / FORMATION</div>${commonLeft.edu.map(x=>editable(x,'edu')).join('')}</div>
-<div class="ls"><div class="side-heading">LANGUES</div>${editable('Français : <strong>Langue maternelle</strong>')}${editable('Anglais : <strong>Niveau C1</strong>')}</div>
-<div class="ls"><div class="side-heading">LOGICIELS / OUTILS</div>${d.tools.map(x=>editable('- '+x)).join('')}</div>
-<div class="ls"><div class="side-heading">${d.title==='Data Scientist'?'MÉTHODES / ANALYSE':'VISION / MÉTHODES'}</div>${d.methods.map(x=>editable('- '+x)).join('')}</div>
-<div class="ls"><div class="blue-heading">Atouts</div>${d.strengths.map(x=>editable('- '+x)).join('')}</div>
-<div class="ls"><div class="blue-heading">Loisirs</div>${editable('- Organisation d’événements')}</div>
-<div class="ls"><div class="blue-heading">Savoir-être</div>${editable('- Rigueur, écoute active, capacité d’analyse, esprit d’équipe et adaptabilité.')}</div>
+<div class="ls education"><div class="heading" contenteditable="true" aria-label="Titre de la section Formation">DIPLÔMES / FORMATION</div>${commonLeft.edu.map(x=>editable(x,'edu')).join('')}</div>
+<div class="ls"><div class="side-heading" contenteditable="true" aria-label="Titre de section">LANGUES</div>${editable('Français : <strong>Langue maternelle</strong>')}${editable('Anglais : <strong>Niveau C1</strong>')}</div>
+<div class="ls"><div class="side-heading" contenteditable="true" aria-label="Titre de section">LOGICIELS / OUTILS</div>${d.tools.map(x=>editable('- '+x)).join('')}</div>
+<div class="ls"><div class="side-heading" contenteditable="true" aria-label="Titre de section">${d.title==='Data Scientist'?'MÉTHODES / ANALYSE':'VISION / MÉTHODES'}</div>${d.methods.map(x=>editable('- '+x)).join('')}</div>
+<div class="ls"><div class="blue-heading" contenteditable="true" aria-label="Titre de section">Atouts</div>${d.strengths.map(x=>editable('- '+x)).join('')}</div>
+<div class="ls"><div class="blue-heading" contenteditable="true" aria-label="Titre de section">Loisirs</div>${editable('- Organisation d’événements')}</div>
+<div class="ls"><div class="blue-heading" contenteditable="true" aria-label="Titre de section">Savoir-être</div>${editable('- Rigueur, écoute active, capacité d’analyse, esprit d’équipe et adaptabilité.')}</div>
 </aside>`}
 function renderExp(a){return `<section class="experience"><div class="jobname"><span class="diamond">❖</span><span contenteditable="true">${a[0]}</span></div>${editable(a[1],'date')}${editable(a[2],'company')}<div class="desc"><strong>Mission :</strong> <span contenteditable="true">${a[3]}</span></div><div class="desc"><strong>Résultats :</strong> <span contenteditable="true">${a[4]}</span></div><div class="desc"><strong>Expériences acquises :</strong> <span contenteditable="true">${a[5]}</span></div></section>`}
-function renderMain(d){return `<main><div class="right-heading">EXPERIENCES</div>${d.experiences.map(renderExp).join('')}<section class="skills"><div class="right-heading">COMPETENCES</div>${d.skills.map(group=>`<div class="skill-title"><span class="diamond">❖</span><span contenteditable="true">${group[0]}</span></div>${group[1].map(s=>editable(s,'skill-bullet')).join('')}`).join('')}</section></main>`}
+function renderMain(d){return `<main><div class="right-heading" contenteditable="true" aria-label="Titre de section Expériences">EXPERIENCES</div>${d.experiences.map(renderExp).join('')}<section class="skills"><div class="right-heading" contenteditable="true" aria-label="Titre de section Compétences">COMPETENCES</div>${d.skills.map(group=>`<div class="skill-title"><span class="diamond">❖</span><span contenteditable="true">${group[0]}</span></div>${group[1].map(s=>editable(s,'skill-bullet')).join('')}`).join('')}</section></main>`}
 cont.innerHTML=['A','B'].map(k=>`<article data-sheet="${k}" class="sheet" ${k==='B'?'hidden':''}>${renderSide(cv[k])}${renderMain(cv[k])}</article>`).join('');
 const current=()=>root.querySelector('.sheet[data-sheet="'+chosen+'"]');
 const toast=s=>root.querySelector('#toast').textContent=s;
-root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{chosen=b.dataset.tab;root.querySelectorAll('[data-tab]').forEach(t=>t.classList.toggle('selected',t===b));root.querySelectorAll('.sheet').forEach(s=>s.hidden=s.dataset.sheet!==chosen);toast('CV '+chosen+' sélectionné');closeMenu()});
-root.addEventListener('focusin',e=>{if(e.target.matches('[contenteditable]'))lastField=e.target});
-const exec=(command)=>{if(lastField&&current().contains(lastField)){lastField.focus();document.execCommand(command,false,null)}else toast('Sélectionnez une zone de texte')};
-['bold','italic','bullets'].forEach(id=>{const b=root.querySelector('#'+id);b.addEventListener('mousedown',e=>e.preventDefault());b.addEventListener('click',()=>exec(id==='bullets'?'insertUnorderedList':id))});
-root.querySelector('#add').onclick=()=>{const s=document.createElement('section');s.className='experience';s.innerHTML=renderExp(['Nouvelle expérience – Intitulé','Dates – Localisation','Organisation : Nature de la mission','Objectif du projet','Réalisation concrète obtenue','Méthodes et responsabilités développées']);current().querySelector('.skills').before(s);s.querySelector('[contenteditable]').focus();toast('Expérience ajoutée')};
+// Track selection and switch plans through the mini-Word controller below.
+
+ const fieldOf=n=>n?.nodeType===1?n.closest?.('[contenteditable="true"]'):n?.parentElement?.closest('[contenteditable="true"]');
+ let savedRange=null;
+ const formatStatus=root.querySelector('#format-status');
+ function rememberSelection(){
+   const selection=window.getSelection();
+   if(!selection||!selection.rangeCount)return;
+   const field=fieldOf(selection.anchorNode);
+   if(field&&current().contains(field)){
+     lastField=field;
+     savedRange=selection.getRangeAt(0).cloneRange();
+   }
+ }
+ document.addEventListener('selectionchange',rememberSelection);
+ root.addEventListener('focusin',e=>{const f=fieldOf(e.target);if(f&&current().contains(f)){lastField=f;rememberSelection();}});
+ function restoreRange(){
+   if(!lastField||!current().contains(lastField)){toast('Clique d’abord sur une zone du CV.');return false;}
+   lastField.focus({preventScroll:true});
+   if(savedRange&&lastField.contains(savedRange.commonAncestorContainer)){
+     const sel=window.getSelection();sel.removeAllRanges();sel.addRange(savedRange);
+   }
+   return true;
+ }
+ function runCommand(cmd,value){
+   if(!restoreRange())return;
+   const ok=document.execCommand(cmd,false,value??null);
+   rememberSelection();
+   if(!ok)formatStatus.textContent='La commande n’est pas prise en charge par ce navigateur.';
+   persistCurrent();
+ }
+ function styleField(property,value){
+   if(!lastField||!current().contains(lastField)){toast('Clique d’abord sur une zone du CV.');return;}
+   lastField.style[property]=value;
+   persistCurrent();
+ }
+ function colorHex(rgb){
+   const nums=(rgb.match(/\d+(?:\.\d+)?/g)||[]).slice(0,3).map(Number);
+   return nums.length===3?'#'+nums.map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0')).join(''):'#000000';
+ }
+ root.querySelectorAll('.ribbon button').forEach(b=>b.addEventListener('mousedown',e=>e.preventDefault()));
+ const commands={
+   bold:'bold',italic:'italic',underline:'underline',strike:'strikeThrough',
+   bullets:'insertUnorderedList',numbering:'insertOrderedList',
+   'align-left':'justifyLeft','align-center':'justifyCenter','align-right':'justifyRight','align-justify':'justifyFull',
+   indent:'indent',outdent:'outdent',undo:'undo',redo:'redo','clear-format':'removeFormat',
+ };
+ for(const [id,cmd] of Object.entries(commands))root.querySelector('#'+id).addEventListener('click',()=>runCommand(cmd));
+ root.querySelector('#font-family').addEventListener('change',e=>runCommand('fontName',e.target.value));
+ root.querySelector('#font-size').addEventListener('change',e=>{
+   if(!restoreRange())return;
+   document.execCommand('fontSize',false,'7');
+   const px=Number(e.target.value)*96/72;
+   current().querySelectorAll('font[size="7"]').forEach(n=>{n.removeAttribute('size');n.style.fontSize=px+'px';});
+   rememberSelection();persistCurrent();
+ });
+ root.querySelector('#font-color').addEventListener('input',e=>runCommand('foreColor',e.target.value));
+ root.querySelector('#highlight-color').addEventListener('input',e=>{
+   if(!restoreRange())return;
+   if(!document.execCommand('hiliteColor',false,e.target.value))document.execCommand('backColor',false,e.target.value);
+   rememberSelection();persistCurrent();
+ });
+ root.querySelector('#block-bg').addEventListener('input',e=>styleField('backgroundColor',e.target.value));
+ root.querySelector('#line-height').addEventListener('change',e=>styleField('lineHeight',e.target.value));
+ root.querySelector('#paper-bg').addEventListener('input',e=>{current().style.backgroundColor=e.target.value;persistCurrent();});
+ root.querySelector('#sidebar-bg').addEventListener('input',e=>{current().querySelector('aside').style.backgroundColor=e.target.value;persistCurrent();});
+ // Keep both CVs separately, including paragraph styles and renamed section titles.
+ const storageKey=plan=>'monstage:thierry-miniword:v1:'+plan;
+ function persistCurrent(){
+   try{localStorage.setItem(storageKey(chosen),current().outerHTML);root.querySelector('#save-notice').textContent='Modifications enregistrées';}
+   catch(e){root.querySelector('#save-notice').textContent='Sauvegarde locale indisponible';}
+ }
+ root.addEventListener('input',e=>{if(e.target.closest('.sheet'))persistCurrent();});
+ root.addEventListener('paste',e=>{
+   const target=fieldOf(e.target);
+   if(!target||!current().contains(target))return;
+   e.preventDefault();
+   document.execCommand('insertText',false,e.clipboardData?.getData('text/plain')||'');
+   persistCurrent();
+ });
+ root.addEventListener('click',e=>{
+   const f=fieldOf(e.target);
+   if(f&&current().contains(f)){
+     formatStatus.textContent='Zone sélectionnée : '+(f.textContent||'Texte').trim().slice(0,65);
+     rememberSelection();
+   }
+ });
+ for(const plan of ['A','B']){
+   const html=(()=>{try{return localStorage.getItem(storageKey(plan));}catch{return null;}})();
+   if(!html)continue;
+   const tpl=document.createElement('template');tpl.innerHTML=html;
+   const candidate=tpl.content.firstElementChild;
+   if(!candidate?.matches('.sheet[data-sheet="'+plan+'"]'))continue;
+   // The loaded node must be a CV sheet, never an arbitrary foreign element.
+   candidate.querySelectorAll('script,iframe,object,embed').forEach(n=>n.remove());
+   for(const el of candidate.querySelectorAll('*')){
+     for(const attr of Array.from(el.attributes))if(/^on/i.test(attr.name))el.removeAttribute(attr.name);
+   }
+   cont.querySelector('.sheet[data-sheet="'+plan+'"]').replaceWith(candidate);
+ }
+ // Switching tracks does not discard edits or the active local formatting.
+ const switchBar=root.querySelectorAll('[data-tab]');
+ switchBar.forEach(b=>b.onclick=()=>{
+   persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;
+   switchBar.forEach(t=>t.classList.toggle('selected',t===b));
+   root.querySelectorAll('.sheet').forEach(x=>x.hidden=x.dataset.sheet!==chosen);
+   root.querySelector('#paper-bg').value=colorHex(getComputedStyle(current()).backgroundColor);
+   root.querySelector('#sidebar-bg').value=colorHex(getComputedStyle(current().querySelector('aside')).backgroundColor);
+   toast('CV '+chosen+' sélectionné');closeMenu();
+ });
+root.querySelector('#add').onclick=()=>{const s=document.createElement('section');s.className='experience';s.innerHTML=renderExp(['Nouvelle expérience – Intitulé','Dates – Localisation','Organisation : Nature de la mission','Objectif du projet','Réalisation concrète obtenue','Méthodes et responsabilités développées']);current().querySelector('.skills').before(s);s.querySelector('[contenteditable]').focus();persistCurrent();toast('Expérience ajoutée')};
 const menu=root.querySelector('#download-menu');const toggle=root.querySelector('#download');function closeMenu(){menu.classList.remove('open');toggle.setAttribute('aria-expanded','false')}
 toggle.onclick=()=>{menu.classList.toggle('open');toggle.setAttribute('aria-expanded',menu.classList.contains('open')?'true':'false')};
 document.addEventListener('click',e=>{if(!root.querySelector('.download-wrap').contains(e.target))closeMenu()});
@@ -108,7 +269,7 @@ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'
 const getText=e=>e?.innerText?.replace(/\u00a0/g,' ')||'';
 function segment(node,bold=false,italic=false){const a=[];function walk(n,b,i){if(n.nodeType===3){a.push({text:n.nodeValue,bold:b,italic:i});return}if(n.nodeType!==1)return;const tag=n.tagName.toLowerCase();if(tag==='br'){a.push({text:'\n',bold:b,italic:i});return}const bb=b||['strong','b'].includes(tag),ii=i||['em','i'].includes(tag);for(const c of n.childNodes)walk(c,bb,ii)}walk(node,bold,italic);return a}
 function getBlocks(sheet){const left=[],right=[];for(const s of sheet.querySelectorAll('aside .ls')){for(const c of s.children){if(c.classList.contains('heading'))left.push({type:'sideHead',parts:segment(c)});else if(c.classList.contains('name'))left.push({type:'name',parts:segment(c)});else if(c.classList.contains('job'))left.push({type:'job',parts:segment(c)});else if(c.classList.contains('side-heading'))left.push({type:'center',parts:segment(c)});else if(c.classList.contains('blue-heading'))left.push({type:'blueSide',parts:segment(c)});else left.push({type:c.classList.contains('edu')?'edu':s.classList.contains('contacts')?'contact':'left',parts:segment(c)})}left.push({type:'sectionBreak',parts:[]})}
- const m=sheet.querySelector('main');for(const c of m.children){if(c.classList.contains('right-heading'))right.push({type:'rightHead',parts:segment(c)});if(c.classList.contains('experience')){const name=c.querySelector('.jobname [contenteditable]');right.push({type:'expTitle',parts:segment(name)});right.push({type:'meta',parts:segment(c.querySelector('.date'))});right.push({type:'company',parts:segment(c.querySelector('.company'))});for(const d of c.querySelectorAll('.desc'))right.push({type:'desc',parts:segment(d)});right.push({type:'expBreak',parts:[]})}if(c.classList.contains('skills')){right.push({type:'rightHead',parts:[{text:'COMPETENCES',bold:true}]});for(const e of c.children){if(e.classList.contains('skill-title'))right.push({type:'skillTitle',parts:segment(e.querySelector('[contenteditable]'))});if(e.classList.contains('skill-bullet'))right.push({type:'bullet',parts:segment(e)})}}}return{left,right}}
+ const m=sheet.querySelector('main');for(const c of m.children){if(c.classList.contains('right-heading'))right.push({type:'rightHead',parts:segment(c)});if(c.classList.contains('experience')){const name=c.querySelector('.jobname [contenteditable]');right.push({type:'expTitle',parts:segment(name)});right.push({type:'meta',parts:segment(c.querySelector('.date'))});right.push({type:'company',parts:segment(c.querySelector('.company'))});for(const d of c.querySelectorAll('.desc'))right.push({type:'desc',parts:segment(d)});right.push({type:'expBreak',parts:[]})}if(c.classList.contains('skills')){right.push({type:'rightHead',parts:segment(c.querySelector('.right-heading'))});for(const e of c.children){if(e.classList.contains('skill-title'))right.push({type:'skillTitle',parts:segment(e.querySelector('[contenteditable]'))});if(e.classList.contains('skill-bullet'))right.push({type:'bullet',parts:segment(e)})}}}return{left,right}}
 function downloadBlob(bytes,mime,name){const blob=bytes instanceof Blob?bytes:new Blob([bytes],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}
 // Word export: Office OpenXML (genuine DOCX) assembled without external libraries.
 function crc32(b){let v=0xffffffff;for(const q of b){v^=q;for(let i=0;i<8;i++)v=(v>>>1)^((v&1)?0xedb88320:0)}return(v^0xffffffff)>>>0}
