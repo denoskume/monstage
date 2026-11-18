@@ -122,6 +122,37 @@
 #cvtool .bar button:focus-visible,#cvtool .word-tabs button:focus-visible{outline:2px solid #2a6da8;outline-offset:1px}
 @media(max-width:1000px){#cvtool .bar{gap:9px;padding:7px 10px}#cvtool .save-indicator{display:none}#cvtool .studio-brand{min-width:auto}#cvtool .ribbon-panel{overflow-x:auto}}
 @media(max-width:600px){#cvtool .track-tabs button{font-size:11px;padding:6px 7px}#cvtool .studio-brand small{display:none}#cvtool .studio-brand strong{font-size:12px}#cvtool #download{padding:8px}}
+
+/* Word-like table rows in the gray sidebar. Controls are editor overlays only. */
+#cvtool .sheet{position:relative;grid-template-columns:var(--sidebar-width,201px) minmax(0,1fr)}
+#cvtool .sheet aside{position:relative;min-width:0}
+#cvtool .sheet aside .ls{position:relative}
+#cvtool .sheet aside .ls:not(:last-of-type){border-bottom:1px solid #72b5df}
+#cvtool .sheet aside .ls.cell-selected{box-shadow:inset 2px 0 #2b7db8}
+#cvtool .table-interaction-layer{position:absolute;inset:0 0 auto 0;height:100%;pointer-events:none;z-index:5}
+#cvtool .row-boundary{position:absolute;left:0;right:0;height:12px;transform:translateY(-50%);pointer-events:auto;cursor:row-resize;touch-action:none;display:flex;align-items:center}
+#cvtool .row-boundary:after{content:"";height:1px;position:absolute;left:0;right:0;top:50%;background:transparent;pointer-events:none}
+#cvtool .row-boundary:hover:after,#cvtool .row-boundary.dragging:after{height:2px;background:#1a78c5}
+#cvtool .row-boundary .insert-cell{position:absolute;left:-15px;top:50%;transform:translateY(-50%);width:22px;height:22px;padding:0!important;border-radius:50%;border:1px solid #6fa5d0;background:#fff;color:#135992;font:bold 18px Arial;display:grid;place-items:center;line-height:1;opacity:.25;box-shadow:0 1px 5px #173f6f25;pointer-events:auto;cursor:pointer;z-index:2}
+#cvtool .row-boundary:hover .insert-cell,#cvtool .row-boundary .insert-cell:focus-visible{opacity:1}
+#cvtool .row-boundary .resize-symbol{position:absolute;left:51%;top:50%;transform:translate(-50%,-50%);padding:0 5px;font:12px Arial;color:#205e9a;background:#f8fbff;border:1px solid #9dbbd8;border-radius:3px;opacity:0;pointer-events:none}
+#cvtool .row-boundary:hover .resize-symbol,#cvtool .row-boundary.dragging .resize-symbol{opacity:1}
+#cvtool .column-resize{position:absolute;z-index:6;top:0;bottom:0;left:var(--sidebar-width,201px);width:9px;transform:translateX(-50%);cursor:col-resize;touch-action:none;background:transparent}
+#cvtool .column-resize:hover,#cvtool .column-resize.dragging{background:#2584c933}
+#cvtool .column-resize:after{content:"⋮";position:absolute;top:15px;left:50%;transform:translateX(-50%);border:1px solid #a9c7e0;border-radius:4px;padding:4px 2px;background:#fff;color:#256da2;font:12px Arial;opacity:0}
+#cvtool .column-resize:hover:after,#cvtool .column-resize.dragging:after{opacity:1}
+#cvtool .table-operations{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:3px 0}
+#cvtool .table-operations button{display:flex;gap:5px;align-items:center;white-space:nowrap;border:1px solid #d4deea;padding:8px 9px;border-radius:4px;font:11px Arial;color:#324a68;background:white}
+#cvtool .table-operations button:hover{background:#eaf3fe;border-color:#9ac3e7}
+#cvtool .table-operations button.danger:hover{background:#fff0f0;color:#b52626;border-color:#f1b4b4}
+#cvtool .table-context-note{font:11px/1.45 Arial;color:#668099;max-width:270px;padding:8px}
+#cvtool .word-table{min-width:430px}
+#cvtool .word-table .word-group-content{min-height:74px}
+@media print{
+ #cvtool .table-interaction-layer,#cvtool .column-resize{display:none!important}
+ #cvtool .sheet{grid-template-columns:var(--sidebar-width,201px) minmax(0,1fr)!important}
+}
+
 #cvtool .tip{font:12px Arial;color:#627184;padding:9px 3px}
 #cvtool .toast{font:12px Arial;color:#38657c;padding:0 7px}
 @page { size: A4 portrait; margin: 0; }
@@ -144,7 +175,7 @@
  <div class="bar-spacer"></div><span class="save-indicator" id="save-notice" aria-live="polite"><span class="save-dot"></span> Modifications enregistrées</span>
  <div class="download-wrap"><button id="download" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 18v3h14v-3"/></svg> Télécharger <span>⌄</span></button><div id="download-menu" role="menu"><button id="export-docx" role="menuitem">Word (.docx)</button><button id="export-pdf" role="menuitem">PDF (.pdf) · Texte sélectionnable</button></div></div>
  </div>
- <div class="word-ribbon"><nav class="word-tabs" aria-label="Menu du document"><button type="button" data-ribbon="file">Fichier</button><button type="button" class="active" data-ribbon="home">Accueil</button><button type="button" data-ribbon="insert">Insertion</button><button type="button" data-ribbon="layout">Mise en page</button></nav>
+ <div class="word-ribbon"><nav class="word-tabs" aria-label="Menu du document"><button type="button" data-ribbon="file">Fichier</button><button type="button" class="active" data-ribbon="home">Accueil</button><button type="button" data-ribbon="insert">Insertion</button><button type="button" data-ribbon="layout">Mise en page</button><button type="button" data-ribbon="table">Disposition du tableau</button></nav>
  <div class="ribbon-panel active" data-ribbon-panel="home" role="toolbar" aria-label="Accueil"><div class="word-group word-clipboard"><div class="word-group-content">
  <div class="clipboard-row"><button type="button" class="large-tool" id="paste" aria-label="Coller" title="Coller"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M7 6H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h6"/></svg><span>Coller</span></button>
  <div class="clipboard-stack"><button type="button" class="tool-btn" id="copy" aria-label="Copier" title="Copier la sélection"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button><span class="tiny-caption">Copier</span></div></div></div><div class="word-group-label">Presse-papiers</div></div><div class="word-group word-font"><div class="word-group-content">
@@ -194,7 +225,24 @@
  <button type="button" class="large-tool" id="file-pdf"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg><span>PDF · texte</span></button>
  <button type="button" class="large-tool" id="file-word"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg><span>Word .docx</span></button>
  </div></div><div class="word-group-label">Exporter le CV actif</div></div></div>
+ 
+ <div class="ribbon-panel" data-ribbon-panel="table" role="toolbar" aria-label="Disposition du tableau" hidden>
+  <div class="word-group word-table"><div class="word-group-content">
+   <div class="table-operations">
+    <button type="button" id="cell-insert" title="Insérer une cellule sous celle sélectionnée">⊞ Ajouter cellule</button>
+    <button type="button" id="cell-delete" class="danger" title="Supprimer la cellule sélectionnée">⊟ Supprimer cellule</button>
+    <button type="button" id="row-insert" title="Ajouter une ligne dans la cellule sélectionnée">＋ Ajouter ligne</button>
+    <button type="button" id="row-delete" class="danger" title="Supprimer la ligne sélectionnée">− Supprimer ligne</button>
+   </div>
+   <div class="table-operations">
+    <button type="button" id="bullet-insert" title="Insérer une puce après la ligne sélectionnée">•＋ Ajouter puce</button>
+    <button type="button" id="bullet-delete" class="danger" title="Supprimer la puce sélectionnée">•− Supprimer puce</button>
+    <button type="button" id="cell-reset-height" title="Adapter la hauteur de la cellule à son contenu">↕ Hauteur auto</button>
+   </div>
+  </div><div class="word-group-label">Cellules, lignes et puces</div></div>
+  <div class="word-group"><div class="word-group-content"><div class="table-context-note">Place le pointeur sur une séparation bleue : <b>+</b> insère une cellule, <b>↕</b> déplace la limite. Glisse aussi le bord vertical pour élargir la colonne grise.</div></div><div class="word-group-label">Manipulation directe</div></div>
  </div>
+</div>
  <div class="format-status" id="format-status" role="status"><span class="status-pill">Édition directe</span> Sélectionne du texte pour appliquer une mise en forme, ou clique sur un titre pour le renommer.</div>
 <div class="viewport" id="paper-container"></div><div class="tip">Clique directement sur le texte pour le modifier. Les fichiers Word et PDF sont téléchargés directement à partir des modifications du CV sélectionné. Le PDF est un document A4 avec texte sélectionnable, et non une image.</div><div class="toast" id="toast" aria-live="polite"></div>
 </div><script>
