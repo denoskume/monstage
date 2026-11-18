@@ -1130,6 +1130,9 @@ function directPDF(sheet){
   while(node=walker.nextNode()){
     const el=node.parentElement;
     if(!el||!node.nodeValue||!node.nodeValue.trim())continue;
+    // The interactive table resize/insert controls are not part of the CV.
+    // Their Unicode handle (↕) was being converted to a literal '?' in the PDF.
+    if(el.closest('.table-interaction-layer,.column-resize,[aria-hidden="true"],[hidden]'))continue;
     if(el.closest('.diamond')){drawDiamond(el.getBoundingClientRect());continue;}
     const cs=getComputedStyle(el);
     const fontPx=parseFloat(cs.fontSize)||13;
