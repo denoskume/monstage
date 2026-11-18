@@ -167,16 +167,19 @@ test('CV A et CV B restent strictement séparés après sauvegarde et rechargeme
   await heading.fill('EXPERIENCES SCIENCE DES DONNEES');
   await expect(heading).toHaveText('EXPERIENCES SCIENCE DES DONNEES');
 
-  // The saved CV B used to lose its hidden attribute, making it appear
-  // beneath CV A on the next page load.
+  // The latest active track is resumed on the next visit, and the other CV
+  // remains hidden instead of being displayed vertically underneath it.
   await page.reload();
-  await expect(a).toBeVisible();
-  await expect(b).toBeHidden();
-
-  await page.getByRole('button', {name:'CV B Data Scientist'}).click();
   await expect(a).toBeHidden();
   await expect(b).toBeVisible();
   await expect(b.locator('.right-heading').first()).toHaveText('EXPERIENCES SCIENCE DES DONNEES');
+
+  await page.getByRole('button', {name:'CV A Vision'}).click();
+  await expect(a).toBeVisible();
+  await expect(b).toBeHidden();
+  await page.getByRole('button', {name:'CV B Data Scientist'}).click();
+  await expect(a).toBeHidden();
+  await expect(b).toBeVisible();
 
   await page.goto('cv/thierry-editor.html?plan=B');
   await expect(a).toBeHidden();
