@@ -851,11 +851,12 @@ function ooxml(sheet){
    return `<w:p>${pf}${chunks||R(' ',false,'',size)}</w:p>`;
  }
  const leftSections=[];
+ const renderedSideCells=Array.from(sheet.querySelectorAll('aside .ls'));
  for(const section of sheet.querySelectorAll('aside .ls')){
    const children=Array.from(section.children),arr=[];
    children.forEach((e,i)=>{
      const cls=e.classList; const last=i===children.length-1;
-     let opt={size:18,after:0,line:220,border:last && section!==sheet.querySelector('aside .ls:last-child')};
+     let opt={size:18,after:0,line:220,border:false};
      if(cls.contains('name')) opt={size:24,bold:true,center:true,after:90,line:245};
      else if(cls.contains('job'))opt={size:22,bold:true,blue:true,center:true,after:15,line:232,border:true};
      else if(cls.contains('heading'))opt={size:20,bold:true,after:155,line:225};
@@ -888,10 +889,25 @@ function ooxml(sheet){
    }
  }
  const makeCell=(width,fill,body,leftMargin,rightMargin)=>`<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${fill?`<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>`:''}<w:tcMar><w:top w:w="90" w:type="dxa"/><w:start w:w="${leftMargin}" w:type="dxa"/><w:bottom w:w="80" w:type="dxa"/><w:end w:w="${rightMargin}" w:type="dxa"/></w:tcMar></w:tcPr>${body}</w:tc>`;
- const lW=2970,rW=8750,tw=11720;
+ const tw=11720;
+  const sidebarRect=sheet.querySelector('aside').getBoundingClientRect();
+  const lW=Math.max(2450,Math.min(4900,Math.round(tw*sidebarRect.width/sheet.getBoundingClientRect().width))),rW=tw-lW;
   const railFill=colorHex(getComputedStyle(sheet.querySelector('aside')).backgroundColor)||'C3C5C6';
   const paperFill=colorHex(getComputedStyle(sheet).backgroundColor)||'FFFFFF';
- const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="${P}"><w:body><w:tbl><w:tblPr><w:tblW w:w="${tw}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders><w:top w:val="single" w:sz="5" w:color="80BCE0"/><w:bottom w:val="single" w:sz="5" w:color="80BCE0"/><w:left w:val="single" w:sz="5" w:color="80BCE0"/><w:right w:val="single" w:sz="5" w:color="80BCE0"/><w:insideV w:val="single" w:sz="6" w:color="80BCE0"/></w:tblBorders><w:tblCellSpacing w:w="0" w:type="dxa"/></w:tblPr><w:tblGrid><w:gridCol w:w="${lW}"/><w:gridCol w:w="${rW}"/></w:tblGrid><w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="16300" w:hRule="atLeast"/></w:trPr>${makeCell(lW,railFill,leftSections.join(''),115,95)}${makeCell(rW,paperFill==='FFFFFF'?null:paperFill,right,355,200)}</w:tr></w:tbl><w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="105" w:right="90" w:bottom="100" w:left="90" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+
+  // Native nested table: one Word row per resizable gray sidebar cell.
+  // This lets users insert/delete/resize those rows in Word as in the source.
+  const rowHeights=renderedSideCells.map(el=>Math.max(300,Math.round(el.getBoundingClientRect().height*15)));
+  const alreadyUsed=rowHeights.slice(0,-1).reduce((sum,n)=>sum+n,0);
+  if(rowHeights.length)rowHeights[rowHeights.length-1]=Math.max(rowHeights[rowHeights.length-1],16300-alreadyUsed);
+  const internalWidth=lW;
+  const nativeRows=leftSections.map((body,i)=>{
+    const height=rowHeights[i]||300;
+    return `<w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="${height}" w:hRule="atLeast"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="${internalWidth}" w:type="dxa"/><w:shd w:val="clear" w:fill="${railFill}"/><w:tcMar><w:top w:w="100" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:bottom w:w="70" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tcMar></w:tcPr>${body}</w:tc></w:tr>`;
+  }).join('');
+  const tableBorders=`<w:tblBorders><w:insideH w:val="single" w:sz="5" w:color="72B5DF"/></w:tblBorders>`;
+  const sidebarTable=`<w:tbl><w:tblPr><w:tblW w:w="${internalWidth}" w:type="dxa"/><w:tblLayout w:type="fixed"/>${tableBorders}</w:tblPr><w:tblGrid><w:gridCol w:w="${internalWidth}"/></w:tblGrid>${nativeRows}</w:tbl><w:p/>`;
+ const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="${P}"><w:body><w:tbl><w:tblPr><w:tblW w:w="${tw}" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblBorders><w:top w:val="single" w:sz="5" w:color="80BCE0"/><w:bottom w:val="single" w:sz="5" w:color="80BCE0"/><w:left w:val="single" w:sz="5" w:color="80BCE0"/><w:right w:val="single" w:sz="5" w:color="80BCE0"/><w:insideV w:val="single" w:sz="6" w:color="80BCE0"/></w:tblBorders><w:tblCellSpacing w:w="0" w:type="dxa"/></w:tblPr><w:tblGrid><w:gridCol w:w="${lW}"/><w:gridCol w:w="${rW}"/></w:tblGrid><w:tr><w:trPr><w:cantSplit/><w:trHeight w:val="16300" w:hRule="atLeast"/></w:trPr>${makeCell(lW,railFill,sidebarTable,0,0)}${makeCell(rW,paperFill==='FFFFFF'?null:paperFill,right,355,200)}</w:tr></w:tbl><w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="105" w:right="90" w:bottom="100" w:left="90" w:header="0" w:footer="0" w:gutter="0"/></w:sectPr></w:body></w:document>`;
  const types=`<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
  const rels=`<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
  return zipFiles([['[Content_Types].xml',types],['_rels/.rels',rels],['word/document.xml',doc]])
@@ -919,10 +935,11 @@ function directPDF(sheet){
   }
   // Sample edited paper and sidebar background colors for every PDF page.
   const paperColor=color(getComputedStyle(sheet).backgroundColor),railColor=color(getComputedStyle(sheet.querySelector('aside')).backgroundColor);
+   const sideWidth=sheet.querySelector('aside').getBoundingClientRect().width*k;
   for(let p=0;p<pageCount;p++){
     rect(p,0,0,W,H,...paperColor);
-    rect(p,0,0,201*k,H,...railColor);
-    line(p,201*k,0,201*k,H,.396,.666,.867,.58);
+    rect(p,0,0,sideWidth,H,...railColor);
+    line(p,sideWidth,0,sideWidth,H,.396,.666,.867,.58);
     line(p,.4,.4,W-.4,.4,.502,.737,.878,.48);
     line(p,.4,H-.4,W-.4,H-.4,.502,.737,.878,.48);
     line(p,.4,.4,.4,H-.4,.502,.737,.878,.48);
@@ -931,7 +948,7 @@ function directPDF(sheet){
   sheet.querySelectorAll('aside .ls').forEach(el=>{
     let b=el.getBoundingClientRect(), endY=b.bottom-box.top;
     let page=Math.floor(endY/pagePx), y=(endY%pagePx)*k;
-    if(page>=0&&page<pageCount&&endY < heightPx-3)line(page,0,y,201*k,y,.447,.710,.874,.45);
+    if(page>=0&&page<pageCount&&endY < heightPx-3)line(page,0,y,sideWidth,y,.447,.710,.874,.45);
   });
   const winMap={0x20ac:128,0x201a:130,0x0192:131,0x201e:132,0x2026:133,0x2020:134,0x2021:135,0x02c6:136,0x2030:137,0x0160:138,0x2039:139,0x0152:140,0x017d:142,0x2018:145,0x2019:146,0x201c:147,0x201d:148,0x2022:149,0x2013:150,0x2014:151,0x02dc:152,0x2122:153,0x0161:154,0x203a:155,0x0153:156,0x017e:158,0x0178:159,0x202f:32,0x00a0:32,0x2212:45,0x2192:62,0x2011:45};
   function pdfLiteral(input){
