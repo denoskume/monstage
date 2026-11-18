@@ -119,6 +119,33 @@
 #cvtool .viewport{padding:24px 12px 28px;background:#f3f5f9;border:1px solid #e6ebf2;border-radius:8px}
 #cvtool .sheet{box-shadow:0 12px 34px #142e4e20}
 #cvtool [contenteditable=true]:focus{background:#eef6ff;outline:1px dashed #4c83c2;outline-offset:1px}
+
+/* Explicit save + editable revision history. Never printed or exported. */
+#cvtool{position:relative}
+#cvtool .save-actions{display:flex;gap:5px;align-items:center}
+#cvtool .save-actions button{border:1px solid #bfd0e0;border-radius:5px;background:#fff;color:#24517c;padding:8px 10px;font:600 12px Arial;white-space:nowrap}
+#cvtool #save-cv{background:#e9f2ff;border-color:#aac8e7;color:#175388}
+#cvtool .save-actions button:hover{background:#e4effe}
+#cvtool .save-indicator{display:inline-flex;align-items:center;gap:4px;min-width:132px;max-width:205px;white-space:normal;line-height:1.35;font-size:11px;color:#496174}
+#cvtool .save-indicator.error{color:#9b2020;font-weight:600}
+#cvtool .save-indicator .save-dot{flex:none}
+#cvtool .versions-popover{position:absolute;right:145px;top:57px;z-index:50;width:min(390px,calc(100vw - 28px));background:#fff;border:1px solid #d5e0ee;border-radius:8px;box-shadow:0 12px 35px #112e4a25;padding:12px;font-family:Arial,sans-serif}
+#cvtool .versions-popover[hidden]{display:none!important}
+#cvtool .versions-head{display:flex;justify-content:space-between;align-items:start;gap:10px;margin-bottom:9px}
+#cvtool .versions-head strong{font-size:14px;color:#203d5f}
+#cvtool .versions-head p{margin:5px 0;font-size:11px;color:#667f95}
+#cvtool #versions-close{border:0;background:transparent;color:#62788c;padding:0 8px;font-size:23px}
+#cvtool .version-list{max-height:305px;overflow-y:auto;display:grid;gap:7px}
+#cvtool .version-item{display:flex;gap:7px;align-items:center;justify-content:space-between;padding:9px 8px;background:#f6f9fd;border:1px solid #e2eaf3;border-radius:6px}
+#cvtool .version-item strong{font:600 12px Arial;color:#273e59}
+#cvtool .version-item small{display:block;margin-top:4px;font:11px Arial;color:#617791}
+#cvtool .version-item button{flex:none;border:1px solid #b7cce1;background:white;color:#185d94;border-radius:5px;font:600 11px Arial;padding:7px 9px}
+#cvtool .version-empty{font:12px/1.5 Arial;color:#627790;margin:12px 3px}
+#cvtool .version-help{font:10px/1.45 Arial;color:#73859a;margin:11px 2px 0}
+#cvtool .save-warning{font-size:11px;color:#9b2020}
+@media(max-width:1000px){#cvtool .bar{flex-wrap:wrap}#cvtool .save-actions{order:3}#cvtool .save-indicator{display:inline-flex;order:4;flex-grow:1}#cvtool .versions-popover{right:12px;top:80px}}
+@media print{#cvtool .save-actions,#cvtool .versions-popover{display:none!important}}
+
 #cvtool .bar button:focus-visible,#cvtool .word-tabs button:focus-visible{outline:2px solid #2a6da8;outline-offset:1px}
 @media(max-width:1000px){#cvtool .bar{gap:9px;padding:7px 10px}#cvtool .save-indicator{display:none}#cvtool .studio-brand{min-width:auto}#cvtool .ribbon-panel{overflow-x:auto}}
 @media(max-width:600px){#cvtool .track-tabs button{font-size:11px;padding:6px 7px}#cvtool .studio-brand small{display:none}#cvtool .studio-brand strong{font-size:12px}#cvtool #download{padding:8px}}
@@ -172,9 +199,12 @@
 <div class="bar">
  <div class="studio-brand"><span class="brand-mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg></span><span><strong>Studio CV</strong><small>MonStage</small></span></div>
  <div class="track-tabs" aria-label="Version du CV"><button data-tab="A" class="selected">CV A <span>Vision</span></button><button data-tab="B">CV B <span>Data Scientist</span></button></div>
- <div class="bar-spacer"></div><span class="save-indicator" id="save-notice" aria-live="polite"><span class="save-dot"></span> Modifications enregistrées</span>
+ <div class="bar-spacer"></div>
+ <div class="save-actions"><button type="button" id="save-cv" title="Enregistrer la version actuelle du CV" aria-label="Enregistrer le CV">Enregistrer</button><button type="button" id="versions-cv" aria-expanded="false" aria-controls="cv-versions-panel" title="Afficher les versions enregistrées">Versions ▾</button></div>
+ <span class="save-indicator" id="save-notice" aria-live="polite"><span class="save-dot"></span> Prêt à enregistrer</span>
  <div class="download-wrap"><button id="download" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 18v3h14v-3"/></svg> Télécharger <span>⌄</span></button><div id="download-menu" role="menu"><button id="export-docx" role="menuitem">Word (.docx)</button><button id="export-pdf" role="menuitem">PDF (.pdf) · Texte sélectionnable</button></div></div>
  </div>
+ <section class="versions-popover" id="cv-versions-panel" hidden aria-label="Historique des CV enregistrés"><div class="versions-head"><div><strong>Versions sauvegardées</strong><p id="versions-subtitle">CV A — Vision</p></div><button type="button" id="versions-close" aria-label="Fermer l’historique">×</button></div><div class="version-list" id="versions-list"></div><p class="version-help">Les versions sont conservées dans ce navigateur. Restaurer une version remplace le brouillon actuel après confirmation.</p></section>
  <div class="word-ribbon"><nav class="word-tabs" aria-label="Menu du document"><button type="button" data-ribbon="file">Fichier</button><button type="button" class="active" data-ribbon="home">Accueil</button><button type="button" data-ribbon="insert">Insertion</button><button type="button" data-ribbon="layout">Mise en page</button><button type="button" data-ribbon="table">Disposition du tableau</button></nav>
  <div class="ribbon-panel active" data-ribbon-panel="home" role="toolbar" aria-label="Accueil"><div class="word-group word-clipboard"><div class="word-group-content">
  <div class="clipboard-row"><button type="button" class="large-tool" id="paste" aria-label="Coller" title="Coller"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M7 6H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h6"/></svg><span>Coller</span></button>
