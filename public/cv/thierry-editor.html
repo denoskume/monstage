@@ -316,6 +316,29 @@ const toast=s=>root.querySelector('#toast').textContent=s;
 let savedRange=null;
 const formatStatus=root.querySelector('#format-status');
 const storageKey=plan=>'monstage:thierry-miniword:v1:'+plan;
+const metaKey=plan=>'monstage:thierry-miniword:v2:meta:'+plan;
+const versionsKey=plan=>'monstage:thierry-miniword:v2:versions:'+plan;
+const activePlanKey='monstage:thierry-miniword:v2:active-plan';
+const formatStamp=value=>new Date(value).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+function savedMeta(plan){
+ try{const raw=localStorage.getItem(metaKey(plan));return raw?JSON.parse(raw):{};}catch{return {};}
+}
+function savedVersions(plan){
+ try{const raw=localStorage.getItem(versionsKey(plan));const rows=raw?JSON.parse(raw):[];return Array.isArray(rows)?rows.filter(x=>x&&typeof x.html==='string'&&typeof x.at==='number'):[];}catch{return [];}
+}
+function setSaveNotice(message,isError=false){
+ const element=root.querySelector('#save-notice');
+ element.classList.toggle('error',isError);
+ element.replaceChildren();
+ const dot=document.createElement('span');dot.className='save-dot';
+ element.append(dot,document.createTextNode(' '+message));
+}
+function stampCurrentPlan(){
+ const meta=savedMeta(chosen);
+ if(meta.savedAt)setSaveNotice('Enregistré le '+formatStamp(meta.savedAt));
+ else setSaveNotice('Prêt à enregistrer');
+}
+
 const history={A:{undo:[],redo:[]},B:{undo:[],redo:[]}};
 let restoring=false;
 let activeCell=null;
@@ -358,9 +381,88 @@ function capture(){
  stack.redo=[];
 }
 function persistCurrent(){
- try{localStorage.setItem(storageKey(chosen),cleanSheetMarkup(current()));root.querySelector('#save-notice').innerHTML='<span class="save-dot"></span> Modifications enregistrées';}
- catch(e){root.querySelector('#save-notice').textContent='Sauvegarde locale indisponible';}
+ const html=cleanSheetMarkup(current());
+ const savedAt=Date.now();
+ try{
+  localStorage.setItem(storageKey(chosen),html);
+  const meta={...savedMeta(chosen),savedAt};
+  localStorage.setItem(metaKey(chosen),JSON.stringify(meta));
+  setSaveNotice('Enregistré le '+formatStamp(savedAt));
+  return true;
+ }catch(error){
+  setSaveNotice('Échec de sauvegarde : stockage indisponible',true);
+  note('Impossible de sauvegarder dans ce navigateur. Télécharge le CV avant de quitter la page.');
+  return false;
+ }
 }
+function saveSnapshot(kind='manual'){
+ if(!persistCurrent())return false;
+ const date=Date.now(),html=cleanSheetMarkup(current());
+ const label=kind==='manual'?'Version enregistrée':kind==='pdf'?'Export PDF':kind==='docx'?'Export Word':'Version précédente';
+ try{
+  const prior=savedVersions(chosen);
+  const versions=[{id:date,at:date,kind,label,html},...prior.filter(x=>x.html!==html || kind!=='manual')].slice(0,10);
+  localStorage.setItem(versionsKey(chosen),JSON.stringify(versions));
+  const meta={...savedMeta(chosen),savedAt:date,lastVersionAt:date};
+  if(kind==='pdf'||kind==='docx'){meta.lastDownloadAt=date;meta.lastDownloadType=kind.toUpperCase();}
+  localStorage.setItem(metaKey(chosen),JSON.stringify(meta));
+  setSaveNotice('Enregistré le '+formatStamp(date));
+  renderVersions();
+  return true;
+ }catch(error){
+  // The latest draft was still saved, even if there is no room for older versions.
+  note('CV actuel sauvegardé, mais historique indisponible : espace de stockage insuffisant.');
+  return false;
+ }
+}
+function renderVersions(){
+ const list=root.querySelector('#versions-list');
+ if(!list)return;
+ list.replaceChildren();
+ const subtitle=root.querySelector('#versions-subtitle');
+ subtitle.textContent=chosen==='A'?'CV A — Computer Vision Engineer':'CV B — Data Scientist';
+ const versions=savedVersions(chosen);
+ if(!versions.length){
+  const empty=document.createElement('p');empty.className='version-empty';
+  empty.textContent='Aucune version manuelle pour le moment. Le brouillon actuel est sauvegardé automatiquement.';
+  list.appendChild(empty);return;
+ }
+ versions.forEach(version=>{
+  const row=document.createElement('div');row.className='version-item';
+  const info=document.createElement('div');
+  const title=document.createElement('strong');title.textContent=version.label||'Version sauvegardée';
+  const date=document.createElement('small');date.textContent=formatStamp(version.at);
+  info.append(title,date);
+  const button=document.createElement('button');button.type='button';button.textContent='Restaurer';
+  button.setAttribute('aria-label','Restaurer '+title.textContent+' du '+formatStamp(version.at));
+  button.onclick=()=>{
+    if(!confirm('Remplacer le CV actuel par cette version du '+formatStamp(version.at)+' ? Le CV actuel sera conservé dans l’historique.'))return;
+    // Protect the draft before switching to a prior snapshot.
+    saveSnapshot('previous');
+    capture();
+    replaceSheet(version.html);
+    closeVersions();
+    note('Version du '+formatStamp(version.at)+' restaurée et enregistrée.');
+  };
+  row.append(info,button);list.appendChild(row);
+ });
+}
+function closeVersions(){
+ root.querySelector('#cv-versions-panel').hidden=true;
+ root.querySelector('#versions-cv').setAttribute('aria-expanded','false');
+}
+root.querySelector('#save-cv').addEventListener('click',()=>{
+ const ok=saveSnapshot('manual');
+ note(ok?'Version enregistrée. Tu la retrouveras en rouvrant ce CV.':'Enregistrement impossible. Vérifie l’espace du navigateur.');
+});
+root.querySelector('#versions-cv').addEventListener('click',()=>{
+ const panel=root.querySelector('#cv-versions-panel');
+ panel.hidden=!panel.hidden;
+ root.querySelector('#versions-cv').setAttribute('aria-expanded',String(!panel.hidden));
+ if(!panel.hidden)renderVersions();
+});
+root.querySelector('#versions-close').addEventListener('click',closeVersions);
+
 function replaceSheet(html){
  const t=document.createElement('template');t.innerHTML=html;
  const next=t.content.firstElementChild;
@@ -584,16 +686,20 @@ for(const sheet of root.querySelectorAll('.sheet')){
  sheet.hidden=sheet.dataset.sheet!==chosen;
  attachTableInteractions(sheet);
 }
+stampCurrentPlan();
 const switchBar=root.querySelectorAll('[data-tab]');
 switchBar.forEach(b=>b.onclick=()=>{
  persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;activeCell=null;
+ try{localStorage.setItem(activePlanKey,chosen);}catch{}
+ closeVersions();
  switchBar.forEach(t=>t.classList.toggle('selected',t===b));
  root.querySelectorAll('.sheet').forEach(x=>x.hidden=x.dataset.sheet!==chosen);
  const rgb=css=>{const nums=(css.match(/\d+(?:\.\d+)?/g)||[]).slice(0,3).map(Number);return nums.length===3?'#'+nums.map(x=>Math.round(x).toString(16).padStart(2,'0')).join(''):'#ffffff';};
  root.querySelector('#paper-bg').value=rgb(getComputedStyle(current()).backgroundColor);
  root.querySelector('#sidebar-bg').value=rgb(getComputedStyle(current().querySelector('aside')).backgroundColor);
  attachTableInteractions(current());syncTableHandles();
- note('CV '+chosen+' sélectionné.');closeMenu();
+ stampCurrentPlan();
+ note('CV '+chosen+' sélectionné. La dernière version enregistrée est chargée.');closeMenu();
 });
 root.querySelector('#add').onclick=()=>{
  capture();
@@ -1144,6 +1250,13 @@ function exportPDF(){
 }
 root.querySelector('#export-docx').onclick=()=>{try{downloadBlob(ooxml(current()),'application/vnd.openxmlformats-officedocument.wordprocessingml.document',`Denos_KUME_CV_${chosen==='A'?'Computer_Vision':'Data_Scientist'}.docx`);toast('Word généré avec les modifications actuelles')}catch(e){toast('Erreur de génération Word : '+e.message)}closeMenu()};
 root.querySelector('#export-pdf').onclick=exportPDF;
-if(new URLSearchParams(window.location.search).get('plan')==='B')root.querySelector('[data-tab="B"]').click();
+// Before leaving the page, save the latest field and table dimensions as well.
+window.addEventListener('pagehide',()=>persistCurrent());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistCurrent();});
+const forcedPlan=new URLSearchParams(window.location.search).get('plan');
+let lastPlan='A';
+try{lastPlan=localStorage.getItem(activePlanKey)==='B'?'B':'A';}catch{}
+const initialPlan=forcedPlan==='A'||forcedPlan==='B'?forcedPlan:lastPlan;
+if(initialPlan!=='A')root.querySelector('[data-tab="B"]').click();
 })();
 </script></body></html>
