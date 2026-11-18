@@ -1119,9 +1119,14 @@ function directPDF(sheet){
     const y=(rectCss.top-box.top+rectCss.height/2)*k;
     const p=Math.floor((rectCss.top-box.top)/pagePx), yy=y-p*pagePx*k;
     if(p<0||p>=pageCount)return;
-    const d=3.5*k;
+    // Match the four-facet ❖ glyph shown beside experiences and skills
+    // in the HTML editor instead of exporting a plain filled diamond.
+    const offset=2.45*k, radius=2.2*k;
     fill(p,0,.44,.72);
-    pages[p].push(`${fmt(x)} ${fmt(H-yy+d)} m ${fmt(x+d)} ${fmt(H-yy)} l ${fmt(x)} ${fmt(H-yy-d)} l ${fmt(x-d)} ${fmt(H-yy)} l h f`);
+    const facet=(centerX,centerY)=>{
+      pages[p].push(`${fmt(centerX)} ${fmt(H-centerY+radius)} m ${fmt(centerX+radius)} ${fmt(H-centerY)} l ${fmt(centerX)} ${fmt(H-centerY-radius)} l ${fmt(centerX-radius)} ${fmt(H-centerY)} l h f`);
+    };
+    facet(x,yy-offset);facet(x+offset,yy);facet(x,yy+offset);facet(x-offset,yy);
   }
   // Capture all actual DOM text from the current CV, including user edits and bold formatting.
   const walker=document.createTreeWalker(sheet,NodeFilter.SHOW_TEXT);
