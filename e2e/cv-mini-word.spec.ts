@@ -242,3 +242,26 @@ test('édition sauvegardée automatiquement et versions du CV reprises après fe
   await page.getByRole('button',{name:'CV A Vision'}).click();
   await expect(a.locator('.right-heading').first()).toHaveText('CV A PRÊT À ENVOYER');
 });
+
+
+test('PDF CV A : pas de poignées ? et mêmes puces quatre facettes que l’éditeur', async ({page},testInfo)=>{
+  test.skip(testInfo.project.name!=='Desktop Chrome','Export PDF du CV A sur ordinateur');
+  await page.goto('cv/thierry-editor.html?plan=A');
+  await expect(page.locator('.sheet[data-sheet="A"]')).toBeVisible();
+  await expect(page.locator('.sheet[data-sheet="A"] .diamond').first()).toContainText('❖');
+  const downloadPromise=page.waitForEvent('download');
+  await page.locator('#download').click();
+  await page.locator('#export-pdf').click();
+  const file=await downloadPromise;
+  const contents=(await readFile(await file.path())).toString('latin1');
+  expect(contents.startsWith('%PDF-')).toBe(true);
+  // Native editor handles (+ and ↕) must not become PDF text.
+  expect(contents).not.toContain('(?) Tj');
+  expect(contents).not.toContain('(+) Tj');
+  // Four diamond facets per project title, not one plain lozenge.
+  const headings=await page.locator('.sheet[data-sheet="A"] .diamond').count();
+  const facetPaths=(contents.match(/ l h f/g)||[]).length;
+  expect(facetPaths).toBeGreaterThanOrEqual(headings*4);
+  expect(contents).toContain('(Background)');
+  expect(contents).toContain('(Mission)');
+});
