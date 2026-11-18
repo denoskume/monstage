@@ -288,6 +288,8 @@ const formatStatus=root.querySelector('#format-status');
 const storageKey=plan=>'monstage:thierry-miniword:v1:'+plan;
 const history={A:{undo:[],redo:[]},B:{undo:[],redo:[]}};
 let restoring=false;
+let activeCell=null;
+let tableResizeObserver=null;
 
 function note(message){formatStatus.innerHTML='<span class="status-pill">Édition directe</span> '+message;}
 function rememberSelection(){
@@ -558,7 +560,6 @@ switchBar.forEach(b=>b.onclick=()=>{
  attachTableInteractions(current());syncTableHandles();
  note('CV '+chosen+' sélectionné.');closeMenu();
 });
-if(new URLSearchParams(window.location.search).get('plan')==='B')root.querySelector('[data-tab="B"]').click();
 root.querySelector('#add').onclick=()=>{
  capture();
  const x=document.createElement('section');x.className='experience';
@@ -569,8 +570,6 @@ root.querySelector('#add').onclick=()=>{
 /* Native Word-like table operations for the CV's left-hand cells.
    These controls live outside .ls so they never enter DOCX/PDF text.
    The sections themselves remain plain editable HTML and can be saved. */
-let activeCell=null;
-let tableResizeObserver=null;
 function cleanSheetMarkup(sheet){
  const copy=sheet.cloneNode(true);
  copy.querySelectorAll('.table-interaction-layer,.column-resize').forEach(x=>x.remove());
@@ -1108,5 +1107,6 @@ function exportPDF(){
 }
 root.querySelector('#export-docx').onclick=()=>{try{downloadBlob(ooxml(current()),'application/vnd.openxmlformats-officedocument.wordprocessingml.document',`Denos_KUME_CV_${chosen==='A'?'Computer_Vision':'Data_Scientist'}.docx`);toast('Word généré avec les modifications actuelles')}catch(e){toast('Erreur de génération Word : '+e.message)}closeMenu()};
 root.querySelector('#export-pdf').onclick=exportPDF;
+if(new URLSearchParams(window.location.search).get('plan')==='B')root.querySelector('[data-tab="B"]').click();
 })();
 </script></body></html>
