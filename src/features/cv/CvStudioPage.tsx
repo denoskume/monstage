@@ -9,7 +9,8 @@ import { useSearchParams } from 'react-router-dom';
 export function CvStudioPage() {
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [searchParams] = useSearchParams();
-  const plan = searchParams.get('plan') === 'B' ? 'B' : 'A';
+  const requestedPlan = searchParams.get('plan');
+  const planParam = requestedPlan === 'A' || requestedPlan === 'B' ? `?plan=${requestedPlan}` : '';
   const [editorHeight, setEditorHeight] = useState(1370);
 
   function fitEditor() {
@@ -39,7 +40,7 @@ export function CvStudioPage() {
       <iframe
         ref={frameRef}
         title="Éditeur CV Thierry KUME — Plan A et Plan B"
-        src={`/monstage/cv/thierry-editor.html?plan=${plan}`}
+        src={`/monstage/cv/thierry-editor.html${planParam}`}
         onLoad={onEditorLoad}
         style={{
           display: 'block',
