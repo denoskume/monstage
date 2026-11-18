@@ -149,3 +149,36 @@ test('cellules Thierry : ajout, suppression, puces, redimensionnement manuel et 
   await page.locator('#cell-delete').click();
   await expect(page.locator('.sheet[data-sheet="A"] aside > .ls')).toHaveCount(initial);
 });
+
+
+test('CV A et CV B restent strictement séparés après sauvegarde et rechargement', async ({page}, testInfo) => {
+  test.skip(testInfo.project.name !== 'Desktop Chrome', 'Contrôle desktop des onglets CV');
+  await page.goto('cv/thierry-editor.html');
+  const a=page.locator('.sheet[data-sheet="A"]');
+  const b=page.locator('.sheet[data-sheet="B"]');
+  await expect(a).toBeVisible();
+  await expect(b).toBeHidden();
+
+  await page.getByRole('button', {name:'CV B Data Scientist'}).click();
+  await expect(a).toBeHidden();
+  await expect(b).toBeVisible();
+
+  const heading=b.locator('.right-heading[contenteditable]').first();
+  await heading.fill('EXPERIENCES SCIENCE DES DONNEES');
+  await expect(heading).toHaveText('EXPERIENCES SCIENCE DES DONNEES');
+
+  // The saved CV B used to lose its hidden attribute, making it appear
+  // beneath CV A on the next page load.
+  await page.reload();
+  await expect(a).toBeVisible();
+  await expect(b).toBeHidden();
+
+  await page.getByRole('button', {name:'CV B Data Scientist'}).click();
+  await expect(a).toBeHidden();
+  await expect(b).toBeVisible();
+  await expect(b.locator('.right-heading').first()).toHaveText('EXPERIENCES SCIENCE DES DONNEES');
+
+  await page.goto('cv/thierry-editor.html?plan=B');
+  await expect(a).toBeHidden();
+  await expect(b).toBeVisible();
+});
