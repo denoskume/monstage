@@ -26,10 +26,6 @@
 #cvtool .edu{margin-bottom:12px}
 #cvtool .edu:last-child{margin-bottom:0}
 #cvtool .side-heading{text-align:center;font-size:13px;margin-bottom:6px}
-#cvtool .sheet[data-sheet="A"] .profile-text{font-size:11.2px;line-height:1.17;text-align:left}
-#cvtool .sheet[data-sheet="A"] .side-tool{font-size:11.6px;line-height:1.3}
-#cvtool .sheet[data-sheet="A"] .education .edu{margin-bottom:9px}
-#cvtool .sheet[data-sheet="A"] .experience{margin-bottom:15px}
 #cvtool .blue-heading{text-align:center;color:#0070b5;font-size:13px;margin-bottom:4px}
 #cvtool main{padding:7px 16px 8px 25px;text-align:justify;min-width:0}
 #cvtool .right-heading{font-weight:bold;font-size:14px;text-decoration:underline;margin-bottom:5px;text-align:left}
@@ -284,7 +280,12 @@
 const root=document.getElementById('cvtool');const cont=document.getElementById('paper-container');let chosen='A',lastField=null;
 const commonLeft={edu:['- 2025–2027 : <strong>MSc Control and Robotics</strong>, parcours <strong>Data Science, Signal &amp; Image Processing</strong> à Centrale Nantes (cursus en anglais).','- 2021–2025 : <strong>BSc Computer Science &amp; Electronics</strong> à Kristu Jayanti University, Inde (cursus en anglais).','- Décembre 2024 : <strong>Google Advanced Data Analytics</strong>, Google / Coursera.','- Juillet 2024 : <strong>SQL Certification Course</strong>, Simplilearn.']};
 const cv={
-A:{"title":"STAGE — VISION PAR ORDINATEUR & TRAITEMENT D’IMAGES","profile":"Étudiant en M2 MSc Control and Robotics à Centrale Nantes, spécialisé en Data Science, Signal & Image Processing. Recherche un stage de 6 mois dès février 2027 en vision par ordinateur et traitement d’images.","education":["<strong>2025–2027 | MSc Control and Robotics</strong><br>Data Science, Signal &amp; Image Processing<br>Centrale Nantes — France","<strong>2021–2025 | BSc Computer Science &amp; Electronics</strong><br>Kristu Jayanti College — Inde"],"certification":"Google Data Analytics","tools":["<strong>Programmation :</strong> Python, MATLAB","<strong>Vision &amp; IA :</strong> OpenCV, PyTorch, NumPy","<strong>Développement :</strong> Git, GitHub, VS Code"],"strengths":["Analyse de données","Développement web","Systèmes embarqués"],"experiences":[["Développeur – Plateforme de gestion des candidatures MonStage","2026 à aujourd’hui – France","<strong>Projet personnel</strong> : Développement web","Concevoir une application centralisant les offres, automatisant leur gestion et outillant le suivi des candidatures.","Plateforme MonStage mise en service, regroupant les offres, détectant les doublons et permettant le suivi interactif des candidatures.","Développement web, intégration d’API, gestion de données, conception de tableaux de bord et déploiement."],["Traitement d’images – Détection de micro-cathéters","2026 – France, Nantes","<strong>Centrale Nantes</strong> : Projet de Master","Développer et évaluer une méthode de détection et de segmentation de micro-cathéters sur des images fluoroscopiques bruitées.","Micro-cathéters détectés et segmentés sur les images testées ; performances mesurées : Dice <strong>0,475</strong>, IoU <strong>0,332</strong>.","Programmation Python, débruitage, soustraction de fond, réglage de seuils et évaluation quantitative."],["Stagiaire Data Analyst – Analyse de données","Septembre à décembre 2024 – Inde, Bengaluru (4 mois)","<strong>Unified Mentor Pvt. Ltd.</strong> : Stage de fin d’études de Bachelor","Préparer des jeux de données, conduire des analyses exploratoires et identifier les principales tendances.","Jeux de données nettoyés et analysés ; tendances identifiées et restituées par des visualisations.","Nettoyage de données, Python, pandas, NumPy, Matplotlib et visualisation."],["Chef de projet – Robot de lutte contre l’incendie","Septembre 2022 – Inde, Bengaluru (1 mois)","<strong>Kristu Jayanti College</strong> : Projet GALAXIA – Équipe de 3 étudiants","Concevoir, programmer et tester un robot mobile capable de détecter des flammes et de projeter de l’eau vers leur source.","Robot assemblé et testé avec succès, détectant une flamme et projetant de l’eau vers sa source ; <strong>3ᵉ place au concours GALAXIA 2022</strong>.","Programmation C sur Arduino Uno, intégration électronique, tests et coordination d’équipe."]],"skills":[["Traitement d’images et vision par ordinateur",["Prétraitement, filtrage et segmentation d’images ;","Calibration caméra, détection de caractéristiques et suivi d’objets ;","Évaluation des résultats avec PSNR, Dice et IoU."]],["Développement et expérimentation",["Conception et test de pipelines Python ;","Analyse comparative des méthodes et interprétation des résultats."]]]},
+A:{title:'Computer Vision Engineer',tools:['Python, MATLAB, OpenCV','PyTorch, scikit-learn','NumPy, Matplotlib, Git','Jupyter Notebook'],methods:['Filtrage et segmentation','Calibration et détection','Comparaison de méthodes'],strengths:['Traitement d’images','Vision par ordinateur','Machine Learning appliqué'],experiences:[
+['Background Subtraction – Segmentation de micro-cathéters','Janvier à avril 2026 – Nantes, France (4 mois)','<strong>Centrale Nantes</strong> : <strong>Projet de Master 1 en binôme</strong>','Développer une méthode pour repérer des micro-cathéters difficiles à distinguer sur des images médicales bruitées.','Mise au point et test d’une solution de traitement d’images permettant de repérer et d’isoler les micro-cathéters sur les images étudiées.','Développement d’un pipeline Python : débruitage, soustraction de fond, seuillage et comparaison des segmentations.'],
+['Computer Vision & Image Processing – Portfolio MSc','2025 à 2026 – Nantes, France','<strong>Centrale Nantes</strong> : <strong>Travaux pratiques et projets académiques</strong>','Concevoir et tester des pipelines de traitement d’images et de vision par ordinateur.','Réalisation et validation de huit laboratoires de vision par ordinateur, avec leurs méthodes et résultats documentés.','Calibration caméra, ORB/RANSAC, filtrage, segmentation, suivi d’objets et expérimentation avec PyTorch.'],
+['CLAP Zero-Shot – Classification audio','2025 à 2026 – Nantes, France','<strong>Centrale Nantes</strong> : <strong>Projet académique de Machine Learning</strong>','Améliorer la reconnaissance automatique de différentes catégories de sons.','Identification d’une stratégie améliorant la reconnaissance des sons : 91 % de bonnes classifications contre 83 % au départ.','Comparaison de dix formulations sur 2 000 enregistrements et analyse des erreurs de classification.'],
+['Speech AI Evaluation Specialist','Août à octobre 2026 – À distance','<strong>RWS Moravia</strong> : <strong>Expérience professionnelle</strong>','Évaluer la qualité des réponses de systèmes d’intelligence artificielle vocale.','Réalisation d’évaluations documentées permettant de repérer et de signaler les réponses non conformes.','Vérification de pertinence et de cohérence, repérage d’erreurs et documentation des écarts.'],
+['Data Analyst Intern – Analyse de données','Septembre à décembre 2024 – Bengaluru, Inde (4 mois)','<strong>Unified Mentor Pvt. Ltd.</strong> : <strong>Stage de fin d’études de Bachelor</strong>','Préparer, analyser et visualiser des jeux de données structurées.','Mise à disposition de données nettoyées et de visualisations faisant ressortir les principales tendances.','Nettoyage avec pandas et NumPy, analyse exploratoire et graphiques Matplotlib.']],skills:[['Vision par ordinateur et traitement d’images',['Conception de pipelines pour le débruitage et la segmentation des images ;','Filtrage, soustraction de fond, seuillage et morphologie ;','Calibration caméra, détection de caractéristiques et suivi d’objets ;','Méthodes ORB/RANSAC et estimation géométrique ;','Évaluation et comparaison de méthodes sur des images de test.']],['Machine Learning & développement Python',['Préparation de données, classification et évaluation de modèles ;','Expérimentations Python avec PyTorch et scikit-learn ;','Documentation et reproductibilité avec Jupyter et Git.']]]},
 B:{title:'Data Scientist',tools:['Python, SQL, MATLAB','pandas, NumPy, scikit-learn','PyTorch, Matplotlib','Power BI, Streamlit, Git'],methods:['Régression, classification','Validation croisée','Évaluation de modèles'],strengths:['Modélisation prédictive','Analyse de données','Machine Learning'],experiences:[
 ['CLAP Zero-Shot – Classification audio','2025 à 2026 – Nantes, France','<strong>Centrale Nantes</strong> : <strong>Projet académique de Machine Learning</strong>','Améliorer la reconnaissance automatique des sons sur un ensemble de 2 000 enregistrements.','Identification d’une stratégie améliorant la reconnaissance des sons : 91 % de bonnes classifications contre 83 % au départ.','Évaluation de dix stratégies de formulation et comparaison des classifications obtenues.'],
 ['Healthcare Insurance – Predictive Analytics','Projet personnel – Python / Machine Learning','<strong>Projet de Data Science</strong> : <strong>Modélisation prédictive</strong>','Prédire les coûts d’hospitalisation et identifier les cas à coûts élevés.','Mise au point et test de modèles permettant d’estimer les coûts d’hospitalisation et d’identifier les cas à coûts élevés.','Préparation de données, Random Forest, Gradient Boosting et validation croisée.'],
@@ -293,20 +294,7 @@ B:{title:'Data Scientist',tools:['Python, SQL, MATLAB','pandas, NumPy, scikit-le
 ['Speech AI Evaluation Specialist','Août à octobre 2026 – À distance','<strong>RWS Moravia</strong> : <strong>Expérience professionnelle</strong>','Contrôler la qualité des résultats de systèmes d’IA vocale.','Production d’évaluations traçables ayant permis d’identifier et de signaler les incohérences des réponses IA.','Analyse d’erreurs, contrôle de cohérence et documentation des évaluations.']],skills:[['Data Science et Machine Learning',['Nettoyage, structuration et exploration de jeux de données ;','Analyse statistique descriptive et identification de tendances ;','Construction de modèles de régression et de classification ;','Validation croisée, comparaison des modèles et analyse des erreurs ;','Évaluation de la qualité des prédictions et interprétation des erreurs.']],['Analyse prédictive et visualisation',['Random Forest, Gradient Boosting et suivi de KPI ;','Visualisation et reporting avec Matplotlib, Streamlit et Power BI ;','Python, SQL, pandas, NumPy, scikit-learn et Git.']]]}
 };
 function editable(s,cls=''){return '<div class="'+cls+'" contenteditable="true">'+s+'</div>'}
-function renderSide(d){
-if(d.profile){
- return `<aside>
-<div class="ls identity">${editable('Denos KUME','name')}${editable(d.title,'job')}</div>
-<div class="ls contacts">${['Nantes, France','kamenan.kume@eleves.ec-nantes.fr','06.62.91.94.68','linkedin.com/in/denoskume','github.com/denoskume'].map(x=>editable(x)).join('')}</div>
-<div class="ls education"><div class="heading" contenteditable="true">PROFIL</div>${editable(d.profile,'profile-text')}</div>
-<div class="ls education"><div class="heading" contenteditable="true">FORMATION</div>${d.education.map(x=>editable(x,'edu')).join('')}</div>
-<div class="ls"><div class="side-heading" contenteditable="true">LOGICIELS / OUTILS</div>${d.tools.map(x=>editable(x,'side-tool')).join('')}</div>
-<div class="ls"><div class="blue-heading" contenteditable="true">Atouts</div>${d.strengths.map(x=>editable('• '+x)).join('')}</div>
-<div class="ls"><div class="side-heading" contenteditable="true">LANGUES</div>${editable('Français : <strong>Langue maternelle</strong>')}${editable('Anglais : <strong>C1</strong>')}</div>
-<div class="ls"><div class="blue-heading" contenteditable="true">Certification</div>${editable(d.certification)}</div>
-</aside>`;
-}
-return `<aside>
+function renderSide(d){return `<aside>
 <div class="ls identity">${editable('Denos KUME','name')}${editable(d.title,'job')}</div>
 <div class="ls contacts">${['Nantes, France','kamenan.kume@eleves.ec-nantes.fr','06.62.91.94.68','linkedin.com/in/denoskume','github.com/denoskume'].map(x=>editable(x)).join('')}</div>
 <div class="ls education"><div class="heading" contenteditable="true" aria-label="Titre de la section Formation">DIPLÔMES / FORMATION</div>${commonLeft.edu.map(x=>editable(x,'edu')).join('')}</div>
@@ -683,37 +671,42 @@ root.addEventListener('keydown',e=>{
  if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
  if(e.key.toLowerCase()==='y'){e.preventDefault();redo();}
 });
-// Actualisation CV A du 18/11/2026 : conserver le brouillon personnel et sa version antérieure.
-const cvAUpdateKey='monstage:thierry-miniword:v2:cvA-content-20261118';
+// Restauration ponctuelle de la dernière sauvegarde personnelle du CV A,
+// avant les actualisations non demandées du 18 novembre 2026.
+// Ne s'exécute que sur les navigateurs ayant reçu l'une de ces actualisations.
+const recoveryKey='monstage:thierry-miniword:v2:restored-personal-save-20261118';
+let recoveryNotice='';
 try{
- if(!localStorage.getItem(cvAUpdateKey)){
-  const priorHTML=localStorage.getItem(storageKey('A'));
-  if(priorHTML){
-   const oldTemplate=document.createElement('template');oldTemplate.innerHTML=priorHTML;
-   const previous=oldTemplate.content.firstElementChild;
-   const refreshed=cont.querySelector('.sheet[data-sheet="A"]');
-   if(previous?.matches('.sheet[data-sheet="A"]')&&refreshed){
-    // Conserver les coordonnées personnelles et les dimensions ajustées dans l'éditeur.
-    const previousName=previous.querySelector('.identity .name');
-    const newName=refreshed.querySelector('.identity .name');
-    if(previousName&&newName)newName.innerHTML=previousName.innerHTML;
-    const previousContacts=Array.from(previous.querySelectorAll('.contacts > [contenteditable]'));
-    const newContacts=Array.from(refreshed.querySelectorAll('.contacts > [contenteditable]'));
-    previousContacts.slice(0,newContacts.length).forEach((field,i)=>{newContacts[i].innerHTML=field.innerHTML;});
-    if(previous.hasAttribute('style'))refreshed.setAttribute('style',previous.getAttribute('style'));
-    if(previous.querySelector('aside')?.hasAttribute('style'))refreshed.querySelector('aside').setAttribute('style',previous.querySelector('aside').getAttribute('style'));
-    const date=Date.now();
-    const versions=savedVersions('A');
-    versions.unshift({id:date,at:date,kind:'previous',label:'CV A avant actualisation',html:priorHTML});
-    // La sauvegarde de la version précédente précède toujours le remplacement du brouillon.
-    localStorage.setItem(versionsKey('A'),JSON.stringify(versions.slice(0,10)));
-    localStorage.setItem(storageKey('A'),cleanSheetMarkup(refreshed));
-    localStorage.setItem(metaKey('A'),JSON.stringify({...savedMeta('A'),savedAt:date}));
+ const wasModified=localStorage.getItem('monstage:thierry-miniword:v2:cvA-content-20261118')==='1' ||
+                   localStorage.getItem('monstage:thierry-miniword:v2:cvA-validated-20261118-v2')==='1';
+ if(wasModified&&!localStorage.getItem(recoveryKey)){
+  const versions=savedVersions('A');
+  const initial=versions.filter(v=>v.label==='CV A avant actualisation').sort((a,b)=>a.at-b.at)[0];
+  // Sélectionner la dernière sauvegarde volontaire AVANT notre première actualisation.
+  const cutoff=initial?.at??Number.POSITIVE_INFINITY;
+  const latestManual=versions.filter(v=>v.kind==='manual'&&v.at<cutoff).sort((a,b)=>b.at-a.at)[0];
+  const toRestore=latestManual||initial;
+  if(toRestore){
+   const template=document.createElement('template');
+   template.innerHTML=toRestore.html;
+   if(template.content.firstElementChild?.matches('.sheet[data-sheet="A"]')){
+    const present=localStorage.getItem(storageKey('A'));
+    if(present&&present!==toRestore.html){
+     const date=Date.now();
+     // Préserver la version actuelle en cas de besoin de revenir en arrière.
+     const backup={id:date,at:date,kind:'previous',label:'Sauvegarde de sécurité avant restauration',html:present};
+     localStorage.setItem(versionsKey('A'),JSON.stringify([backup,...versions]));
+    }
+    localStorage.setItem(storageKey('A'),toRestore.html);
+    localStorage.setItem(metaKey('A'),JSON.stringify({...savedMeta('A'),savedAt:toRestore.at}));
+    localStorage.setItem(recoveryKey,'1');
+    recoveryNotice=latestManual?'Dernière version enregistrée du CV A restaurée.':'CV A restauré à son état antérieur aux actualisations.';
    }
+  }else{
+   recoveryNotice='Aucune sauvegarde antérieure détectée : vérifie le menu Versions.';
   }
-  localStorage.setItem(cvAUpdateKey,'1');
  }
-}catch(error){console.warn('Actualisation CV A impossible, brouillon précédent conservé :',error);}
+}catch(error){console.warn('Restauration CV A non appliquée :',error);recoveryNotice='Restauration indisponible : utiliser le menu Versions.';}
 for(const plan of ['A','B']){
  const html=(()=>{try{return localStorage.getItem(storageKey(plan));}catch{return null;}})();
  if(!html)continue;
@@ -730,6 +723,7 @@ for(const sheet of root.querySelectorAll('.sheet')){
  attachTableInteractions(sheet);
 }
 stampCurrentPlan();
+if(recoveryNotice)note(recoveryNotice);
 const switchBar=root.querySelectorAll('[data-tab]');
 switchBar.forEach(b=>b.onclick=()=>{
  persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;activeCell=null;
