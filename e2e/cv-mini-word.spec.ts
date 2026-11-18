@@ -182,3 +182,60 @@ test('CV A et CV B restent strictement séparés après sauvegarde et rechargeme
   await expect(a).toBeHidden();
   await expect(b).toBeVisible();
 });
+
+
+test('édition sauvegardée automatiquement et versions du CV reprises après fermeture', async ({page},testInfo)=>{
+  test.skip(testInfo.project.name !== 'Desktop Chrome','Sauvegarde et reprise vérifiées sur desktop');
+  await page.goto('cv/thierry-editor.html');
+  const a=page.locator('.sheet[data-sheet="A"]');
+  const b=page.locator('.sheet[data-sheet="B"]');
+  const section=a.locator('.right-heading[contenteditable]').first();
+
+  await section.fill('MES EXPÉRIENCES — VERSION 1');
+  await expect(page.locator('#save-notice')).toContainText('Enregistré le');
+  await page.locator('#save-cv').click();
+  await page.locator('#versions-cv').click();
+  await expect(page.locator('#versions-list .version-item')).toHaveCount(1);
+  await expect(page.locator('#versions-list')).toContainText('Version enregistrée');
+  await page.locator('#versions-close').click();
+
+  // Autosave must preserve an edit that was not followed by a manual save.
+  await section.fill('MES EXPÉRIENCES — MODIFIÉES');
+  await page.reload();
+  await expect(a).toBeVisible();
+  await expect(b).toBeHidden();
+  await expect(a.locator('.right-heading').first()).toHaveText('MES EXPÉRIENCES — MODIFIÉES');
+
+  // Prior manual snapshots are restorable without clearing the current draft.
+  await page.locator('#versions-cv').click();
+  page.once('dialog',dialog=>dialog.accept());
+  await page.locator('#versions-list .version-item').first().getByRole('button',{name:/Restaurer/}).click();
+  await expect(a.locator('.right-heading').first()).toHaveText('MES EXPÉRIENCES — VERSION 1');
+  await page.reload();
+  await expect(a.locator('.right-heading').first()).toHaveText('MES EXPÉRIENCES — VERSION 1');
+
+  // Last downloaded revision is recorded and remains the next session's draft.
+  const current=a.locator('.right-heading[contenteditable]').first();
+  await current.fill('CV A PRÊT À ENVOYER');
+  const pdfPromise=page.waitForEvent('download');
+  await page.locator('#download').click();
+  await page.locator('#export-pdf').click();
+  await pdfPromise;
+  await page.locator('#versions-cv').click();
+  await expect(page.locator('#versions-list')).toContainText('Export PDF');
+  await page.reload();
+  await expect(a.locator('.right-heading').first()).toHaveText('CV A PRÊT À ENVOYER');
+
+  // B is independent, and the most recently selected plan reopens automatically.
+  await page.getByRole('button',{name:'CV B Data Scientist'}).click();
+  const headingB=b.locator('.right-heading[contenteditable]').first();
+  await headingB.fill('DATA SCIENCE — VERSION PERSONNALISÉE');
+  await page.locator('#save-cv').click();
+  await page.reload();
+  await expect(b).toBeVisible();
+  await expect(a).toBeHidden();
+  await expect(b.locator('.right-heading').first()).toHaveText('DATA SCIENCE — VERSION PERSONNALISÉE');
+  await expect(page.locator('#save-notice')).toContainText('Enregistré le');
+  await page.getByRole('button',{name:'CV A Vision'}).click();
+  await expect(a.locator('.right-heading').first()).toHaveText('CV A PRÊT À ENVOYER');
+});
