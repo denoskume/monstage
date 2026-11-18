@@ -320,13 +320,13 @@ function capture(){
  if(restoring)return;
  const stack=history[chosen];
  const last=stack.undo[stack.undo.length-1];
- const html=current().outerHTML;
+ const html=cleanSheetMarkup(current());
  if(last!==html)stack.undo.push(html);
  if(stack.undo.length>45)stack.undo.shift();
  stack.redo=[];
 }
 function persistCurrent(){
- try{localStorage.setItem(storageKey(chosen),current().outerHTML);root.querySelector('#save-notice').innerHTML='<span class="save-dot"></span> Modifications enregistrées';}
+ try{localStorage.setItem(storageKey(chosen),cleanSheetMarkup(current()));root.querySelector('#save-notice').innerHTML='<span class="save-dot"></span> Modifications enregistrées';}
  catch(e){root.querySelector('#save-notice').textContent='Sauvegarde locale indisponible';}
 }
 function replaceSheet(html){
@@ -337,7 +337,8 @@ function replaceSheet(html){
  for(const el of next.querySelectorAll('*')){
   for(const a of Array.from(el.attributes))if(/^on/i.test(a.name))el.removeAttribute(a.name);
  }
- current().replaceWith(next);lastField=null;savedRange=null;
+ current().replaceWith(next);lastField=null;savedRange=null;activeCell=null;
+ attachTableInteractions(next);
  persistCurrent();
 }
 function undo(){const h=history[chosen];if(!h.undo.length){note('Rien à annuler.');return;}h.redo.push(current().outerHTML);replaceSheet(h.undo.pop());note('Dernière modification annulée.');}
@@ -518,7 +519,7 @@ root.querySelectorAll('[data-ribbon]').forEach(b=>b.addEventListener('click',()=
 root.querySelector('#file-word').addEventListener('click',()=>root.querySelector('#export-docx').click());
 root.querySelector('#file-pdf').addEventListener('click',()=>root.querySelector('#export-pdf').click());
 root.addEventListener('beforeinput',e=>{if(e.target.closest('.sheet')&&!restoring)capture();});
-root.addEventListener('input',e=>{if(e.target.closest('.sheet'))persistCurrent();});
+root.addEventListener('input',e=>{if(e.target.closest('.sheet')){persistCurrent();requestAnimationFrame(syncTableHandles);}});
 root.addEventListener('paste',e=>{
  const target=fieldOf(e.target);if(!target||!current().contains(target))return;
  e.preventDefault();const text=e.clipboardData?.getData('text/plain')||'';
@@ -545,14 +546,16 @@ for(const plan of ['A','B']){
  for(const el of candidate.querySelectorAll('*'))for(const a of Array.from(el.attributes))if(/^on/i.test(a.name))el.removeAttribute(a.name);
  cont.querySelector('.sheet[data-sheet="'+plan+'"]').replaceWith(candidate);
 }
+for(const sheet of root.querySelectorAll('.sheet'))attachTableInteractions(sheet);
 const switchBar=root.querySelectorAll('[data-tab]');
 switchBar.forEach(b=>b.onclick=()=>{
- persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;
+ persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;activeCell=null;
  switchBar.forEach(t=>t.classList.toggle('selected',t===b));
  root.querySelectorAll('.sheet').forEach(x=>x.hidden=x.dataset.sheet!==chosen);
  const rgb=css=>{const nums=(css.match(/\d+(?:\.\d+)?/g)||[]).slice(0,3).map(Number);return nums.length===3?'#'+nums.map(x=>Math.round(x).toString(16).padStart(2,'0')).join(''):'#ffffff';};
  root.querySelector('#paper-bg').value=rgb(getComputedStyle(current()).backgroundColor);
  root.querySelector('#sidebar-bg').value=rgb(getComputedStyle(current().querySelector('aside')).backgroundColor);
+ attachTableInteractions(current());syncTableHandles();
  note('CV '+chosen+' sélectionné.');closeMenu();
 });
 if(new URLSearchParams(window.location.search).get('plan')==='B')root.querySelector('[data-tab="B"]').click();
@@ -562,6 +565,231 @@ root.querySelector('#add').onclick=()=>{
  x.innerHTML=renderExp(['Nouvelle expérience – Intitulé','Dates – Localisation','Organisation : Nature de la mission','Objectif du projet','Réalisation concrète obtenue','Méthodes et responsabilités développées']);
  current().querySelector('.skills').before(x);x.querySelector('[contenteditable]').focus();persistCurrent();note('Expérience ajoutée.');
 };
+
+/* Native Word-like table operations for the CV's left-hand cells.
+   These controls live outside .ls so they never enter DOCX/PDF text.
+   The sections themselves remain plain editable HTML and can be saved. */
+let activeCell=null;
+let tableResizeObserver=null;
+function cleanSheetMarkup(sheet){
+ const copy=sheet.cloneNode(true);
+ copy.querySelectorAll('.table-interaction-layer,.column-resize').forEach(x=>x.remove());
+ copy.querySelectorAll('.cell-selected').forEach(x=>x.classList.remove('cell-selected'));
+ return copy.outerHTML;
+}
+function setActiveCell(cell){
+ if(activeCell?.isConnected)activeCell.classList.remove('cell-selected');
+ activeCell=cell&&current().contains(cell)?cell:null;
+ if(activeCell)activeCell.classList.add('cell-selected');
+}
+function currentCell(){
+ if(activeCell&&current().contains(activeCell))return activeCell;
+ const cell=lastField?.closest('.ls');
+ return cell&&current().contains(cell)?cell:null;
+}
+function selectCellNeeded(){
+ const cell=currentCell();
+ if(!cell)note('Clique dans la cellule grise à modifier, puis utilise les commandes Tableau.');
+ return cell;
+}
+function focusEditable(node){
+ if(!node)return;
+ node.focus({preventScroll:false});
+ lastField=node;savedRange=null;rememberSelection();
+}
+function handleCellInsert(afterCell){
+ if(!afterCell||!current().contains(afterCell))return;
+ capture();
+ const cell=document.createElement('div');
+ cell.className='ls';
+ cell.innerHTML='<div class="side-heading" contenteditable="true" aria-label="Titre de section">Nouvelle rubrique</div><div contenteditable="true">Nouvelle ligne</div>';
+ afterCell.after(cell);
+ attachTableInteractions(current());setActiveCell(cell);
+ focusEditable(cell.querySelector('[contenteditable]'));
+ persistCurrent();note('Cellule insérée. Modifie son titre et ses lignes directement.');
+}
+function deleteActiveCell(){
+ const cell=selectCellNeeded();
+ if(!cell)return;
+ if(current().querySelectorAll('aside .ls').length<=1){note('La colonne doit conserver au moins une cellule.');return;}
+ if(!confirm('Supprimer cette cellule et tout son contenu ?'))return;
+ capture();
+ const next=cell.nextElementSibling?.matches('.ls')?cell.nextElementSibling:cell.previousElementSibling;
+ cell.remove();setActiveCell(null);
+ attachTableInteractions(current());
+ if(next?.matches('.ls'))setActiveCell(next);
+ lastField=null;savedRange=null;persistCurrent();note('Cellule supprimée.');
+}
+function insertCellLine(asBullet=false){
+ const cell=selectCellNeeded();
+ if(!cell)return;
+ capture();
+ const field=lastField&&cell.contains(lastField)?lastField:null;
+ const row=document.createElement('div');
+ row.contentEditable='true';
+ row.className=asBullet?'side-bullet':'side-row';
+ row.textContent=asBullet?'• Nouvelle puce':'Nouvelle ligne';
+ const anchor=field?.closest('aside .ls > [contenteditable="true"]');
+ if(anchor&&anchor.parentElement===cell)anchor.after(row);
+ else cell.appendChild(row);
+ attachTableInteractions(current());setActiveCell(cell);
+ focusEditable(row);persistCurrent();note(asBullet?'Puce ajoutée dans la cellule.':'Ligne ajoutée à la cellule.');
+}
+function deleteCellLine(){
+ const cell=selectCellNeeded();
+ if(!cell)return;
+ const row=lastField&&cell.contains(lastField)?lastField.closest('[contenteditable="true"]'):null;
+ if(!row||row.parentElement!==cell){
+  note('Clique sur la ligne de la cellule que tu veux supprimer.');return;
+ }
+ if(cell.querySelectorAll(':scope > [contenteditable="true"]').length<=1){
+  note('Dernière ligne : utilise « Supprimer cellule » pour retirer la rubrique entière.');return;
+ }
+ capture();
+ const next=row.nextElementSibling?.matches('[contenteditable]')?row.nextElementSibling:row.previousElementSibling;
+ row.remove();lastField=null;savedRange=null;
+ attachTableInteractions(current());setActiveCell(cell);
+ focusEditable(next?.matches('[contenteditable]')?next:null);
+ persistCurrent();note('Ligne supprimée.');
+}
+function addBullet(){
+ const withinSkills=lastField&&current().contains(lastField)&&lastField.closest('.skills');
+ if(withinSkills){
+  const chosenLine=lastField.closest('.skill-bullet,.skill-title');
+  const newLine=document.createElement('div');
+  newLine.className='skill-bullet';newLine.contentEditable='true';newLine.textContent='Nouvelle compétence';
+  capture();
+  (chosenLine||current().querySelector('.skills').lastElementChild).after(newLine);
+  focusEditable(newLine);persistCurrent();note('Puce ajoutée à la section Compétences.');return;
+ }
+ insertCellLine(true);
+}
+function deleteBullet(){
+ const skill=lastField?.closest('.skill-bullet');
+ if(skill&&current().contains(skill)){
+  capture();skill.remove();lastField=null;savedRange=null;persistCurrent();note('Puce supprimée.');return;
+ }
+ const side=lastField?.closest('aside .ls > .side-bullet');
+ if(side&&current().contains(side)){
+  setActiveCell(side.closest('.ls'));deleteCellLine();note('Puce supprimée.');return;
+ }
+ const row=lastField?.closest('aside .ls > [contenteditable="true"]');
+ if(row&&/^\s*[•\-–]\s*/.test(row.textContent)){
+  capture();row.textContent=row.textContent.replace(/^\s*[•\-–]\s*/, '');
+  persistCurrent();note('Marqueur de puce supprimé, texte conservé.');return;
+ }
+ note('Sélectionne une puce de la colonne ou de la section Compétences.');
+}
+function resetActiveCellHeight(){
+ const cell=selectCellNeeded();if(!cell)return;
+ capture();cell.style.minHeight='';attachTableInteractions(current());persistCurrent();
+ note('Hauteur de la cellule adaptée à son contenu.');
+}
+function syncTableHandles(){
+ const sheet=current(),aside=sheet?.querySelector('aside');
+ if(!aside)return;
+ const boundaries=aside.querySelectorAll('.row-boundary');
+ const cells=Array.from(aside.querySelectorAll(':scope > .ls'));
+ boundaries.forEach((boundary,i)=>{if(cells[i])boundary.style.top=(cells[i].offsetTop+cells[i].offsetHeight)+'px';});
+}
+function attachTableInteractions(sheet){
+ if(!sheet)return;
+ const aside=sheet.querySelector('aside');if(!aside)return;
+ aside.querySelector('.table-interaction-layer')?.remove();
+ sheet.querySelector('.column-resize')?.remove();
+ const cells=Array.from(aside.querySelectorAll(':scope > .ls'));
+ const layer=document.createElement('div');
+ layer.className='table-interaction-layer';
+ layer.setAttribute('aria-label','Manipulation des cellules de la colonne gauche');
+ cells.slice(0,-1).forEach((cell,i)=>{
+  const boundary=document.createElement('div');
+  boundary.className='row-boundary';
+  boundary.setAttribute('role','separator');
+  boundary.setAttribute('aria-orientation','horizontal');
+  boundary.setAttribute('title','Glisser pour ajuster la hauteur de la cellule');
+  boundary.dataset.row=String(i);
+  const plus=document.createElement('button');plus.type='button';
+  plus.className='insert-cell';plus.textContent='+';
+  plus.title='Insérer une cellule à cet emplacement';
+  plus.setAttribute('aria-label','Insérer une cellule après la cellule '+(i+1));
+  plus.addEventListener('click',e=>{e.stopPropagation();handleCellInsert(cell);});
+  const handle=document.createElement('span');handle.className='resize-symbol';handle.textContent='↕';handle.setAttribute('aria-hidden','true');
+  boundary.append(plus,handle);
+  boundary.addEventListener('pointerdown',e=>{
+   if(e.target===plus||e.button!==0)return;
+   e.preventDefault();e.stopPropagation();setActiveCell(cell);
+   const start=e.clientY,startHeight=cell.getBoundingClientRect().height;
+   const oldMin=cell.style.minHeight;
+   cell.style.minHeight='0px';
+   const minHeight=Math.max(34,Math.ceil(cell.getBoundingClientRect().height));
+   cell.style.minHeight=oldMin;
+   capture();boundary.classList.add('dragging');document.body.style.cursor='row-resize';
+   const move=ev=>{
+    const height=Math.max(minHeight,startHeight+ev.clientY-start);
+    cell.style.minHeight=Math.round(height)+'px';
+    const all=Array.from(aside.querySelectorAll(':scope > .ls'));
+    layer.querySelectorAll('.row-boundary').forEach((b,n)=>{b.style.top=(all[n].offsetTop+all[n].offsetHeight)+'px';});
+   };
+   const finish=()=>{
+    window.removeEventListener('pointermove',move);
+    window.removeEventListener('pointerup',finish);
+    window.removeEventListener('pointercancel',finish);
+    document.body.style.cursor='';boundary.classList.remove('dragging');
+    persistCurrent();note('Hauteur de la cellule ajustée et enregistrée.');
+   };
+   window.addEventListener('pointermove',move);window.addEventListener('pointerup',finish,{once:true});window.addEventListener('pointercancel',finish,{once:true});
+  });
+  layer.appendChild(boundary);
+ });
+ aside.appendChild(layer);
+ const grip=document.createElement('div');grip.className='column-resize';
+ grip.setAttribute('role','separator');
+ grip.setAttribute('aria-orientation','vertical');
+ grip.title='Glisser pour ajuster la largeur de la colonne grise';
+ grip.addEventListener('pointerdown',e=>{
+  if(e.button!==0)return;
+  e.preventDefault();capture();
+  const start=e.clientX,initial=aside.getBoundingClientRect().width;
+  grip.classList.add('dragging');document.body.style.cursor='col-resize';
+  const move=ev=>{
+   const width=Math.max(160,Math.min(320,Math.round(initial+ev.clientX-start)));
+   sheet.style.setProperty('--sidebar-width',width+'px');
+  };
+  const finish=()=>{
+   window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',finish);window.removeEventListener('pointercancel',finish);
+   grip.classList.remove('dragging');document.body.style.cursor='';
+   persistCurrent();note('Largeur de la colonne ajustée et enregistrée.');
+  };
+  window.addEventListener('pointermove',move);window.addEventListener('pointerup',finish,{once:true});window.addEventListener('pointercancel',finish,{once:true});
+ });
+ sheet.appendChild(grip);
+ const all=Array.from(aside.querySelectorAll(':scope > .ls'));
+ layer.querySelectorAll('.row-boundary').forEach((b,n)=>{b.style.top=(all[n].offsetTop+all[n].offsetHeight)+'px';});
+ if(sheet===current()){
+  if(!tableResizeObserver&&typeof ResizeObserver!=='undefined')tableResizeObserver=new ResizeObserver(()=>syncTableHandles());
+  if(tableResizeObserver){tableResizeObserver.disconnect();tableResizeObserver.observe(aside);all.forEach(el=>tableResizeObserver.observe(el));}
+ }
+}
+root.addEventListener('focusin',event=>{
+ const cell=event.target.closest?.('aside .ls');
+ if(cell&&current().contains(cell))setActiveCell(cell);
+});
+root.addEventListener('click',event=>{
+ const cell=event.target.closest?.('aside .ls');
+ if(cell&&current().contains(cell))setActiveCell(cell);
+});
+for(const [id,handler] of Object.entries({
+ 'cell-insert':()=>{const c=selectCellNeeded();if(c)handleCellInsert(c);},
+ 'cell-delete':deleteActiveCell,
+ 'row-insert':()=>insertCellLine(false),
+ 'row-delete':deleteCellLine,
+ 'bullet-insert':addBullet,
+ 'bullet-delete':deleteBullet,
+ 'cell-reset-height':resetActiveCellHeight
+})){
+ root.querySelector('#'+id)?.addEventListener('click',handler);
+}
+
 const menu=root.querySelector('#download-menu');const toggle=root.querySelector('#download');function closeMenu(){menu.classList.remove('open');toggle.setAttribute('aria-expanded','false')}
 toggle.onclick=()=>{menu.classList.toggle('open');toggle.setAttribute('aria-expanded',menu.classList.contains('open')?'true':'false')};
 document.addEventListener('click',e=>{if(!root.querySelector('.download-wrap').contains(e.target))closeMenu()});
