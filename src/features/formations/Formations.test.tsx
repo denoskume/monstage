@@ -37,7 +37,7 @@ describe('Formations pages',()=>{
     await user.click(screen.getByRole('button',{name:'Vérifier ma réponse'}));
     await user.click(screen.getByRole('checkbox',{name:/J’ai réalisé la mission/}));
     expect(screen.getByRole('button',{name:/Valider ce module/})).toBeDisabled();
-    expect(screen.getByText(/0\/6 leçons/)).toBeInTheDocument();
+    expect(screen.getAllByText(/0\/6 leçons/).length).toBeGreaterThan(0);
   });
 
   it('lets a learner complete a specific lesson after practising and passing the quiz',async()=>{
