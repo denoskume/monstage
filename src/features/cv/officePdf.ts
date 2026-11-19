@@ -1,3 +1,4 @@
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { renderAsync } from 'docx-preview';
 import htmlToPdfmake from 'html-to-pdfmake';
 import pdfMake from 'pdfmake/build/pdfmake';
@@ -28,6 +29,32 @@ function sectionContent(section: HTMLElement): Content {
     }
     if (node.tagName === 'TR') target.style.removeProperty('height');
   });
+  // PDFMake treats an image as a block. Keep text on both sides of an
+  // inline drawing, including its run styles and hyperlinks.
+  clone.querySelectorAll('p:has(img)').forEach(paragraph => {
+    if (!paragraph.textContent?.trim()) return;
+    const range = paragraph.ownerDocument.createRange();
+    range.selectNodeContents(paragraph);
+    const output = paragraph.ownerDocument.createDocumentFragment();
+    function appendText() {
+      const fragment = range.cloneContents();
+      if (!fragment.textContent?.length) return;
+      const block = paragraph.cloneNode(false);
+      block.appendChild(fragment);
+      output.appendChild(block);
+    }
+    for (const image of paragraph.querySelectorAll('img')) {
+      range.setEndBefore(image);
+      appendText();
+      const block = paragraph.cloneNode(false);
+      block.appendChild(image.cloneNode(true));
+      output.appendChild(block);
+      range.setStartAfter(image);
+    }
+    range.setEnd(paragraph, paragraph.childNodes.length);
+    appendText();
+    paragraph.replaceWith(output);
+  });
   // A line break inside a contact address can prevent extraction as one email.
   clone.querySelectorAll('p').forEach(paragraph => {
     const address = paragraph.textContent?.trim();
@@ -42,6 +69,38 @@ function sectionContent(section: HTMLElement): Content {
   });
 }
 
+// docx-preview paints a run containing a drawing as a drawing-only run.
+function printableRuns(source: Uint8Array) {
+  const parts = unzipSync(source);
+  const word = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  let changed = false;
+  for (const path of Object.keys(parts).filter(path => /^word\/(document|header\d+|footer\d+|footnotes|endnotes)\.xml$/.test(path))) {
+    const xml = strFromU8(parts[path]);
+    if (!xml.includes(':drawing')) continue;
+    const dom = new DOMParser().parseFromString(xml, 'application/xml');
+    let dirty = false;
+    for (const run of Array.from(dom.getElementsByTagNameNS(word, 'r'))) {
+      const children = Array.from(run.children);
+      const properties = children.find(child => child.namespaceURI === word && child.localName === 'rPr');
+      const content = children.filter(child => child !== properties);
+      if (content.length < 2 || !content.some(child => child.namespaceURI === word && child.localName === 'drawing')) continue;
+      for (const child of content) {
+        const single = run.cloneNode(false);
+        if (properties) single.appendChild(properties.cloneNode(true));
+        single.appendChild(child);
+        run.parentNode!.insertBefore(single, run);
+      }
+      run.remove();
+      dirty = true;
+    }
+    if (dirty) {
+      parts[path] = strToU8(new XMLSerializer().serializeToString(dom));
+      changed = true;
+    }
+  }
+  return changed ? zipSync(parts, {level:0}) : source;
+}
+
 export async function documentPdf(source: Uint8Array): Promise<{ bytes: Uint8Array }> {
   const frame = document.createElement('iframe');
   frame.setAttribute('aria-hidden', 'true');
@@ -49,7 +108,7 @@ export async function documentPdf(source: Uint8Array): Promise<{ bytes: Uint8Arr
   document.body.append(frame);
   try {
     const dom = frame.contentDocument!;
-    await renderAsync(source, dom.body, dom.head, { inWrapper: false, useBase64URL: true, renderAltChunks: false });
+    await renderAsync(printableRuns(source), dom.body, dom.head, { inWrapper: false, useBase64URL: true, renderAltChunks: false });
     const sections = Array.from(dom.querySelectorAll<HTMLElement>('section.docx'));
     if (!sections.length) throw new Error('Aucune page à exporter.');
     const css = frame.contentWindow!.getComputedStyle(sections[0]);
