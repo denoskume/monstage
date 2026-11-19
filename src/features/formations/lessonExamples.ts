@@ -1,4 +1,5 @@
 import type {FormationModule} from './formationTypes';
+import {extraPatterns} from './lessonExamplesAdditional';
 
 export type LessonExample = {
   language:'python'|'sql'|'excel'|'dax'|'text';
@@ -234,7 +235,7 @@ print(largeur * hauteur)`,'Une boîte englobante localise l’objet dans l’ima
 export function getLessonExample(topic:string,module:FormationModule,index:number):LessonExample {
   const special=curated[module.id]?.[index];
   if(special)return special;
-  const match=patterns.find(([pattern])=>pattern.test(topic));
+  const match=[...extraPatterns,...patterns].find(([pattern])=>pattern.test(topic));
   if(match)return match[1](topic,module);
   // Preserve a concrete example from the correct module rather than an invented result.
   const lines=module.code.trim().split('\n');
