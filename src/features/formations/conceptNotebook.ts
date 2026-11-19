@@ -4,7 +4,7 @@ export function conceptNotebookSource(item:DeepConceptArticle):string{
  const a=item.article;
  const markdown=(source:string)=>({cell_type:'markdown' as const,metadata:{},source});
  const code=(source:string)=>({cell_type:'code' as const,metadata:{},source,execution_count:null,outputs:[]});
- const cells=[
+ const cells:Array<ReturnType<typeof markdown>|ReturnType<typeof code>>=[
   markdown('# '+a.title+'\n\n**'+a.eyebrow+'**\n\n'+a.intro.join('\n\n')),
   markdown('## TL;DR Summary\n\n'+a.tldr.join('\n\n'))
  ];
