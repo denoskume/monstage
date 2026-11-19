@@ -8,7 +8,7 @@ export const extraPatterns:Matcher[]=[
   [/tableaux croisés dynamiques/i,()=>X(`# Équivalent en Pandas d'un tableau croisé dynamique
 import pandas as pd
 df = pd.DataFrame({"site":["A","A","B"],"CA":[10,20,7]})
-print(df.pivot_table(index="site",values="CA",aggfunc="sum"))`,'Un tableau croisé regroupe les données pour comparer les catégories.','A : 30 et B : 7.','Essaie aggfunc="mean".'),
+print(df.pivot_table(index="site",values="CA",aggfunc="sum"))`,'Un tableau croisé regroupe les données pour comparer les catégories.','A : 30 et B : 7.','Essaie aggfunc="mean".')],
   [/Markdown\/code Jupyter|notebooks Jupyter/i,()=>X(`# Cellule Markdown : explique la question métier
 # Cellule Python : exécute un calcul
 ventes = [12, 18, 20]
