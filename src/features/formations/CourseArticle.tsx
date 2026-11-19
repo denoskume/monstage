@@ -4,6 +4,7 @@ import type { CourseArticleData, ArticleSection } from './courseArticleContent';
 import { getOpenCVArticle } from './courseArticleContent';
 import { pandasNumpyArticle } from './pandasNumPyArticle';
 import { pythonArticle, edaArticle } from './pythonEdaArticles';
+import { sqlArticle, powerBIArticle } from './sqlPowerBIArticles';
 import { getLessonExample } from './lessonExamples';
 import { topicGuide } from './TopicLessons';
 import { LessonVisual } from './LessonVisual';
@@ -46,6 +47,8 @@ export function articleFor(track:FormationTrack,module:FormationModule):CourseAr
  if(module.id==='pandas-numpy')return pandasNumpyArticle;
  if(module.id==='python')return pythonArticle;
  if(module.id==='statistiques-eda')return edaArticle;
+ if(module.id==='sql')return sqlArticle;
+ if(module.id==='powerbi')return powerBIArticle;
  return createdArticle(track,module);
 }
 
