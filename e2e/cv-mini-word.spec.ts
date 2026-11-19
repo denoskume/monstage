@@ -265,3 +265,28 @@ test('PDF CV A : pas de poignées ? et mêmes puces quatre facettes que l’édi
   expect(contents).toContain('(Background)');
   expect(contents).toContain('(Mission)');
 });
+
+test('remplacer une occurrence entre deux styles, annuler et réduire le ruban', async ({ page }) => {
+  await page.goto('cv/thierry-editor.html?plan=A');
+  const heading = page.locator('.sheet[data-sheet="A"] .right-heading').first();
+  await heading.evaluate(el => { el.innerHTML = 'Projet <b>CV</b> et Projet CV'; });
+  await page.locator('#replace').click();
+  await page.locator('#query').fill('Projet CV');
+  await expect(page.locator('.search-result')).toHaveText('1 sur 2');
+  await page.locator('#next-match').click();
+  await expect(page.locator('.search-result')).toHaveText('2 sur 2');
+  await page.locator('#previous-match').click();
+  await page.locator('#replacement').fill('Vision');
+  await page.locator('#replace-match').click();
+  await page.locator('#search-close').click();
+  await expect(heading).toHaveText('Vision et Projet CV');
+  await page.locator('#undo').click();
+  await expect(heading.locator('b')).toHaveText('CV');
+  await page.locator('#redo').click();
+  await page.reload();
+  await expect(heading).toHaveText('Vision et Projet CV');
+  await page.locator('#fold').click();
+  await expect(page.locator('.word-font')).toBeHidden();
+  await page.getByRole('button', { name: 'Disposition du tableau' }).click();
+  await expect(page.locator('#row-insert')).toBeVisible();
+});
