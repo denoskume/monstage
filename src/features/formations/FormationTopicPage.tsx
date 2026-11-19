@@ -30,6 +30,8 @@ export default function FormationTopicPage({track,module,topic,topicCompleted,on
   const [experimented,setExperimented]=useState(false);
   const [explained,setExplained]=useState(false);
   const [editableCode,setEditableCode]=useState(topic.code);
+  const [editableFocusCode,setEditableFocusCode]=useState(topic.focusCode);
+  const [editingFocus,setEditingFocus]=useState(false);
   const [editing,setEditing]=useState(false);
   const [copied,setCopied]=useState(false);
   const topics=useMemo(()=>allTopics(track,module),[track,module]);
@@ -45,8 +47,8 @@ export default function FormationTopicPage({track,module,topic,topicCompleted,on
   const steps:Array<[Step,string]>=[['theorie','Comprendre'],['code','Code & résultats'],['exercice','Pratiquer'],['quiz','Valider']];
   useEffect(()=>{
     setStep('theorie');setAnswer(null);setChecked(false);setExperimented(false);setExplained(false);
-    setEditableCode(topic.code);setEditing(false);setCopied(false);
-  },[topic.id,module.id,track.id,topic.code]);
+    setEditableCode(topic.code);setEditableFocusCode(topic.focusCode);setEditing(false);setEditingFocus(false);setCopied(false);
+  },[topic.id,module.id,track.id,topic.code,topic.focusCode]);
   async function copyCode(){
     try {await navigator.clipboard.writeText(editableCode);setCopied(true);}
     catch {setCopied(false);}
@@ -98,12 +100,23 @@ export default function FormationTopicPage({track,module,topic,topicCompleted,on
             </div></div>
             {editing?<textarea className="formation-code__editor" spellCheck={false} aria-label="Éditeur du code du cours" value={editableCode} onChange={e=>setEditableCode(e.target.value)} rows={Math.max(12,editableCode.split('\n').length+2)}/>:<pre><code>{editableCode}</code></pre>}
           </div>
+          <div className="formation-focus-example">
+            <span className="formation-eyebrow">CODE SPÉCIFIQUE À LA LEÇON {String(topic.number).padStart(2,'0')}</span>
+            <h3>Expérimentation ciblée : {topic.title}</h3>
+            <p>{topic.exercise} Exécute cet exemple après le script de référence du module.</p>
+            <div className="formation-code">
+              <div className="formation-code__header"><span>{topic.focusLanguage.toUpperCase()} · EXERCICE GUIDÉ</span>
+                <div className="formation-code__controls"><button type="button" onClick={()=>setEditingFocus(v=>!v)}>{editingFocus?'Afficher le code':'Modifier mon exercice'}</button></div>
+              </div>
+              {editingFocus?<textarea className="formation-code__editor" value={editableFocusCode} onChange={e=>setEditableFocusCode(e.target.value)} spellCheck={false} aria-label="Éditeur de l'exercice ciblé" rows={Math.max(8,editableFocusCode.split('\n').length+2)}/>:<pre><code>{editableFocusCode}</code></pre>}
+            </div>
+          </div>
           <div className="formation-code-actions">
-            <button className="formation-secondary-action" onClick={()=>triggerDownload(track.id+'-'+module.id+'-'+topic.id+'.ipynb',lessonNotebook(track,module,topic,editableCode),'application/x-ipynb+json')}>↓ Télécharger le notebook de cette leçon</button>
+            <button className="formation-secondary-action" onClick={()=>triggerDownload(track.id+'-'+module.id+'-'+topic.id+'.ipynb',lessonNotebook(track,module,topic,editableCode,editableFocusCode),'application/x-ipynb+json')}>↓ Télécharger le notebook de cette leçon</button>
             <a className="formation-link-button" href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Ouvrir Google Colab ↗</a>
           </div>
           <div className="formation-result"><strong>Comment lire le résultat ?</strong><p>{topic.interpretation}</p></div>
-          <p>Le notebook contient la théorie, le script, l’exercice guidé, une cellule pour ton code, la mission et la correction du quiz. Le code Python s’exécute dans Jupyter ou Colab, pas directement dans ce panneau.</p>
+          <p>Le notebook contient la théorie, le script de base, le code ciblé de cette leçon, des cellules pour pratiquer, la mission et la correction du quiz. Le code Python s’exécute dans Jupyter ou Colab, pas directement dans ce panneau.</p>
           <div className="formation-topic-panel__footer"><button className="formation-primary-action" onClick={()=>setStep('exercice')}>Passer à l’expérimentation →</button></div>
         </section>}
         {step==='exercice'&&<section className="formation-topic-panel">
