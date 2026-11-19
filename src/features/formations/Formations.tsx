@@ -6,12 +6,15 @@ import { dataAnalystTrack } from './dataAnalystTrack';
 import { imageProcessingTrack } from './imageProcessingTrack';
 import { computerVisionTrack } from './computerVisionTrack';
 import { FormationLab } from './FormationLabs';
+import FormationTopicPage from './FormationTopicPage';
+import { allTopics, topicById, topicProgressKey } from './detailedLessons';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
 export const formationTracks = [imageProcessingTrack, computerVisionTrack, dataAnalystTrack];
 const PROGRESS_KEY = 'monstage:formations:completed:v2';
 const NOTES_KEY = 'monstage:formations:notes:v2';
+const TOPICS_KEY = 'monstage:formations:topic-completed:v1';
 type Stage = 'comprendre' | 'pratiquer' | 'valider';
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -103,23 +106,24 @@ function TrackSymbol({id}: {id:string}) {
     {id === 'traitement-images' ? '◈' : id === 'computer-vision' ? '⌘' : '▥'}
   </span>;
 }
-function Catalog({completed}: {completed:string[]}) {
+function Catalog({completed, topicCompleted}: {completed:string[]; topicCompleted:string[]}) {
   const [search,setSearch] = useState('');
   const filtered = formationTracks.filter(t => [t.title,t.subtitle,...t.tools].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
   const total = formationTracks.reduce((n,t)=>n+t.modules.length,0);
+  const totalTopics = formationTracks.reduce((n,t)=>n+t.modules.reduce((sum,m)=>sum+m.points.length,0),0);
   return <div className="formation-catalog">
     <header className="formation-hero">
       <div className="formation-hero__copy">
         <span className="formation-eyebrow">MONSTAGE LEARNING · FORMATIONS</span>
         <h1>Apprendre. Pratiquer.<br /><em>Devenir opérationnel.</em></h1>
         <p>De zéro à la première mission en entreprise. Des notions expliquées simplement, du code commenté, des laboratoires visuels et des livrables à présenter.</p>
-        <div className="formation-hero__meta"><span>3 parcours structurés</span><span>{total} modules</span><span>Jupyter · Projets · Quiz</span></div>
+        <div className="formation-hero__meta"><span>3 parcours structurés</span><span>{total} modules</span><span>{totalTopics} leçons détaillées</span><span>Jupyter · Projets · Quiz</span></div>
       </div>
       <div className="formation-hero__progress">
         <span className="formation-eyebrow">MA PROGRESSION</span>
-        <strong>{completed.length}<small> / {total}</small></strong>
-        <ProgressBar value={completed.length} count={total}/>
-        <p>modules validés</p>
+        <strong>{topicCompleted.length}<small> / {totalTopics}</small></strong>
+        <ProgressBar value={topicCompleted.length} count={totalTopics}/>
+        <p>leçons validées</p>
       </div>
     </header>
     <div className="formation-section-heading">
@@ -156,8 +160,10 @@ function Catalog({completed}: {completed:string[]}) {
     <div className="formation-existing"><strong>Ateliers précédents conservés</strong><p>Les mini-cours OpenCV / Data Analyst déjà présents restent disponibles.</p><Link to="/formations/vision">Atelier Vision historique</Link><Link to="/formations/data">Atelier Data historique</Link></div>
   </div>;
 }
-function Overview({track,completed}: {track:FormationTrack;completed:string[]}) {
+function Overview({track,completed,topicCompleted}: {track:FormationTrack;completed:string[];topicCompleted:string[]}) {
   const done = trackDoneCount(track,completed);
+  const totalLessons=track.modules.reduce((n,m)=>n+m.points.length,0);
+  const lessonsDone=track.modules.reduce((n,m)=>n+allTopics(track,m).filter(t=>topicCompleted.includes(topicProgressKey(t))).length,0);
   const firstIncomplete = track.modules.find(module => !completed.includes(track.id+':'+module.id)) || track.modules[0];
   return <div className="formation-overview">
     <nav className="formation-breadcrumb" aria-label="Fil d’Ariane"><Link to="/formations">Formations</Link><span> / </span><span>{track.title}</span></nav>
@@ -165,8 +171,8 @@ function Overview({track,completed}: {track:FormationTrack;completed:string[]}) 
       <div><span className="formation-eyebrow">{track.plan} · {track.level}</span><h1>{track.title}</h1><p>{track.objective}</p>
         <div className="formation-tags">{track.tools.map(t=><span key={t}>{t}</span>)}</div></div>
       <div className="formation-overview__aside">
-        <div className="formation-overview__stats"><strong>{done} / {track.modules.length}</strong><span>modules validés</span></div>
-        <ProgressBar value={done} count={track.modules.length}/>
+        <div className="formation-overview__stats"><strong>{lessonsDone} / {totalLessons}</strong><span>leçons détaillées validées · {done} modules complets</span></div>
+        <ProgressBar value={lessonsDone} count={totalLessons}/>
         <Link className="formation-primary-action" to={'/formations/'+track.id+'/'+firstIncomplete.id}>{done ? 'Continuer le parcours':'Commencer le parcours'} <span aria-hidden="true">→</span></Link>
         <button className="formation-secondary-action" type="button" onClick={()=>downloadTrack(track)}>↓ Télécharger les notebooks (.zip)</button>
       </div>
@@ -174,20 +180,22 @@ function Overview({track,completed}: {track:FormationTrack;completed:string[]}) 
     <section className="formation-syllabus"><div className="formation-section-heading"><div><span className="formation-eyebrow">PROGRAMME DÉTAILLÉ</span><h2>Les {track.modules.length} modules</h2></div><span className="formation-syllabus__duration">{track.weeks}</span></div>
       <div className="formation-module-grid">{track.modules.map((module,index) => {
         const doneModule=completed.includes(track.id+':'+module.id);
+        const lessonsDone=allTopics(track,module).filter(t=>topicCompleted.includes(topicProgressKey(t))).length;
         return <Link key={module.id} className="formation-module-card" to={'/formations/'+track.id+'/'+module.id}>
           <div className="formation-module-card__header"><span>MODULE {String(index+1).padStart(2,'0')}</span><DoneMark done={doneModule}/></div>
           <h3>{module.title}</h3><p>{module.objective}</p>
-          <div className="formation-module-card__footer"><span>{module.points.length} notions · Notebook · Quiz</span><span aria-hidden="true">↗</span></div>
+          <div className="formation-module-card__footer"><span>{lessonsDone}/{module.points.length} leçons · Notebook · Quiz</span><span aria-hidden="true">↗</span></div>
         </Link>;
       })}</div>
     </section>
     <section className="formation-final-project"><span className="formation-eyebrow">PROJET FINAL</span><h2>{track.project}</h2><p>À la fin du parcours : code reproductible, vérifications, résultats analysés, documentation et restitution professionnelle.</p></section>
   </div>;
 }
-function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
+function ModuleScreen({track,module,completed,topicCompleted,onComplete,notes,onNote}: {
   track:FormationTrack;
   module:FormationModule;
   completed:string[];
+  topicCompleted:string[];
   onComplete:(id:string)=>void;
   notes:Record<string,string>;
   onNote:(id:string,value:string)=>void;
@@ -200,6 +208,9 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
   const [editing,setEditing]=useState(false);
   const [editableCode,setEditableCode]=useState(module.code);
   const index=track.modules.findIndex(item=>item.id===module.id);
+  const topics=allTopics(track,module);
+  const finishedTopics=topics.filter(topic=>topicCompleted.includes(topicProgressKey(topic))).length;
+  const allTopicsComplete=finishedTopics===topics.length;
   const key=track.id+':'+module.id;
   const done=completed.includes(key);
   const prev=track.modules[index-1];
@@ -226,7 +237,13 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
         </nav>
       </aside>
       <main className="formation-lesson__main">
-        <div className="formation-lesson__heading"><span className="formation-eyebrow">MODULE {String(index+1).padStart(2,'0')} / {track.modules.length} · {track.plan}</span><h1>{module.title}</h1><p>{module.objective}</p><div className="formation-lesson__status">{done ? '✓ Module validé':'○ En cours d’apprentissage'}</div></div>
+        <div className="formation-lesson__heading"><span className="formation-eyebrow">MODULE {String(index+1).padStart(2,'0')} / {track.modules.length} · {track.plan}</span><h1>{module.title}</h1><p>{module.objective}</p><div className="formation-lesson__status">{done ? '✓ Module validé':'○ En cours d’apprentissage'} · {finishedTopics}/{topics.length} leçons</div></div>
+        <section className="formation-module-lessons" aria-label="Leçons détaillées de ce module">
+          <div className="formation-module-lessons__header"><div><span className="formation-eyebrow">LES LEÇONS DU MODULE</span><h2>Apprendre chaque notion pas à pas</h2></div><span>{finishedTopics}/{topics.length} validées</span></div>
+          <div className="formation-module-lessons__list">{topics.map((topic,i)=><Link key={topic.id} to={'/formations/'+track.id+'/'+module.id+'/'+topic.id}>
+            <span className="formation-module-lessons__number">{String(i+1).padStart(2,'0')}</span><span>{topic.title}</span><strong>{topicCompleted.includes(topicProgressKey(topic))?'✓':'→'}</strong>
+          </Link>)}</div>
+        </section>
         <div className="formation-step-tabs" role="tablist" aria-label="Étapes pédagogiques">
           {stages.map(([id,num,name])=><button key={id} type="button" role="tab" aria-selected={stage===id} className={stage===id?'is-active':''} onClick={()=>setStage(id)}><span>{num}</span>{name}</button>)}
         </div>
@@ -265,8 +282,8 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
             <textarea id="formation-notes" rows={5} value={notes[key]||''} onChange={e=>onNote(key,e.target.value)} placeholder="Ce que j’ai testé… Ce que j’ai compris… Ce que je veux approfondir…"/>
           </section>
           <label className="formation-self-check"><input type="checkbox" checked={missionReady} onChange={e=>setMissionReady(e.target.checked)}/><span>J’ai réalisé la mission et vérifié le livrable avec les critères annoncés.</span></label>
-          <button className="formation-primary-action" type="button" disabled={done || !right || !missionReady} onClick={()=>onComplete(key)}>{done?'✓ Module déjà validé':'Valider ce module'} <span aria-hidden="true">→</span></button>
-          {!done && <p className="formation-help-text">La validation demande une bonne réponse au quiz et une mission effectivement réalisée. Le suivi est conservé sur cet appareil.</p>}
+          <button className="formation-primary-action" type="button" disabled={done || !right || !missionReady || !allTopicsComplete} onClick={()=>onComplete(key)}>{done?'✓ Module déjà validé':'Valider ce module'} <span aria-hidden="true">→</span></button>
+          {!done && <p className="formation-help-text">Pour valider le module, termine ses {topics.length} leçons, réussis ce quiz et réalise la mission finale. {finishedTopics}/{topics.length} leçons sont actuellement validées.</p>}
         </div>}
         <footer className="formation-lesson__navigation">
           {prev ? <Link to={'/formations/'+track.id+'/'+prev.id}>← Module précédent</Link> : <Link to={'/formations/'+track.id}>← Programme</Link>}
@@ -277,19 +294,23 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
   </div>;
 }
 export default function Formations() {
-  const {parcours,lecon} = useParams();
+  const {parcours,lecon,topic:topicId} = useParams();
   const [completed,setCompleted] = useState<string[]>(()=>readStorage<string[]>(PROGRESS_KEY,[]));
   const [notes,setNotes] = useState<Record<string,string>>(()=>readStorage<Record<string,string>>(NOTES_KEY,{}));
+  const [topicCompleted,setTopicCompleted] = useState<string[]>(()=>readStorage<string[]>(TOPICS_KEY,[]));
   useEffect(()=>{try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(completed));}catch{/* stockage indisponible */}},[completed]);
   useEffect(()=>{try{window.localStorage.setItem(NOTES_KEY,JSON.stringify(notes));}catch{/* stockage indisponible */}},[notes]);
+  useEffect(()=>{try{window.localStorage.setItem(TOPICS_KEY,JSON.stringify(topicCompleted));}catch{/* stockage indisponible */}},[topicCompleted]);
   const track = useMemo(()=>formationTracks.find(t=>t.id===parcours),[parcours]);
   const module = track?.modules.find(m=>m.id===lecon);
+  const topic = track && module && topicId ? topicById(track,module,topicId) : undefined;
   if (parcours==='vision' || parcours==='data') return <LegacyFormations/>;
-  if ((parcours && !track) || (lecon && !module)) return <Navigate to="/formations" replace/>;
+  if ((parcours && !track) || (lecon && !module) || (topicId && !topic)) return <Navigate to="/formations" replace/>;
   const validCompleted=completed.filter(id=>formationTracks.some(t=>t.modules.some(m=>id===t.id+':'+m.id)));
   return <section className="page formations" lang="fr">
-    {!track ? <Catalog completed={validCompleted}/> :
-      !module ? <Overview track={track} completed={validCompleted}/> :
-      <ModuleScreen track={track} module={module} completed={validCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/>}
+    {!track ? <Catalog completed={validCompleted} topicCompleted={topicCompleted}/> :
+      !module ? <Overview track={track} completed={validCompleted} topicCompleted={topicCompleted}/> :
+      topic ? <FormationTopicPage track={track} module={module} topic={topic} topicCompleted={topicCompleted} onTopicComplete={id=>setTopicCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/> :
+      <ModuleScreen track={track} module={module} completed={validCompleted} topicCompleted={topicCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/>}
   </section>;
 }
