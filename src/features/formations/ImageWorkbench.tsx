@@ -135,6 +135,25 @@ function thumbInfo(operation:Operation) {
   if(operation==='morphology')return 'Ouverture = érosion puis dilatation, avec un noyau 3×3. Les petits objets peuvent disparaître.';
   return 'Les deux images proviennent exactement de la même source. Les traitements sont calculés dans ce navigateur.';
 }
+function Histogram({pixels}:{pixels:Uint8ClampedArray}) {
+  const bins=Array.from({length:32},()=>0);
+  for(const pixel of pixels)bins[Math.min(31,Math.floor(pixel/8))]++;
+  const max=Math.max(1,...bins);
+  const points=bins.map((v,i)=>(42+i*15)+','+(128-v/max*110)).join(' ');
+  return <div className="formation-image-histogram">
+    <strong>Histogramme des intensités du résultat</strong>
+    <svg viewBox="0 0 540 165" role="img" aria-label="Histogramme du résultat : intensité de 0 à 255 en abscisse et nombre de pixels en ordonnée">
+      <line x1="42" y1="18" x2="42" y2="128" stroke="currentColor" opacity=".5"/>
+      <line x1="42" y1="128" x2="516" y2="128" stroke="currentColor" opacity=".5"/>
+      <polyline points={points} fill="none" stroke="#1d9b84" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"/>
+      <text x="42" y="145" fill="currentColor" fontSize="12">0</text>
+      <text x="265" y="145" fill="currentColor" fontSize="12">128</text>
+      <text x="487" y="145" fill="currentColor" fontSize="12">255</text>
+      <text x="218" y="161" fill="currentColor" fontSize="11">Intensité des pixels</text>
+      <text x="8" y="15" fill="currentColor" fontSize="11">Pixels</text>
+    </svg>
+  </div>;
+}
 export function ImageWorkbench({moduleId}:{moduleId:string}) {
   const before=useRef<HTMLCanvasElement>(null);
   const after=useRef<HTMLCanvasElement>(null);
@@ -195,6 +214,7 @@ export function ImageWorkbench({moduleId}:{moduleId:string}) {
       <figure><canvas ref={before} role="img" aria-label="Image originale en niveaux de gris"/><figcaption>Image originale · {image.width} × {image.height}</figcaption></figure>
       <figure><canvas ref={after} role="img" aria-label="Résultat du traitement sélectionné"/><figcaption>Résultat · {labels[operation]}</figcaption></figure>
     </div>
+    <Histogram pixels={processed}/>
     <div className="formation-workbench-metrics">
       <span>Intensité minimale <strong>{metrics.min}</strong></span>
       <span>Moyenne <strong>{metrics.avg}</strong></span>
