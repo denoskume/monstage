@@ -11,6 +11,7 @@ import { AdvancedImageLab } from './AdvancedImageLabs';
 import { DataWorkbench } from './DataWorkbench';
 import { TopicLessons, topicGuide } from './TopicLessons';
 import { validateFormationBackup } from './formationBackup';
+import { mathematicsNotes } from './mathematicsNotes';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
@@ -269,6 +270,13 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote,topics,onT
         {stage==='comprendre' && <div className="formation-content-section" role="tabpanel">
           <span className="formation-eyebrow">01 · THÉORIE ESSENTIELLE</span><h2>Comprendre avant de coder</h2>
           <p className="formation-featured-paragraph">{module.concept}</p>
+          {mathematicsNotes[module.id]&&<div className="formation-mathematics">
+            <span className="formation-eyebrow">MATHÉMATIQUES ESSENTIELLES</span>
+            <h3>{mathematicsNotes[module.id].title}</h3>
+            <div className="formation-math-formula">{mathematicsNotes[module.id].equation}</div>
+            <p>{mathematicsNotes[module.id].interpretation}</p>
+            <div className="formation-math-example"><strong>Exemple numérique</strong><p>{mathematicsNotes[module.id].example}</p></div>
+          </div>}
           <div className="formation-notions"><h3>Ce que tu vas apprendre</h3><ol>{module.points.map((point,i)=><li key={point}><b>{String(i+1).padStart(2,'0')}</b><span>{point}</span></li>)}</ol></div>
           <div className="formation-business-case"><strong>Exemple concret</strong><p>{module.example}</p></div>
           <TopicLessons module={module} completed={topicProgress} onToggle={i=>onToggleTopic(key,i)}/>
