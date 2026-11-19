@@ -7,7 +7,6 @@ import { pythonArticle, edaArticle } from './pythonEdaArticles';
 import { getLessonExample } from './lessonExamples';
 import { topicGuide } from './TopicLessons';
 import { LessonVisual } from './LessonVisual';
-import { mathematicsNotes } from './mathematicsNotes';
 
 function createdArticle(track:FormationTrack,module:FormationModule):CourseArticleData {
   const sections:ArticleSection[]=module.points.map((topic,index)=>{
