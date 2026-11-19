@@ -1349,6 +1349,7 @@ function exportPDF(){
 }
 root.querySelector('#export-docx').onclick=()=>{try{downloadBlob(ooxml(current()),'application/vnd.openxmlformats-officedocument.wordprocessingml.document',`Denos_KUME_CV_${chosen==='A'?'Computer_Vision':'Data_Scientist'}.docx`);saveSnapshot('docx');toast('Word généré — dernière version enregistrée')}catch(e){toast('Erreur de génération Word : '+e.message)}closeMenu()};
 root.querySelector('#export-pdf').onclick=exportPDF;
+window.monstageOfficeCopy=()=>({plan:chosen,document:ooxml(current())});
 // Before leaving the page, save the latest field and table dimensions as well.
 window.addEventListener('pagehide',()=>persistCurrent());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistCurrent();});
