@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Éditeur CV Thierry — exports fidèles</title><style>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Éditeur CV Thierry — exports fidèles</title><style>
 :root{font-family:Arial,sans-serif;color:#263543}
 *{box-sizing:border-box}
 #cvtool{max-width:980px;margin:auto;font-family:Arial,sans-serif}
@@ -195,17 +195,17 @@
   #cvtool [contenteditable=true]:focus,#cvtool [contenteditable=true]:hover{background:transparent!important;outline:0!important}
   #cvtool .experience{break-inside:avoid}
 }
-</style></head><body><div id="cvtool">
+</style><link rel="stylesheet" href="ribbon.css"></head><body><div id="cvtool">
 <div class="bar">
  <div class="studio-brand"><span class="brand-mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg></span><span><strong>Studio CV</strong><small>MonStage</small></span></div>
  <div class="track-tabs" aria-label="Version du CV"><button data-tab="A" class="selected">CV A <span>Vision</span></button><button data-tab="B">CV B <span>Data Scientist</span></button></div>
- <div class="bar-spacer"></div>
+ <div class="quick-tools"><button type="button" class="tool-btn" id="undo" aria-label="Annuler" title="Annuler"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-7L3 13"/></svg></button><button type="button" class="tool-btn" id="redo" aria-label="Rétablir" title="Rétablir"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-7l3 3"/></svg></button></div><div class="bar-spacer"></div>
  <div class="save-actions"><button type="button" id="save-cv" title="Enregistrer la version actuelle du CV" aria-label="Enregistrer le CV">Enregistrer</button><button type="button" id="versions-cv" aria-expanded="false" aria-controls="cv-versions-panel" title="Afficher les versions enregistrées">Versions ▾</button></div>
  <span class="save-indicator" id="save-notice" aria-live="polite"><span class="save-dot"></span> Prêt à enregistrer</span>
  <div class="download-wrap"><button id="download" aria-expanded="false"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M5 18v3h14v-3"/></svg> Télécharger <span>⌄</span></button><div id="download-menu" role="menu"><button id="export-docx" role="menuitem">Word (.docx)</button><button id="export-pdf" role="menuitem">PDF (.pdf) · Texte sélectionnable</button></div></div>
  </div>
  <section class="versions-popover" id="cv-versions-panel" hidden aria-label="Historique des CV enregistrés"><div class="versions-head"><div><strong>Versions sauvegardées</strong><p id="versions-subtitle">CV A — Vision</p></div><button type="button" id="versions-close" aria-label="Fermer l’historique">×</button></div><div class="version-list" id="versions-list"></div><p class="version-help">Les versions sont conservées dans ce navigateur. Restaurer une version remplace le brouillon actuel après confirmation.</p></section>
- <div class="word-ribbon"><nav class="word-tabs" aria-label="Menu du document"><button type="button" data-ribbon="file">Fichier</button><button type="button" class="active" data-ribbon="home">Accueil</button><button type="button" data-ribbon="insert">Insertion</button><button type="button" data-ribbon="layout">Mise en page</button><button type="button" data-ribbon="table">Disposition du tableau</button></nav>
+ <div class="word-ribbon"><nav class="word-tabs" aria-label="Menu du document"><button type="button" data-ribbon="file">Fichier</button><button type="button" class="active" data-ribbon="home">Accueil</button><button type="button" data-ribbon="insert">Insertion</button><button type="button" data-ribbon="layout">Mise en page</button><button type="button" data-ribbon="table">Disposition du tableau</button></nav><button type="button" id="fold" title="Réduire le ruban" aria-label="Réduire le ruban" aria-expanded="true">⌃</button>
  <div class="ribbon-panel active" data-ribbon-panel="home" role="toolbar" aria-label="Accueil"><div class="word-group word-clipboard"><div class="word-group-content">
  <div class="clipboard-row"><button type="button" class="large-tool" id="paste" aria-label="Coller" title="Coller"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="4" width="8" height="4" rx="1"/><path d="M7 6H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h6"/></svg><span>Coller</span></button>
  <div class="clipboard-stack"><button type="button" class="tool-btn" id="copy" aria-label="Copier" title="Copier la sélection"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button><span class="tiny-caption">Copier</span></div></div></div><div class="word-group-label">Presse-papiers</div></div><div class="word-group word-font"><div class="word-group-content">
@@ -228,8 +228,6 @@
  <span class="ribbon-separator"></span>
  <button type="button" class="tool-btn" id="outdent" aria-label="Diminuer le retrait" title="Diminuer le retrait"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M10 10h10M10 14h10M4 18h16M8 10l-4 2 4 2z"/></svg></button>
  <button type="button" class="tool-btn" id="indent" aria-label="Augmenter le retrait" title="Augmenter le retrait"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M10 10h10M10 14h10M4 18h16M4 10l4 2-4 2z"/></svg></button>
- <button type="button" class="tool-btn" id="undo" aria-label="Annuler" title="Annuler"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-7L3 13"/></svg></button>
- <button type="button" class="tool-btn" id="redo" aria-label="Rétablir" title="Rétablir"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-7l3 3"/></svg></button>
  </div><div class="font-row">
  <button type="button" class="tool-btn" id="align-left" aria-label="Aligner à gauche" title="Aligner à gauche"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"/></svg></button>
  <button type="button" class="tool-btn" id="align-center" aria-label="Centrer" title="Centrer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"/></svg></button>
@@ -243,9 +241,10 @@
  <button type="button" class="style-tile" data-style="heading"><span class="style-example heading-example">Titre</span><small>Titre de section</small></button>
  </div></div><div class="word-group-label">Styles</div></div><div class="word-group word-editing"><div class="word-group-content"><div class="edit-stack">
  <button type="button" class="edit-tool" id="find" aria-label="Rechercher"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><span>Rechercher</span></button>
+ <button type="button" class="edit-tool" id="replace"><span aria-hidden="true">⇄</span>Remplacer</button>
  <button type="button" class="edit-tool" id="select-paragraph" aria-label="Sélectionner le paragraphe"><span style="font-size:16px">▤</span><span>Sélectionner</span></button>
  </div></div><div class="word-group-label">Édition</div></div></div>
- <div class="ribbon-panel" data-ribbon-panel="insert" role="toolbar" aria-label="Insertion" hidden><div class="word-group word-insert"><div class="word-group-content"><div class="insertion-actions"><button type="button" class="large-tool" id="add"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Expérience</span></button><button type="button" class="large-tool" id="add-skill"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Compétence</span></button></div></div><div class="word-group-label">Insérer</div></div><div class="word-group word-note"><div class="word-group-content"><div class="helper-text">Clique directement sur un titre, un résultat ou une compétence pour le modifier.</div></div><div class="word-group-label">Conseil</div></div></div>
+ <div class="ribbon-panel" data-ribbon-panel="insert" role="toolbar" aria-label="Insertion" hidden><div class="word-group word-insert"><div class="word-group-content"><div class="insertion-actions"><button type="button" class="large-tool" id="add"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Expérience</span></button><button type="button" class="large-tool" id="add-skill"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Compétence</span></button></div></div><div class="word-group-label">Insérer</div></div></div>
  <div class="ribbon-panel" data-ribbon-panel="layout" role="toolbar" aria-label="Mise en page" hidden><div class="word-group word-colors"><div class="word-group-content"><div class="layout-colors">
  <label class="layout-color"><input id="paper-bg" aria-label="Fond de page du CV" type="color" value="#ffffff"><span>Page</span></label>
  <label class="layout-color"><input id="sidebar-bg" aria-label="Fond de colonne latérale" type="color" value="#c3c5c6"><span>Colonne</span></label>
@@ -257,22 +256,18 @@
  </div></div><div class="word-group-label">Exporter le CV actif</div></div></div>
  
  <div class="ribbon-panel" data-ribbon-panel="table" role="toolbar" aria-label="Disposition du tableau" hidden>
-  <div class="word-group word-table"><div class="word-group-content">
-   <div class="table-operations">
-    <button type="button" id="cell-insert" title="Insérer une cellule sous celle sélectionnée">⊞ Ajouter cellule</button>
-    <button type="button" id="cell-delete" class="danger" title="Supprimer la cellule sélectionnée">⊟ Supprimer cellule</button>
-    <button type="button" id="row-insert" title="Ajouter une ligne dans la cellule sélectionnée">＋ Ajouter ligne</button>
-    <button type="button" id="row-delete" class="danger" title="Supprimer la ligne sélectionnée">− Supprimer ligne</button>
-   </div>
-   <div class="table-operations">
-    <button type="button" id="bullet-insert" title="Insérer une puce après la ligne sélectionnée">•＋ Ajouter puce</button>
-    <button type="button" id="bullet-delete" class="danger" title="Supprimer la puce sélectionnée">•− Supprimer puce</button>
-    <button type="button" id="cell-reset-height" title="Adapter la hauteur de la cellule à son contenu">↕ Hauteur auto</button>
-   </div>
-  </div><div class="word-group-label">Cellules, lignes et puces</div></div>
-  <div class="word-group"><div class="word-group-content"><div class="table-context-note">Place le pointeur sur une séparation bleue : <b>+</b> insère une cellule, <b>↕</b> déplace la limite. Glisse aussi le bord vertical pour élargir la colonne grise.</div></div><div class="word-group-label">Manipulation directe</div></div>
+<div class="word-group"><div class="word-group-content"><button type="button" id="cell-insert" title="Insérer une cellule sous celle sélectionnée">⊞ Ajouter cellule</button><button type="button" id="cell-delete" class="danger" title="Supprimer la cellule sélectionnée">⊟ Supprimer cellule</button></div><div class="word-group-label">Cellules</div></div>
+<div class="word-group"><div class="word-group-content"><button type="button" id="row-insert" title="Ajouter une ligne dans la cellule sélectionnée">＋ Ajouter ligne</button><button type="button" id="row-delete" class="danger" title="Supprimer la ligne sélectionnée">− Supprimer ligne</button></div><div class="word-group-label">Lignes</div></div>
+<div class="word-group"><div class="word-group-content"><button type="button" id="bullet-insert" title="Insérer une puce après la ligne sélectionnée">•＋ Ajouter puce</button><button type="button" id="bullet-delete" class="danger" title="Supprimer la puce sélectionnée">•− Supprimer puce</button></div><div class="word-group-label">Puces</div></div>
+<div class="word-group"><div class="word-group-content"><button type="button" id="cell-reset-height" title="Adapter la hauteur de la cellule à son contenu">↕ Hauteur auto</button></div><div class="word-group-label">Dimensions</div></div>
  </div>
 </div>
+ <dialog id="search-box" aria-labelledby="search-title">
+ <div class="search-head"><strong id="search-title">Rechercher dans le CV</strong><button type="button" id="search-close" aria-label="Fermer">×</button></div>
+ <label>Rechercher<input id="query" type="search" autocomplete="off"></label>
+ <label id="replacement-row">Remplacer par<input id="replacement" autocomplete="off"></label>
+ <div class="search-result" role="status"></div><div class="search-actions"><button id="previous-match">Précédent</button><button id="next-match">Suivant</button><button id="replace-match">Remplacer ici</button></div>
+ </dialog>
  <div class="format-status" id="format-status" role="status"><span class="status-pill">Édition directe</span> Sélectionne du texte pour appliquer une mise en forme, ou clique sur un titre pour le renommer.</div>
 <div class="viewport" id="paper-container"></div><div class="tip">Clique directement sur le texte pour le modifier. Les fichiers Word et PDF sont téléchargés directement à partir des modifications du CV sélectionné. Le PDF est un document A4 avec texte sélectionnable, et non une image.</div><div class="toast" id="toast" aria-live="polite"></div>
 </div><script>
@@ -344,7 +339,7 @@ let restoring=false;
 let activeCell=null;
 let tableResizeObserver=null;
 
-function note(message){formatStatus.innerHTML='<span class="status-pill">Édition directe</span> '+message;}
+function note(message){formatStatus.lastChild.textContent=' '+message;}
 function rememberSelection(){
  const sel=window.getSelection();
  if(!sel||!sel.rangeCount)return;
@@ -577,22 +572,68 @@ function selectParagraph(){
  const r=document.createRange();r.selectNodeContents(lastField);setSelectionRange(r);
  note('Paragraphe sélectionné : tu peux appliquer une police, une couleur ou une taille.');
 }
-function findText(){
- const query=prompt('Rechercher dans le CV :');
- if(!query?.trim())return;
- const walker=document.createTreeWalker(current(),NodeFilter.SHOW_TEXT);
- let node;
- while((node=walker.nextNode())){
-  const i=node.nodeValue.toLowerCase().indexOf(query.toLowerCase());
-  if(i<0)continue;
-  const field=fieldOf(node);if(!field)continue;
-  lastField=field;
-  const r=document.createRange();r.setStart(node,i);r.setEnd(node,i+query.length);
-  setSelectionRange(r);field.scrollIntoView({block:'center',behavior:'smooth'});
-  note('Texte trouvé et sélectionné.');return;
- }
- note('Aucune occurrence dans le CV sélectionné.');
+const searchBox=root.querySelector('#search-box');
+const queryInput=root.querySelector('#query');
+const replaceInput=root.querySelector('#replacement');
+let matches=[], matchIndex=0;
+function showMatch(){
+ const range=matches[matchIndex];
+ searchBox.querySelector('.search-result').textContent=range?(matchIndex+1)+' sur '+matches.length:(queryInput.value?'Aucun résultat':'');
+ for(const button of searchBox.querySelectorAll('.search-actions button'))button.disabled=!range;
+ if(range){
+  fieldOf(range.startContainer).scrollIntoView({block:'nearest'});
+  window.CSS?.highlights?.set('cv-match',new Highlight(range));
+ }else window.CSS?.highlights?.delete('cv-match');
 }
+function collectMatches(){
+ matches=[];matchIndex=0;
+ const term=queryInput.value;
+ if(term){
+  const escaped=Array.from(term,char=>'\\^$.*+?()[]{}|'.includes(char)?'\\'+char:char).join('');
+  // Work within a single editable field while allowing inline formatting boundaries.
+  for(const field of current().querySelectorAll('[contenteditable="true"]')){
+   const walker=document.createTreeWalker(field,NodeFilter.SHOW_TEXT);
+   let node,offset=0;const runs=[];
+   while((node=walker.nextNode())){
+    if(!node.length)continue;
+    runs.push({node,start:offset,end:offset+node.length});offset+=node.length;
+   }
+   const text=runs.map(run=>run.node.data).join('');
+   for(const hit of text.matchAll(new RegExp(escaped,'giu'))){
+    const start=hit.index,end=start+hit[0].length;
+    const first=runs.find(run=>run.end>start),last=runs.find(run=>run.end>=end);
+    const range=document.createRange();range.setStart(first.node,start-first.start);range.setEnd(last.node,end-last.start);matches.push(range);
+   }
+  }
+ }
+ showMatch();
+}
+function findText(replace=false){
+ const replacing=replace===true;
+ root.querySelector('#replacement-row').hidden=!replacing;
+ root.querySelector('#replace-match').hidden=!replacing;
+ root.querySelector('#search-title').textContent=replacing?'Remplacer dans le CV':'Rechercher dans le CV';
+ if(!searchBox.open)searchBox.showModal();
+ queryInput.focus();queryInput.select();collectMatches();
+}
+function stepMatch(delta){
+ if(matches.length){matchIndex=(matchIndex+matches.length+delta)%matches.length;showMatch();}
+}
+queryInput.addEventListener('input',collectMatches);
+queryInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();stepMatch(e.shiftKey?-1:1);}});
+root.querySelector('#previous-match').onclick=()=>stepMatch(-1);
+root.querySelector('#next-match').onclick=()=>stepMatch(1);
+root.querySelector('#search-close').onclick=()=>searchBox.close();
+searchBox.addEventListener('close',()=>{
+ window.CSS?.highlights?.delete('cv-match');
+ const range=matches[matchIndex];
+ if(range){fieldOf(range.startContainer)?.focus({preventScroll:true});setSelectionRange(range);}
+});
+root.querySelector('#replace-match').onclick=()=>{
+ const range=matches[matchIndex];if(!range)return;
+ const index=matchIndex;capture();range.deleteContents();range.insertNode(document.createTextNode(replaceInput.value));
+ persistCurrent();collectMatches();matchIndex=Math.max(0,Math.min(index,matches.length-1));showMatch();
+};
 function applyStyle(name){
  const field=lastField;if(!field||!current().contains(field))return note('Clique d’abord sur le paragraphe à styliser.');
  capture();
@@ -625,7 +666,7 @@ const actionMap={
  bullets:()=>formatList('ul'),numbering:()=>formatList('ol'),
  indent:()=>adjustIndent(1),outdent:()=>adjustIndent(-1),
  undo,redo,'font-grow':()=>changeSize(1),'font-shrink':()=>changeSize(-1),
- copy:copySelected,paste:pasteSelected,find:findText,'select-paragraph':selectParagraph,
+ copy:copySelected,paste:pasteSelected,find:()=>findText(),replace:()=>findText(true),'select-paragraph':selectParagraph,
  'add-skill':()=>{
   capture();
   const skills=current().querySelector('.skills');
@@ -647,7 +688,16 @@ root.querySelector('#line-height').addEventListener('change',e=>styleField('line
 root.querySelector('#paper-bg').addEventListener('input',e=>{capture();current().style.backgroundColor=e.target.value;persistCurrent();});
 root.querySelector('#sidebar-bg').addEventListener('input',e=>{capture();current().querySelector('aside').style.backgroundColor=e.target.value;persistCurrent();});
 root.querySelectorAll('[data-style]').forEach(b=>b.addEventListener('click',()=>applyStyle(b.dataset.style)));
+const fold=root.querySelector('#fold');
+function foldRibbon(collapsed){
+ root.querySelector('.word-ribbon').classList.toggle('folded',collapsed);
+ fold.setAttribute('aria-expanded',String(!collapsed));
+ fold.title=collapsed?'Développer le ruban':'Réduire le ruban';
+ fold.setAttribute('aria-label',fold.title);
+}
+fold.onclick=()=>foldRibbon(fold.getAttribute('aria-expanded')==='true');
 root.querySelectorAll('[data-ribbon]').forEach(b=>b.addEventListener('click',()=>{
+ foldRibbon(false);
  root.querySelectorAll('[data-ribbon]').forEach(x=>x.classList.toggle('active',x===b));
  root.querySelectorAll('[data-ribbon-panel]').forEach(panel=>{panel.hidden=panel.dataset.ribbonPanel!==b.dataset.ribbon;panel.classList.toggle('active',!panel.hidden);});
 }));
@@ -668,6 +718,9 @@ root.addEventListener('click',e=>{
 });
 root.addEventListener('keydown',e=>{
  if(!((e.ctrlKey||e.metaKey)&&!e.altKey))return;
+ if(searchBox.open)return;
+ if(['f','h'].includes(e.key.toLowerCase())){e.preventDefault();findText(e.key.toLowerCase()==='h');return;}
+ if(e.key.toLowerCase()==='s'){e.preventDefault();root.querySelector('#save-cv').click();return;}
  if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
  if(e.key.toLowerCase()==='y'){e.preventDefault();redo();}
 });

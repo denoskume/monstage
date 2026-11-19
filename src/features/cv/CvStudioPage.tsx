@@ -17,7 +17,6 @@ export function CvStudioPage() {
     const document = frameRef.current?.contentDocument;
     if (!document?.body) return;
     const height = Math.ceil(Math.max(
-      document.documentElement.scrollHeight,
       document.body.scrollHeight,
       1300,
     ) + 20);
