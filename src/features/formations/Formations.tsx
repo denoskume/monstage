@@ -7,6 +7,8 @@ import { imageProcessingTrack } from './imageProcessingTrack';
 import { computerVisionTrack } from './computerVisionTrack';
 import { FormationLab } from './FormationLabs';
 import FormationTopicPage from './FormationTopicPage';
+import FormationProjectsPage from './FormationProjectsPage';
+import { formationProjects } from './formationProjects';
 import { allTopics, topicById, topicProgressKey, lessonNotebook } from './detailedLessons';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
@@ -121,7 +123,7 @@ function Catalog({completed, topicCompleted}: {completed:string[]; topicComplete
         <span className="formation-eyebrow">MONSTAGE LEARNING · FORMATIONS</span>
         <h1>Apprendre. Pratiquer.<br /><em>Devenir opérationnel.</em></h1>
         <p>De zéro à la première mission en entreprise. Des notions expliquées simplement, du code commenté, des laboratoires visuels et des livrables à présenter.</p>
-        <div className="formation-hero__meta"><span>3 parcours structurés</span><span>{total} modules</span><span>{totalTopics} leçons détaillées</span><span>Jupyter · Projets · Quiz</span></div>
+        <div className="formation-hero__meta"><span>3 parcours structurés</span><span>{total} modules</span><span>{totalTopics} leçons détaillées</span><span>11 projets · Jupyter · Quiz</span></div>
       </div>
       <div className="formation-hero__progress">
         <span className="formation-eyebrow">MA PROGRESSION</span>
@@ -192,7 +194,7 @@ function Overview({track,completed,topicCompleted}: {track:FormationTrack;comple
         </Link>;
       })}</div>
     </section>
-    <section className="formation-final-project"><span className="formation-eyebrow">PROJET FINAL</span><h2>{track.project}</h2><p>À la fin du parcours : code reproductible, vérifications, résultats analysés, documentation et restitution professionnelle.</p></section>
+    <section className="formation-final-project"><span className="formation-eyebrow">ATELIERS ET PROJET FINAL</span><h2>{track.project}</h2><p>{formationProjects[track.id]?.length||0} projets avec briefs, données, scripts de départ, livrables et critères de réussite.</p><Link className="formation-primary-action" to={'/formations/'+track.id+'/projets'}>Ouvrir les projets du parcours →</Link></section>
   </div>;
 }
 function ModuleScreen({track,module,completed,topicCompleted,onComplete,notes,onNote}: {
@@ -306,13 +308,15 @@ export default function Formations() {
   useEffect(()=>{try{window.localStorage.setItem(NOTES_KEY,JSON.stringify(notes));}catch{/* stockage indisponible */}},[notes]);
   useEffect(()=>{try{window.localStorage.setItem(TOPICS_KEY,JSON.stringify(topicCompleted));}catch{/* stockage indisponible */}},[topicCompleted]);
   const track = useMemo(()=>formationTracks.find(t=>t.id===parcours),[parcours]);
-  const module = track?.modules.find(m=>m.id===lecon);
+  const projectsView=lecon==='projets';
+  const module = projectsView ? undefined : track?.modules.find(m=>m.id===lecon);
   const topic = track && module && topicId ? topicById(track,module,topicId) : undefined;
   if (parcours==='vision' || parcours==='data') return <LegacyFormations/>;
-  if ((parcours && !track) || (lecon && !module) || (topicId && !topic)) return <Navigate to="/formations" replace/>;
+  if ((parcours && !track) || (lecon && !module && !projectsView) || (topicId && !topic && !projectsView)) return <Navigate to="/formations" replace/>;
   const validCompleted=completed.filter(id=>formationTracks.some(t=>t.modules.some(m=>id===t.id+':'+m.id)));
   return <section className="page formations" lang="fr">
     {!track ? <Catalog completed={validCompleted} topicCompleted={topicCompleted}/> :
+      projectsView ? <FormationProjectsPage track={track} projectId={topicId}/> :
       !module ? <Overview track={track} completed={validCompleted} topicCompleted={topicCompleted}/> :
       topic ? <FormationTopicPage track={track} module={module} topic={topic} topicCompleted={topicCompleted} onTopicComplete={id=>setTopicCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/> :
       <ModuleScreen track={track} module={module} completed={validCompleted} topicCompleted={topicCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/>}
