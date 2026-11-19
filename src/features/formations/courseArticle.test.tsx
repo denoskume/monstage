@@ -53,7 +53,7 @@ describe('GUVI-reference complete article layout',()=>{
   expect(a.sections.map(s=>s.title)).toContain('What is Pandas?');
   expect(a.sections.map(s=>s.title)).toContain('Cleaning Missing and Duplicate Values');
   showArticle(dataAnalystTrack,'pandas-numpy');
-  expect(screen.getByText(/Une ligne est une campagne/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Une ligne est une campagne/)).not.toBeInTheDocument();
   expect(screen.getByRole('heading',{name:'Understanding Series and DataFrames'})).toBeInTheDocument();
  });
  it('renders a readable article TOC with scroll controls',async()=>{
