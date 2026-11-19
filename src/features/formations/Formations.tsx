@@ -1,85 +1,291 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { courses } from './courses';
-import '../training/training.css';
+import { zipSync, strToU8 } from 'fflate';
+import type { FormationModule, FormationTrack } from './formationTypes';
+import { dataAnalystTrack } from './dataAnalystTrack';
+import { imageProcessingTrack } from './imageProcessingTrack';
+import { computerVisionTrack } from './computerVisionTrack';
+import { FormationLab } from './FormationLabs';
+import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
-type Course = typeof courses[number];
-type Lesson = Course['lessons'][number];
+export const formationTracks = [imageProcessingTrack, computerVisionTrack, dataAnalystTrack];
+const PROGRESS_KEY = 'monstage:formations:completed:v2';
+const NOTES_KEY = 'monstage:formations:notes:v2';
+type Stage = 'comprendre' | 'pratiquer' | 'valider';
 
-function notebook(lesson: Lesson, course: Course) {
-  const markdown = (source: string) => ({ cell_type: 'markdown', metadata: {}, source });
-  const code = (source: string) => ({ cell_type: 'code', metadata: {}, source, execution_count: null, outputs: [] });
-  const packages = [
-    ['torch', 'torch'], ['numpy', 'numpy'], ['matplotlib', 'matplotlib'], ['skimage', 'scikit-image'],
-    ['cv2', 'opencv-python-headless'], ['sklearn', 'scikit-learn'], ['pandas', 'pandas']
-  ].filter(([module]) => lesson.code.includes(module)).map(([, name]) => name);
-  if (lesson.id === 'classer') packages.push('matplotlib');
-  const cells = [
-    markdown('# ' + lesson.title + '\n\n' + lesson.why), markdown('## Comprendre\n' + lesson.theory),
-    markdown('Dans un noyau Python 3, exécute les cellules dans l’ordre.'),
-    ...(packages.length ? [code('%pip install ' + packages.join(' '))] : []),
-    markdown('## Exemple guidé'), code(lesson.code), markdown(lesson.reading),
-    markdown('## À toi de modifier\n' + lesson.guided), code(''),
-    markdown('## Mission autonome\n' + lesson.mission), code(''), markdown('## Validation\n' + lesson.check + '\n\n**Mon diagnostic**\n\nÀ compléter.')
-  ];
-  const file = { nbformat: 4, nbformat_minor: 4, metadata: { kernelspec: { name: 'python3', display_name: 'Python 3', language: 'python' } }, cells };
-  const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2)], {type: 'application/json'}));
+function readStorage<T>(key: string, fallback: T): T {
+  try {
+    const value = window.localStorage.getItem(key);
+    return value ? JSON.parse(value) as T : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveFile(filename: string, blob: Blob) {
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = course.id + '-' + lesson.id + '.ipynb';
+  link.download = filename;
+  document.body.appendChild(link);
   link.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
-function PixelGrid() {
-  const [values, setValues] = useState([0,255,0,255,255,255,0,255,0]);
-  return <div className="formation-pixels"><p>Clique sur une case pour inverser sa luminosité.</p>
-    <div>{values.map((value, i) => <button key={i} type="button" aria-label={'Ligne ' + (1 + Math.floor(i / 3)) + ', colonne ' + (1 + i % 3) + ', intensité ' + value}
-      style={{background: value ? 'white' : 'black', color: value ? 'black' : 'white'}}
-      onClick={() => setValues(values.map((v, k) => k === i ? 255-v : v))}>{value}</button>)}</div>
+function notebookSource(track: FormationTrack, module: FormationModule) {
+  const markdown = (source: string) => ({ cell_type: 'markdown', metadata: {}, source });
+  const code = (source: string) => ({ cell_type: 'code', metadata: {}, source, outputs: [], execution_count: null });
+  const packages: string[] = [];
+  if (/\b(?:import|from)\s+numpy\b/.test(module.code)) packages.push('numpy');
+  if (/\b(?:import|from)\s+pandas\b/.test(module.code)) packages.push('pandas');
+  if (/\b(?:import|from)\s+matplotlib\b/.test(module.code)) packages.push('matplotlib');
+  if (/\b(?:import|from)\s+cv2\b/.test(module.code)) packages.push('opencv-python-headless');
+  if (/\b(?:import|from)\s+sklearn\b/.test(module.code)) packages.push('scikit-learn');
+  if (/\b(?:import|from)\s+torch\b/.test(module.code)) packages.push('torch');
+
+  const cells = [
+    markdown('# ' + module.title + '\n\n**' + track.title + '**\n\n## Objectif\n' + module.objective),
+    markdown('## Comprendre\n' + module.concept + '\n\n## Notions essentielles\n' + module.points.map(point => '- ' + point).join('\n')),
+    markdown('## Situation professionnelle\n' + module.example),
+    ...(module.codeLanguage === 'python'
+      ? [...(packages.length ? [code('%pip install ' + [...new Set(packages)].join(' '))] : []), code(module.code)]
+      : [markdown('## Exemple de ' + (module.codeLanguage || 'code') + '\n\n```' + (module.codeLanguage || '') + '\n' + module.code + '\n```')]),
+    markdown('## Interpréter les résultats\n' + module.result),
+    markdown('## À toi de modifier\n' + module.instructions),
+    ...(module.codeLanguage === 'python' ? [code('# Écris ton expérimentation ici\n')] : []),
+    markdown('## Mission à réaliser\n' + module.mission + '\n\n### Critère de réussite\n' + module.validation),
+    ...(module.codeLanguage === 'python' ? [code('# Ton code final\n')] : []),
+    markdown('## Auto-évaluation\n**Question :** ' + module.quiz.question + '\n\n' + module.quiz.options.map((v,i) => String(i+1) + '. ' + v).join('\n') + '\n\n**Correction :** ' + module.quiz.options[module.quiz.correct] + '\n\n' + module.quiz.explanation),
+    markdown('## Mon diagnostic\nCe que j’ai compris :\n\nCe que je dois approfondir :\n\nQuestions à mon tuteur :')
+  ];
+  return JSON.stringify({
+    nbformat: 4,
+    nbformat_minor: 5,
+    metadata: {kernelspec: {name:'python3',display_name:'Python 3',language:'python'}, language_info: {name:'python'}},
+    cells
+  }, null, 2);
+}
+
+function downloadNotebook(track: FormationTrack, module: FormationModule) {
+  saveFile(track.id + '-' + module.id + '.ipynb', new Blob([notebookSource(track, module)], {type:'application/x-ipynb+json'}));
+}
+function downloadTrack(track: FormationTrack) {
+  const archive: Record<string, Uint8Array> = {};
+  track.modules.forEach((module, i) => {
+    const name = String(i+1).padStart(2,'0') + '-' + module.id + '.ipynb';
+    archive[name] = strToU8(notebookSource(track, module));
+  });
+  archive['LIRE-AVANT-DE-COMMENCER.md'] = strToU8(
+    '# ' + track.title + '\n\n' + track.objective + '\n\n' +
+    'Chaque notebook contient une explication, un exemple, une interprétation, un exercice et une mission.\n' +
+    'Les notebooks Python peuvent être importés dans Jupyter ou Google Colab. Les exemples SQL, Excel et DAX doivent être exécutés dans leurs outils respectifs.\n\n' +
+    track.modules.map((m,i)=> (i+1) + '. ' + m.title).join('\n') + '\n'
+  );
+  saveFile(track.id + '-notebooks.zip', new Blob([new Uint8Array(zipSync(archive))], {type:'application/zip'}));
+}
+
+function DoneMark({done}: {done:boolean}) {
+  return <span className={'formation-done-mark' + (done?' is-done':'')} aria-label={done?'Module validé':'Module non validé'}>{done?'✓':'○'}</span>;
+}
+function ProgressBar({value, count}: {value:number;count:number}) {
+  return <div className="formation-progress-line" role="progressbar" aria-label="Modules validés" aria-valuenow={value} aria-valuemin={0} aria-valuemax={count}>
+    <div style={{width:count ? (100 * value / count) + '%' : '0%'}} />
   </div>;
 }
-
-function Exercise({course, lesson}: {course: Course; lesson: Lesson}) {
-  const [answer, setAnswer] = useState<number | null>(null);
-  const next = course.lessons[course.lessons.indexOf(lesson) + 1];
-  return <>
-    <p className="eyebrow">{course.plan} · Étape {course.lessons.indexOf(lesson) + 1} sur {course.lessons.length}</p>
-    <h1>{lesson.title}</h1><p>{lesson.why}</p>
-    <section className="card lms-section"><h2>Comprendre</h2><p>{lesson.theory}</p>{lesson.id === 'premiers-pixels' && <PixelGrid />}</section>
-    <section className="card lms-section"><h2>Appliquer en Python</h2>
-      <p>Télécharge le notebook puis ouvre-le dans Jupyter. Pour travailler depuis ton navigateur, ouvre Google Colab et importe le fichier .ipynb. Exécute chaque cellule dans l’ordre avec Maj + Entrée.</p><pre><code>{lesson.code}</code></pre><p>{lesson.reading}</p>
-      <button className="button button--primary" onClick={() => notebook(lesson, course)}>Télécharger le notebook Jupyter</button>
-    </section>
-    <section className="card lms-section"><h2>À toi de modifier</h2><p>{lesson.guided}</p>
-      <fieldset><legend>{lesson.question}</legend>{lesson.answers.map((choice, i) => <label key={choice}><input type="radio" name="question" checked={answer === i} onChange={() => setAnswer(i)} /> {choice}</label>)}</fieldset>
-      <p role="status">{answer === null ? '' : answer === lesson.correct ? 'Bonne réponse. ' + lesson.hint : 'Réessaie. ' + lesson.hint}</p>
-    </section>
-    <section className="card lms-section"><h2>Mini-projet à livrer</h2><p>{lesson.mission}</p><h3>Critère de réussite</h3><p>{lesson.check}</p>
-      <Link to={next ? '/formations/' + course.id + '/' + next.id : course.project}>{next ? 'Leçon suivante · ' + next.title : 'Appliquer ces acquis dans le stage pratique'}</Link>
-    </section>
-  </>;
+function trackDoneCount(track: FormationTrack, completed: string[]) {
+  return track.modules.filter(module => completed.includes(track.id + ':' + module.id)).length;
 }
-
+function TrackSymbol({id}: {id:string}) {
+  return <span aria-hidden="true" className={'formation-track-symbol formation-track-symbol--' + id}>
+    {id === 'traitement-images' ? '◈' : id === 'computer-vision' ? '⌘' : '▥'}
+  </span>;
+}
+function Catalog({completed}: {completed:string[]}) {
+  const [search,setSearch] = useState('');
+  const filtered = formationTracks.filter(t => [t.title,t.subtitle,...t.tools].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
+  const total = formationTracks.reduce((n,t)=>n+t.modules.length,0);
+  return <div className="formation-catalog">
+    <header className="formation-hero">
+      <div className="formation-hero__copy">
+        <span className="formation-eyebrow">MONSTAGE LEARNING · FORMATIONS</span>
+        <h1>Apprendre. Pratiquer.<br /><em>Devenir opérationnel.</em></h1>
+        <p>De zéro à la première mission en entreprise. Des notions expliquées simplement, du code commenté, des laboratoires visuels et des livrables à présenter.</p>
+        <div className="formation-hero__meta"><span>3 parcours structurés</span><span>{total} modules</span><span>Jupyter · Projets · Quiz</span></div>
+      </div>
+      <div className="formation-hero__progress">
+        <span className="formation-eyebrow">MA PROGRESSION</span>
+        <strong>{completed.length}<small> / {total}</small></strong>
+        <ProgressBar value={completed.length} count={total}/>
+        <p>modules validés</p>
+      </div>
+    </header>
+    <div className="formation-section-heading">
+      <div><span className="formation-eyebrow">CHOISIS TON PARCOURS</span><h2>Catalogue des formations</h2></div>
+      <label className="formation-search"><span className="sr-only">Rechercher une formation</span>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Rechercher un domaine ou un outil…" type="search"/>
+      </label>
+    </div>
+    <div className="formation-tracks-grid">
+      {filtered.map(track => {
+        const done = trackDoneCount(track, completed);
+        return <article key={track.id} className={'formation-track-card formation-track-card--' + track.id}>
+          <div className="formation-track-card__top"><TrackSymbol id={track.id}/><span>{track.plan}</span></div>
+          <h3>{track.title}</h3><p>{track.subtitle}</p>
+          <div className="formation-tags">{track.tools.map(tool=><span key={tool}>{tool}</span>)}</div>
+          <div className="formation-track-card__bottom">
+            <div className="formation-track-card__numbers"><span>{track.modules.length} modules · {track.weeks}</span><strong>{Math.round(done/track.modules.length*100)} %</strong></div>
+            <ProgressBar value={done} count={track.modules.length}/>
+            <Link className="formation-primary-action" to={'/formations/' + track.id}>{done ? 'Reprendre ma formation':'Découvrir le parcours'} <span aria-hidden="true">→</span></Link>
+          </div>
+        </article>;
+      })}
+    </div>
+    {!filtered.length && <div className="formation-empty">Aucun parcours ne correspond à cette recherche.</div>}
+    <section className="formation-method">
+      <div><span className="formation-eyebrow">MÉTHODE D’APPRENTISSAGE</span><h2>Une notion n’est acquise que si tu sais l’appliquer.</h2></div>
+      <div className="formation-method__steps">
+        <span><b>01</b> Comprendre la théorie essentielle</span>
+        <span><b>02</b> Exécuter et modifier le code</span>
+        <span><b>03</b> Interpréter et résoudre une mission</span>
+        <span><b>04</b> Valider et expliquer les résultats</span>
+      </div>
+    </section>
+    <div className="formation-existing"><strong>Ateliers précédents conservés</strong><p>Les mini-cours OpenCV / Data Analyst déjà présents restent disponibles.</p><Link to="/formations/vision">Atelier Vision historique</Link><Link to="/formations/data">Atelier Data historique</Link></div>
+  </div>;
+}
+function Overview({track,completed}: {track:FormationTrack;completed:string[]}) {
+  const done = trackDoneCount(track,completed);
+  const firstIncomplete = track.modules.find(module => !completed.includes(track.id+':'+module.id)) || track.modules[0];
+  return <div className="formation-overview">
+    <nav className="formation-breadcrumb" aria-label="Fil d’Ariane"><Link to="/formations">Formations</Link><span> / </span><span>{track.title}</span></nav>
+    <header className="formation-overview__hero">
+      <div><span className="formation-eyebrow">{track.plan} · {track.level}</span><h1>{track.title}</h1><p>{track.objective}</p>
+        <div className="formation-tags">{track.tools.map(t=><span key={t}>{t}</span>)}</div></div>
+      <div className="formation-overview__aside">
+        <div className="formation-overview__stats"><strong>{done} / {track.modules.length}</strong><span>modules validés</span></div>
+        <ProgressBar value={done} count={track.modules.length}/>
+        <Link className="formation-primary-action" to={'/formations/'+track.id+'/'+firstIncomplete.id}>{done ? 'Continuer le parcours':'Commencer le parcours'} <span aria-hidden="true">→</span></Link>
+        <button className="formation-secondary-action" type="button" onClick={()=>downloadTrack(track)}>↓ Télécharger les notebooks (.zip)</button>
+      </div>
+    </header>
+    <section className="formation-syllabus"><div className="formation-section-heading"><div><span className="formation-eyebrow">PROGRAMME DÉTAILLÉ</span><h2>Les {track.modules.length} modules</h2></div><span className="formation-syllabus__duration">{track.weeks}</span></div>
+      <div className="formation-module-grid">{track.modules.map((module,index) => {
+        const doneModule=completed.includes(track.id+':'+module.id);
+        return <Link key={module.id} className="formation-module-card" to={'/formations/'+track.id+'/'+module.id}>
+          <div className="formation-module-card__header"><span>MODULE {String(index+1).padStart(2,'0')}</span><DoneMark done={doneModule}/></div>
+          <h3>{module.title}</h3><p>{module.objective}</p>
+          <div className="formation-module-card__footer"><span>{module.points.length} notions · Notebook · Quiz</span><span aria-hidden="true">↗</span></div>
+        </Link>;
+      })}</div>
+    </section>
+    <section className="formation-final-project"><span className="formation-eyebrow">PROJET FINAL</span><h2>{track.project}</h2><p>À la fin du parcours : code reproductible, vérifications, résultats analysés, documentation et restitution professionnelle.</p></section>
+  </div>;
+}
+function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
+  track:FormationTrack;
+  module:FormationModule;
+  completed:string[];
+  onComplete:(id:string)=>void;
+  notes:Record<string,string>;
+  onNote:(id:string,value:string)=>void;
+}) {
+  const [stage,setStage]=useState<Stage>('comprendre');
+  const [answer,setAnswer]=useState<number|null>(null);
+  const [checked,setChecked]=useState(false);
+  const [missionReady,setMissionReady]=useState(false);
+  const [copied,setCopied]=useState(false);
+  const index=track.modules.findIndex(item=>item.id===module.id);
+  const key=track.id+':'+module.id;
+  const done=completed.includes(key);
+  const prev=track.modules[index-1];
+  const next=track.modules[index+1];
+  useEffect(()=>{setStage('comprendre');setAnswer(null);setChecked(false);setMissionReady(false);setCopied(false);},[key]);
+  const right=checked && answer===module.quiz.correct;
+  const stages: Array<[Stage,string,string]> = [['comprendre','01','Comprendre'],['pratiquer','02','Pratiquer'],['valider','03','Valider']];
+  async function copyExample() {
+    try { await navigator.clipboard.writeText(module.code); setCopied(true); }
+    catch { setCopied(false); }
+  }
+  return <div className="formation-lesson">
+    <nav className="formation-breadcrumb" aria-label="Fil d’Ariane"><Link to="/formations">Formations</Link><span> / </span><Link to={'/formations/'+track.id}>{track.title}</Link><span> / </span><span>Module {index+1}</span></nav>
+    <div className="formation-lesson__layout">
+      <aside className="formation-lesson__sidebar" aria-label="Sommaire du parcours">
+        <Link className="formation-sidebar-back" to={'/formations/'+track.id}>← Programme complet</Link>
+        <div className="formation-sidebar-head"><span className="formation-eyebrow">{track.plan}</span><strong>{track.title}</strong><span>{trackDoneCount(track,completed)} sur {track.modules.length} modules</span><ProgressBar value={trackDoneCount(track,completed)} count={track.modules.length}/></div>
+        <nav className="formation-sidebar-list" aria-label="Modules">
+          {track.modules.map((m,i)=><Link key={m.id} aria-current={m.id===module.id?'page':undefined} className={m.id===module.id?'is-current':''} to={'/formations/'+track.id+'/'+m.id}>
+            <span className="formation-sidebar-number">{String(i+1).padStart(2,'0')}</span>
+            <span>{m.title}</span>
+            {completed.includes(track.id+':'+m.id)&&<span className="formation-sidebar-check" aria-label="Validé">✓</span>}
+          </Link>)}
+        </nav>
+      </aside>
+      <main className="formation-lesson__main">
+        <div className="formation-lesson__heading"><span className="formation-eyebrow">MODULE {String(index+1).padStart(2,'0')} / {track.modules.length} · {track.plan}</span><h1>{module.title}</h1><p>{module.objective}</p><div className="formation-lesson__status">{done ? '✓ Module validé':'○ En cours d’apprentissage'}</div></div>
+        <div className="formation-step-tabs" role="tablist" aria-label="Étapes pédagogiques">
+          {stages.map(([id,num,name])=><button key={id} type="button" role="tab" aria-selected={stage===id} className={stage===id?'is-active':''} onClick={()=>setStage(id)}><span>{num}</span>{name}</button>)}
+        </div>
+        {stage==='comprendre' && <div className="formation-content-section" role="tabpanel">
+          <span className="formation-eyebrow">01 · THÉORIE ESSENTIELLE</span><h2>Comprendre avant de coder</h2>
+          <p className="formation-featured-paragraph">{module.concept}</p>
+          <div className="formation-notions"><h3>Ce que tu vas apprendre</h3><ol>{module.points.map((point,i)=><li key={point}><b>{String(i+1).padStart(2,'0')}</b><span>{point}</span></li>)}</ol></div>
+          <div className="formation-business-case"><strong>Exemple concret</strong><p>{module.example}</p></div>
+          <FormationLab moduleId={module.id}/>
+          <div className="formation-stage-footer"><p>Lis la théorie, essaie de reformuler le concept, puis explore le code.</p><button className="formation-primary-action" type="button" onClick={()=>setStage('pratiquer')}>Passer à la pratique <span aria-hidden="true">→</span></button></div>
+        </div>}
+        {stage==='pratiquer' && <div className="formation-content-section" role="tabpanel">
+          <span className="formation-eyebrow">02 · APPLICATION GUIDÉE</span><h2>Observer le code et ses résultats</h2><p>Exemple autonome à reproduire dans un notebook. Lis les commentaires, exécute, puis modifie les paramètres pour vérifier ce que tu as compris.</p>
+          <div className="formation-code">
+            <div className="formation-code__header"><span>{module.codeLanguage==='excel'?'FORMULES EXCEL':module.codeLanguage==='dax'?'MESURES DAX':module.codeLanguage==='sql'?'SQL / PYTHON':'PYTHON 3'}</span><button type="button" onClick={copyExample}>{copied?'✓ Copié':'Copier le code'}</button></div>
+            <pre><code>{module.code}</code></pre>
+          </div>
+          <div className="formation-code-actions"><button className="formation-secondary-action" type="button" onClick={()=>downloadNotebook(track,module)}>↓ Télécharger le notebook .ipynb</button><a className="formation-link-button" href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Ouvrir Google Colab ↗</a></div>
+          <div className="formation-result"><strong>Comment interpréter le résultat ?</strong><p>{module.result}</p></div>
+          <div className="formation-business-case"><strong>À toi de modifier</strong><p>{module.instructions}</p></div>
+          {module.codeLanguage!=='python'&&<p className="formation-tool-warning">Cet exemple {module.codeLanguage?.toUpperCase()} doit être exécuté dans l’outil correspondant. Il est inclus comme référence dans le notebook, pas en cellule Python exécutable.</p>}
+          <div className="formation-stage-footer"><p>Ne copie pas seulement le code : explique chaque transformation et vérifie les résultats.</p><button className="formation-primary-action" type="button" onClick={()=>setStage('valider')}>Passer à la validation <span aria-hidden="true">→</span></button></div>
+        </div>}
+        {stage==='valider' && <div className="formation-content-section" role="tabpanel">
+          <span className="formation-eyebrow">03 · ÉVALUATION ET MISSION</span><h2>Prouver ce que tu as appris</h2>
+          <section className="formation-quiz"><h3>Question de compréhension</h3><p>{module.quiz.question}</p>
+            <fieldset><legend className="sr-only">Choisis une réponse</legend>{module.quiz.options.map((option,i)=><label className={'formation-quiz-option'+(answer===i?' is-selected':'')} key={option}>
+              <input type="radio" name={'quiz-'+key} checked={answer===i} onChange={()=>{setAnswer(i);setChecked(false);}}/><span>{String.fromCharCode(65+i)}</span>{option}
+            </label>)}</fieldset>
+            <button className="formation-secondary-action" type="button" disabled={answer===null} onClick={()=>setChecked(true)}>Vérifier ma réponse</button>
+            {checked&&<div className={'formation-quiz-feedback'+(right?' is-correct':' is-incorrect')} role="status"><strong>{right?'Bonne réponse !':'Pas encore.'}</strong><p>{module.quiz.explanation}</p></div>}
+          </section>
+          <section className="formation-mission"><span className="formation-eyebrow">MISSION DE STAGE SIMULÉE</span><h3>Livrable attendu</h3><p>{module.mission}</p><strong>Critère de réussite</strong><p>{module.validation}</p></section>
+          <section className="formation-learning-note"><label htmlFor="formation-notes"><strong>Mon carnet de bord</strong><span>Note les difficultés, résultats et questions pour ton tuteur. Enregistré uniquement dans ce navigateur.</span></label>
+            <textarea id="formation-notes" rows={5} value={notes[key]||''} onChange={e=>onNote(key,e.target.value)} placeholder="Ce que j’ai testé… Ce que j’ai compris… Ce que je veux approfondir…"/>
+          </section>
+          <label className="formation-self-check"><input type="checkbox" checked={missionReady} onChange={e=>setMissionReady(e.target.checked)}/><span>J’ai réalisé la mission et vérifié le livrable avec les critères annoncés.</span></label>
+          <button className="formation-primary-action" type="button" disabled={done || !right || !missionReady} onClick={()=>onComplete(key)}>{done?'✓ Module déjà validé':'Valider ce module'} <span aria-hidden="true">→</span></button>
+          {!done && <p className="formation-help-text">La validation demande une bonne réponse au quiz et une mission effectivement réalisée. Le suivi est conservé sur cet appareil.</p>}
+        </div>}
+        <footer className="formation-lesson__navigation">
+          {prev ? <Link to={'/formations/'+track.id+'/'+prev.id}>← Module précédent</Link> : <Link to={'/formations/'+track.id}>← Programme</Link>}
+          {next ? <Link to={'/formations/'+track.id+'/'+next.id}>Module suivant →</Link> : <Link to={'/formations/'+track.id}>Voir ma progression →</Link>}
+        </footer>
+      </main>
+    </div>
+  </div>;
+}
 export default function Formations() {
-  const { parcours, lecon } = useParams();
-  const course = courses.find(item => item.id === parcours);
-  const lesson = course?.lessons.find(item => item.id === lecon);
-  if ((parcours && !course) || (lecon && !lesson)) return <Navigate to="/formations" replace />;
+  const {parcours,lecon} = useParams();
+  const [completed,setCompleted] = useState<string[]>(()=>readStorage<string[]>(PROGRESS_KEY,[]));
+  const [notes,setNotes] = useState<Record<string,string>>(()=>readStorage<Record<string,string>>(NOTES_KEY,{}));
+  useEffect(()=>{try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(completed));}catch{/* stockage indisponible */}},[completed]);
+  useEffect(()=>{try{window.localStorage.setItem(NOTES_KEY,JSON.stringify(notes));}catch{/* stockage indisponible */}},[notes]);
+  const track = useMemo(()=>formationTracks.find(t=>t.id===parcours),[parcours]);
+  const module = track?.modules.find(m=>m.id===lecon);
+  if (parcours==='vision' || parcours==='data') return <LegacyFormations/>;
+  if ((parcours && !track) || (lecon && !module)) return <Navigate to="/formations" replace/>;
+  const validCompleted=completed.filter(id=>formationTracks.some(t=>t.modules.some(m=>id===t.id+':'+m.id)));
   return <section className="page formations" lang="fr">
-    {course && <nav aria-label="Fil d’Ariane"><Link to="/formations">Formations</Link>{lesson && <> / <Link to={'/formations/' + course.id}>{course.title}</Link></>}</nav>}
-    {!course ? <>
-      <h1>Formations</h1><p>Commence sans prérequis dans le domaine. Pour chaque étape, découvre la notion, teste le code puis réalise un mini-projet. La dernière étape simule une première mission confiée par un tuteur.</p>
-      <div className="stage-course-grid">{courses.map(item => <article className="card lms-section" key={item.id}>
-        <p className="eyebrow">{item.plan}</p><h2>{item.title}</h2><p>{item.goal}</p>
-        <Link className="button button--primary" to={'/formations/' + item.id}>Explorer le parcours {item.plan.slice(-1)}</Link>
-      </article>)}</div>
-    </> : lesson ? <Exercise key={lesson.id} course={course} lesson={lesson} /> : <>
-      <p className="eyebrow">{course.plan}</p><h1>{course.title}</h1><p>{course.goal}</p>
-      <Link className="button button--primary" to={'/formations/' + course.id + '/' + course.lessons[0].id}>Commencer par la première leçon</Link>
-      <h2>Parcours en {course.lessons.length} étapes</h2><ol className="formation-list">{course.lessons.map(item => <li className="card lms-section" key={item.id}><h2><Link to={'/formations/' + course.id + '/' + item.id}>{item.title}</Link></h2><p>{item.mission}</p></li>)}</ol>
-      <Link to={course.project}>Accéder au stage pratique</Link>
-    </>}
+    {!track ? <Catalog completed={validCompleted}/> :
+      !module ? <Overview track={track} completed={validCompleted}/> :
+      <ModuleScreen track={track} module={module} completed={validCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/>}
   </section>;
 }
