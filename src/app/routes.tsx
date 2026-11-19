@@ -24,7 +24,7 @@ export function AppRoutes() {
     <Routes>
       <Route element={<AppShell />}>
         <Route index element={<Navigate to="/offers" replace />} />
-        <Route path="/formations/:parcours?/:lecon?" element={<Suspense fallback={<p role="status">Chargement des formations…</p>}><Formations /></Suspense>} />
+        <Route path="/formations/:parcours?/:lecon?/:topic?" element={<Suspense fallback={<p role="status">Chargement des formations…</p>}><Formations /></Suspense>} />
         <Route path="/stages" element={<StagesPage />} />
         <Route path="/stages/data-analysis" element={<Suspense fallback={<p role="status">Chargement du projet…</p>}><DataStagePage /></Suspense>} />
         <Route path="/stage-cv" element={<TrainingPage />} />
