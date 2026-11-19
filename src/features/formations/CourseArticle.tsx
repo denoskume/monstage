@@ -10,7 +10,16 @@ import { getLessonExample } from './lessonExamples';
 import { topicGuide } from './TopicLessons';
 import { LessonVisual } from './LessonVisual';
 import { deepConceptsFor } from './deepConceptIndex';
+import { PythonConceptVisual, type PythonDiagramKind } from './PythonConceptVisual';
 
+const articleDiagrams:Record<string,PythonDiagramKind> = {
+ 'python-introduction':'python-flow', 'jupyter-notebook':'jupyter',
+ 'python-variables':'variables','python-data-types':'types','python-operators':'operators',
+ 'python-lists':'lists','python-tuples':'tuples','python-dictionaries':'dictionaries',
+ 'python-conditions':'conditions','python-loops':'loops',
+ 'python-builtins':'builtins','python-user-defined-functions':'functions',
+ 'python-csv':'csv','python-json':'json','python-exceptions':'exceptions'
+};
 function createdArticle(track:FormationTrack,module:FormationModule):CourseArticleData {
   const sections:ArticleSection[]=module.points.map((topic,index)=>{
     const guide=topicGuide(topic,module),example=getLessonExample(topic,module,index);
@@ -71,6 +80,7 @@ function OpenCVMap(){
 }
 
 function ConceptVisual({visual,module}:{visual:NonNullable<ArticleSection['visual']>;module:FormationModule;pointIndex:number}){
+ if(Object.values(articleDiagrams).includes(visual as PythonDiagramKind))return <PythonConceptVisual kind={visual as PythonDiagramKind}/>;
  if(visual==='opencv')return <OpenCVMap/>;
  if(visual==='colors')return <div className="course-article-color-demo" aria-label="Comparaison des représentations d’une couleur"><div><b style={{background:'#bf3d49'}}/>RGB<br/><small>Rouge, vert, bleu</small></div><div><b style={{background:'#bf3d49'}}/>BGR<br/><small>Bleu, vert, rouge</small></div><div><b style={{background:'linear-gradient(90deg,#f34660,#faa354,#f5e55a,#5dc477,#53b7de,#9672bc)'}}/>HSV<br/><small>Teinte, saturation, valeur</small></div><p>Il s’agit de représentations numériques différentes : pour conserver l’aspect visuel, on convertit les canaux avec cv2.cvtColor.</p></div>;
  if(visual==='pixels')return <LessonVisual topic="Pixel, lignes/colonnes et origine des coordonnées" module={{...module,id:'images-pixels'}}/>;
@@ -111,7 +121,11 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
  useEffect(()=>{setSelectedSlug(null);},[module.id]);
  const selectedIndex=concepts.findIndex(x=>x.slug===(selectedSlug??concepts[0]?.slug));
  const concept=selectedIndex>=0?concepts[selectedIndex]:undefined;
- const article=useMemo(()=>concept?.article??articleFor(track,module),[concept,track,module]);
+ const article=useMemo(()=>{
+   if(!concept)return articleFor(track,module);
+   return {...concept.article,sections:concept.article.sections.map((part,i)=>
+     i===0?{...part,visual:articleDiagrams[concept.slug]}:part)};
+ },[concept,track,module]);
  const [copied,setCopied]=useState(false);
  const length=article.intro.join(' ').length+article.sections.map(s=>s.paragraphs.join(' ')+(s.code||'')).join(' ').length;
  const readTime=Math.max(4,Math.round(length/900));
