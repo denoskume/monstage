@@ -121,7 +121,7 @@ export const formationProjects:Record<string,FormationProject[]> = {
         "Les totaux correspondent aux données sources",
         "Les limitations et règles d'accès sont documentées"
       ],
-      "starterCode": "# Mesures à ajouter dans Power BI Desktop (DAX)\n# Total Production = SUM(FactProduction[Unites])\n# Total Coût = SUM(FactProduction[CoutEUR])\n# Coût par unité = DIVIDE([Total Coût], [Total Production])\n\n# Les fichiers .pbix sont construits avec Power BI Desktop ;\n# ce notebook sert uniquement à contrôler le fichier source.\nimport pandas as pd\ndf = pd.read_csv(\"production.csv\")\nprint(df.groupby(\"site\")[[\"unites\",\"cout_eur\"]].sum())",
+      "starterCode": "# Mesures à ajouter dans Power BI Desktop (DAX)\n# Total Production = SUM(FactProduction[Unites])\n# Total Coût = SUM(FactProduction[CoutEUR])\n# Coût par unité = DIVIDE([Total Coût], [Total Production])\n\n# Les fichiers .pbix sont construits avec Power BI Desktop ;\n# ce notebook sert uniquement à contrôler le fichier source.\nimport pandas as pd\ndf = pd.read_csv(\"production.csv\")\nprint(df.groupby(\"site\")[[\"unites\",\"cout_eur\"]].sum())\n\n# TODO : vérifier les totaux par période avec Power BI\n# TODO : créer les dimensions Date/Site et les mesures DAX\n# TODO : contrôler les interactions et livrer une page de détail",
       "dataName": "production.csv",
       "data": "date,site,unites,cout_eur\n2026-09-01,Nantes,120,8200\n2026-09-01,Lyon,90,6500\n2026-09-02,Nantes,133,9100\n2026-09-02,Lyon,110,7200\n2026-10-01,Nantes,138,9300\n2026-10-01,Lyon,105,7000\n"
     },
