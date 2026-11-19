@@ -9,6 +9,7 @@ import { FormationLab } from './FormationLabs';
 import { ImageWorkbench } from './ImageWorkbench';
 import { DataWorkbench } from './DataWorkbench';
 import { TopicLessons, topicGuide } from './TopicLessons';
+import { validateFormationBackup } from './formationBackup';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
@@ -127,7 +128,8 @@ function TrackSymbol({id}: {id:string}) {
     {id === 'traitement-images' ? '◈' : id === 'computer-vision' ? '⌘' : '▥'}
   </span>;
 }
-function Catalog({completed,onBackup}: {completed:string[];onBackup:()=>void}) {
+function Catalog({completed,onBackup,onRestore}: {completed:string[];onBackup:()=>void;onRestore:(file:File)=>Promise<void>}) {
+  const [restoreMessage,setRestoreMessage]=useState('');
   const [search,setSearch] = useState('');
   const filtered = formationTracks.filter(t => [t.title,t.subtitle,...t.tools].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
   const total = formationTracks.reduce((n,t)=>n+t.modules.length,0);
@@ -177,7 +179,9 @@ function Catalog({completed,onBackup}: {completed:string[];onBackup:()=>void}) {
         <span><b>04</b> Valider et expliquer les résultats</span>
       </div>
     </section>
-    <section className="formation-backup"><div><strong>Conserver mes travaux</strong><p>Export local des notes, étapes étudiées et codes modifiés. Les données ne quittent pas le navigateur.</p></div><button type="button" className="formation-secondary-action" onClick={onBackup}>↓ Sauvegarder mon parcours (JSON)</button></section>
+    <section className="formation-backup"><div><strong>Conserver mes travaux</strong><p>Export local des notes, étapes étudiées et codes modifiés. Les données ne quittent pas le navigateur.</p></div><div className="formation-backup__actions"><button type="button" className="formation-secondary-action" onClick={onBackup}>↓ Sauvegarder mon parcours (JSON)</button>
+      <label className="formation-workbench-upload">↑ Restaurer une sauvegarde <input type="file" accept=".json,application/json" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{await onRestore(file);setRestoreMessage('Sauvegarde restaurée.');}catch(error){setRestoreMessage(error instanceof Error?error.message:'Import impossible.');}e.target.value='';}}/></label>
+      {restoreMessage&&<p role="status">{restoreMessage}</p>}</div></section>
     <div className="formation-existing"><strong>Ateliers précédents conservés</strong><p>Les mini-cours OpenCV / Data Analyst déjà présents restent disponibles.</p><Link to="/formations/vision">Atelier Vision historique</Link><Link to="/formations/data">Atelier Data historique</Link></div>
   </div>;
 }
@@ -324,13 +328,22 @@ export default function Formations() {
     saveFile('monstage-formations-sauvegarde.json',new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
   }
   function toggleTopic(key:string,index:number){setTopics(previous=>{const old=previous[key]||[];return {...previous,[key]:old.includes(index)?old.filter(n=>n!==index):[...old,index].sort((a,b)=>a-b)};});}
+  async function restore(file:File) {
+    if(file.size>2_000_000)throw Error('Sauvegarde trop volumineuse (2 Mo max).');
+    const backup=validateFormationBackup(JSON.parse(await file.text()));
+    const allowed=new Set(formationTracks.flatMap(t=>t.modules.map(m=>t.id+':'+m.id)));
+    setCompleted(backup.completed.filter(id=>allowed.has(id)));
+    setNotes(Object.fromEntries(Object.entries(backup.notes).filter(([id])=>allowed.has(id))));
+    setTopics(Object.fromEntries(Object.entries(backup.topics).filter(([id])=>allowed.has(id))));
+    setCodeDrafts(Object.fromEntries(Object.entries(backup.codeDrafts).filter(([id])=>allowed.has(id))));
+  }
   const track = useMemo(()=>formationTracks.find(t=>t.id===parcours),[parcours]);
   const module = track?.modules.find(m=>m.id===lecon);
   if (parcours==='vision' || parcours==='data') return <LegacyFormations/>;
   if ((parcours && !track) || (lecon && !module)) return <Navigate to="/formations" replace/>;
   const validCompleted=completed.filter(id=>formationTracks.some(t=>t.modules.some(m=>id===t.id+':'+m.id)));
   return <section className="page formations" lang="fr">
-    {!track ? <Catalog completed={validCompleted} onBackup={backup}/> :
+    {!track ? <Catalog completed={validCompleted} onBackup={backup} onRestore={restore}/> :
       !module ? <Overview track={track} completed={validCompleted}/> :
       <ModuleScreen track={track} module={module} completed={validCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))} topics={topics} onToggleTopic={toggleTopic} codeDrafts={codeDrafts} onCodeDraft={(id,value)=>setCodeDrafts(n=>({...n,[id]:value}))}/>}
   </section>;
