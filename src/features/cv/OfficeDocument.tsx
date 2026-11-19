@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { DocxEditor, type DocxEditorRef } from '@docx-editor.dev/react';
-import { fr } from '@docx-editor.dev/i18n/fr';
+import { WordRibbon } from './WordRibbon';
 import '@docx-editor.dev/core/styles/editor.css';
 import { writeFile } from './officeStore';
 
@@ -27,6 +27,11 @@ export default function OfficeDocument({ session, close, create, pick }: { sessi
   const [ready, setReady] = useState(false);
 
   const [exporting, setExporting] = useState(false);
+
+  const [rulers, setRulers] = useState(true);
+  const [navigation, setNavigation] = useState(false);
+
+  const [navigationTab, setNavigationTab] = useState<'headings'|'find'|'goto'>('find');
 
   function save() {
     clearTimeout(timer.current);
@@ -95,7 +100,21 @@ export default function OfficeDocument({ session, close, create, pick }: { sessi
       <button disabled={!ready || exporting} onClick={() => void download('pdf')}>Télécharger le PDF</button>
       <button disabled={!ready || exporting} onClick={() => void download('docx')}>Télécharger le DOCX</button>
     </header>
-    <div className="ms-office-paper"><DocxEditor ref={editor} document={session.source} mode="edit" locale="fr-FR" i18n={fr}
+    <div className="ms-office-paper"><DocxEditor ref={editor} document={session.source} mode="edit" locale="fr-FR" rulers={rulers} navigation={{open:navigation,onOpenChange:setNavigation,tab:navigationTab,onTabChange:setNavigationTab}}
+      renderTitleBarRight={() => <WordRibbon
+        newFile={() => { void save().then(ok => { if (ok) create(); }); }}
+        open={() => { void save().then(ok => { if (ok) pick(); }); }}
+        save={() => void save()} pdf={() => void download('pdf')} docx={() => void download('docx')}
+        share={async () => {
+          try {
+            const bytes = await editor.current?.save();
+            if (!bytes) return;
+            const file = new File([bytes], name.current + '.docx', {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+            if (navigator.canShare?.({files:[file]})) await navigator.share({files:[file],title:name.current});
+            else { await download('docx'); setNotice('Copie DOCX téléchargée pour le partage.'); }
+          } catch (error) { if (!(error instanceof DOMException && error.name === 'AbortError')) setNotice('Partage indisponible.'); }
+        }}
+        find={() => {setNavigationTab('find'); setNavigation(true);}} rulers={rulers} toggleRulers={() => setRulers(v => !v)} notice={setNotice}/>}
       title={title} onTitleChange={value => { name.current = value.trim() || 'Document sans titre'; setTitle(value); changed(); }}
       onOpen={() => { void save().then(ok => { if (ok) pick(); }); }}
       onChange={changed} onSave={() => void save()}
