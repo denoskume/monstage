@@ -4,6 +4,9 @@ import { fr } from '@docx-editor.dev/i18n/fr';
 import '@docx-editor.dev/core/styles/editor.css';
 import { writeFile } from './officeStore';
 
+const pdfExport = async (source: Uint8Array) => (await import('./officePdf')).documentPdf(source);
+const menu = { reportIssue: false as const, exporters: { pdf: pdfExport } };
+
 export interface OfficeSession {
   id: string;
   name: string;
@@ -22,6 +25,8 @@ export default function OfficeDocument({ session, close, create, pick }: { sessi
   const [title, setTitle] = useState(session.name);
   const [notice, setNotice] = useState('Ouverture…');
   const [ready, setReady] = useState(false);
+
+  const [exporting, setExporting] = useState(false);
 
   function save() {
     clearTimeout(timer.current);
@@ -64,52 +69,37 @@ export default function OfficeDocument({ session, close, create, pick }: { sessi
     };
   }, []);
 
-  async function download() {
-    const bytes = await editor.current?.save();
-    if (!bytes) return;
-    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = (name.current.replace(/\.docx$/i, '') || 'Document') + '.docx';
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
-  }
-  async function printDocument() {
-    const frame = document.createElement('iframe');
-    frame.style.cssText = 'position:fixed;left:-10000px;width:900px;height:1000px;border:0';
-    frame.title = 'Impression du document';
-    document.body.append(frame);
+  async function download(format: 'pdf' | 'docx') {
+    setExporting(true);
     try {
-      const bytes = await editor.current?.save();
-      if (!bytes || !frame.contentDocument || !frame.contentWindow) throw new Error();
-      const { renderAsync } = await import('docx-preview');
-      const page = frame.contentDocument;
-      page.title = name.current;
-      await renderAsync(bytes, page.body, page.head, { inWrapper: false, useBase64URL: true });
-      const style = page.createElement('style');
-      style.textContent = '@page{margin:0}body{margin:0}section.docx{break-after:page;box-shadow:none!important}section.docx:last-child{break-after:auto}*{print-color-adjust:exact}';
-      page.head.append(style);
-      await page.fonts.ready;
-      frame.contentWindow.addEventListener('afterprint', () => frame.remove(), { once: true });
-      frame.contentWindow.print();
+      const docx = await editor.current?.save();
+      if (!docx) throw new Error('Document indisponible');
+      const blob = format === 'pdf'
+        ? new Blob([new Uint8Array((await pdfExport(new Uint8Array(docx))).bytes)], { type: 'application/pdf' })
+        : new Blob([docx], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = (name.current.replace(/\.(docx|pdf)$/i, '') || 'Document') + '.' + format;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
     } catch {
-      frame.remove();
-      setNotice('Impression impossible. Tu peux télécharger le document Word.');
-    }
+      setNotice('Le téléchargement a échoué. Ton document reste ouvert.');
+    } finally { setExporting(false); }
   }
   return <div className="ms-office" role="dialog" aria-modal="true" aria-label="Éditeur de documents MonStage">
     <header className="ms-office-bar">
       <button onClick={async () => { if (!ready || await save()) close(); }}>← Studio CV</button>
       <button disabled={!ready} onClick={async () => { if (await save()) create(); }}>Nouveau document</button>
       <span role="status">{notice}</span>
-      <button disabled={!ready} onClick={() => void printDocument()}>Imprimer / PDF</button>
-      <button disabled={!ready} onClick={() => void download()}>Télécharger le DOCX</button>
+      <button disabled={!ready || exporting} onClick={() => void download('pdf')}>Télécharger le PDF</button>
+      <button disabled={!ready || exporting} onClick={() => void download('docx')}>Télécharger le DOCX</button>
     </header>
     <div className="ms-office-paper"><DocxEditor ref={editor} document={session.source} mode="edit" locale="fr-FR" i18n={fr}
       title={title} onTitleChange={value => { name.current = value.trim() || 'Document sans titre'; setTitle(value); changed(); }}
       onOpen={() => { void save().then(ok => { if (ok) pick(); }); }}
       onChange={changed} onSave={() => void save()}
       onReady={() => { setReady(true); setNotice(session.revision ? 'Enregistré dans ce navigateur' : 'Enregistrement…'); void save(); }}
-      menu={{ reportIssue: false }} /></div>
+      menu={menu} /></div>
   </div>;
 }
