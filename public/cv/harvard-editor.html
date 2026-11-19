@@ -551,6 +551,7 @@ function replaceSheet(html){
  }
  next.hidden=next.dataset.sheet!==chosen;
  current().replaceWith(next);lastField=null;savedRange=null;activeCell=null;
+ if(chosen==='H')hvSyncAppearance();
  attachTableInteractions(next);
  persistCurrent();
 }
@@ -841,6 +842,7 @@ switchBar.forEach(b=>b.onclick=()=>{
  if(chosen==='H'&&root.querySelector('[data-ribbon="table"]').classList.contains('active'))root.querySelector('[data-ribbon="home"]').click();
  attachTableInteractions(current());syncTableHandles();
  stampCurrentPlan();
+ if(chosen==='H')hvSyncAppearance();
  note('CV '+chosen+' sélectionné. La dernière version enregistrée est chargée.');closeMenu();
 });
 root.querySelector('#add').onclick=()=>{
@@ -1183,6 +1185,92 @@ for(const [id,callback] of Object.entries({
  'hv-up':()=>hvMove(-1),'hv-down':()=>hvMove(1),'hv-delete':hvDelete,
  'hv-new':hvNew,'hv-import-a':()=>hvImport('A'),'hv-import-b':()=>hvImport('B')
 }))root.querySelector('#'+id)?.addEventListener('click',callback);
+
+
+/* Style and page-color controls persist in Harvard's saved sheet, never in CV A/B. */
+const hvStyleInput=root.querySelector('#hv-style');
+const hvPageColorInput=root.querySelector('#hv-page-color');
+function hvSyncAppearance(){
+ const sheet=current();
+ if(!sheet?.classList.contains('harvard-sheet'))return;
+ hvStyleInput.value=sheet.dataset.hvStyle||'classic';
+ hvPageColorInput.value=sheet.dataset.pageColor||'white';
+ root.querySelector('#paper-bg').value=(sheet.dataset.pageColor==='lightgray'?'#f4f5f7':'#ffffff');
+}
+hvStyleInput.addEventListener('change',()=>{
+ if(chosen!=='H')return;
+ capture();current().dataset.hvStyle=hvStyleInput.value;
+ persistCurrent();note('Style '+hvStyleInput.selectedOptions[0].textContent+' appliqué, contenu conservé.');
+});
+hvPageColorInput.addEventListener('change',()=>{
+ if(chosen!=='H')return;
+ capture();current().dataset.pageColor=hvPageColorInput.value;
+ current().style.removeProperty('background-color');
+ persistCurrent();note('Couleur de page mise à jour.');
+});
+/* Hyperlinks are real anchors, editable like text and saved in the document. */
+const hvLinkDialog=root.querySelector('#hv-link-dialog');
+const hvLinkText=root.querySelector('#hv-link-text');
+const hvLinkUrl=root.querySelector('#hv-link-url');
+let hvPendingRange=null, hvPendingField=null, hvEditingLink=null;
+function hvAnchoredFromRange(range){
+ const node=range?.startContainer;
+ const start=node?.nodeType===3?node.parentElement:node;
+ return start?.closest?.('a[href]')||null;
+}
+function hvOpenLink(){
+ if(chosen!=='H')return;
+ hvPendingField=lastField&&current().contains(lastField)?lastField:null;
+ if(!hvPendingField)return note('Clique d’abord sur un texte du CV ou sélectionne le texte à transformer en lien.');
+ const range=savedRange&&hvPendingField.contains(savedRange.commonAncestorContainer)?savedRange.cloneRange():null;
+ hvPendingRange=range;
+ hvEditingLink=hvAnchoredFromRange(range)||hvPendingField.querySelector('a[href]');
+ if(hvEditingLink&&!hvPendingField.contains(hvEditingLink))hvEditingLink=null;
+ hvLinkText.value=hvEditingLink?.textContent||(!range?.collapsed?range.toString():'');
+ hvLinkUrl.value=hvEditingLink?.getAttribute('href')||'';
+ hvLinkDialog.showModal();
+ (hvLinkText.value?hvLinkUrl:hvLinkText).focus();
+}
+function hvSafeUrl(raw){
+ const typed=raw.trim();
+ const uri=/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(typed)?'https://'+typed:typed;
+ if(/^(mailto:|tel:)/i.test(uri))return uri;
+ try{const result=new URL(uri);return ['https:','http:'].includes(result.protocol)?result.href:null;}catch{return null;}
+}
+root.querySelector('#hv-link-form').addEventListener('submit',event=>{
+ event.preventDefault();
+ const textValue=hvLinkText.value.trim();
+ const urlValue=hvSafeUrl(hvLinkUrl.value);
+ if(!textValue||!urlValue){note('Lien invalide : saisis un texte et une URL https:// valide.');hvLinkUrl.focus();return;}
+ if(!hvPendingField||!current().contains(hvPendingField)){hvLinkDialog.close();return;}
+ capture();
+ const anchor=hvEditingLink&&current().contains(hvEditingLink)?hvEditingLink:document.createElement('a');
+ anchor.href=urlValue;anchor.setAttribute('rel','noopener noreferrer');anchor.target='_blank';
+ anchor.textContent=textValue;
+ if(!hvEditingLink){
+   if(hvPendingRange&&hvPendingField.contains(hvPendingRange.commonAncestorContainer)){
+     hvPendingRange.deleteContents();hvPendingRange.insertNode(anchor);
+   }else hvPendingField.append(anchor);
+ }
+ hvLinkDialog.close();lastField=hvPendingField;savedRange=null;hvPendingRange=null;hvEditingLink=null;
+ persistCurrent();note('Lien cliquable ajouté au CV et aux exports.');
+});
+root.querySelector('#hv-link-cancel').onclick=()=>hvLinkDialog.close();
+hvLinkDialog.addEventListener('close',()=>{hvPendingRange=null;hvEditingLink=null;});
+function hvUnlink(){
+ if(chosen!=='H')return;
+ const link=hvAnchoredFromRange(savedRange)||lastField?.querySelector('a[href]');
+ if(!link||!current().contains(link))return note('Place le curseur dans le lien à retirer.');
+ capture();const contents=document.createTextNode(link.textContent);link.replaceWith(contents);
+ persistCurrent();note('Lien retiré, texte conservé.');
+}
+root.querySelector('#hv-link').addEventListener('mousedown',e=>e.preventDefault());
+root.querySelector('#hv-link').onclick=hvOpenLink;
+root.querySelector('#hv-unlink').onclick=hvUnlink;
+root.addEventListener('click',event=>{
+ const link=event.target.closest?.('.harvard-sheet [contenteditable="true"] a[href]');
+ if(link&&!event.ctrlKey&&!event.metaKey){event.preventDefault();lastField=link.closest('[contenteditable="true"]');}
+});
 
 const menu=root.querySelector('#download-menu');const toggle=root.querySelector('#download');function closeMenu(){menu.classList.remove('open');toggle.setAttribute('aria-expanded','false')}
 toggle.onclick=()=>{menu.classList.toggle('open');toggle.setAttribute('aria-expanded',menu.classList.contains('open')?'true':'false')};
