@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { FormationModule } from './formationTypes';
 
-function VisualFrame({title,subtitle,children}:{title:string;subtitle:string;children:React.ReactNode}) {
+function VisualFrame({title,subtitle,children}:{title:string;subtitle:string;children:ReactNode}) {
   return <figure className="learning-visual">
     <div className="learning-visual__header"><span>COMPRENDRE EN IMAGE</span><strong>{title}</strong></div>
     <div className="learning-visual__content">{children}</div>
@@ -138,7 +138,7 @@ export function LessonVisual({topic,module}:{topic:string;module:FormationModule
   if(/seuillage|otsu|segmentation|masque binaire|seuil fixe/.test(q))return <ThresholdVisual/>;
   if(/convolution|filtre moyen|gaussien|sobel|noyau|kernel|voisinage/.test(q))return <KernelVisual/>;
   if(/iou|dice|masque.*classe|faux positif|faux négatif/.test(q))return <MaskVisual/>;
-  if(/train|test|validation|surapprentissage|apprentissage supervisé|knn/.test(q)&&module.plan!=='Plan B')return <SplitVisual/>;
+  if(/train|test|validation|surapprentissage|apprentissage supervisé|knn/.test(q)&&module.id!=='metier-donnees')return <SplitVisual/>;
   if(/relu|neurone|activation|couche|réseau|gradient/.test(q))return <NetworkVisual/>;
   if(module.id==='metier-donnees'||/kpi|agrégation|groupby|tableau croisé|ventes|graphique catégoriel|sum|group by/.test(q))return <DataVisual/>;
   if(module.id==='classification-ml')return <SplitVisual/>;
