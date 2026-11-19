@@ -108,7 +108,7 @@ export const dataAnalystTrack: FormationTrack = {
         "correct": 1,
         "explanation": "Une correspondance un-à-plusieurs peut multiplier les lignes et gonfler les sommes."
       },
-      "codeLanguage": "sql"
+      "codeLanguage": "python"
     },
     {
       "id": "python",
