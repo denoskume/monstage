@@ -5,11 +5,11 @@ import type { FormationModule, FormationTrack } from './formationTypes';
 import { dataAnalystTrack } from './dataAnalystTrack';
 import { imageProcessingTrack } from './imageProcessingTrack';
 import { computerVisionTrack } from './computerVisionTrack';
-import { FormationLab } from './FormationLabs';
 import { ImageWorkbench } from './ImageWorkbench';
 import { AdvancedImageLab } from './AdvancedImageLabs';
 import { DataWorkbench } from './DataWorkbench';
-import { TopicLessons, topicGuide } from './TopicLessons';
+import { topicGuide } from './TopicLessons';
+import { CourseArticle } from './CourseArticle';
 import { validateFormationBackup } from './formationBackup';
 import { mathematicsNotes } from './mathematicsNotes';
 import { AuthContext } from '../../auth/useAuth';
@@ -17,6 +17,7 @@ import { formationsCloudRequest } from './formationCloud';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 import './editorialLearning.css';
+import './courseArticle.css';
 
 export const formationTracks = [imageProcessingTrack, computerVisionTrack, dataAnalystTrack];
 const PROGRESS_KEY = 'monstage:formations:completed:v2';
@@ -285,32 +286,14 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote,topics,onT
         </nav>
       </aside>
       <main className="formation-lesson__main">
-        <div className="formation-lesson__heading"><span className="formation-eyebrow">MODULE {String(index+1).padStart(2,'0')} / {track.modules.length} · {track.plan}</span><h1>{module.title}</h1><p>{module.objective}</p><div className="formation-lesson__status">{done ? '✓ Module validé':'○ En cours d’apprentissage'}</div></div>
-        <div className="formation-step-tabs" role="tablist" aria-label="Étapes pédagogiques">
+{stage!=='comprendre'&&<div className="formation-lesson__heading"><span className="formation-eyebrow">MODULE {String(index+1).padStart(2,'0')} / {track.modules.length} · {track.plan}</span><h1>{module.title}</h1><p>{module.objective}</p><div className="formation-lesson__status">{done ? '✓ Module validé':'○ En cours d’apprentissage'}</div></div>}
+        {stage!=='comprendre'&&<div className="formation-step-tabs" role="tablist" aria-label="Étapes pédagogiques">
           {stages.map(([id,num,name])=><button key={id} type="button" role="tab" aria-selected={stage===id} className={stage===id?'is-active':''} onClick={()=>setStage(id)}><span>{num}</span>{name}</button>)}
-        </div>
-        {stage==='comprendre' && <div className="formation-content-section formation-content-section--editorial" role="tabpanel">
-          <span className="formation-eyebrow">01 · APPRENDRE SIMPLEMENT</span>
-          <h2>Une notion. Une explication. Un résultat concret.</h2>
-          <p className="formation-featured-paragraph">{module.concept}</p>
-          <details className="learning-context-details">
-            <summary>Afficher les objectifs et les bases mathématiques du module</summary>
-            {mathematicsNotes[module.id]&&<div className="formation-mathematics">
-              <span className="formation-eyebrow">LE MINIMUM MATHÉMATIQUE UTILE</span>
-              <h3>{mathematicsNotes[module.id].title}</h3>
-              <div className="formation-math-formula">{mathematicsNotes[module.id].equation}</div>
-              <p>{mathematicsNotes[module.id].interpretation}</p>
-              <div className="formation-math-example"><strong>Exemple numérique</strong><p>{mathematicsNotes[module.id].example}</p></div>
-            </div>}
-            <div className="formation-notions"><h3>Les notions du module</h3><ol>{module.points.map((point,i)=><li key={point}><b>{String(i+1).padStart(2,'0')}</b><span>{point}</span></li>)}</ol></div>
-          </details>
-          <TopicLessons module={module} completed={topicProgress} onToggle={i=>onToggleTopic(key,i)}/>
-          <details className="learning-context-details learning-context-details--lab">
-            <summary>Laboratoire supplémentaire du module</summary>
-            <FormationLab moduleId={module.id}/>
-          </details>
-          <div className="formation-stage-footer"><p>À chaque notion : un exemple visuel, quelques lignes commentées, un résultat expliqué et un contrôle de compréhension.</p><button className="formation-primary-action" type="button" onClick={()=>setStage('pratiquer')}>Passer au projet du module <span aria-hidden="true">→</span></button></div>
         </div>}
+        {stage==='comprendre' && <CourseArticle track={track} module={module} learned={topicProgress}
+          onToggle={i=>onToggleTopic(key,i)}
+          onPractice={()=>setStage('pratiquer')}
+          onValidate={()=>setStage('valider')}/>}
         {stage==='pratiquer' && <div className="formation-content-section" role="tabpanel">
           <span className="formation-eyebrow">02 · APPLICATION GUIDÉE</span><h2>Observer le code et ses résultats</h2><p>Exemple autonome à reproduire dans un notebook. Lis les commentaires, exécute, puis modifie les paramètres pour vérifier ce que tu as compris.</p>
           {track.plan==='Plan A' ? (['fourier','video-mouvement','convolutions-cnn','reseaux-neurones','pytorch-entrainement'].includes(module.id) ? <AdvancedImageLab moduleId={module.id}/> : <ImageWorkbench moduleId={module.id}/>) : <DataWorkbench/>}
