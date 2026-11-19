@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormationModule, FormationTrack } from './formationTypes';
 import type { CourseArticleData, ArticleSection } from './courseArticleContent';
 import { getOpenCVArticle } from './courseArticleContent';
@@ -9,6 +9,7 @@ import { visualizationArticle, spreadsheetArticle } from './visualSpreadsheetArt
 import { getLessonExample } from './lessonExamples';
 import { topicGuide } from './TopicLessons';
 import { LessonVisual } from './LessonVisual';
+import { deepConceptsFor } from './deepConceptIndex';
 
 function createdArticle(track:FormationTrack,module:FormationModule):CourseArticleData {
   const sections:ArticleSection[]=module.points.map((topic,index)=>{
@@ -105,11 +106,16 @@ function CodeExample({section}:{section:ArticleSection}) {
 export function CourseArticle({track,module,learned,onToggle,onPractice,onValidate}:{
  track:FormationTrack;module:FormationModule;learned:number[];onToggle:(index:number)=>void;onPractice:()=>void;onValidate:()=>void;
 }) {
- const article=useMemo(()=>articleFor(track,module),[track,module]);
+ const concepts=useMemo(()=>deepConceptsFor(module.id),[module.id]);
+ const [selectedSlug,setSelectedSlug]=useState<string|null>(null);
+ useEffect(()=>{setSelectedSlug(null);},[module.id]);
+ const selectedIndex=concepts.findIndex(x=>x.slug===(selectedSlug??concepts[0]?.slug));
+ const concept=selectedIndex>=0?concepts[selectedIndex]:undefined;
+ const article=useMemo(()=>concept?.article??articleFor(track,module),[concept,track,module]);
  const [copied,setCopied]=useState(false);
  const length=article.intro.join(' ').length+article.sections.map(s=>s.paragraphs.join(' ')+(s.code||'')).join(' ').length;
  const readTime=Math.max(4,Math.round(length/900));
- const prefix='course-'+module.id+'-';
+ const prefix='course-'+module.id+'-'+(concept?.slug??'overview')+'-';
  const sections = [
    {id:'tldr',title:'TL;DR Summary',depth:1},
    ...article.sections.map(s=>({id:s.id,title:s.title,depth:s.depth||1})),
@@ -121,7 +127,12 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
    try{await navigator.clipboard.writeText(window.location.href);setCopied(true);}catch{setCopied(false);}
  }
  function scrollTo(id:string) {const target=document.getElementById(prefix+id);if(target&&typeof target.scrollIntoView==='function')target.scrollIntoView({behavior:'smooth',block:'start'});}
- return <article className="course-article" aria-label={article.title}>
+ return <div className="course-article-shell">
+   {concepts.length>0&&<nav className="course-article-library" aria-label="Articles complets du module">
+     <div className="course-article-library__heading"><span>PROGRAMME PYTHON · COURS INDIVIDUELS</span><h2>{concepts.length} articles complets pour maîtriser Python</h2><p>Choisis une notion. Chaque article contient son introduction, ses explications progressives, plusieurs exemples de code, leurs sorties, des erreurs fréquentes et une FAQ.</p></div>
+     <ol>{concepts.map((item,i)=><li key={item.slug}><button type="button" className={concept?.slug===item.slug?'is-current':''} aria-current={concept?.slug===item.slug?'page':undefined} onClick={()=>setSelectedSlug(item.slug)}><span>{String(i+1).padStart(2,'0')}</span><strong>{item.article.title.replace(': A Complete Beginner’s Guide','').replace(': A Beginner’s Guide','')}</strong><span aria-hidden="true">›</span></button></li>)}</ol>
+   </nav>}
+   <article className="course-article" aria-label={article.title}>
    <header className="course-article__header">
      <span className="course-article__category">{article.eyebrow}</span>
      <h1>{article.title}</h1>
@@ -172,10 +183,11 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
    <section className="course-article__practice" aria-label="Poursuivre la formation">
      <h2>Passer de la lecture à la pratique</h2>
      <p>Une lecture devient une compétence lorsque tu peux exécuter le code, observer le résultat, modifier un paramètre et expliquer ton choix.</p>
-     <details><summary>Voir mon suivi des notions du module ({learned.length}/{module.points.length})</summary>
+     <details><summary>Voir mon suivi des objectifs du module ({learned.length}/{module.points.length})</summary>
        <div className="course-article__checks">{module.points.map((topic,index)=><label key={index}><input type="checkbox" checked={learned.includes(index)} onChange={()=>onToggle(index)}/>{topic}</label>)}</div>
      </details>
+     {concept&&selectedIndex<concepts.length-1&&<button className="course-article-library__next" type="button" onClick={()=>setSelectedSlug(concepts[selectedIndex+1].slug)}>Article suivant : {concepts[selectedIndex+1].article.title} →</button>}
      <div className="course-article__actions"><button className="formation-primary-action" type="button" onClick={onPractice}>Pratiquer avec le projet du module →</button><button className="formation-secondary-action" type="button" onClick={onValidate}>Évaluer mes connaissances</button></div>
    </section>
- </article>;
+ </article></div>;
 }
