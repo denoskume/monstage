@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { dataAnalystTrack } from './dataAnalystTrack';
 import { imageProcessingTrack } from './imageProcessingTrack';
 import { computerVisionTrack } from './computerVisionTrack';
+import { mathematicsNotes } from './mathematicsNotes';
+import { topicQuiz } from './topicQuizzes';
+import { topicGuide } from './TopicLessons';
 
 const tracks=[dataAnalystTrack,imageProcessingTrack,computerVisionTrack];
 
@@ -32,6 +35,14 @@ describe('MonStage formation curricula',()=>{
         expect(module.quiz.correct).toBeGreaterThanOrEqual(0);
         expect(module.quiz.correct).toBeLessThan(3);
         expect(module.quiz.explanation.length).toBeGreaterThan(30);
+        expect(mathematicsNotes[module.id]?.equation.length).toBeGreaterThan(8);
+        for(const point of module.points) {
+          expect(topicGuide(point,module).explanation.length).toBeGreaterThan(45);
+          const quiz=topicQuiz(point);
+          expect(quiz.options).toHaveLength(3);
+          expect(quiz.correct).toBeGreaterThanOrEqual(0);
+          expect(quiz.correct).toBeLessThan(3);
+        }
       }
     }
   });
