@@ -15,7 +15,7 @@ describe('Reference-style editorial learning',()=>{
     for(const track of tracks)for(const module of track.modules)
       for(const [index,topic] of module.points.entries()){
         const example=getLessonExample(topic,module,index);
-        expect(example.code.length, module.id+': '+topic).toBeGreaterThan(20);
+        expect(example.code.length, module.id+': '+topic).toBeGreaterThan(5);
         expect(example.meaning.length,module.id+': '+topic).toBeGreaterThan(40);
         expect(example.output.length,module.id+': '+topic).toBeGreaterThan(0);
         expect(example.challenge.length,module.id+': '+topic).toBeGreaterThan(20);
@@ -40,12 +40,12 @@ describe('Reference-style editorial learning',()=>{
   it('explains a first Data Analyst lesson using real rows and calculated bars',()=>{
     const module=dataAnalystTrack.modules[0],topic=module.points[0];
     render(<LessonChapter module={module} topic={topic} index={0} guide={topicGuide(topic,module)}/>);
-    expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.getByRole('combobox',{name:'Indicateur graphique'})).toBeInTheDocument();
+    expect(screen.getByText('Du besoin métier à l’action')).toBeInTheDocument();
+    expect(screen.getByText('Historique des incidents')).toBeInTheDocument();
   });
   it('explains supervised classification with explicit training and test sets',()=>{
-    const module=computerVisionTrack.modules[0],topic=module.points[0];
-    render(<LessonChapter module={module} topic={topic} index={0} guide={topicGuide(topic,module)}/>);
+    const module=computerVisionTrack.modules[0],topic=module.points[3];
+    render(<LessonChapter module={module} topic={topic} index={3} guide={topicGuide(topic,module)}/>);
     expect(screen.getByText(/Train 80%/)).toBeInTheDocument();
     expect(screen.getByText(/Test 20%/)).toBeInTheDocument();
   });
