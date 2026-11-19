@@ -27,7 +27,7 @@ describe('Formations pages',()=>{
     expect(screen.getByRole('heading',{name:'Common Mistakes Beginners Make'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'FAQs'})).toBeInTheDocument();
 
-    await user.click(screen.getByText(/Voir mon suivi des notions du module/));
+    await user.click(screen.getByText(/Voir mon suivi des objectifs du module/));
     const progress=screen.getAllByRole('checkbox');
     expect(progress).toHaveLength(6);
     for(const check of progress)await user.click(check);
