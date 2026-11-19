@@ -17,6 +17,8 @@ describe('205 individual topic lessons',()=>{
       expect(topic.exercise.length).toBeGreaterThan(40);
       expect(topic.pitfall.length).toBeGreaterThan(50);
       expect(topic.code.length).toBeGreaterThan(50);
+      expect(topic.focusCode.length).toBeGreaterThan(35);
+      expect(topic.focusLanguage.length).toBeGreaterThan(0);
       expect(topic.quiz.options).toHaveLength(3);
       expect(topic.quiz.options[topic.quiz.correct]).toBe(topic.pitfall);
       expect(new Set(topic.quiz.options).size).toBe(3);
@@ -35,6 +37,7 @@ describe('205 individual topic lessons',()=>{
           expect(notebook.cells.some((cell:{source:string})=>cell.source.includes(topic.title))).toBe(true);
           expect(notebook.cells.some((cell:{source:string})=>cell.source.includes(topic.exercise))).toBe(true);
           expect(notebook.cells.some((cell:{source:string})=>cell.source.includes(topic.pitfall))).toBe(true);
+          expect(notebook.cells.some((cell:{source:string})=>cell.source.includes(topic.focusCode))).toBe(true);
         }
       }
     }
