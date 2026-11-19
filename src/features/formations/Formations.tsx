@@ -7,6 +7,7 @@ import { imageProcessingTrack } from './imageProcessingTrack';
 import { computerVisionTrack } from './computerVisionTrack';
 import { FormationLab } from './FormationLabs';
 import { ImageWorkbench } from './ImageWorkbench';
+import { AdvancedImageLab } from './AdvancedImageLabs';
 import { DataWorkbench } from './DataWorkbench';
 import { TopicLessons, topicGuide } from './TopicLessons';
 import { validateFormationBackup } from './formationBackup';
@@ -276,7 +277,7 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote,topics,onT
         </div>}
         {stage==='pratiquer' && <div className="formation-content-section" role="tabpanel">
           <span className="formation-eyebrow">02 · APPLICATION GUIDÉE</span><h2>Observer le code et ses résultats</h2><p>Exemple autonome à reproduire dans un notebook. Lis les commentaires, exécute, puis modifie les paramètres pour vérifier ce que tu as compris.</p>
-          {track.plan==='Plan A'?<ImageWorkbench moduleId={module.id}/>:<DataWorkbench/>}
+          {track.plan==='Plan A' ? (['fourier','video-mouvement','convolutions-cnn','reseaux-neurones','pytorch-entrainement'].includes(module.id) ? <AdvancedImageLab moduleId={module.id}/> : <ImageWorkbench moduleId={module.id}/>) : <DataWorkbench/>}
           <div className="formation-code">
             <div className="formation-code__header"><span>{module.codeLanguage==='excel'?'FORMULES EXCEL':module.codeLanguage==='dax'?'MESURES DAX':module.codeLanguage==='sql'?'SQL / PYTHON':'PYTHON 3'}</span><div className="formation-code__controls"><button type="button" onClick={()=>setEditing(v=>!v)}>{editing?'Voir l’aperçu':'Modifier le code'}</button><button type="button" onClick={copyExample}>{copied?'✓ Copié':'Copier le code'}</button></div></div>
             {editing?<textarea className="formation-code__editor" spellCheck={false} aria-label="Éditeur de code de l’exemple" value={editableCode} onChange={e=>{setEditableCode(e.target.value);onCodeDraft(key,e.target.value);}} rows={Math.max(12,editableCode.split('\n').length+2)}/>:<pre><code>{editableCode}</code></pre>}
