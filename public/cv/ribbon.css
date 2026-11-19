@@ -1,0 +1,45 @@
+@media screen {
+  #cvtool .bar { min-height:44px; padding:5px 12px; gap:12px; background:#f7f8fa }
+  #cvtool .studio-brand { min-width:auto }
+  #cvtool .quick-tools { display:flex; gap:2px; border-left:1px solid #cdd5df; padding-left:8px }
+  #cvtool .quick-tools button { border:0; background:transparent }
+  #cvtool .quick-tools button:hover { background:#e2eafa }
+  #cvtool .word-ribbon { position:relative }
+  #cvtool .word-tabs { height:31px; padding:0 2px; margin-right:34px; overflow-x:auto; scrollbar-width:thin }
+  #cvtool .word-tabs button { height:30px; flex:none; padding:0 10px }
+  #cvtool #fold { position:absolute; top:2px; right:4px; width:27px; height:26px; padding:0; border:0; font:18px Arial }
+  #cvtool .folded #fold { transform:rotate(180deg) }
+  #cvtool .folded .ribbon-panel { display:none }
+  #cvtool .ribbon-panel { min-height:85px; padding:5px 3px 4px }
+  #cvtool .word-group { width:auto; padding:0 9px }
+  #cvtool .word-group-content { min-height:54px; gap:2px }
+  #cvtool .word-group-label { font-size:10px; color:#566477; padding-top:3px }
+  #cvtool .font-row { min-height:24px; gap:2px }
+  #cvtool .tool-btn { height:24px; width:25px; min-width:25px; display:inline-flex; align-items:center; justify-content:center }
+  #cvtool .font-row select { height:24px }
+  #cvtool #font-family { width:127px }
+  #cvtool .large-tool,#cvtool .style-tile { min-height:48px; height:48px; padding:3px; gap:3px }
+  #cvtool .edit-stack { gap:0 }
+  #cvtool .edit-tool { padding:1px 4px; min-height:19px }
+  #cvtool .clipboard-row { gap:1px }
+  #cvtool [data-ribbon-panel="table"] button { padding:3px 6px; text-align:left; font-size:12px }
+  #cvtool [data-ribbon-panel="table"] .danger:hover { color:#a32424; background:#ffeded }
+  #cvtool .format-status { padding:5px 3px }
+  #cvtool #search-box { position:fixed; inset:12px 12px auto auto; margin:0; width:min(330px,calc(100% - 24px)); border:1px solid #c7d4e0; padding:14px; border-radius:8px; box-shadow:0 8px 32px #172b4626; font:13px Arial; color:#243750 }
+  #search-box::backdrop { background:transparent }
+  #search-box .search-head,#search-box .search-actions { display:flex; align-items:center; justify-content:space-between; gap:4px }
+  #cvtool #search-close { border:0; font-size:18px; padding:2px 6px }
+  #search-box label { display:grid; gap:4px; margin:9px 0 }
+  #search-box [hidden] { display:none }
+  #search-box input { width:100%; padding:6px; border:1px solid #b5c5d5; border-radius:3px }
+  #search-box .search-result { min-height:18px; color:#4c6681 }
+  #search-box button:disabled { opacity:.5 }
+  ::highlight(cv-match) { background:#ffdb68; color:#171717 }
+}
+@media screen and (max-width:760px) {
+  #cvtool .bar { flex-wrap:wrap; gap:4px 6px }
+  #cvtool .track-tabs { flex:1 }
+  #cvtool .bar-spacer { flex-basis:100%; height:0 }
+  #cvtool .download-wrap { margin-left:auto }
+  #cvtool .versions-popover { right:0; top:76px }
+}
