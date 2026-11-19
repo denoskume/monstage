@@ -294,3 +294,7 @@
 .formation-math-example {border-left:3px solid #25a18a;padding:11px 16px;background:var(--surface);border-radius:0 7px 7px 0;}
 .formation-math-example strong {font-size:.77rem;}
 .formation-math-example p {font-size:.84rem;color:var(--text-muted);line-height:1.7;margin:7px 0 0;}
+
+.formation-cloud {background:color-mix(in srgb,var(--surface) 93%,#c6f4e7);border-color:color-mix(in srgb,var(--border) 75%,#5fc4b0);}
+.formation-cloud-message {margin-top:10px!important;color:var(--accent)!important;font-weight:700;}
+.formation-cloud .formation-primary-action {white-space:normal;}

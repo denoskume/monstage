@@ -1,14 +1,17 @@
 import type { Env } from './env';
 import { validateDataStage } from '../../src/features/training/dataAnalysis/state';
 import { validateTraining } from '../../src/features/training/training';
+import { validateFormationBackup } from '../../src/features/formations/formationBackup';
 const ROOT = 'https://api.github.com/repos/denoskume/Candidatures_Stages/contents/';
 export async function handleTraining(env: Env, body: Record<string, unknown>): Promise<{ status: number; payload: Record<string, unknown> }> {
   const error = (status: number, message: string) => ({ status, payload: { error: message } });
   const course = body.course ?? 'cv';
-  if (course !== 'cv' && course !== 'data-analysis') return error(400, 'Parcours invalide.');
-  const FILE = ROOT + (course === 'cv' ? 'Formation_CV' : 'Formation_Data_Analysis') + '/progression.json';
+  if (course !== 'cv' && course !== 'data-analysis' && course !== 'formations') return error(400, 'Parcours invalide.');
+  const FOLDER = course === 'cv' ? 'Formation_CV' : course === 'data-analysis' ? 'Formation_Data_Analysis' : 'Formation_Parcours';
+  const FILE = ROOT + FOLDER + '/progression.json';
   const validate = (value: unknown) => {
     if (course === 'data-analysis') return validateDataStage(value);
+    if (course === 'formations') return validateFormationBackup(value);
     if (value && typeof value === 'object' && 'course' in value && (value as {course:unknown}).course !== 'cv') throw new Error('Parcours incompatible.');
     return validateTraining(value);
   };
@@ -31,7 +34,7 @@ export async function handleTraining(env: Env, body: Record<string, unknown>): P
     if (bytes.length > 250000) return error(413, 'Journal trop volumineux : limite de 250 Ko.');
     let binary = '';
     for (const byte of bytes) binary += String.fromCharCode(byte);
-    const written = await fetch(FILE, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: course === 'cv' ? 'Suivi du stage Computer Vision' : 'Suivi du projet Data Analysis', content: btoa(binary), branch: 'main', ...(file ? { sha: file.sha } : {}) }) });
+    const written = await fetch(FILE, { method: 'PUT', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ message: course === 'cv' ? 'Suivi du stage Computer Vision' : course === 'data-analysis' ? 'Suivi du projet Data Analysis' : 'Suivi des parcours Formations', content: btoa(binary), branch: 'main', ...(file ? { sha: file.sha } : {}) }) });
     if (written.status === 409 || written.status === 422) return error(409, 'Conflit de sauvegarde. Exporte ton brouillon avant de recharger.');
     if (!written.ok) return error(502, 'Enregistrement privé impossible. Ton brouillon reste disponible.');
     const saved = await written.json() as { content?: { sha?: string } };

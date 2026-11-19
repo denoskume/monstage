@@ -45,3 +45,27 @@ it('rejects unknown courses and mismatched saves before writing', async () => {
   expect((await handleTraining(env,{action:'load',course:'../../private'})).status).toBe(400);
   expect(fetcher).not.toHaveBeenCalled();
 });
+
+it('isolates Formation course storage and validates cloud progress schema',async()=>{
+  const fetcher=vi.fn().mockResolvedValue(new Response('',{status:404}));
+  vi.stubGlobal('fetch',fetcher);
+  await handleTraining(env,{action:'load',course:'formations'});
+  expect(fetcher.mock.calls[0][0]).toContain('/Formation_Parcours/progression.json');
+  const invalid=await handleTraining(env,{
+    action:'save',course:'formations',revision:null,
+    state:{version:1,startDate:'',tasks:{},mastered:{},logs:{}}
+  });
+  expect(invalid.status).toBe(400);
+});
+it('writes Formation study progress without modifying the CV or Data archive',async()=>{
+  const backup={format:'monstage-formations-v3',date:'2026-11-19',completed:['data-analyst:sql'],notes:{},topics:{'data-analyst:sql':[0,1]},codeDrafts:{}};
+  const fetcher=vi.fn().mockResolvedValueOnce(new Response('',{status:404})).mockImplementationOnce(async(url,init)=>{
+    expect(url).toContain('/Formation_Parcours/progression.json');
+    const posted=JSON.parse(init.body);
+    const decoded=new TextDecoder().decode(Uint8Array.from(atob(posted.content),c=>c.charCodeAt(0)));
+    expect(JSON.parse(decoded)).toEqual(backup);
+    return new Response(JSON.stringify({content:{sha:'formation-saved'}}),{status:200});
+  });
+  vi.stubGlobal('fetch',fetcher);
+  expect((await handleTraining(env,{action:'save',course:'formations',revision:null,state:backup})).payload).toEqual({revision:'formation-saved',saved:true});
+});

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { zipSync, strToU8 } from 'fflate';
 import type { FormationModule, FormationTrack } from './formationTypes';
@@ -12,6 +12,8 @@ import { DataWorkbench } from './DataWorkbench';
 import { TopicLessons, topicGuide } from './TopicLessons';
 import { validateFormationBackup } from './formationBackup';
 import { mathematicsNotes } from './mathematicsNotes';
+import { AuthContext } from '../../auth/useAuth';
+import { formationsCloudRequest } from './formationCloud';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
@@ -132,7 +134,17 @@ function TrackSymbol({id}: {id:string}) {
     {id === 'traitement-images' ? '◈' : id === 'computer-vision' ? '⌘' : '▥'}
   </span>;
 }
-function Catalog({completed,onBackup,onRestore}: {completed:string[];onBackup:()=>void;onRestore:(file:File)=>Promise<void>}) {
+function Catalog({completed,onBackup,onRestore,onCloudLoad,onCloudSave,cloudStatus,cloudBusy,cloudReady,cloudEnabled}: {
+  completed:string[];
+  onBackup:()=>void;
+  onRestore:(file:File)=>Promise<void>;
+  onCloudLoad:()=>Promise<void>;
+  onCloudSave:()=>Promise<void>;
+  cloudStatus:string;
+  cloudBusy:boolean;
+  cloudReady:boolean;
+  cloudEnabled:boolean;
+}) {
   const [restoreMessage,setRestoreMessage]=useState('');
   const [search,setSearch] = useState('');
   const filtered = formationTracks.filter(t => [t.title,t.subtitle,...t.tools].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
@@ -186,6 +198,13 @@ function Catalog({completed,onBackup,onRestore}: {completed:string[];onBackup:()
     <section className="formation-backup"><div><strong>Conserver mes travaux</strong><p>Export local des notes, étapes étudiées et codes modifiés. Les données ne quittent pas le navigateur.</p></div><div className="formation-backup__actions"><button type="button" className="formation-secondary-action" onClick={onBackup}>↓ Sauvegarder mon parcours (JSON)</button>
       <label className="formation-workbench-upload">↑ Restaurer une sauvegarde <input type="file" accept=".json,application/json" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{await onRestore(file);setRestoreMessage('Sauvegarde restaurée.');}catch(error){setRestoreMessage(error instanceof Error?error.message:'Import impossible.');}e.target.value='';}}/></label>
       {restoreMessage&&<p role="status">{restoreMessage}</p>}</div></section>
+    <section className="formation-backup formation-cloud">
+      <div><strong>Sauvegarde privée entre appareils</strong><p>Récupère et fusionne ta progression enregistrée, puis confirme l’enregistrement de tes travaux. Les versions sont contrôlées pour éviter les écrasements.</p>{cloudStatus&&<p className="formation-cloud-message" role="status">{cloudStatus}</p>}</div>
+      <div className="formation-backup__actions">
+        <button type="button" disabled={!cloudEnabled||cloudBusy} className="formation-secondary-action" onClick={()=>void onCloudLoad()}>{cloudBusy?'Traitement…':'↓ Récupérer mon suivi privé'}</button>
+        <button type="button" disabled={!cloudEnabled||cloudBusy||!cloudReady} className="formation-primary-action" onClick={()=>void onCloudSave()}>↑ Enregistrer dans mon espace privé</button>
+      </div>
+    </section>
     <div className="formation-existing"><strong>Ateliers précédents conservés</strong><p>Les mini-cours OpenCV / Data Analyst déjà présents restent disponibles.</p><Link to="/formations/vision">Atelier Vision historique</Link><Link to="/formations/data">Atelier Data historique</Link></div>
   </div>;
 }
@@ -326,6 +345,12 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote,topics,onT
 }
 export default function Formations() {
   const {parcours,lecon} = useParams();
+  const auth = useContext(AuthContext);
+  const token = auth?.token ?? null;
+  const [cloudRevision,setCloudRevision] = useState<string|null>(null);
+  const [cloudReady,setCloudReady] = useState(false);
+  const [cloudBusy,setCloudBusy] = useState(false);
+  const [cloudStatus,setCloudStatus] = useState('');
   const [completed,setCompleted] = useState<string[]>(()=>readStorage<string[]>(PROGRESS_KEY,[]));
   const [notes,setNotes] = useState<Record<string,string>>(()=>readStorage<Record<string,string>>(NOTES_KEY,{}));
   const [topics,setTopics] = useState<Record<string,number[]>>(()=>readStorage<Record<string,number[]>>(TOPICS_KEY,{}));
@@ -348,13 +373,55 @@ export default function Formations() {
     setTopics(Object.fromEntries(Object.entries(backup.topics).filter(([id])=>allowed.has(id))));
     setCodeDrafts(Object.fromEntries(Object.entries(backup.codeDrafts).filter(([id])=>allowed.has(id))));
   }
+  async function loadCloud(){
+    if(!token)return;
+    setCloudBusy(true);
+    setCloudStatus('Lecture du suivi privé…');
+    try{
+      const result=await formationsCloudRequest(token,{action:'load'});
+      setCloudRevision(result.revision);
+      setCloudReady(true);
+      if(result.state){
+        const allowed=new Set(formationTracks.flatMap(t=>t.modules.map(m=>t.id+':'+m.id)));
+        setCompleted(local=>[...new Set([...result.state!.completed.filter(id=>allowed.has(id)),...local])]);
+        setTopics(local=>{
+          const merged={...result.state!.topics,...local};
+          for(const [key,entries] of Object.entries(result.state!.topics)){
+            if(!allowed.has(key)){delete merged[key];continue;}
+            merged[key]=[...new Set([...(local[key]||[]),...entries])];
+          }
+          return merged;
+        });
+        setNotes(local=>({...result.state!.notes,...local}));
+        setCodeDrafts(local=>({...result.state!.codeDrafts,...local}));
+        setCloudStatus('Suivi privé récupéré et fusionné avec tes travaux locaux. Tu peux maintenant enregistrer la version réunie.');
+      }else setCloudStatus('Aucune sauvegarde distante existante. Ton suivi local peut maintenant être enregistré.');
+    }catch(error){
+      setCloudReady(false);
+      setCloudStatus(error instanceof Error?error.message:'Lecture impossible. Le suivi local est conservé.');
+    }finally{setCloudBusy(false);}
+  }
+  async function saveCloud(){
+    if(!token||!cloudReady)return;
+    setCloudBusy(true);
+    setCloudStatus('Enregistrement sécurisé…');
+    try{
+      const state=validateFormationBackup({format:'monstage-formations-v3',date:new Date().toISOString(),completed,notes,topics,codeDrafts});
+      const result=await formationsCloudRequest(token,{action:'save',revision:cloudRevision,state});
+      setCloudRevision(result.revision);
+      setCloudStatus('Suivi enregistré dans ton espace privé. Il pourra être récupéré sur un autre appareil.');
+    }catch(error){
+      setCloudReady(false);
+      setCloudStatus(error instanceof Error?error.message:'Enregistrement impossible. Tes données locales restent intactes.');
+    }finally{setCloudBusy(false);}
+  }
   const track = useMemo(()=>formationTracks.find(t=>t.id===parcours),[parcours]);
   const module = track?.modules.find(m=>m.id===lecon);
   if (parcours==='vision' || parcours==='data') return <LegacyFormations/>;
   if ((parcours && !track) || (lecon && !module)) return <Navigate to="/formations" replace/>;
   const validCompleted=completed.filter(id=>formationTracks.some(t=>t.modules.some(m=>id===t.id+':'+m.id)));
   return <section className="page formations" lang="fr">
-    {!track ? <Catalog completed={validCompleted} onBackup={backup} onRestore={restore}/> :
+    {!track ? <Catalog completed={validCompleted} onBackup={backup} onRestore={restore} onCloudLoad={loadCloud} onCloudSave={saveCloud} cloudStatus={cloudStatus} cloudBusy={cloudBusy} cloudReady={cloudReady} cloudEnabled={!!token}/> :
       !module ? <Overview track={track} completed={validCompleted}/> :
       <ModuleScreen track={track} module={module} completed={validCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))} topics={topics} onToggleTopic={toggleTopic} codeDrafts={codeDrafts} onCodeDraft={(id,value)=>setCodeDrafts(n=>({...n,[id]:value}))}/>}
   </section>;
