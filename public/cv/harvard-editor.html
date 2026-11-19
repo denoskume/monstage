@@ -1,4 +1,4 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Éditeur CV Thierry — exports fidèles</title><style>
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>MonStage — Studio CV Harvard</title><style>
 :root{font-family:Arial,sans-serif;color:#263543}
 *{box-sizing:border-box}
 #cvtool{max-width:980px;margin:auto;font-family:Arial,sans-serif}
@@ -266,6 +266,15 @@
 #cvtool .harvard-sheet[data-hv-style="executive"] .hv-org{color:#394d60}
 #cvtool .harvard-sheet[data-page-color="lightgray"]{background:#f4f5f7}
 #cvtool .harvard-sheet[data-page-color="white"]{background:#fff}
+
+#cvtool .harvard-sheet[data-hv-style="classic"] .hv-paragraph,
+#cvtool .harvard-sheet[data-hv-style="classic"] .hv-title,
+#cvtool .harvard-sheet[data-hv-style="classic"] .hv-org,
+#cvtool .harvard-sheet[data-hv-style="classic"] .hv-bullet{font-family:Georgia,'Times New Roman',serif}
+#cvtool .harvard-sheet[data-hv-style="executive"] .hv-paragraph,
+#cvtool .harvard-sheet[data-hv-style="executive"] .hv-title,
+#cvtool .harvard-sheet[data-hv-style="executive"] .hv-bullet,
+#cvtool .harvard-sheet[data-hv-style="executive"] .hv-org{font-family:Cambria,Georgia,serif}
 @media print{#cvtool .harvard-design{display:none!important}}
 </style><link rel="stylesheet" href="ribbon.css"></head><body><div id="cvtool">
 <div class="bar">
@@ -321,7 +330,7 @@
  <label class="layout-color"><input id="paper-bg" aria-label="Fond de page du CV" type="color" value="#ffffff"><span>Page</span></label>
  <label class="layout-color"><input id="sidebar-bg" aria-label="Fond de colonne latérale" type="color" value="#c3c5c6"><span>Colonne</span></label>
  <label class="layout-color"><input id="block-bg" aria-label="Fond de la zone sélectionnée" type="color" value="#ffffff"><span>Paragraphe</span></label>
- </div></div><div class="word-group-label">Couleurs</div></div><div class="word-group word-note"><div class="word-group-content"><div class="helper-text">Format A4 · modèle Thierry KUME · colonnes conservées dans les exports.</div></div><div class="word-group-label">Mise en page</div></div></div>
+ </div></div><div class="word-group-label">Couleurs</div></div><div class="word-group word-note"><div class="word-group-content"><div class="helper-text">Harvard A4 · une colonne · texte sélectionnable, liens actifs.</div></div><div class="word-group-label">Mise en page</div></div></div>
  <div class="ribbon-panel" data-ribbon-panel="file" role="toolbar" aria-label="Fichier" hidden><div class="word-group word-insert"><div class="word-group-content"><div class="insertion-actions">
  <button type="button" class="large-tool" id="file-pdf"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg><span>PDF · texte</span></button>
  <button type="button" class="large-tool" id="file-word"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg><span>Word .docx</span></button>
@@ -1359,12 +1368,12 @@ function harvardDocx(sheet){
   if(!el)return '';
   const list=el.querySelector?.(':scope > ul,:scope > ol');
   if(list)return Array.from(list.querySelectorAll(':scope > li')).map((li,i)=>paragraph(li,'bullet',list.tagName==='OL'?String(i+1)+'. ':'• ')).join('');
-  const alignment=getComputedStyle(el).textAlign;
-  const center=['name','contact','target'].includes(kind)&&!el.style.textAlign;
-  const docAlign=alignment==='justify'?'both':el.style.textAlign||((center?'center':'left'));
+  const alignment=el.style.textAlign||getComputedStyle(el).textAlign||'left';
+  const docAlign=alignment==='justify'?'both':alignment;
   const bottom=kind==='heading'?105:kind==='name'?35:kind==='bullet'?18:kind==='title'?10:kind==='contact'?35:kind==='org'?40:65;
   const before=kind==='heading'?145:0;
-  const border=kind==='heading'?'<w:pBdr><w:bottom w:val="single" w:sz="6" w:color="222222" w:space="4"/></w:pBdr>':'';
+  const headingHex=colorHex(getComputedStyle(sheet.querySelector('.hv-heading')||sheet).borderBottomColor)||'222222';
+  const border=kind==='heading'?'<w:pBdr><w:bottom w:val="single" w:sz="6" w:color="'+headingHex+'" w:space="4"/></w:pBdr>':'';
   const hanging=kind==='bullet'?'<w:ind w:left="260" w:hanging="185"/>':'';
   const keep=['name','heading','title','target'].includes(kind)?'<w:keepNext/>':'';
   return '<w:p><w:pPr><w:jc w:val="'+docAlign+'"/><w:spacing w:before="'+before+'" w:after="'+bottom+'" w:line="245" w:lineRule="auto"/>'
@@ -1532,7 +1541,8 @@ function directPDF(sheet){
   // Harvard headings use a real line across the full content width.
   if(!aside)sheet.querySelectorAll('.hv-heading').forEach(el=>{
     const r=el.getBoundingClientRect(),top=r.bottom-box.top,page=Math.floor(top/pagePx);
-    line(page,(r.left-box.left)*k,(top-page*pagePx)*k,(r.right-box.left)*k,(top-page*pagePx)*k,.13,.13,.13,.75);
+    const css=getComputedStyle(el),ink=color(css.borderBottomColor||css.color);
+    line(page,(r.left-box.left)*k,(top-page*pagePx)*k,(r.right-box.left)*k,(top-page*pagePx)*k,...ink,.75);
   });
   const winMap={0x20ac:128,0x201a:130,0x0192:131,0x201e:132,0x2026:133,0x2020:134,0x2021:135,0x02c6:136,0x2030:137,0x0160:138,0x2039:139,0x0152:140,0x017d:142,0x2018:145,0x2019:146,0x201c:147,0x201d:148,0x2022:149,0x2013:150,0x2014:151,0x02dc:152,0x2122:153,0x0161:154,0x203a:155,0x0153:156,0x017e:158,0x0178:159,0x202f:32,0x00a0:32,0x2212:45,0x2192:62,0x2011:45};
   function pdfLiteral(input){
