@@ -2,6 +2,9 @@ import type { FormationModule, FormationTrack, FormationQuiz } from './formation
 import { dataLessonNotes } from './dataLessonNotes';
 import { imageLessonNotes } from './imageLessonNotes';
 import { visionLessonNotes } from './visionLessonNotes';
+import { dataFocusCode } from './dataFocusCode';
+import { imageFocusCode } from './imageFocusCode';
+import { visionFocusCode } from './visionFocusCode';
 
 export type LessonTopic = {
   id: string;
@@ -15,6 +18,8 @@ export type LessonTopic = {
   exercise: string;
   pitfall: string;
   code: string;
+  focusCode: string;
+  focusLanguage: string;
   language: FormationModule['codeLanguage'];
   interpretation: string;
   mission: string;
@@ -22,6 +27,12 @@ export type LessonTopic = {
   quiz: FormationQuiz;
   formula?: { expression: string; interpretation: string };
 };
+
+const snippetsByTrack = {
+  'data-analyst':dataFocusCode,
+  'traitement-images':imageFocusCode,
+  'computer-vision':visionFocusCode
+} as const;
 
 const notesByTrack = {
   'data-analyst': dataLessonNotes,
@@ -50,7 +61,8 @@ const math: Record<string,{expression:string;interpretation:string}> = {
 
 export function allTopics(track:FormationTrack,module:FormationModule): LessonTopic[] {
   const notes = notesByTrack[track.id as keyof typeof notesByTrack]?.[module.id];
-  if (!notes || notes.length !== module.points.length) {
+  const snippets=snippetsByTrack[track.id as keyof typeof snippetsByTrack]?.[module.id];
+  if (!notes || notes.length !== module.points.length || !snippets || snippets.length !== module.points.length) {
     throw new Error('Contenu détaillé incomplet : ' + track.id + '/' + module.id);
   }
   return module.points.map((title,index) => {
@@ -72,6 +84,8 @@ export function allTopics(track:FormationTrack,module:FormationModule): LessonTo
       exercise,
       pitfall,
       code:module.code,
+      focusCode:snippets[index],
+      focusLanguage:track.id==='data-analyst' && module.id==='powerbi' && index<2 ? 'm' : (module.codeLanguage||'python'),
       language:module.codeLanguage,
       interpretation:module.result,
       mission:module.mission,
@@ -102,16 +116,18 @@ function detectPackages(code:string) {
     [/\b(?:import|from)\s+matplotlib\b/,'matplotlib'],
     [/\b(?:import|from)\s+cv2\b/,'opencv-python-headless'],
     [/\b(?:import|from)\s+sklearn\b/,'scikit-learn'],
-    [/\b(?:import|from)\s+torch\b/,'torch']
+    [/\b(?:import|from)\s+torch\b/,'torch'],
+    [/\b(?:import|from)\s+plotly\b/,'plotly']
   ];
   return packages.filter(([test])=>test.test(code)).map(([,name])=>name);
 }
 
-export function lessonNotebook(track:FormationTrack,module:FormationModule,topic:LessonTopic,editedCode?:string) {
+export function lessonNotebook(track:FormationTrack,module:FormationModule,topic:LessonTopic,editedCode?:string,editedFocusCode?:string) {
   const markdown=(source:string)=>({cell_type:'markdown',metadata:{},source});
   const code=(source:string)=>({cell_type:'code',metadata:{},source,outputs:[],execution_count:null});
   const example=editedCode??topic.code;
-  const packages=detectPackages(example);
+  const focused=editedFocusCode??topic.focusCode;
+  const packages=detectPackages(example+'\n'+focused);
   const cells = [
     markdown('# '+track.title+'\n\n## Module : '+module.title+'\n### Leçon '+topic.number+' — '+topic.title+'\n\n**Objectif.** '+topic.objective),
     markdown('## Théorie expliquée\n\n'+topic.concept+'\n\n**Contexte professionnel.** '+topic.context),
@@ -121,6 +137,8 @@ export function lessonNotebook(track:FormationTrack,module:FormationModule,topic
        ? [...(packages.length ? [code('%pip install '+packages.join(' '))] : []),code(example)]
        : [markdown('Exécuter dans l’outil '+(topic.language||'correspondant')+' :\n\n```'+(topic.language||'')+'\n'+example+'\n```')]),
     markdown('## Comment interpréter les résultats\n'+topic.interpretation),
+    markdown('## Expérimentation de cette leçon\n'+topic.exercise+'\n\nExécuter ce bloc **après** le script de référence du module.'),
+    ...(topic.focusLanguage==='python' ? [code(focused)] : [markdown('Code à exécuter dans l’outil '+topic.focusLanguage+' :\n\n```'+topic.focusLanguage+'\n'+focused+'\n```')]),
     markdown('## À toi de modifier\n'+topic.exercise),
     ...(topic.language==='python'?[code('# Ton expérimentation sur : '+topic.title+'\n')]:[]),
     markdown('## Erreur fréquente\n'+topic.pitfall),
