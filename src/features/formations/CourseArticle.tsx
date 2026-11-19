@@ -65,7 +65,6 @@ function OpenCVMap(){
 
 function ConceptVisual({visual,module,pointIndex}:{visual:NonNullable<ArticleSection['visual']>;module:FormationModule;pointIndex:number}){
  if(visual==='opencv')return <OpenCVMap/>;
- const topic=module.points[Math.min(pointIndex,module.points.length-1)]||module.title;
  if(visual==='colors')return <div className="course-article-color-demo" aria-label="Comparaison des représentations d’une couleur"><div><b style={{background:'#bf3d49'}}/>RGB<br/><small>Rouge, vert, bleu</small></div><div><b style={{background:'#bf3d49'}}/>BGR<br/><small>Bleu, vert, rouge</small></div><div><b style={{background:'linear-gradient(90deg,#f34660,#faa354,#f5e55a,#5dc477,#53b7de,#9672bc)'}}/>HSV<br/><small>Teinte, saturation, valeur</small></div><p>Il s’agit de représentations numériques différentes : pour conserver l’aspect visuel, on convertit les canaux avec cv2.cvtColor.</p></div>;
  if(visual==='pixels')return <LessonVisual topic="Pixel, lignes/colonnes et origine des coordonnées" module={{...module,id:'images-pixels'}}/>;
  if(visual==='data'||visual==='pandas')return <LessonVisual topic="Question métier, indicateur, décision" module={{...module,id:'metier-donnees'}}/>;
