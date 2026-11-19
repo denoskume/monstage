@@ -19,6 +19,7 @@
     "@docx-editor.dev/react": "2.39.0",
     "@vitejs/plugin-react": "^5.0.0",
     "docx-preview": "0.3.7",
+    "fflate": "0.8.3",
     "html-to-pdfmake": "2.5.32",
     "pdf-lib": "^1.17.1",
     "pdfmake": "0.2.20",
