@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import type { FormationModule } from './formationTypes';
+import { IntroLessonVisual } from './IntroLessonVisuals';
 
 function VisualFrame({title,subtitle,children}:{title:string;subtitle:string;children:ReactNode}) {
   return <figure className="learning-visual">
@@ -132,6 +133,8 @@ function StepsVisual({module}:{module:FormationModule}){
   </VisualFrame>;
 }
 export function LessonVisual({topic,module}:{topic:string;module:FormationModule}){
+  const introductory=IntroLessonVisual({moduleId:module.id,topic});
+  if(introductory)return introductory;
   const q=topic.toLowerCase();
   if(/pixel|lignes\/colonnes|intensité|signal 2d|résolution|échantillonnage|quantification/.test(q)&&module.id==='images-pixels')return <PixelVisual/>;
   if(/bgr|rgb|hsv|couleur|canaux/.test(q))return <ColorVisual/>;
