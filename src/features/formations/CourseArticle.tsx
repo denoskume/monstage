@@ -38,7 +38,7 @@ function createdArticle(track:FormationTrack,module:FormationModule):CourseArtic
       'L’objectif est de savoir expliquer le traitement, modifier les exemples et réaliser la mission professionnelle du module.'
     ],
     sections,
-    mistakes:[...new Set([module.points.length?topicGuide(module.points[0],module).pitfall:'Toujours vérifier les entrées.',module.points.length>1?topicGuide(module.points[1],module).pitfall:'Ne pas confondre l’objectif et le résultat.',module.points.length>2?topicGuide(module.points[2],module).pitfall:'Documenter les limites.', 'Recopier le code sans vérifier ses résultats.', 'Interpréter une observation sans préciser les données, les unités et le contexte.'])],
+    mistakes:[...new Set([module.points.length?topicGuide(module.points[0],module).pitfall:'Toujours vérifier les entrées.',module.points.length>1?topicGuide(module.points[1],module).pitfall:'Ne pas confondre l’objectif et le résultat.',module.points.length>2?topicGuide(module.points[2],module).pitfall:'Documenter les limites.', 'Recopier le code sans vérifier ses résultats.', 'Interpréter une observation sans préciser les données, les unités et le contexte.','Ne pas documenter la provenance ou la version des données.','Oublier de vérifier les cas limites et les valeurs absentes.','Confondre un résultat observé et la preuve d’une cause.'])],
     conclusion:[module.result,'La prochaine étape est d’exécuter le projet complet du module, comparer les résultats et documenter les limites de la méthode.'],
     faq:module.points.slice(0,4).map(point=>({question:'À quoi sert « '+point+' » ?',answer:topicGuide(point,module).explanation}))
   };
