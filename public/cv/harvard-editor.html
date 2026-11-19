@@ -1317,22 +1317,43 @@ function zipFiles(files){const encoder=new TextEncoder(),local=[],central=[];let
 /* Plain single-column OOXML: no layout tables, figures, images or text boxes. */
 function harvardDocx(sheet){
  const P='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
- const xml=esc;
- function runs(el,kind){
-  const ss=segment(el);let out='';
-  for(const part of ss){
+ const R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+ const xml=esc,externalLinks=[];
+ function asRuns(parts,kind){
+  let result='';
+  for(const part of parts){
    if(!part.text)continue;
-   const size=Math.max(16,Math.min(58,part.size||20));
+   const sz=Math.max(16,Math.min(58,part.size||20));
    const bold=kind==='name'||kind==='heading'||kind==='target'||kind==='title'||part.bold;
    const italic=kind==='org'||part.italic;
-   out+='<w:r><w:rPr><w:rFonts w:ascii="'+xml(part.font||'Arial')+'" w:hAnsi="'+xml(part.font||'Arial')+'"/><w:sz w:val="'+size+'"/>'
+   result+='<w:r><w:rPr><w:rFonts w:ascii="'+xml(part.font||'Arial')+'" w:hAnsi="'+xml(part.font||'Arial')+'"/><w:sz w:val="'+sz+'"/>'
      +(bold?'<w:b/>':'')+(italic?'<w:i/>':'')
      +(part.underline?'<w:u w:val="single"/>':'')
      +(part.strike?'<w:strike/>':'')
      +(part.color&&part.color!=='000000'?'<w:color w:val="'+part.color+'"/>':'')
      +'</w:rPr><w:t xml:space="preserve">'+xml(part.text)+'</w:t></w:r>';
   }
-  return out||'<w:r><w:t> </w:t></w:r>';
+  return result;
+ }
+ function runs(el,kind){
+  let markup='';
+  function walk(node){
+   if(node.nodeType===3){markup+=asRuns(segment(node),kind);return;}
+   if(node.nodeType!==1)return;
+   if(node.tagName==='BR'){markup+='<w:r><w:br/></w:r>';return;}
+   if(node.tagName==='A'){
+    const href=hvSafeUrl(node.getAttribute('href')||'');
+    if(href){
+     const id='rId'+(externalLinks.length+1);
+     externalLinks.push({id,url:href});
+     markup+='<w:hyperlink r:id="'+id+'" w:history="1">'+asRuns(segment(node),kind)+'</w:hyperlink>';
+     return;
+    }
+   }
+   for(const child of node.childNodes)walk(child);
+  }
+  for(const child of el.childNodes)walk(child);
+  return markup||'<w:r><w:t> </w:t></w:r>';
  }
  function paragraph(el,kind,prefix=''){
   if(!el)return '';
@@ -1375,11 +1396,15 @@ function harvardDocx(sheet){
    }
   }
  }
- const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="'+P+'"><w:body>'+body
+ const bg=sheet.dataset.pageColor==='lightgray'?'F4F5F7':'FFFFFF';
+ const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="'+P+'" xmlns:r="'+R+'"><w:background w:color="'+bg+'"/><w:body>'+body
   +'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="840" w:right="900" w:bottom="840" w:left="900" w:header="0" w:footer="0"/></w:sectPr></w:body></w:document>';
  const types='<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
  const rels='<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
- return zipFiles([['[Content_Types].xml',types],['_rels/.rels',rels],['word/document.xml',doc]]);
+ const externalRels='<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+   +externalLinks.map(link=>'<Relationship Id="'+link.id+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="'+xml(link.url)+'" TargetMode="External"/>').join('')
+   +'</Relationships>';
+ return zipFiles([['[Content_Types].xml',types],['_rels/.rels',rels],['word/document.xml',doc],['word/_rels/document.xml.rels',externalRels]]);
 }
 
 function ooxml(sheet){
