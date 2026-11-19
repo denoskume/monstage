@@ -1092,9 +1092,10 @@ function hvNew(){
 function hvImport(plan){
  if(!confirm('Copier le contenu du CV '+plan+' dans Harvard ? Le CV '+plan+' ne sera pas modifié et Harvard sera archivé.'))return;
  const raw=(()=>{try{return localStorage.getItem(storageKey(plan));}catch{return null;}})();
+ if(!raw)return note('Aucune sauvegarde du CV '+plan+' disponible dans ce navigateur. Ouvre et enregistre ce CV avant de le copier.');
  const sourceTemplate=document.createElement('template');sourceTemplate.innerHTML=raw||'';
  const candidate=sourceTemplate.content.firstElementChild;
- const src=candidate?.matches('.sheet[data-sheet="'+plan+'"]')?candidate:cont.querySelector('.sheet[data-sheet="'+plan+'"]');
+ const src=candidate?.matches('.sheet[data-sheet="'+plan+'"]')?candidate:null;
  if(!src)return note('Le CV '+plan+' est introuvable.');
  saveSnapshot('previous');capture();const doc=hvTemplate();
  const name=src.querySelector('.identity .name')?.textContent;
@@ -1177,10 +1178,10 @@ function harvardDocx(sheet){
   const ss=segment(el);let out='';
   for(const part of ss){
    if(!part.text)continue;
-   const size=kind==='name'?34:kind==='heading'?22:kind==='contact'?18:kind==='target'?21:20;
+   const size=Math.max(16,Math.min(58,part.size||20));
    const bold=kind==='name'||kind==='heading'||kind==='target'||kind==='title'||part.bold;
    const italic=kind==='org'||part.italic;
-   out+='<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="'+size+'"/>'
+   out+='<w:r><w:rPr><w:rFonts w:ascii="'+xml(part.font||'Arial')+'" w:hAnsi="'+xml(part.font||'Arial')+'"/><w:sz w:val="'+size+'"/>'
      +(bold?'<w:b/>':'')+(italic?'<w:i/>':'')
      +(part.underline?'<w:u w:val="single"/>':'')
      +(part.strike?'<w:strike/>':'')
@@ -1189,16 +1190,20 @@ function harvardDocx(sheet){
   }
   return out||'<w:r><w:t> </w:t></w:r>';
  }
- function paragraph(el,kind){
+ function paragraph(el,kind,prefix=''){
   if(!el)return '';
-  const center=['name','contact','target'].includes(kind);
+  const list=el.querySelector?.(':scope > ul,:scope > ol');
+  if(list)return Array.from(list.querySelectorAll(':scope > li')).map((li,i)=>paragraph(li,'bullet',list.tagName==='OL'?String(i+1)+'. ':'• ')).join('');
+  const alignment=getComputedStyle(el).textAlign;
+  const center=['name','contact','target'].includes(kind)&&!el.style.textAlign;
+  const docAlign=alignment==='justify'?'both':el.style.textAlign||((center?'center':'left'));
   const bottom=kind==='heading'?105:kind==='name'?35:kind==='bullet'?18:kind==='title'?10:kind==='contact'?35:kind==='org'?40:65;
   const before=kind==='heading'?145:0;
   const border=kind==='heading'?'<w:pBdr><w:bottom w:val="single" w:sz="6" w:color="222222" w:space="4"/></w:pBdr>':'';
   const hanging=kind==='bullet'?'<w:ind w:left="260" w:hanging="185"/>':'';
   const keep=['name','heading','title','target'].includes(kind)?'<w:keepNext/>':'';
-  return '<w:p><w:pPr><w:jc w:val="'+(center?'center':'left')+'"/><w:spacing w:before="'+before+'" w:after="'+bottom+'" w:line="245" w:lineRule="auto"/>'
-    +border+hanging+keep+'</w:pPr>'+runs(el,kind)+'</w:p>';
+  return '<w:p><w:pPr><w:jc w:val="'+docAlign+'"/><w:spacing w:before="'+before+'" w:after="'+bottom+'" w:line="245" w:lineRule="auto"/>'
+    +border+hanging+keep+'</w:pPr>'+(prefix?'<w:r><w:t xml:space="preserve">'+xml(prefix)+'</w:t></w:r>':'')+runs(el,kind)+'</w:p>';
  }
  let body='';
  for(const el of sheet.querySelectorAll('.hv-header > [contenteditable]')){
@@ -1354,6 +1359,11 @@ function directPDF(sheet){
   if(aside)sheet.querySelectorAll('aside .ls').forEach(el=>{
     const b=el.getBoundingClientRect(),endY=b.bottom-box.top,page=Math.floor(endY/pagePx),y=(endY%pagePx)*k;
     if(page>=0&&page<pageCount&&endY<heightPx-3)line(page,0,y,sideWidth,y,.447,.710,.874,.45);
+  });
+  // Harvard headings use a real line across the full content width.
+  if(!aside)sheet.querySelectorAll('.hv-heading').forEach(el=>{
+    const r=el.getBoundingClientRect(),top=r.bottom-box.top,page=Math.floor(top/pagePx);
+    line(page,(r.left-box.left)*k,(top-page*pagePx)*k,(r.right-box.left)*k,(top-page*pagePx)*k,.13,.13,.13,.75);
   });
   const winMap={0x20ac:128,0x201a:130,0x0192:131,0x201e:132,0x2026:133,0x2020:134,0x2021:135,0x02c6:136,0x2030:137,0x0160:138,0x2039:139,0x0152:140,0x017d:142,0x2018:145,0x2019:146,0x201c:147,0x201d:148,0x2022:149,0x2013:150,0x2014:151,0x02dc:152,0x2122:153,0x0161:154,0x203a:155,0x0153:156,0x017e:158,0x0178:159,0x202f:32,0x00a0:32,0x2212:45,0x2192:62,0x2011:45};
   function pdfLiteral(input){
