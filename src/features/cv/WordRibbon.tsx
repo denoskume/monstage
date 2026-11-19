@@ -4,8 +4,13 @@ import {
   useDocxEditor,
   useEditorCommand,
   useParagraphStyle,
+  useZoom,
 } from '@docx-editor.dev/react';
 import { createT, en } from '@docx-editor.dev/i18n';
+
+import { SignatureTool } from './SignatureTool';
+import { MailMergeTools } from './MailMergeTools';
+import { PageSetupTools } from './PageSetupTools';
 
 const T = DocxEditor.Toolbar;
 const translate = createT(en);
@@ -98,6 +103,7 @@ export function WordRibbon(props: RibbonProps) {
   const [reference, setReference] = useState(0);
   const bibliography = useRef<HTMLInputElement>(null);
   const editor = useDocxEditor();
+  const zoom = useZoom();
   const exec = (cmd: Exclude<Command, string>) => {
     const result = editor?.exec(cmd);
     if (!result?.ok)
@@ -169,6 +175,10 @@ export function WordRibbon(props: RibbonProps) {
     ),
     Home: (
       <>
+        <Group name="History">
+          <T.Undo />
+          <T.Redo />
+        </Group>
         <Group name="Clipboard">
           <div className="wr-clipboard">
             {button('Paste', async () => {
@@ -249,13 +259,47 @@ export function WordRibbon(props: RibbonProps) {
         <Group name="Links">
           <T.Link />
           <Action cmd="insert.bookmark">Bookmark</Action>
+          <Action cmd="insert.goToBookmark">Go to Bookmark</Action>
         </Group>
         <Group name="Header & Footer">
+          <div className="wr-row">
+            <Action cmd={{ type: 'editHeaderFooter', position: 'header' }}>
+              Header
+            </Action>
+            <Action cmd={{ type: 'editHeaderFooter', position: 'footer' }}>
+              Footer
+            </Action>
+            <Action cmd={{ type: 'exitHeaderFooter' }}>Close</Action>
+          </div>
           <Action cmd="insert.pageNumber">Page Number</Action>
           <Action cmd="insert.pageXofY">Page X of Y</Action>
         </Group>
         <Group name="Text">
+          {button('Date & Time', () =>
+            paste(
+              new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(
+                new Date(),
+              ),
+            ),
+          )}
           <Action cmd="insert.textBox">Text Box</Action>
+        </Group>
+        <Group name="Signature">
+          <SignatureTool notice={props.notice} />
+        </Group>
+        <Group name="Symbols">
+          <select
+            aria-label="Insert Symbol"
+            value=""
+            onChange={(e) => paste(e.target.value)}
+          >
+            <option value="" disabled>
+              Symbol
+            </option>
+            {Array.from('©®™€£¥µ±×÷≤≥≠∞αβγλπΣΩ°→←✓•').map((char) => (
+              <option key={char}>{char}</option>
+            ))}
+          </select>
         </Group>
       </>
     ),
@@ -272,6 +316,7 @@ export function WordRibbon(props: RibbonProps) {
     Layout: (
       <>
         <Group name="Page Setup">
+          <PageSetupTools notice={props.notice} />
           <Action cmd="file.pageSetup">Page Setup</Action>
           <Action cmd="insert.sectionBreakNextPage">Next Page</Action>
           <Action cmd="insert.sectionBreakContinuous">Continuous Break</Action>
@@ -294,15 +339,47 @@ export function WordRibbon(props: RibbonProps) {
         <Group name="Footnotes">
           <Action cmd="insert.footnote">Insert Footnote</Action>
           <Action cmd="insert.endnote">Insert Endnote</Action>
+          <div className="wr-row">
+            <Action cmd={{ type: 'convertAllNotes', fromKind: 'footnote' }}>
+              Convert to Endnotes
+            </Action>
+            <Action cmd={{ type: 'convertAllNotes', fromKind: 'endnote' }}>
+              Convert to Footnotes
+            </Action>
+          </div>
         </Group>
         <Group name="Citations & Bibliography">
           {button('Bibliography', () => setTab('Zotero'))}
         </Group>
       </>
     ),
-    Mailings: <Group name="Write & Insert Fields">{substitution(true)}</Group>,
+    Mailings: (
+      <>
+        <Group name="Write & Insert Fields">{substitution(true)}</Group>
+      </>
+    ),
     Review: (
       <>
+        <Group name="Proofing">
+          {button('Word Count', () => {
+            const text =
+              editor
+                ?.getParagraphs()
+                .map((p) => p.acceptedText)
+                .join('\n') ?? '';
+            const words = [
+              ...new Intl.Segmenter('fr', { granularity: 'word' }).segment(
+                text,
+              ),
+            ].filter((s) => s.isWordLike).length;
+            props.notice(
+              words +
+                ' mots · ' +
+                Array.from(text.replace(/\s/gu, '')).length +
+                ' caractères hors espaces',
+            );
+          })}
+        </Group>
         <Group name="Comments">
           <T.AddComment />
           <T.Comments />
@@ -310,6 +387,24 @@ export function WordRibbon(props: RibbonProps) {
         <Group name="Tracking">
           <T.EditingMode />
           <Action cmd="review.revisionMarkup">Markup Options</Action>
+          <select
+            value=""
+            aria-label="Display for Review"
+            onChange={(e) =>
+              exec({
+                type: 'setReviewDisplayMode',
+                mode: e.target.value as 'simple-markup' | 'all-markup' | 'proposed' | 'original',
+              })
+            }
+          >
+            <option disabled value="">
+              Display for Review
+            </option>
+            <option value="simple-markup">Simple Markup</option>
+            <option value="all-markup">All Markup</option>
+            <option value="proposed">No Markup</option>
+            <option value="original">Original</option>
+          </select>
         </Group>
         <Group name="Changes">
           <Action cmd="review.previousChange">Previous</Action>
@@ -340,6 +435,10 @@ export function WordRibbon(props: RibbonProps) {
         </Group>
         <Group name="Zoom">
           <T.Zoom />
+          <div className="wr-row">
+            {button('100%', zoom.reset)}
+            {button('Page Width', zoom.fitToWidth)}
+          </div>
         </Group>
       </>
     ),
@@ -378,7 +477,14 @@ export function WordRibbon(props: RibbonProps) {
       </Group>
     ),
     Acrobat: (
-      <Group name="Create Adobe PDF">{button('Create a PDF', props.pdf)}</Group>
+      <>
+        <Group name="Create Adobe PDF">
+          {button('Create a PDF', props.pdf)}
+        </Group>
+        <Group name="Signature">
+          <SignatureTool notice={props.notice} />
+        </Group>
+      </>
     ),
     'Table Design': (
       <>
@@ -400,6 +506,25 @@ export function WordRibbon(props: RibbonProps) {
     ),
     'Table Layout': (
       <>
+        <Group name="Table">
+          {(['table', 'row', 'column'] as const).map((region) => (
+            <Action key={region} cmd={{ type: 'selectTableRegion', region }}>
+              Select {region}
+            </Action>
+          ))}
+        </Group>
+        <Group name="Cell Size">
+          <Action
+            cmd={{ type: 'setTableProperties', width: 5000, widthType: 'pct' }}
+          >
+            Fit to Window
+          </Action>
+          <Action
+            cmd={{ type: 'setTableProperties', width: 0, widthType: 'auto' }}
+          >
+            Auto Width
+          </Action>
+        </Group>
         <Group name="Rows & Columns">
           <div className="wr-row">
             <Action cmd={{ type: 'insertRow', where: 'above' }}>
@@ -467,6 +592,12 @@ export function WordRibbon(props: RibbonProps) {
         overflow={false}
         t={(key) => translate(key as Parameters<typeof translate>[0])}
       >
+        <div style={{ display: tab === 'Mailings' ? 'contents' : 'none' }}>
+          {' '}
+          <Group name="Start Mail Merge">
+            <MailMergeTools notice={props.notice} />
+          </Group>
+        </div>
         {content[tab]}
       </T>
       {addIns && (
