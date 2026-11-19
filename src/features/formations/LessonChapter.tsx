@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { FormationModule } from './formationTypes';
 import { getLessonExample } from './lessonExamples';
 import { LessonVisual } from './LessonVisual';
-import { topicGuide } from './TopicLessons';
+
 
 /** The article follows the teaching structure demonstrated in the reference video:
  * plain-language idea → visual observation → short annotated code → output → practice → FAQ.
@@ -26,8 +26,7 @@ function quickFact(module:FormationModule,topic:string) {
   if(/SQL|JOIN|GROUP BY/.test(topic))return 'Une jointure mal définie peut augmenter les sommes sans déclencher aucune erreur technique.';
   return 'En entreprise, une bonne méthode est celle qu’un collègue peut comprendre, reproduire et vérifier sur de nouvelles données.';
 }
-export function LessonChapter({module,topic,index}:{module:FormationModule;topic:string;index:number}){
-  const guide=useMemo(()=>topicGuide(topic,module),[topic,module]);
+export function LessonChapter({module,topic,index,guide}:{module:FormationModule;topic:string;index:number;guide:{explanation:string;example:string;pitfall:string}}){
   const example=useMemo(()=>getLessonExample(topic,module,index),[topic,module,index]);
   const [copied,setCopied]=useState(false);
   useEffect(()=>{setCopied(false);},[module.id,index]);
