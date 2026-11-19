@@ -1166,6 +1166,71 @@ function crc32(b){let v=0xffffffff;for(const q of b){v^=q;for(let i=0;i<8;i++)v=
 function zipFiles(files){const encoder=new TextEncoder(),local=[],central=[];let offset=0;for(const [filename,value] of files){const name=encoder.encode(filename),data=encoder.encode(value),crc=crc32(data);const l=new Uint8Array(30+name.length+data.length),d=new DataView(l.buffer);d.setUint32(0,0x04034b50,true);d.setUint16(4,20,true);d.setUint32(14,crc,true);d.setUint32(18,data.length,true);d.setUint32(22,data.length,true);d.setUint16(26,name.length,true);l.set(name,30);l.set(data,30+name.length);local.push(l);const c=new Uint8Array(46+name.length),dc=new DataView(c.buffer);dc.setUint32(0,0x02014b50,true);dc.setUint16(4,20,true);dc.setUint16(6,20,true);dc.setUint32(16,crc,true);dc.setUint32(20,data.length,true);dc.setUint32(24,data.length,true);dc.setUint16(28,name.length,true);dc.setUint32(42,offset,true);c.set(name,46);central.push(c);offset+=l.length}const csize=central.reduce((n,x)=>n+x.length,0);const end=new Uint8Array(22),de=new DataView(end.buffer);de.setUint32(0,0x06054b50,true);de.setUint16(8,files.length,true);de.setUint16(10,files.length,true);de.setUint32(12,csize,true);de.setUint32(16,offset,true);return new Blob([...local,...central,end],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})}
 // Word: match the A4 model with real editable text, true two-column table,
 // gray sidebar spanning the page and pale-blue section borders.
+
+/* Plain single-column OOXML: no layout tables, figures, images or text boxes. */
+function harvardDocx(sheet){
+ const P='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+ const xml=esc;
+ function runs(el,kind){
+  const ss=segment(el);let out='';
+  for(const part of ss){
+   if(!part.text)continue;
+   const size=kind==='name'?34:kind==='heading'?22:kind==='contact'?18:kind==='target'?21:20;
+   const bold=kind==='name'||kind==='heading'||kind==='target'||kind==='title'||part.bold;
+   const italic=kind==='org'||part.italic;
+   out+='<w:r><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/><w:sz w:val="'+size+'"/>'
+     +(bold?'<w:b/>':'')+(italic?'<w:i/>':'')
+     +(part.underline?'<w:u w:val="single"/>':'')
+     +(part.strike?'<w:strike/>':'')
+     +(part.color&&part.color!=='000000'?'<w:color w:val="'+part.color+'"/>':'')
+     +'</w:rPr><w:t xml:space="preserve">'+xml(part.text)+'</w:t></w:r>';
+  }
+  return out||'<w:r><w:t> </w:t></w:r>';
+ }
+ function paragraph(el,kind){
+  if(!el)return '';
+  const center=['name','contact','target'].includes(kind);
+  const bottom=kind==='heading'?105:kind==='name'?35:kind==='bullet'?18:kind==='title'?10:kind==='contact'?35:kind==='org'?40:65;
+  const before=kind==='heading'?145:0;
+  const border=kind==='heading'?'<w:pBdr><w:bottom w:val="single" w:sz="6" w:color="222222" w:space="4"/></w:pBdr>':'';
+  const hanging=kind==='bullet'?'<w:ind w:left="260" w:hanging="185"/>':'';
+  const keep=['name','heading','title','target'].includes(kind)?'<w:keepNext/>':'';
+  return '<w:p><w:pPr><w:jc w:val="'+(center?'center':'left')+'"/><w:spacing w:before="'+before+'" w:after="'+bottom+'" w:line="245" w:lineRule="auto"/>'
+    +border+hanging+keep+'</w:pPr>'+runs(el,kind)+'</w:p>';
+ }
+ let body='';
+ for(const el of sheet.querySelectorAll('.hv-header > [contenteditable]')){
+  const kind=el.classList.contains('hv-name')?'name':el.classList.contains('hv-target')?'target':'contact';
+  body+=paragraph(el,kind);
+ }
+ const sections=Array.from(sheet.querySelectorAll('.hv-section'));
+ for(const section of sections){
+  body+=paragraph(section.querySelector('.hv-heading'),'heading');
+  for(const item of Array.from(section.children).slice(1)){
+   if(item.classList.contains('hv-item')){
+    const title=item.querySelector('.hv-title'),date=item.querySelector('.hv-date');
+    if(title){
+     const dateRuns=date?runs(date,'date'):'';
+     const tabs='<w:tabs><w:tab w:val="right" w:pos="10100"/></w:tabs>';
+     body+='<w:p><w:pPr>'+tabs+'<w:spacing w:after="18"/><w:keepNext/></w:pPr>'+runs(title,'title')+(date?'<w:r><w:tab/></w:r>'+dateRuns:'')+'</w:p>';
+    }
+    body+=paragraph(item.querySelector('.hv-org'),'org');
+    for(const entry of Array.from(item.children)){
+     if(entry.matches('.hv-bullet'))body+=paragraph(entry,'bullet');
+     else if(entry.matches('.hv-paragraph'))body+=paragraph(entry,'body');
+    }
+   }else if(item.matches('[contenteditable]')){
+    body+=paragraph(item,item.classList.contains('hv-bullet')?'bullet':'body');
+   }
+  }
+ }
+ const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="'+P+'"><w:body>'+body
+  +'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="840" w:right="900" w:bottom="840" w:left="900" w:header="0" w:footer="0"/></w:sectPr></w:body></w:document>';
+ const types='<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
+ const rels='<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+ return zipFiles([['[Content_Types].xml',types],['_rels/.rels',rels],['word/document.xml',doc]]);
+}
+
 function ooxml(sheet){
  if(sheet.dataset.sheet==='H')return harvardDocx(sheet);
  const P='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
@@ -1270,21 +1335,23 @@ function directPDF(sheet){
     stroke(page,r,g,b);pages[page].push(`${fmt(th)} w ${fmt(x1)} ${fmt(H-y1)} m ${fmt(x2)} ${fmt(H-y2)} l S`);
   }
   // Sample edited paper and sidebar background colors for every PDF page.
-  const paperColor=color(getComputedStyle(sheet).backgroundColor),railColor=color(getComputedStyle(sheet.querySelector('aside')).backgroundColor);
-   const sideWidth=sheet.querySelector('aside').getBoundingClientRect().width*k;
+  const paperColor=color(getComputedStyle(sheet).backgroundColor);
+  const aside=sheet.querySelector('aside'),railColor=aside?color(getComputedStyle(aside).backgroundColor):paperColor;
+  const sideWidth=aside?aside.getBoundingClientRect().width*k:0;
   for(let p=0;p<pageCount;p++){
     rect(p,0,0,W,H,...paperColor);
-    rect(p,0,0,sideWidth,H,...railColor);
-    line(p,sideWidth,0,sideWidth,H,.396,.666,.867,.58);
-    line(p,.4,.4,W-.4,.4,.502,.737,.878,.48);
-    line(p,.4,H-.4,W-.4,H-.4,.502,.737,.878,.48);
-    line(p,.4,.4,.4,H-.4,.502,.737,.878,.48);
-    line(p,W-.4,.4,W-.4,H-.4,.502,.737,.878,.48);
+    if(aside){
+      rect(p,0,0,sideWidth,H,...railColor);
+      line(p,sideWidth,0,sideWidth,H,.396,.666,.867,.58);
+      line(p,.4,.4,W-.4,.4,.502,.737,.878,.48);
+      line(p,.4,H-.4,W-.4,H-.4,.502,.737,.878,.48);
+      line(p,.4,.4,.4,H-.4,.502,.737,.878,.48);
+      line(p,W-.4,.4,W-.4,H-.4,.502,.737,.878,.48);
+    }
   }
-  sheet.querySelectorAll('aside .ls').forEach(el=>{
-    let b=el.getBoundingClientRect(), endY=b.bottom-box.top;
-    let page=Math.floor(endY/pagePx), y=(endY%pagePx)*k;
-    if(page>=0&&page<pageCount&&endY < heightPx-3)line(page,0,y,sideWidth,y,.447,.710,.874,.45);
+  if(aside)sheet.querySelectorAll('aside .ls').forEach(el=>{
+    const b=el.getBoundingClientRect(),endY=b.bottom-box.top,page=Math.floor(endY/pagePx),y=(endY%pagePx)*k;
+    if(page>=0&&page<pageCount&&endY<heightPx-3)line(page,0,y,sideWidth,y,.447,.710,.874,.45);
   });
   const winMap={0x20ac:128,0x201a:130,0x0192:131,0x201e:132,0x2026:133,0x2020:134,0x2021:135,0x02c6:136,0x2030:137,0x0160:138,0x2039:139,0x0152:140,0x017d:142,0x2018:145,0x2019:146,0x201c:147,0x201d:148,0x2022:149,0x2013:150,0x2014:151,0x02dc:152,0x2122:153,0x0161:154,0x203a:155,0x0153:156,0x017e:158,0x0178:159,0x202f:32,0x00a0:32,0x2212:45,0x2192:62,0x2011:45};
   function pdfLiteral(input){
@@ -1445,13 +1512,13 @@ function directPDF(sheet){
 function exportPDF(){
   try{
     const {bytes,pageCount}=directPDF(current());
-    downloadBlob(bytes,'application/pdf',`Denos_KUME_CV_${chosen==='A'?'Computer_Vision':'Data_Scientist'}.pdf`);
+    downloadBlob(bytes,'application/pdf',`Denos_KUME_CV_${chosen==='A'?'Computer_Vision':chosen==='B'?'Data_Scientist':'Harvard'}.pdf`);
     saveSnapshot('pdf');
     toast(`PDF préparé — dernière version conservée, ${pageCount} page${pageCount>1?'s':''} A4${pageCount>1?' (CV à raccourcir pour une page)':''}`);
   }catch(err){console.error(err);toast('Échec export PDF : '+err.message)}
   closeMenu();
 }
-root.querySelector('#export-docx').onclick=()=>{try{downloadBlob(ooxml(current()),'application/vnd.openxmlformats-officedocument.wordprocessingml.document',`Denos_KUME_CV_${chosen==='A'?'Computer_Vision':'Data_Scientist'}.docx`);saveSnapshot('docx');toast('Word généré — dernière version enregistrée')}catch(e){toast('Erreur de génération Word : '+e.message)}closeMenu()};
+root.querySelector('#export-docx').onclick=()=>{try{downloadBlob(ooxml(current()),'application/vnd.openxmlformats-officedocument.wordprocessingml.document',`Denos_KUME_CV_${chosen==='A'?'Computer_Vision':chosen==='B'?'Data_Scientist':'Harvard'}.docx`);saveSnapshot('docx');toast('Word généré — dernière version enregistrée')}catch(e){toast('Erreur de génération Word : '+e.message)}closeMenu()};
 root.querySelector('#export-pdf').onclick=exportPDF;
 window.monstageOfficeCopy=()=>({plan:chosen,document:ooxml(current())});
 // Before leaving the page, save the latest field and table dimensions as well.
