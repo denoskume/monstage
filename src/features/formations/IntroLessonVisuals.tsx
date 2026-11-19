@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 type Kind='workflow'|'types'|'source'|'grain'|'kpi'|'quality'|'classes'|'features'|'labels'|'knn'|'confusion';
-function VisualShell({title,caption,children}:{title:string;caption:string;children:React.ReactNode}){
+function VisualShell({title,caption,children}:{title:string;caption:string;children:ReactNode}){
   return <figure className="learning-visual">
     <div className="learning-visual__header"><span>COMPRENDRE EN IMAGE</span><strong>{title}</strong></div>
     <div className="learning-visual__content">{children}</div>
