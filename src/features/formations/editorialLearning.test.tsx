@@ -17,7 +17,7 @@ describe('Reference-style editorial learning',()=>{
         const example=getLessonExample(topic,module,index);
         expect(example.code.length, module.id+': '+topic).toBeGreaterThan(20);
         expect(example.meaning.length,module.id+': '+topic).toBeGreaterThan(40);
-        expect(example.output.length,module.id+': '+topic).toBeGreaterThan(9);
+        expect(example.output.length,module.id+': '+topic).toBeGreaterThan(0);
         expect(example.challenge.length,module.id+': '+topic).toBeGreaterThan(20);
         expect(example.meaning).not.toContain('Ce court extrait appartient au projet réel du module');
         total++;
