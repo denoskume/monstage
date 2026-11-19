@@ -8,7 +8,7 @@ const TOPICS_KEY='monstage:formations:topic-completed:v1';
 const NOTES_KEY='monstage:formations:notes:v2';
 const PROJECTS_KEY='monstage:formations:projects:v1';
 
-type ProgressExport={version:1;kind:'monstage-learning';date:string;modules:string[];topics:string[];notes:Record<string,string>;projects:Record<string,boolean[]>};
+export type ProgressExport={version:1;kind:'monstage-learning';date:string;modules:string[];topics:string[];notes:Record<string,string>;projects:Record<string,boolean[]>};
 function object(v:unknown):v is Record<string,unknown> {
   return v!==null&&typeof v==='object'&&!Array.isArray(v);
 }
@@ -19,7 +19,7 @@ function read<T>(key:string, fallback:T):T {
 function mergeItems(a:string[],b:string[],allowed:Set<string>) {
   return [...new Set([...a,...b].filter(s=>allowed.has(s)))];
 }
-export function backupModel(tracks:FormationTrack[]):ProgressExport {
+export function backupModel():ProgressExport {
   return {
     version:1,
     kind:'monstage-learning',
@@ -83,7 +83,7 @@ export function FormationBackup({tracks,onImported}:{
   }
   return <section className="formation-backup" aria-label="Sauvegarde de ma progression">
     <div><strong>Sauvegarder mon apprentissage</strong><p>La progression reste locale à ce navigateur. Exporte un fichier pour la restaurer ailleurs ou après un changement d’appareil.</p></div>
-    <div><button className="formation-secondary-action" type="button" onClick={()=>download(JSON.stringify(backupModel(tracks),null,2))}>↓ Exporter la progression</button>
+    <div><button className="formation-secondary-action" type="button" onClick={()=>download(JSON.stringify(backupModel(),null,2))}>↓ Exporter la progression</button>
       <button className="formation-secondary-action" type="button" onClick={()=>ref.current?.click()}>↑ Importer une sauvegarde</button>
       <input ref={ref} className="sr-only" type="file" accept=".json,application/json" aria-label="Fichier de sauvegarde" onChange={restore}/>
     </div>
