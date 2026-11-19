@@ -197,7 +197,9 @@
 }
 
 /* Harvard: independent one-column resume, minimal and ATS-oriented. */
+#cvtool .sheet.harvard-sheet[hidden]{display:none!important}
 #cvtool .track-tabs button[data-tab="A"],#cvtool .track-tabs button[data-tab="B"]{display:none}
+#cvtool .track-tabs .harvard-back{display:flex;align-items:center;border:1px solid #cbd7e5;border-radius:5px;padding:7px 10px;color:#28608f;background:white;text-decoration:none;font:600 11px Arial}
 #cvtool .sheet.harvard-sheet{display:block;grid-template-columns:none;width:794px;min-height:1123px;border:1px solid #d2dae4;background:white;color:#10151b;font:12.8px/1.35 Arial,Helvetica,sans-serif}
 #cvtool .harvard-page{padding:40px 51px 42px}
 #cvtool .hv-header{text-align:center;margin-bottom:17px}
@@ -222,7 +224,7 @@
 </style><link rel="stylesheet" href="ribbon.css"></head><body><div id="cvtool">
 <div class="bar">
  <div class="studio-brand"><span class="brand-mark"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6zM14 2v6h5M9 13h7M9 17h7"/></svg></span><span><strong>Studio CV</strong><small>MonStage</small></span></div>
- <div class="track-tabs" aria-label="Version du CV"><button data-tab="A" class="selected">CV A <span>Vision</span></button><button data-tab="B">CV B <span>Data Scientist</span></button><button data-tab="H">Harvard <span>ATS</span></button></div>
+ <div class="track-tabs" aria-label="Version du CV"><button data-tab="A" class="selected">CV A <span>Vision</span></button><button data-tab="B">CV B <span>Data Scientist</span></button><button data-tab="H">Harvard <span>ATS</span></button><a href="thierry-editor.html" class="harvard-back" title="Retour à mes CV existants">← CV A / B</a></div>
  <div class="quick-tools"><button type="button" class="tool-btn" id="undo" aria-label="Annuler" title="Annuler"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-7L3 13"/></svg></button><button type="button" class="tool-btn" id="redo" aria-label="Rétablir" title="Rétablir"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 15-7l3 3"/></svg></button></div><div class="bar-spacer"></div>
  <div class="save-actions"><button type="button" id="save-cv" title="Enregistrer la version actuelle du CV" aria-label="Enregistrer le CV">Enregistrer</button><button type="button" id="versions-cv" aria-expanded="false" aria-controls="cv-versions-panel" title="Afficher les versions enregistrées">Versions ▾</button></div>
  <span class="save-indicator" id="save-notice" aria-live="polite"><span class="save-dot"></span> Prêt à enregistrer</span>
@@ -296,7 +298,7 @@
 <div class="viewport" id="paper-container"></div><div class="tip">Clique directement sur le texte pour le modifier. Les fichiers Word et PDF sont téléchargés directement à partir des modifications du CV sélectionné. Le PDF est un document A4 avec texte sélectionnable, et non une image.</div><div class="toast" id="toast" aria-live="polite"></div>
 </div><script>
 (function(){
-const root=document.getElementById('cvtool');const cont=document.getElementById('paper-container');let chosen='A',lastField=null;
+const root=document.getElementById('cvtool');const cont=document.getElementById('paper-container');let chosen='H',lastField=null;
 const commonLeft={edu:['- 2025–2027 : <strong>MSc Control and Robotics</strong>, parcours <strong>Data Science, Signal &amp; Image Processing</strong> à Centrale Nantes (cursus en anglais).','- 2021–2025 : <strong>BSc Computer Science &amp; Electronics</strong> à Kristu Jayanti University, Inde (cursus en anglais).','- Décembre 2024 : <strong>Google Advanced Data Analytics</strong>, Google / Coursera.','- Juillet 2024 : <strong>SQL Certification Course</strong>, Simplilearn.']};
 const cv={
 A:{title:'Computer Vision Engineer',tools:['Python, MATLAB, OpenCV','PyTorch, scikit-learn','NumPy, Matplotlib, Git','Jupyter Notebook'],methods:['Filtrage et segmentation','Calibration et détection','Comparaison de méthodes'],strengths:['Traitement d’images','Vision par ordinateur','Machine Learning appliqué'],experiences:[
@@ -1035,7 +1037,7 @@ function harvardAddSection(){
 }
 function harvardAddEntry(){
  capture();
- const selected=lastField?.closest('.hv-section'),section=selected||hvSection('experience');
+ const section=hvSection('experience');
  const item=document.createElement('div');item.className='hv-item';
  const row=document.createElement('div');row.className='hv-row';
  row.append(hvMake('hv-title','Nouvelle expérience — Intitulé'),hvMake('hv-date','Dates'));
