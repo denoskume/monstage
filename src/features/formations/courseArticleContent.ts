@@ -10,7 +10,7 @@ export type ArticleSection = {
   language?: string;
   output?: string;
   interpretation?: string;
-  visual?: 'opencv'|'pixels'|'colors'|'operations'|'pandas'|'numpy'|'data'|'edges'|'video';
+  visual?: 'opencv'|'pixels'|'colors'|'operations'|'pandas'|'numpy'|'data'|'edges'|'video'|'python-flow'|'jupyter'|'variables'|'types'|'operators'|'lists'|'tuples'|'dictionaries'|'conditions'|'loops'|'builtins'|'functions'|'csv'|'json'|'exceptions';
   tip?: string;
   pointIndex?: number;
 };
