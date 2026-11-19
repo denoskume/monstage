@@ -6,12 +6,20 @@ import { dataAnalystTrack } from './dataAnalystTrack';
 import { imageProcessingTrack } from './imageProcessingTrack';
 import { computerVisionTrack } from './computerVisionTrack';
 import { FormationLab } from './FormationLabs';
+import { ImageWorkbench } from './ImageWorkbench';
+import { AdvancedImageLab } from './AdvancedImageLabs';
+import { DataWorkbench } from './DataWorkbench';
+import { TopicLessons, topicGuide } from './TopicLessons';
+import { validateFormationBackup } from './formationBackup';
+import { mathematicsNotes } from './mathematicsNotes';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
 export const formationTracks = [imageProcessingTrack, computerVisionTrack, dataAnalystTrack];
 const PROGRESS_KEY = 'monstage:formations:completed:v2';
 const NOTES_KEY = 'monstage:formations:notes:v2';
+const TOPICS_KEY = 'monstage:formations:topics:v3';
+const CODE_KEY = 'monstage:formations:code:v3';
 type Stage = 'comprendre' | 'pratiquer' | 'valider';
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -49,6 +57,7 @@ function notebookSource(track: FormationTrack, module: FormationModule, codeOver
   const cells = [
     markdown('# ' + module.title + '\n\n**' + track.title + '**\n\n## Objectif\n' + module.objective),
     markdown('## Comprendre\n' + module.concept + '\n\n## Notions essentielles\n' + module.points.map(point => '- ' + point).join('\n')),
+    ...(mathematicsNotes[module.id] ? [markdown('## Mathématiques essentielles\n' + mathematicsNotes[module.id].title + '\n\n' + mathematicsNotes[module.id].equation + '\n\n' + mathematicsNotes[module.id].interpretation + '\n\n**Exemple :** ' + mathematicsNotes[module.id].example)] : []),
     markdown('## Situation professionnelle\n' + module.example),
     ...(module.codeLanguage === 'python'
       ? [...(packages.length ? [code('%pip install ' + [...new Set(packages)].join(' '))] : []), code(exampleCode)]
@@ -75,12 +84,32 @@ function downloadNotebook(track: FormationTrack, module: FormationModule, codeOv
 function downloadTrack(track: FormationTrack) {
   const archive: Record<string, Uint8Array> = {};
   track.modules.forEach((module, i) => {
-    const name = String(i+1).padStart(2,'0') + '-' + module.id + '.ipynb';
+    const prefix = String(i+1).padStart(2,'0') + '-' + module.id;
+    const name = prefix + '/00-notebook-module.ipynb';
     archive[name] = strToU8(notebookSource(track, module));
+    module.points.forEach((point, j) => {
+      const guide = topicGuide(point, module);
+      const markdown = (source:string) => ({cell_type:'markdown',metadata:{},source});
+      const code=(source:string)=>({cell_type:'code',metadata:{},source,execution_count:null,outputs:[]});
+      const cells = [
+        markdown('# Leçon '+(j+1)+' — '+point+'\n\n'+track.title+' · '+module.title),
+        markdown('## Pourquoi apprendre cette notion ?\n'+guide.explanation),
+        ...(mathematicsNotes[module.id] ? [markdown('## Repère mathématique\n' + mathematicsNotes[module.id].equation + '\n\n' + mathematicsNotes[module.id].interpretation)] : []),
+        markdown('## Exemple guidé\n'+guide.example),
+        markdown('## Erreur à éviter\n'+guide.pitfall),
+        markdown('## Code du module : retrouve la partie correspondante\nChaque leçon utilise le contexte de la mission du module pour que les notions restent liées à un projet réel.'),
+        ...(module.codeLanguage === 'python' ? [code(module.code)] : [markdown('```'+(module.codeLanguage||'')+'\n'+module.code+'\n```')]),
+        markdown('## Mission autonome\nDans ce code, retrouve la partie correspondant à « '+point+' ». Modifie un paramètre, prédis l’effet, vérifie le résultat et rédige une observation.'),
+        ...(module.codeLanguage === 'python' ? [code('# Ton expérience pratique\n')] : []),
+        markdown('## Validation\nExplique la notion sans lire ton code. Justifie les limites de ton résultat et ajoute une capture ou une mesure.\n\n**Carnet de bord :**')
+      ];
+      const notebook={nbformat:4,nbformat_minor:5,metadata:{kernelspec:{name:'python3',display_name:'Python 3',language:'python'},language_info:{name:'python'}},cells};
+      archive[prefix+'/'+String(j+1).padStart(2,'0')+'-'+point.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)+'.ipynb']=strToU8(JSON.stringify(notebook,null,2));
+    });
   });
   archive['LIRE-AVANT-DE-COMMENCER.md'] = strToU8(
     '# ' + track.title + '\n\n' + track.objective + '\n\n' +
-    'Chaque notebook contient une explication, un exemple, une interprétation, un exercice et une mission.\n' +
+    'L’archive comprend un notebook complet par module et un notebook ciblé pour chaque notion du sommaire. Tous utilisent le cas pratique du module comme fil conducteur.\n' +
     'Les notebooks Python peuvent être importés dans Jupyter ou Google Colab. Les exemples SQL, Excel et DAX doivent être exécutés dans leurs outils respectifs.\n\n' +
     track.modules.map((m,i)=> (i+1) + '. ' + m.title).join('\n') + '\n'
   );
@@ -103,7 +132,8 @@ function TrackSymbol({id}: {id:string}) {
     {id === 'traitement-images' ? '◈' : id === 'computer-vision' ? '⌘' : '▥'}
   </span>;
 }
-function Catalog({completed}: {completed:string[]}) {
+function Catalog({completed,onBackup,onRestore}: {completed:string[];onBackup:()=>void;onRestore:(file:File)=>Promise<void>}) {
+  const [restoreMessage,setRestoreMessage]=useState('');
   const [search,setSearch] = useState('');
   const filtered = formationTracks.filter(t => [t.title,t.subtitle,...t.tools].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
   const total = formationTracks.reduce((n,t)=>n+t.modules.length,0);
@@ -153,6 +183,9 @@ function Catalog({completed}: {completed:string[]}) {
         <span><b>04</b> Valider et expliquer les résultats</span>
       </div>
     </section>
+    <section className="formation-backup"><div><strong>Conserver mes travaux</strong><p>Export local des notes, étapes étudiées et codes modifiés. Les données ne quittent pas le navigateur.</p></div><div className="formation-backup__actions"><button type="button" className="formation-secondary-action" onClick={onBackup}>↓ Sauvegarder mon parcours (JSON)</button>
+      <label className="formation-workbench-upload">↑ Restaurer une sauvegarde <input type="file" accept=".json,application/json" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;try{await onRestore(file);setRestoreMessage('Sauvegarde restaurée.');}catch(error){setRestoreMessage(error instanceof Error?error.message:'Import impossible.');}e.target.value='';}}/></label>
+      {restoreMessage&&<p role="status">{restoreMessage}</p>}</div></section>
     <div className="formation-existing"><strong>Ateliers précédents conservés</strong><p>Les mini-cours OpenCV / Data Analyst déjà présents restent disponibles.</p><Link to="/formations/vision">Atelier Vision historique</Link><Link to="/formations/data">Atelier Data historique</Link></div>
   </div>;
 }
@@ -168,7 +201,7 @@ function Overview({track,completed}: {track:FormationTrack;completed:string[]}) 
         <div className="formation-overview__stats"><strong>{done} / {track.modules.length}</strong><span>modules validés</span></div>
         <ProgressBar value={done} count={track.modules.length}/>
         <Link className="formation-primary-action" to={'/formations/'+track.id+'/'+firstIncomplete.id}>{done ? 'Continuer le parcours':'Commencer le parcours'} <span aria-hidden="true">→</span></Link>
-        <button className="formation-secondary-action" type="button" onClick={()=>downloadTrack(track)}>↓ Télécharger les notebooks (.zip)</button>
+        <button className="formation-secondary-action" type="button" onClick={()=>downloadTrack(track)}>↓ Télécharger tous les notebooks (.zip)</button>
       </div>
     </header>
     <section className="formation-syllabus"><div className="formation-section-heading"><div><span className="formation-eyebrow">PROGRAMME DÉTAILLÉ</span><h2>Les {track.modules.length} modules</h2></div><span className="formation-syllabus__duration">{track.weeks}</span></div>
@@ -184,13 +217,17 @@ function Overview({track,completed}: {track:FormationTrack;completed:string[]}) 
     <section className="formation-final-project"><span className="formation-eyebrow">PROJET FINAL</span><h2>{track.project}</h2><p>À la fin du parcours : code reproductible, vérifications, résultats analysés, documentation et restitution professionnelle.</p></section>
   </div>;
 }
-function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
+function ModuleScreen({track,module,completed,onComplete,notes,onNote,topics,onToggleTopic,codeDrafts,onCodeDraft}: {
   track:FormationTrack;
   module:FormationModule;
   completed:string[];
   onComplete:(id:string)=>void;
   notes:Record<string,string>;
   onNote:(id:string,value:string)=>void;
+  topics:Record<string,number[]>;
+  onToggleTopic:(id:string,index:number)=>void;
+  codeDrafts:Record<string,string>;
+  onCodeDraft:(id:string,value:string)=>void;
 }) {
   const [stage,setStage]=useState<Stage>('comprendre');
   const [answer,setAnswer]=useState<number|null>(null);
@@ -198,13 +235,15 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
   const [missionReady,setMissionReady]=useState(false);
   const [copied,setCopied]=useState(false);
   const [editing,setEditing]=useState(false);
-  const [editableCode,setEditableCode]=useState(module.code);
+  const [editableCode,setEditableCode]=useState(codeDrafts[track.id+':'+module.id] ?? module.code);
   const index=track.modules.findIndex(item=>item.id===module.id);
   const key=track.id+':'+module.id;
   const done=completed.includes(key);
   const prev=track.modules[index-1];
   const next=track.modules[index+1];
-  useEffect(()=>{setStage('comprendre');setAnswer(null);setChecked(false);setMissionReady(false);setCopied(false);setEditing(false);setEditableCode(module.code);},[key, module.code]);
+  useEffect(()=>{setStage('comprendre');setAnswer(null);setChecked(false);setMissionReady(false);setCopied(false);setEditing(false);setEditableCode(codeDrafts[key] ?? module.code);},[key, module.code]);
+  const topicProgress=(topics[key] || []).filter(i=>Number.isInteger(i)&&i>=0&&i<module.points.length);
+  const allTopicsStudied=topicProgress.length===module.points.length;
   const right=checked && answer===module.quiz.correct;
   const stages: Array<[Stage,string,string]> = [['comprendre','01','Comprendre'],['pratiquer','02','Pratiquer'],['valider','03','Valider']];
   async function copyExample() {
@@ -233,16 +272,25 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
         {stage==='comprendre' && <div className="formation-content-section" role="tabpanel">
           <span className="formation-eyebrow">01 · THÉORIE ESSENTIELLE</span><h2>Comprendre avant de coder</h2>
           <p className="formation-featured-paragraph">{module.concept}</p>
+          {mathematicsNotes[module.id]&&<div className="formation-mathematics">
+            <span className="formation-eyebrow">MATHÉMATIQUES ESSENTIELLES</span>
+            <h3>{mathematicsNotes[module.id].title}</h3>
+            <div className="formation-math-formula">{mathematicsNotes[module.id].equation}</div>
+            <p>{mathematicsNotes[module.id].interpretation}</p>
+            <div className="formation-math-example"><strong>Exemple numérique</strong><p>{mathematicsNotes[module.id].example}</p></div>
+          </div>}
           <div className="formation-notions"><h3>Ce que tu vas apprendre</h3><ol>{module.points.map((point,i)=><li key={point}><b>{String(i+1).padStart(2,'0')}</b><span>{point}</span></li>)}</ol></div>
           <div className="formation-business-case"><strong>Exemple concret</strong><p>{module.example}</p></div>
+          <TopicLessons module={module} completed={topicProgress} onToggle={i=>onToggleTopic(key,i)}/>
           <FormationLab moduleId={module.id}/>
           <div className="formation-stage-footer"><p>Lis la théorie, essaie de reformuler le concept, puis explore le code.</p><button className="formation-primary-action" type="button" onClick={()=>setStage('pratiquer')}>Passer à la pratique <span aria-hidden="true">→</span></button></div>
         </div>}
         {stage==='pratiquer' && <div className="formation-content-section" role="tabpanel">
           <span className="formation-eyebrow">02 · APPLICATION GUIDÉE</span><h2>Observer le code et ses résultats</h2><p>Exemple autonome à reproduire dans un notebook. Lis les commentaires, exécute, puis modifie les paramètres pour vérifier ce que tu as compris.</p>
+          {track.plan==='Plan A' ? (['fourier','video-mouvement','convolutions-cnn','reseaux-neurones','pytorch-entrainement'].includes(module.id) ? <AdvancedImageLab moduleId={module.id}/> : <ImageWorkbench moduleId={module.id}/>) : <DataWorkbench/>}
           <div className="formation-code">
             <div className="formation-code__header"><span>{module.codeLanguage==='excel'?'FORMULES EXCEL':module.codeLanguage==='dax'?'MESURES DAX':module.codeLanguage==='sql'?'SQL / PYTHON':'PYTHON 3'}</span><div className="formation-code__controls"><button type="button" onClick={()=>setEditing(v=>!v)}>{editing?'Voir l’aperçu':'Modifier le code'}</button><button type="button" onClick={copyExample}>{copied?'✓ Copié':'Copier le code'}</button></div></div>
-            {editing?<textarea className="formation-code__editor" spellCheck={false} aria-label="Éditeur de code de l’exemple" value={editableCode} onChange={e=>setEditableCode(e.target.value)} rows={Math.max(12,editableCode.split('\n').length+2)}/>:<pre><code>{editableCode}</code></pre>}
+            {editing?<textarea className="formation-code__editor" spellCheck={false} aria-label="Éditeur de code de l’exemple" value={editableCode} onChange={e=>{setEditableCode(e.target.value);onCodeDraft(key,e.target.value);}} rows={Math.max(12,editableCode.split('\n').length+2)}/>:<pre><code>{editableCode}</code></pre>}
           </div>
           <p className="formation-code__notice">Tu peux modifier le code avant de le copier ou de télécharger le notebook. L’exécution Python se fait dans Jupyter ou Google Colab.</p>
           <div className="formation-code-actions"><button className="formation-secondary-action" type="button" onClick={()=>downloadNotebook(track,module,editableCode)}>↓ Télécharger mon notebook .ipynb</button><a className="formation-link-button" href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Ouvrir Google Colab ↗</a></div>
@@ -265,8 +313,8 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
             <textarea id="formation-notes" rows={5} value={notes[key]||''} onChange={e=>onNote(key,e.target.value)} placeholder="Ce que j’ai testé… Ce que j’ai compris… Ce que je veux approfondir…"/>
           </section>
           <label className="formation-self-check"><input type="checkbox" checked={missionReady} onChange={e=>setMissionReady(e.target.checked)}/><span>J’ai réalisé la mission et vérifié le livrable avec les critères annoncés.</span></label>
-          <button className="formation-primary-action" type="button" disabled={done || !right || !missionReady} onClick={()=>onComplete(key)}>{done?'✓ Module déjà validé':'Valider ce module'} <span aria-hidden="true">→</span></button>
-          {!done && <p className="formation-help-text">La validation demande une bonne réponse au quiz et une mission effectivement réalisée. Le suivi est conservé sur cet appareil.</p>}
+          <button className="formation-primary-action" type="button" disabled={done || !right || !missionReady || !allTopicsStudied} onClick={()=>onComplete(key)}>{done?'✓ Module déjà validé':'Valider ce module'} <span aria-hidden="true">→</span></button>
+          {!done && <p className="formation-help-text">La validation demande toutes les notions étudiées ({topicProgress.length}/{module.points.length}), une bonne réponse au quiz et une mission effectivement réalisée. Le suivi est conservé sur cet appareil.</p>}
         </div>}
         <footer className="formation-lesson__navigation">
           {prev ? <Link to={'/formations/'+track.id+'/'+prev.id}>← Module précédent</Link> : <Link to={'/formations/'+track.id}>← Programme</Link>}
@@ -280,16 +328,34 @@ export default function Formations() {
   const {parcours,lecon} = useParams();
   const [completed,setCompleted] = useState<string[]>(()=>readStorage<string[]>(PROGRESS_KEY,[]));
   const [notes,setNotes] = useState<Record<string,string>>(()=>readStorage<Record<string,string>>(NOTES_KEY,{}));
+  const [topics,setTopics] = useState<Record<string,number[]>>(()=>readStorage<Record<string,number[]>>(TOPICS_KEY,{}));
+  const [codeDrafts,setCodeDrafts] = useState<Record<string,string>>(()=>readStorage<Record<string,string>>(CODE_KEY,{}));
   useEffect(()=>{try{window.localStorage.setItem(PROGRESS_KEY,JSON.stringify(completed));}catch{/* stockage indisponible */}},[completed]);
   useEffect(()=>{try{window.localStorage.setItem(NOTES_KEY,JSON.stringify(notes));}catch{/* stockage indisponible */}},[notes]);
+  useEffect(()=>{try{window.localStorage.setItem(TOPICS_KEY,JSON.stringify(topics));}catch{/* stockage indisponible */}},[topics]);
+  useEffect(()=>{try{window.localStorage.setItem(CODE_KEY,JSON.stringify(codeDrafts));}catch{/* stockage indisponible */}},[codeDrafts]);
+  function backup() {
+    const payload = {format:'monstage-formations-v3',date:new Date().toISOString(),completed,notes,topics,codeDrafts};
+    saveFile('monstage-formations-sauvegarde.json',new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
+  }
+  function toggleTopic(key:string,index:number){setTopics(previous=>{const old=previous[key]||[];return {...previous,[key]:old.includes(index)?old.filter(n=>n!==index):[...old,index].sort((a,b)=>a-b)};});}
+  async function restore(file:File) {
+    if(file.size>2_000_000)throw Error('Sauvegarde trop volumineuse (2 Mo max).');
+    const backup=validateFormationBackup(JSON.parse(await file.text()));
+    const allowed=new Set(formationTracks.flatMap(t=>t.modules.map(m=>t.id+':'+m.id)));
+    setCompleted(backup.completed.filter(id=>allowed.has(id)));
+    setNotes(Object.fromEntries(Object.entries(backup.notes).filter(([id])=>allowed.has(id))));
+    setTopics(Object.fromEntries(Object.entries(backup.topics).filter(([id])=>allowed.has(id))));
+    setCodeDrafts(Object.fromEntries(Object.entries(backup.codeDrafts).filter(([id])=>allowed.has(id))));
+  }
   const track = useMemo(()=>formationTracks.find(t=>t.id===parcours),[parcours]);
   const module = track?.modules.find(m=>m.id===lecon);
   if (parcours==='vision' || parcours==='data') return <LegacyFormations/>;
   if ((parcours && !track) || (lecon && !module)) return <Navigate to="/formations" replace/>;
   const validCompleted=completed.filter(id=>formationTracks.some(t=>t.modules.some(m=>id===t.id+':'+m.id)));
   return <section className="page formations" lang="fr">
-    {!track ? <Catalog completed={validCompleted}/> :
+    {!track ? <Catalog completed={validCompleted} onBackup={backup} onRestore={restore}/> :
       !module ? <Overview track={track} completed={validCompleted}/> :
-      <ModuleScreen track={track} module={module} completed={validCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/>}
+      <ModuleScreen track={track} module={module} completed={validCompleted} onComplete={id=>setCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))} topics={topics} onToggleTopic={toggleTopic} codeDrafts={codeDrafts} onCodeDraft={(id,value)=>setCodeDrafts(n=>({...n,[id]:value}))}/>}
   </section>;
 }

@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Formations from './Formations';
+import { topicQuiz } from './topicQuizzes';
+import { imageProcessingTrack } from './imageProcessingTrack';
 
 function mount(url: string) {
   return render(<MemoryRouter initialEntries={[url]}><Routes><Route path="/formations/:parcours?/:lecon?" element={<Formations/>}/></Routes></MemoryRouter>);
@@ -23,6 +25,15 @@ describe('Formations pages',()=>{
     mount('/formations/traitement-images/images-pixels');
     expect(screen.getByRole('heading',{name:'Images numériques, pixels et signaux 2D'})).toBeInTheDocument();
     expect(screen.getByText('Laboratoire interactif · 5 × 5 pixels')).toBeInTheDocument();
+    // Each of the six concepts must be studied before the module can be validated.
+    for(let i=1;i<=6;i++){
+      const quiz=topicQuiz(imageProcessingTrack.modules[0].points[i-1]);
+      await user.click(screen.getByRole('radio',{name:quiz.options[quiz.correct]}));
+      await user.click(screen.getByRole('button',{name:'Corriger ma réponse'}));
+      await user.click(screen.getByRole('checkbox',{name:/J’ai étudié, testé et compris/}));
+      if(i<6) await user.click(screen.getByRole('button',{name:'Notion suivante →'}));
+    }
+    expect(screen.getByText('6/6 étudiées')).toBeInTheDocument();
     await user.click(screen.getByRole('tab',{name:/Pratiquer/}));
     expect(screen.getByRole('button',{name:'Modifier le code'})).toBeInTheDocument();
     await user.click(screen.getByRole('button',{name:'Modifier le code'}));
