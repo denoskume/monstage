@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { FormationModule, FormationTrack } from './formationTypes';
 import { allTopics, lessonNotebook, topicProgressKey, type LessonTopic } from './detailedLessons';
 import { AlgorithmLab } from './AlgorithmLab';
+import ImageUploadLab from './ImageUploadLab';
 import { DataLessonLab } from './DataLessonLab';
 
 type Step='theorie'|'code'|'exercice'|'quiz';
@@ -87,6 +88,7 @@ export default function FormationTopicPage({track,module,topic,topicCompleted,on
           {topic.formula&&<div className="formation-topic-formula"><span>NOTATION À CONNAÎTRE</span><strong>{topic.formula.expression}</strong><p>{topic.formula.interpretation}</p></div>}
           <h3>Pourquoi est-ce utile en entreprise ?</h3><p>{topic.context}</p>
           {track.id==='data-analyst'?<DataLessonLab moduleId={module.id}/>:<AlgorithmLab moduleId={module.id}/>}
+          {track.id!=='data-analyst'&&<ImageUploadLab moduleId={module.id}/>}
           <div className="formation-topic-caution"><strong>Erreur fréquente à éviter</strong><p>{topic.pitfall}</p></div>
           <div className="formation-topic-panel__footer"><button className="formation-primary-action" onClick={()=>setStep('code')}>Compris : voir la démonstration →</button></div>
         </section>}
