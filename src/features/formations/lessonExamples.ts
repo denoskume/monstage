@@ -137,7 +137,7 @@ image = np.zeros((40, 40), dtype=np.uint8)
 image[:, 20:] = 200  # bord vertical net
 edges = cv2.Canny(image, 50, 150)
 print(np.count_nonzero(edges))`,'Canny repère des changements brusques d’intensité et retourne des pixels de contour.', 'Le nombre de pixels de bord détectés est non nul.', 'Augmente les seuils et observe les bordures conservées.')],
-  [/moyen|médian|flou|bruit|Gaussian|filtr|noyau|convolution/i,()=>E(`import cv2
+  [/moyen|médian|flou|bruit|Gaussian|filtr|noyau|convolution|voisinage|kernel/i,()=>E(`import cv2
 import numpy as np
 image = np.zeros((7, 7), dtype=np.uint8)
 image[3, 3] = 180  # point blanc isolé
