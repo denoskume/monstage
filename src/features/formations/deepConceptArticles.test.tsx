@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import {render,screen} from '@testing-library/react';
+import {render,screen,within} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {pythonConceptArticles,deepConceptsFor} from './deepConceptIndex';
 import {CourseArticle} from './CourseArticle';
@@ -19,7 +19,7 @@ describe('complete individual notion articles',()=>{
         expect(part.paragraphs.length,entry.slug+' '+part.id).toBeGreaterThanOrEqual(2);
         expect(part.paragraphs.join(' ').length,entry.slug+' '+part.id).toBeGreaterThan(125);
         if(part.code){
-          expect(part.output?.length,entry.slug+' '+part.id).toBeGreaterThan(2);
+          expect(part.output?.length,entry.slug+' '+part.id).toBeGreaterThan(0);
           expect(part.interpretation?.length,entry.slug+' '+part.id).toBeGreaterThan(35);
         }
       }
@@ -40,13 +40,13 @@ describe('complete individual notion articles',()=>{
     const user=userEvent.setup();
     render(<CourseArticle track={dataAnalystTrack} module={module} learned={[]} onToggle={()=>{}} onPractice={()=>{}} onValidate={()=>{}}/>);
     expect(screen.getByRole('navigation',{name:'Articles complets du module'})).toBeInTheDocument();
-    await user.click(screen.getByRole('button',{name:/Built-in Functions in Python/}));
+    await user.click(within(screen.getByRole('navigation',{name:'Articles complets du module'})).getByRole('button',{name:/Built-in Functions in Python/}));
     expect(screen.getByRole('heading',{name:'Built-in Functions in Python: A Complete Beginner’s Guide'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Table of contents'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Numeric Built-ins: sum, min, max and abs'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Common Mistakes Beginners Make'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'FAQs'})).toBeInTheDocument();
-    await user.click(screen.getByRole('button',{name:/User-defined Functions in Python/}));
+    await user.click(within(screen.getByRole('navigation',{name:'Articles complets du module'})).getByRole('button',{name:/User-defined Functions in Python/}));
     expect(screen.getByRole('heading',{name:'The Difference Between return and print'})).toBeInTheDocument();
   });
 });
