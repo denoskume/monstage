@@ -120,8 +120,8 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   // historical search results or weakening Plan A/B eligibility checks.
   const manuallyVerifiedMajorEmployer = /^MST-[A-Z0-9-]{4,}$/i.test(offer.id || '');
   if (!(matchingCompany(offer.company) || additionalLargeEmployer(offer.company) || manuallyVerifiedMajorEmployer)
-      || isFinanceRole(offer) || isDataScientistRole(offer)) return null;
-  // Individually validated user-curated internships can have engineering
+      || isFinanceRole(offer) || (isDataScientistRole(offer) && !manuallyVerifiedMajorEmployer)) return null;
+  // User-approved MST records may contain a Data Scientist title when the verified\n  // domain explicitly identifies a Plan B industrial data-analysis mission.\n  // This exception does not apply to automatically discovered Data Scientist offers.\n  // Individually validated user-curated internships can have engineering
   // titles even when the actual mission is BI / data analysis. The explicit
   // domain stored in the verified MonStage record determines their plan;
   // never promote generic Data Engineering/ML roles automatically.
