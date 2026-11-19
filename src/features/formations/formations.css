@@ -286,3 +286,11 @@
 .formation-cnn-grid b {display:grid;place-items:center;border:1px solid var(--border);border-radius:4px;background:var(--surface);height:40px;font-size:.78rem;font-variant-numeric:tabular-nums;}
 .formation-cnn-grid--five b {height:32px;font-size:.69rem;}
 @media(max-width:680px){.formation-advanced-plots {grid-template-columns:1fr;}.formation-advanced-lab {padding:13px;}}
+
+.formation-mathematics {margin:23px 0;padding:22px;border:1px solid var(--border);background:var(--surface-muted);border-radius:13px;}
+.formation-mathematics h3 {font-size:1.07rem;letter-spacing:-.02em;margin:7px 0 16px;}
+.formation-math-formula {overflow-x:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;font-family:ui-monospace,Consolas,monospace;font-size:.84rem;line-height:1.8;font-weight:700;}
+.formation-mathematics>p {color:var(--text-muted);line-height:1.7;margin:15px 0;}
+.formation-math-example {border-left:3px solid #25a18a;padding:11px 16px;background:var(--surface);border-radius:0 7px 7px 0;}
+.formation-math-example strong {font-size:.77rem;}
+.formation-math-example p {font-size:.84rem;color:var(--text-muted);line-height:1.7;margin:7px 0 0;}
