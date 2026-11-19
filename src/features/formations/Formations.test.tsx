@@ -23,6 +23,12 @@ describe('Formations pages',()=>{
     mount('/formations/traitement-images/images-pixels');
     expect(screen.getByRole('heading',{name:'Images numériques, pixels et signaux 2D'})).toBeInTheDocument();
     expect(screen.getByText('Laboratoire interactif · 5 × 5 pixels')).toBeInTheDocument();
+    // Each of the seven concepts must be studied before the module can be validated.
+    for(let i=1;i<=7;i++){
+      await user.click(screen.getByRole('checkbox',{name:/J’ai étudié, testé et compris/}));
+      if(i<7) await user.click(screen.getByRole('button',{name:'Notion suivante →'}));
+    }
+    expect(screen.getByText('7/7 étudiées')).toBeInTheDocument();
     await user.click(screen.getByRole('tab',{name:/Pratiquer/}));
     expect(screen.getByRole('button',{name:'Modifier le code'})).toBeInTheDocument();
     await user.click(screen.getByRole('button',{name:'Modifier le code'}));
