@@ -362,3 +362,10 @@
 .formation-project-outcome { font-weight:700; padding:12px 0 0; margin:0; }
 .formation-final-project .formation-primary-action { margin-top:15px; background:#e9fef5; border-color:#e9fef5; color:#11594e; }
 @media(max-width:720px){.formation-projects-grid,.formation-project-detail{grid-template-columns:1fr}.formation-project-detail>section:nth-child(n+4){grid-column:auto}.formation-projects-hero{padding:24px}.formation-project-detail>section{padding:19px}}
+
+.formation-backup { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:16px; margin:26px 0 0; border:1px solid var(--border); border-radius:14px; background:var(--surface); padding:20px 23px; }
+.formation-backup strong { font-size:.88rem; }
+.formation-backup p { margin:6px 0 0; font-size:.76rem; line-height:1.6; color:var(--text-muted); }
+.formation-backup>div:nth-child(2) { display:flex; flex-wrap:wrap; gap:9px; }
+.formation-backup>p { grid-column:1/-1; color:var(--accent); }
+@media(max-width:850px) {.formation-backup { grid-template-columns:1fr; }}
