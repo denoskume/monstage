@@ -57,6 +57,7 @@ function notebookSource(track: FormationTrack, module: FormationModule, codeOver
   const cells = [
     markdown('# ' + module.title + '\n\n**' + track.title + '**\n\n## Objectif\n' + module.objective),
     markdown('## Comprendre\n' + module.concept + '\n\n## Notions essentielles\n' + module.points.map(point => '- ' + point).join('\n')),
+    ...(mathematicsNotes[module.id] ? [markdown('## Mathématiques essentielles\n' + mathematicsNotes[module.id].title + '\n\n' + mathematicsNotes[module.id].equation + '\n\n' + mathematicsNotes[module.id].interpretation + '\n\n**Exemple :** ' + mathematicsNotes[module.id].example)] : []),
     markdown('## Situation professionnelle\n' + module.example),
     ...(module.codeLanguage === 'python'
       ? [...(packages.length ? [code('%pip install ' + [...new Set(packages)].join(' '))] : []), code(exampleCode)]
@@ -93,6 +94,7 @@ function downloadTrack(track: FormationTrack) {
       const cells = [
         markdown('# Leçon '+(j+1)+' — '+point+'\n\n'+track.title+' · '+module.title),
         markdown('## Pourquoi apprendre cette notion ?\n'+guide.explanation),
+        ...(mathematicsNotes[module.id] ? [markdown('## Repère mathématique\n' + mathematicsNotes[module.id].equation + '\n\n' + mathematicsNotes[module.id].interpretation)] : []),
         markdown('## Exemple guidé\n'+guide.example),
         markdown('## Erreur à éviter\n'+guide.pitfall),
         markdown('## Code du module : retrouve la partie correspondante\nChaque leçon utilise le contexte de la mission du module pour que les notions restent liées à un projet réel.'),
