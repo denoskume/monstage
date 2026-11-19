@@ -5,6 +5,7 @@ const links = [
   ['/offers', 'Offers'],
   ['/dashboard', 'Dashboard'],
   ['/studio', 'Studio'],
+  ['/formations', 'Formations'],
 ] as const;
 
 function BookmarkIcon() {

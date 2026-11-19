@@ -1,0 +1,6 @@
+.formations { display: grid; gap: 1rem; padding-bottom: 3rem; }
+.formations .lms-section { min-width: 0; }
+.formations pre { overflow-x: auto; max-width: 100%; background: #152439; color: #eff6ff; padding: 1rem; border-radius: .6rem; line-height: 1.6; }
+.formations fieldset { border: 1px solid #bac7d7; border-radius: .5rem; padding: .85rem; }
+.formations label { display: block; padding: .4rem; cursor: pointer; }
+.formation-list { display: grid; gap: .85rem; padding-inline-start: 1.6rem; }

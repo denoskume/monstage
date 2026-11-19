@@ -5,6 +5,7 @@ const links = [
   ['/dashboard', '▥', 'Suivi'],
   ['/shortlist', '☆', 'Sélection'],
   ['/studio', '▣', 'Préparer'],
+  ['/formations', '▤', 'Formations'],
 ] as const;
 
 export function BottomNav() {
