@@ -92,3 +92,22 @@
 .course-article-frames svg{display:block;width:100%;height:auto;border-radius:5px}
 .course-article-frames span{display:block;text-align:center;margin-top:5px;font-size:.7rem;color:#667b88}
 @media(max-width:600px){.course-article-diagram__steps{gap:4px}.image-demo{height:50px;font-size:1.9rem}.course-article-diagram__steps>div strong{font-size:.61rem}.course-article-canny{grid-template-columns:repeat(3,minmax(0,1fr))}.course-article-frames{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Each teaching notion is a self-contained reading page, not a short entry in the module. */
+.course-article-shell{max-width:940px;min-width:0}
+.course-article-library{background:#fff;color:#24313c;border:1px solid #e0e6eb;border-radius:7px;padding:24px 24px 15px;margin-bottom:20px}
+.course-article-library__heading>span{display:block;font-size:.66rem;letter-spacing:.1em;color:#13816d;font-weight:800;margin-bottom:8px}
+.course-article-library__heading h2{font-size:1.27rem;line-height:1.36;font-weight:800;letter-spacing:-.025em;margin:0 0 8px;color:#1f2d38}
+.course-article-library__heading p{font-size:.87rem;line-height:1.7;color:#637480;margin:0 0 15px}
+.course-article-library ol{list-style:none;margin:0;padding:5px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 9px}
+.course-article-library li{min-width:0}
+.course-article-library li button{width:100%;min-width:0;display:grid;grid-template-columns:24px minmax(0,1fr) 12px;gap:10px;align-items:center;text-align:left;padding:11px 10px;border:1px solid #e4e9ee;background:#f9fafb;color:#465767;border-radius:7px;cursor:pointer}
+.course-article-library li button>span:first-child{font-size:.65rem;font-weight:850;color:#238b79}
+.course-article-library li button>span:last-child{font-size:1.1rem;color:#929ca4}
+.course-article-library li button strong{font-size:.75rem;line-height:1.5;font-weight:650}
+.course-article-library li button:hover{border-color:#80baaa;background:#f2fbf6}
+.course-article-library li button.is-current{background:#e9f8f2;border-color:#2aaa8e;color:#215a50;box-shadow:inset 3px 0 #189b82}
+.course-article-library li button:focus-visible{outline:3px solid #54ac9a;outline-offset:2px}
+.course-article-library__next{width:100%;text-align:left;padding:12px 15px;margin:12px 0;border:1px solid #7fbaa9;border-radius:8px;background:#eaf8f2;color:#187862;font-size:.81rem;font-weight:750;line-height:1.5;cursor:pointer}
+.course-article-library__next:hover{background:#d7f3e8}
+@media(max-width:720px){.course-article-library{padding:16px 12px}.course-article-library ol{grid-template-columns:1fr}.course-article-library__heading h2{font-size:1.05rem}}
