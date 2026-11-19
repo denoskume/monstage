@@ -8,6 +8,7 @@ import { computerVisionTrack } from './computerVisionTrack';
 import { FormationLab } from './FormationLabs';
 import FormationTopicPage from './FormationTopicPage';
 import FormationProjectsPage from './FormationProjectsPage';
+import { FormationBackup, type ProgressExport } from './FormationBackup';
 import { formationProjects } from './formationProjects';
 import { allTopics, topicById, topicProgressKey, lessonNotebook } from './detailedLessons';
 import LegacyFormations from './LegacyFormations';
@@ -112,7 +113,7 @@ function TrackSymbol({id}: {id:string}) {
     {id === 'traitement-images' ? '◈' : id === 'computer-vision' ? '⌘' : '▥'}
   </span>;
 }
-function Catalog({completed, topicCompleted}: {completed:string[]; topicCompleted:string[]}) {
+function Catalog({completed, topicCompleted, onImported}: {completed:string[]; topicCompleted:string[]; onImported:(data:ProgressExport)=>void}) {
   const [search,setSearch] = useState('');
   const filtered = formationTracks.filter(t => [t.title,t.subtitle,...t.tools].join(' ').toLowerCase().includes(search.trim().toLowerCase()));
   const total = formationTracks.reduce((n,t)=>n+t.modules.length,0);
@@ -163,6 +164,7 @@ function Catalog({completed, topicCompleted}: {completed:string[]; topicComplete
         <span><b>04</b> Valider et expliquer les résultats</span>
       </div>
     </section>
+    <FormationBackup tracks={formationTracks} onImported={onImported}/>
     <div className="formation-existing"><strong>Ateliers précédents conservés</strong><p>Les mini-cours OpenCV / Data Analyst déjà présents restent disponibles.</p><Link to="/formations/vision">Atelier Vision historique</Link><Link to="/formations/data">Atelier Data historique</Link></div>
   </div>;
 }
@@ -315,7 +317,7 @@ export default function Formations() {
   if ((parcours && !track) || (lecon && !module && !projectsView) || (topicId && !topic && !projectsView)) return <Navigate to="/formations" replace/>;
   const validCompleted=completed.filter(id=>formationTracks.some(t=>t.modules.some(m=>id===t.id+':'+m.id)));
   return <section className="page formations" lang="fr">
-    {!track ? <Catalog completed={validCompleted} topicCompleted={topicCompleted}/> :
+    {!track ? <Catalog completed={validCompleted} topicCompleted={topicCompleted} onImported={data=>{setCompleted(data.modules);setTopicCompleted(data.topics);setNotes(data.notes);}}/> :
       projectsView ? <FormationProjectsPage track={track} projectId={topicId}/> :
       !module ? <Overview track={track} completed={validCompleted} topicCompleted={topicCompleted}/> :
       topic ? <FormationTopicPage track={track} module={module} topic={topic} topicCompleted={topicCompleted} onTopicComplete={id=>setTopicCompleted(c=>c.includes(id)?c:[...c,id])} notes={notes} onNote={(id,value)=>setNotes(n=>({...n,[id]:value}))}/> :
