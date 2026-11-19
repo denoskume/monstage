@@ -120,7 +120,7 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
  async function share(){
    try{await navigator.clipboard.writeText(window.location.href);setCopied(true);}catch{setCopied(false);}
  }
- function scrollTo(id:string) {document.getElementById(prefix+id)?.scrollIntoView({behavior:'smooth',block:'start'});}
+ function scrollTo(id:string) {const target=document.getElementById(prefix+id);if(target&&typeof target.scrollIntoView==='function')target.scrollIntoView({behavior:'smooth',block:'start'});}
  return <article className="course-article" aria-label={article.title}>
    <header className="course-article__header">
      <span className="course-article__category">{article.eyebrow}</span>
