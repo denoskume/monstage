@@ -5,6 +5,8 @@ import {pythonConceptLogic} from './pythonConceptLogic';
 import {pythonConceptFiles} from './pythonConceptFiles';
 import {numpyConceptArticles} from './numpyConceptArticles';
 import {pandasConceptArticles} from './pandasConceptArticles';
+import {opencvConceptBasics} from './opencvConceptBasics';
+import {opencvConceptColors} from './opencvConceptColors';
 
 export const pythonConceptArticles:DeepConceptArticle[]=[
  ...pythonConceptBasics.filter(a=>a.slug==='python-introduction'||a.slug==='jupyter-notebook'),
@@ -17,5 +19,6 @@ export const pythonConceptArticles:DeepConceptArticle[]=[
 export function deepConceptsFor(moduleId:string):DeepConceptArticle[]{
  if(moduleId==='python')return pythonConceptArticles;
  if(moduleId==='pandas-numpy')return [...numpyConceptArticles,...pandasConceptArticles];
+ if(moduleId==='opencv-couleurs')return [...opencvConceptBasics,...opencvConceptColors];
  return [];
 }
