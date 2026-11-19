@@ -11,6 +11,7 @@ import { topicGuide } from './TopicLessons';
 import { LessonVisual } from './LessonVisual';
 import { deepConceptsFor } from './deepConceptIndex';
 import { PythonConceptVisual, type PythonDiagramKind } from './PythonConceptVisual';
+import { downloadConceptNotebook } from './conceptNotebook';
 
 const articleDiagrams:Record<string,PythonDiagramKind> = {
  'python-introduction':'python-flow', 'jupyter-notebook':'jupyter',
@@ -200,6 +201,7 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
      <details><summary>Voir mon suivi des objectifs du module ({learned.length}/{module.points.length})</summary>
        <div className="course-article__checks">{module.points.map((topic,index)=><label key={index}><input type="checkbox" checked={learned.includes(index)} onChange={()=>onToggle(index)}/>{topic}</label>)}</div>
      </details>
+     {concept&&<div className="course-article__notebook"><strong>Notebook de cette notion</strong><p>Un carnet Jupyter contient toutes les explications et tous les exemples de cet article, avec une cellule distincte par opération et les résultats attendus.</p><button className="formation-secondary-action" type="button" onClick={()=>downloadConceptNotebook(concept)}>↓ Télécharger le notebook complet de cet article (.ipynb)</button></div>}
      {concept&&selectedIndex<concepts.length-1&&<button className="course-article-library__next" type="button" onClick={()=>setSelectedSlug(concepts[selectedIndex+1].slug)}>Article suivant : {concepts[selectedIndex+1].article.title} →</button>}
      <div className="course-article__actions"><button className="formation-primary-action" type="button" onClick={onPractice}>Pratiquer avec le projet du module →</button><button className="formation-secondary-action" type="button" onClick={onValidate}>Évaluer mes connaissances</button></div>
    </section>
