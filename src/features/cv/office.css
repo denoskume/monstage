@@ -6,3 +6,37 @@
 .ms-office-bar span { flex:1; color:#476078; font:12px system-ui }
 .ms-office-paper { flex:1; min-height:0; overflow:hidden }
 .ms-office-launch select { max-width: min(260px,90vw) }
+.ms-office-paper .docx-editor > div:first-child > div:has(> .word-ribbon) { display:flex!important; flex-direction:column!important; align-items:stretch!important; gap:0!important; padding:0!important }
+.ms-office-paper .docx-editor > div:first-child > div:has(> .word-ribbon) > div:first-child { flex-direction:row!important; align-items:center; gap:12px; padding:0 12px }
+.ms-office-paper .docx-editor > div:first-child > div:has(> .word-ribbon) + div { display:none!important }
+.word-ribbon { background:#f4f4f4; color:#202124; font:12px/1.25 'Segoe UI',Arial,sans-serif; min-width:0; width:100%; box-sizing:border-box }
+.wr-nav,.wr-nav nav,.wr-row,.wr-form { display:flex; align-items:center; gap:2px }
+.wr-nav { justify-content:space-between; padding:0 8px; gap:10px }
+.wr-nav nav { overflow-x:auto; min-width:0; scrollbar-width:thin }
+.word-ribbon button { font:inherit; white-space:nowrap; cursor:pointer }
+.wr-nav nav button,.wr-tools button:not([class]),.wr-form button,.wr-nav>.wr-row>button:last-child,.wr-gallery>button { color:inherit; background:transparent; border:0; padding:4px 6px; border-radius:3px }
+.wr-nav nav button { padding:7px 8px; border-bottom:2px solid transparent; border-radius:0 }
+.wr-nav nav button[aria-pressed=true] { border-color:#185abd; font-weight:600 }
+.word-ribbon button:hover:not(:disabled),.wr-gallery>button[aria-pressed=true] { background:#e6edf7 }
+.word-ribbon button:disabled { opacity:.45; cursor:default }
+.wr-nav>.wr-row>button:last-child { background:#185abd; color:white }
+.word-ribbon .wr-panel { display:flex; align-items:stretch; flex-wrap:nowrap; gap:0; margin:0 5px 4px; padding:4px; height:auto; min-height:84px; border:1px solid #d1d1d1; border-radius:7px; background:white; box-sizing:border-box }
+.wr-group { padding:0 8px; border-right:1px solid #ddd; display:flex; flex-direction:column; align-items:stretch; flex:none }
+.wr-group:last-child { border:0 }
+.wr-tools { flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:1px }
+.wr-tools small,.wr-group small { text-align:center; font:10px/14px 'Segoe UI',sans-serif; color:#515151 }
+.wr-tools button:not([class]) { padding:1px 5px }
+.wr-gallery { padding:3px; border:1px solid #ccc; border-radius:4px }
+.wr-gallery>button { padding:9px 5px }
+.wr-form { flex-wrap:wrap; padding:4px }
+.wr-form input,.wr-tools select { max-width:170px; padding:3px; border:1px solid #bbb; border-radius:3px }
+@media(max-width:1200px) { .word-ribbon .wr-panel { flex-wrap:wrap } .wr-group { padding:0 4px } }
+@media(max-width:650px) { .wr-nav { display:block } .wr-group { max-width:100% } .wr-gallery { flex-wrap:wrap } }
+.wr-stack { display:grid; justify-items:start }
+.wr-clipboard { display:flex; align-items:center; gap:4px }
+.wr-tools [data-command="Paste"]::before,.wr-tools [data-command="Create a PDF"]::before,.wr-tools [data-command="Add-ins"]::before { content:""; display:block; margin:0 auto 3px; width:23px; height:26px; background:var(--wr-icon) center / contain no-repeat }
+.wr-tools [data-command="Paste"] { --wr-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28' fill='white' stroke='%23805615'%3E%3Crect x='3' y='4' width='15' height='21' rx='2' fill='%23ffda91'/%3E%3Crect x='7' y='2' width='8' height='5' rx='2'/%3E%3Cpath d='M11 12h10v15H11z' stroke='%23475565'/%3E%3C/svg%3E") }
+.wr-tools [data-command="Create a PDF"] { --wr-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 28' fill='none' stroke='%23a54137' stroke-width='1.5'%3E%3Cpath d='M3 1h12l6 6v20H3zM15 1v7h6'/%3E%3Ctext x='4' y='20' fill='%23a54137' stroke='none' font-family='Arial' font-size='9'%3EPDF%3C/text%3E%3C/svg%3E") }
+.wr-tools [data-command="Add-ins"] { --wr-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d95226'%3E%3Cpath d='M1 1h10v10H1zM14 1h9v10h-9zM1 14h10v9H1zM14 14h9v9h-9z'/%3E%3C/svg%3E") }
+.ms-office-paper .docx-editor > div:first-child [role="menubar"] { display:none }
+.ms-office-paper .docx-editor > div:first-child:has(.wr-nav nav button:first-child[aria-pressed="true"]) [role="menubar"] { display:flex }
