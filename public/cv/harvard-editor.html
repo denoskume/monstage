@@ -197,6 +197,7 @@
 }
 
 /* Harvard: independent one-column resume, minimal and ATS-oriented. */
+#cvtool .track-tabs button[data-tab="A"],#cvtool .track-tabs button[data-tab="B"]{display:none}
 #cvtool .sheet.harvard-sheet{display:block;grid-template-columns:none;width:794px;min-height:1123px;border:1px solid #d2dae4;background:white;color:#10151b;font:12.8px/1.35 Arial,Helvetica,sans-serif}
 #cvtool .harvard-page{padding:40px 51px 42px}
 #cvtool .hv-header{text-align:center;margin-bottom:17px}
@@ -326,6 +327,7 @@ function renderSide(d){return `<aside>
 function renderExp(a){return `<section class="experience"><div class="jobname"><span class="diamond">❖</span><span contenteditable="true">${a[0]}</span></div>${editable(a[1],'date')}${editable(a[2],'company')}<div class="desc"><strong>Mission :</strong> <span contenteditable="true">${a[3]}</span></div><div class="desc"><strong>Résultats :</strong> <span contenteditable="true">${a[4]}</span></div><div class="desc"><strong>Expériences acquises :</strong> <span contenteditable="true">${a[5]}</span></div></section>`}
 function renderMain(d){return `<main><div class="right-heading" contenteditable="true" aria-label="Titre de section Expériences">EXPERIENCES</div>${d.experiences.map(renderExp).join('')}<section class="skills"><div class="right-heading" contenteditable="true" aria-label="Titre de section Compétences">COMPETENCES</div>${d.skills.map(group=>`<div class="skill-title"><span class="diamond">❖</span><span contenteditable="true">${group[0]}</span></div>${group[1].map(s=>editable(s,'skill-bullet')).join('')}`).join('')}</section></main>`}
 cont.innerHTML=['A','B'].map(k=>`<article data-sheet="${k}" class="sheet" ${k==='B'?'hidden':''}>${renderSide(cv[k])}${renderMain(cv[k])}</article>`).join('')+"<article data-sheet=\"H\" class=\"sheet harvard-sheet\" hidden><div class=\"harvard-page\"><header class=\"hv-header\"><div class=\"hv-name\" contenteditable=\"true\">DENOS KUME</div><div class=\"hv-contact\" contenteditable=\"true\">Nantes, France | [Téléphone] | [E-mail] | LinkedIn | github.com/denoskume</div><div class=\"hv-target\" contenteditable=\"true\">VISION PAR ORDINATEUR &amp; TRAITEMENT D’IMAGES</div></header><section class=\"hv-section\" data-section=\"profile\"><div class=\"hv-heading\" contenteditable=\"true\">PROFIL</div><div class=\"hv-paragraph\" contenteditable=\"true\">Étudiant en Master 2 à Centrale Nantes, je me spécialise en vision par ordinateur et traitement d’images. Je recherche un stage de 6 mois dès février 2027 pour contribuer à des projets concrets et progresser dans un environnement professionnel.</div></section><section class=\"hv-section\" data-section=\"education\"><div class=\"hv-heading\" contenteditable=\"true\">FORMATION</div><div class=\"hv-item\"><div class=\"hv-row\"><div class=\"hv-title\" contenteditable=\"true\">MSc Control and Robotics — Centrale Nantes</div><div class=\"hv-date\" contenteditable=\"true\">2025–2027</div></div><div class=\"hv-org\" contenteditable=\"true\">Data Science, Signal &amp; Image Processing · Nantes, France</div></div><div class=\"hv-item\"><div class=\"hv-row\"><div class=\"hv-title\" contenteditable=\"true\">BSc Computer Science &amp; Electronics — Kristu Jayanti College</div><div class=\"hv-date\" contenteditable=\"true\">2021–2025</div></div><div class=\"hv-org\" contenteditable=\"true\">Bengaluru, Inde</div></div></section><section class=\"hv-section\" data-section=\"experience\"><div class=\"hv-heading\" contenteditable=\"true\">EXPÉRIENCES ET PROJETS</div><div class=\"hv-item\"><div class=\"hv-row\"><div class=\"hv-title\" contenteditable=\"true\">Développeur web — MonStage</div><div class=\"hv-date\" contenteditable=\"true\">2026–aujourd’hui</div></div><div class=\"hv-org\" contenteditable=\"true\">Projet personnel · France</div><div class=\"hv-bullet\" contenteditable=\"true\">• Conception d’une plateforme de centralisation des offres et de suivi des candidatures.</div><div class=\"hv-bullet\" contenteditable=\"true\">• Intégration d’API, détection de doublons et tableaux de bord interactifs.</div></div><div class=\"hv-item\"><div class=\"hv-row\"><div class=\"hv-title\" contenteditable=\"true\">Traitement d’images — Détection de micro-cathéters</div><div class=\"hv-date\" contenteditable=\"true\">2026</div></div><div class=\"hv-org\" contenteditable=\"true\">Centrale Nantes · Projet de Master</div><div class=\"hv-bullet\" contenteditable=\"true\">• Développement d’un pipeline de débruitage et segmentation d’images fluoroscopiques.</div><div class=\"hv-bullet\" contenteditable=\"true\">• Micro-cathéters détectés et segmentés ; Dice 0,475, IoU 0,332.</div></div><div class=\"hv-item\"><div class=\"hv-row\"><div class=\"hv-title\" contenteditable=\"true\">Stagiaire Data Analyst — Unified Mentor Pvt. Ltd.</div><div class=\"hv-date\" contenteditable=\"true\">2024</div></div><div class=\"hv-org\" contenteditable=\"true\">Stage de fin d’études de Bachelor · Bengaluru, Inde</div><div class=\"hv-bullet\" contenteditable=\"true\">• Nettoyage et analyse exploratoire de jeux de données.</div><div class=\"hv-bullet\" contenteditable=\"true\">• Identification de tendances et restitution par des visualisations.</div></div><div class=\"hv-item\"><div class=\"hv-row\"><div class=\"hv-title\" contenteditable=\"true\">Coordinateur de projet — Fire Fighting Robot (2FR)</div><div class=\"hv-date\" contenteditable=\"true\">2022</div></div><div class=\"hv-org\" contenteditable=\"true\">GALAXIA · Exposition scientifique inter-établissements · Équipe de 3</div><div class=\"hv-bullet\" contenteditable=\"true\">• Coordination de la conception et des tests d’un robot Arduino détectant les flammes et projetant de l’eau.</div><div class=\"hv-bullet\" contenteditable=\"true\">• Robot fonctionnel présenté ; 3ᵉ place au concours GALAXIA 2022.</div></div></section><section class=\"hv-section\" data-section=\"skills\"><div class=\"hv-heading\" contenteditable=\"true\">COMPÉTENCES TECHNIQUES</div><div class=\"hv-paragraph\" contenteditable=\"true\"><strong>Traitement d’images :</strong> filtrage, débruitage, soustraction de fond, segmentation, PSNR, Dice, IoU.</div><div class=\"hv-paragraph\" contenteditable=\"true\"><strong>Développement :</strong> Python, MATLAB, OpenCV, NumPy, PyTorch, Git, GitHub, API, tableaux de bord.</div></section><section class=\"hv-section\" data-section=\"languages\"><div class=\"hv-heading\" contenteditable=\"true\">LANGUES ET CERTIFICATION</div><div class=\"hv-paragraph\" contenteditable=\"true\">Français : langue maternelle | Anglais : C1 | Google Data Analytics</div></section></div></article>";
+const harvardDefault=cont.querySelector('.sheet[data-sheet="H"]').outerHTML;
 const current=()=>root.querySelector('.sheet[data-sheet="'+chosen+'"]');
 const toast=s=>root.querySelector('#toast').textContent=s;
 // Track selection and switch plans through the mini-Word controller below.
@@ -336,7 +338,7 @@ const formatStatus=root.querySelector('#format-status');
 const storageKey=plan=>'monstage:thierry-miniword:v1:'+plan;
 const metaKey=plan=>'monstage:thierry-miniword:v2:meta:'+plan;
 const versionsKey=plan=>'monstage:thierry-miniword:v2:versions:'+plan;
-const activePlanKey='monstage:thierry-miniword:v2:active-plan';
+const activePlanKey='monstage:harvard-editor:v1:active-plan';
 const formatStamp=value=>new Date(value).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
 function savedMeta(plan){
  try{const raw=localStorage.getItem(metaKey(plan));return raw?JSON.parse(raw):{};}catch{return {};}
@@ -357,7 +359,7 @@ function stampCurrentPlan(){
  else setSaveNotice('Prêt à enregistrer');
 }
 
-const history={A:{undo:[],redo:[]},B:{undo:[],redo:[]}};
+const history={A:{undo:[],redo:[]},B:{undo:[],redo:[]},H:{undo:[],redo:[]}};
 let restoring=false;
 let activeCell=null;
 let tableResizeObserver=null;
@@ -438,7 +440,7 @@ function renderVersions(){
  if(!list)return;
  list.replaceChildren();
  const subtitle=root.querySelector('#versions-subtitle');
- subtitle.textContent=chosen==='A'?'CV A — Computer Vision Engineer':'CV B — Data Scientist';
+ subtitle.textContent=chosen==='H'?'Harvard — 1 colonne':chosen==='A'?'CV A — Computer Vision Engineer':'CV B — Data Scientist';
  const versions=savedVersions(chosen);
  if(!versions.length){
   const empty=document.createElement('p');empty.className='version-empty';
@@ -691,7 +693,8 @@ const actionMap={
  undo,redo,'font-grow':()=>changeSize(1),'font-shrink':()=>changeSize(-1),
  copy:copySelected,paste:pasteSelected,find:()=>findText(),replace:()=>findText(true),'select-paragraph':selectParagraph,
  'add-skill':()=>{
-  capture();
+ if(chosen==='H'){harvardAddBullet('skills');return;}
+ capture();
   const skills=current().querySelector('.skills');
   const title=document.createElement('div');title.className='skill-title';
   title.innerHTML='<span class="diamond">❖</span><span contenteditable="true">Nouvelle compétence</span>';
@@ -709,7 +712,7 @@ root.querySelector('#highlight-color').addEventListener('input',e=>styleSelectio
 root.querySelector('#block-bg').addEventListener('input',e=>styleField('backgroundColor',e.target.value));
 root.querySelector('#line-height').addEventListener('change',e=>styleField('lineHeight',e.target.value));
 root.querySelector('#paper-bg').addEventListener('input',e=>{capture();current().style.backgroundColor=e.target.value;persistCurrent();});
-root.querySelector('#sidebar-bg').addEventListener('input',e=>{capture();current().querySelector('aside').style.backgroundColor=e.target.value;persistCurrent();});
+root.querySelector('#sidebar-bg').addEventListener('input',e=>{const aside=current().querySelector('aside');if(!aside)return;capture();aside.style.backgroundColor=e.target.value;persistCurrent();});
 root.querySelectorAll('[data-style]').forEach(b=>b.addEventListener('click',()=>applyStyle(b.dataset.style)));
 const fold=root.querySelector('#fold');
 function foldRibbon(collapsed){
@@ -747,43 +750,7 @@ root.addEventListener('keydown',e=>{
  if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
  if(e.key.toLowerCase()==='y'){e.preventDefault();redo();}
 });
-// Restauration ponctuelle de la dernière sauvegarde personnelle du CV A,
-// avant les actualisations non demandées du 18 novembre 2026.
-// Ne s'exécute que sur les navigateurs ayant reçu l'une de ces actualisations.
-const recoveryKey='monstage:thierry-miniword:v2:restored-personal-save-20261118';
-let recoveryNotice='';
-try{
- const wasModified=localStorage.getItem('monstage:thierry-miniword:v2:cvA-content-20261118')==='1' ||
-                   localStorage.getItem('monstage:thierry-miniword:v2:cvA-validated-20261118-v2')==='1';
- if(wasModified&&!localStorage.getItem(recoveryKey)){
-  const versions=savedVersions('A');
-  const initial=versions.filter(v=>v.label==='CV A avant actualisation').sort((a,b)=>a.at-b.at)[0];
-  // Sélectionner la dernière sauvegarde volontaire AVANT notre première actualisation.
-  const cutoff=initial?.at??Number.POSITIVE_INFINITY;
-  const latestManual=versions.filter(v=>v.kind==='manual'&&v.at<cutoff).sort((a,b)=>b.at-a.at)[0];
-  const toRestore=latestManual||initial;
-  if(toRestore){
-   const template=document.createElement('template');
-   template.innerHTML=toRestore.html;
-   if(template.content.firstElementChild?.matches('.sheet[data-sheet="A"]')){
-    const present=localStorage.getItem(storageKey('A'));
-    if(present&&present!==toRestore.html){
-     const date=Date.now();
-     // Préserver la version actuelle en cas de besoin de revenir en arrière.
-     const backup={id:date,at:date,kind:'previous',label:'Sauvegarde de sécurité avant restauration',html:present};
-     localStorage.setItem(versionsKey('A'),JSON.stringify([backup,...versions]));
-    }
-    localStorage.setItem(storageKey('A'),toRestore.html);
-    localStorage.setItem(metaKey('A'),JSON.stringify({...savedMeta('A'),savedAt:toRestore.at}));
-    localStorage.setItem(recoveryKey,'1');
-    recoveryNotice=latestManual?'Dernière version enregistrée du CV A restaurée.':'CV A restauré à son état antérieur aux actualisations.';
-   }
-  }else{
-   recoveryNotice='Aucune sauvegarde antérieure détectée : vérifie le menu Versions.';
-  }
- }
-}catch(error){console.warn('Restauration CV A non appliquée :',error);recoveryNotice='Restauration indisponible : utiliser le menu Versions.';}
-for(const plan of ['A','B']){
+for(const plan of ['H']){
  const html=(()=>{try{return localStorage.getItem(storageKey(plan));}catch{return null;}})();
  if(!html)continue;
  const t=document.createElement('template');t.innerHTML=html;
@@ -799,7 +766,7 @@ for(const sheet of root.querySelectorAll('.sheet')){
  attachTableInteractions(sheet);
 }
 stampCurrentPlan();
-if(recoveryNotice)note(recoveryNotice);
+// Le modèle Harvard ne modifie jamais les anciennes sauvegardes CV A/B.
 const switchBar=root.querySelectorAll('[data-tab]');
 switchBar.forEach(b=>b.onclick=()=>{
  persistCurrent();chosen=b.dataset.tab;lastField=null;savedRange=null;activeCell=null;
@@ -809,12 +776,17 @@ switchBar.forEach(b=>b.onclick=()=>{
  root.querySelectorAll('.sheet').forEach(x=>x.hidden=x.dataset.sheet!==chosen);
  const rgb=css=>{const nums=(css.match(/\d+(?:\.\d+)?/g)||[]).slice(0,3).map(Number);return nums.length===3?'#'+nums.map(x=>Math.round(x).toString(16).padStart(2,'0')).join(''):'#ffffff';};
  root.querySelector('#paper-bg').value=rgb(getComputedStyle(current()).backgroundColor);
- root.querySelector('#sidebar-bg').value=rgb(getComputedStyle(current().querySelector('aside')).backgroundColor);
+ root.querySelector('#sidebar-bg').value=rgb(getComputedStyle(current().querySelector('aside')||current()).backgroundColor);
+ root.querySelector('#sidebar-bg').disabled=chosen==='H';
+ root.querySelector('#harvard-tools').hidden=chosen!=='H';
+ root.querySelector('[data-ribbon="table"]').disabled=chosen==='H';
+ if(chosen==='H'&&root.querySelector('[data-ribbon="table"]').classList.contains('active'))root.querySelector('[data-ribbon="home"]').click();
  attachTableInteractions(current());syncTableHandles();
  stampCurrentPlan();
  note('CV '+chosen+' sélectionné. La dernière version enregistrée est chargée.');closeMenu();
 });
 root.querySelector('#add').onclick=()=>{
+ if(chosen==='H'){harvardAddEntry();return;}
  capture();
  const x=document.createElement('section');x.className='experience';
  x.innerHTML=renderExp(['Nouvelle expérience – Intitulé','Dates – Localisation','Organisation : Nature de la mission','Objectif du projet','Réalisation concrète obtenue','Méthodes et responsabilités développées']);
@@ -908,6 +880,7 @@ function deleteCellLine(){
  persistCurrent();note('Ligne supprimée.');
 }
 function addBullet(){
+ if(chosen==='H'){harvardAddBullet();return;}
  const withinSkills=lastField&&current().contains(lastField)&&lastField.closest('.skills');
  if(withinSkills){
   const chosenLine=lastField.closest('.skill-bullet,.skill-title');
@@ -920,6 +893,10 @@ function addBullet(){
  insertCellLine(true);
 }
 function deleteBullet(){
+ if(chosen==='H'){
+ const el=lastField?.closest('.hv-bullet');if(!el||!current().contains(el))return note('Sélectionne une puce du CV Harvard.');
+ capture();el.remove();lastField=null;savedRange=null;persistCurrent();note('Puce supprimée.');return;
+ }
  const skill=lastField?.closest('.skill-bullet');
  if(skill&&current().contains(skill)){
   capture();skill.remove();lastField=null;savedRange=null;persistCurrent();note('Puce supprimée.');return;
@@ -1087,6 +1064,7 @@ function zipFiles(files){const encoder=new TextEncoder(),local=[],central=[];let
 // Word: match the A4 model with real editable text, true two-column table,
 // gray sidebar spanning the page and pale-blue section borders.
 function ooxml(sheet){
+ if(sheet.dataset.sheet==='H')return harvardDocx(sheet);
  const P='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
  const R=(value,bold=false,color='',sz=19,italic=false,underline=false,font='Times New Roman',shade='',strike=false)=>{
   if(!value)return '';
@@ -1378,8 +1356,8 @@ window.addEventListener('pagehide',()=>persistCurrent());
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistCurrent();});
 const forcedPlan=new URLSearchParams(window.location.search).get('plan');
 let lastPlan='A';
-try{lastPlan=localStorage.getItem(activePlanKey)==='B'?'B':'A';}catch{}
-const initialPlan=forcedPlan==='A'||forcedPlan==='B'?forcedPlan:lastPlan;
-if(initialPlan!=='A')root.querySelector('[data-tab="B"]').click();
+lastPlan='H';
+const initialPlan='H';
+root.querySelector('[data-tab="H"]').click();
 })();
 </script></body></html>
