@@ -34,24 +34,25 @@ function saveFile(filename: string, blob: Blob) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
-function notebookSource(track: FormationTrack, module: FormationModule) {
+function notebookSource(track: FormationTrack, module: FormationModule, codeOverride?: string) {
+  const exampleCode = codeOverride ?? module.code;
   const markdown = (source: string) => ({ cell_type: 'markdown', metadata: {}, source });
   const code = (source: string) => ({ cell_type: 'code', metadata: {}, source, outputs: [], execution_count: null });
   const packages: string[] = [];
-  if (/\b(?:import|from)\s+numpy\b/.test(module.code)) packages.push('numpy');
-  if (/\b(?:import|from)\s+pandas\b/.test(module.code)) packages.push('pandas');
-  if (/\b(?:import|from)\s+matplotlib\b/.test(module.code)) packages.push('matplotlib');
-  if (/\b(?:import|from)\s+cv2\b/.test(module.code)) packages.push('opencv-python-headless');
-  if (/\b(?:import|from)\s+sklearn\b/.test(module.code)) packages.push('scikit-learn');
-  if (/\b(?:import|from)\s+torch\b/.test(module.code)) packages.push('torch');
+  if (/\b(?:import|from)\s+numpy\b/.test(exampleCode)) packages.push('numpy');
+  if (/\b(?:import|from)\s+pandas\b/.test(exampleCode)) packages.push('pandas');
+  if (/\b(?:import|from)\s+matplotlib\b/.test(exampleCode)) packages.push('matplotlib');
+  if (/\b(?:import|from)\s+cv2\b/.test(exampleCode)) packages.push('opencv-python-headless');
+  if (/\b(?:import|from)\s+sklearn\b/.test(exampleCode)) packages.push('scikit-learn');
+  if (/\b(?:import|from)\s+torch\b/.test(exampleCode)) packages.push('torch');
 
   const cells = [
     markdown('# ' + module.title + '\n\n**' + track.title + '**\n\n## Objectif\n' + module.objective),
     markdown('## Comprendre\n' + module.concept + '\n\n## Notions essentielles\n' + module.points.map(point => '- ' + point).join('\n')),
     markdown('## Situation professionnelle\n' + module.example),
     ...(module.codeLanguage === 'python'
-      ? [...(packages.length ? [code('%pip install ' + [...new Set(packages)].join(' '))] : []), code(module.code)]
-      : [markdown('## Exemple de ' + (module.codeLanguage || 'code') + '\n\n```' + (module.codeLanguage || '') + '\n' + module.code + '\n```')]),
+      ? [...(packages.length ? [code('%pip install ' + [...new Set(packages)].join(' '))] : []), code(exampleCode)]
+      : [markdown('## Exemple de ' + (module.codeLanguage || 'code') + '\n\n```' + (module.codeLanguage || '') + '\n' + exampleCode + '\n```')]),
     markdown('## Interpréter les résultats\n' + module.result),
     markdown('## À toi de modifier\n' + module.instructions),
     ...(module.codeLanguage === 'python' ? [code('# Écris ton expérimentation ici\n')] : []),
@@ -68,8 +69,8 @@ function notebookSource(track: FormationTrack, module: FormationModule) {
   }, null, 2);
 }
 
-function downloadNotebook(track: FormationTrack, module: FormationModule) {
-  saveFile(track.id + '-' + module.id + '.ipynb', new Blob([notebookSource(track, module)], {type:'application/x-ipynb+json'}));
+function downloadNotebook(track: FormationTrack, module: FormationModule, codeOverride?: string) {
+  saveFile(track.id + '-' + module.id + '.ipynb', new Blob([notebookSource(track, module, codeOverride)], {type:'application/x-ipynb+json'}));
 }
 function downloadTrack(track: FormationTrack) {
   const archive: Record<string, Uint8Array> = {};
@@ -196,16 +197,18 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
   const [checked,setChecked]=useState(false);
   const [missionReady,setMissionReady]=useState(false);
   const [copied,setCopied]=useState(false);
+  const [editing,setEditing]=useState(false);
+  const [editableCode,setEditableCode]=useState(module.code);
   const index=track.modules.findIndex(item=>item.id===module.id);
   const key=track.id+':'+module.id;
   const done=completed.includes(key);
   const prev=track.modules[index-1];
   const next=track.modules[index+1];
-  useEffect(()=>{setStage('comprendre');setAnswer(null);setChecked(false);setMissionReady(false);setCopied(false);},[key]);
+  useEffect(()=>{setStage('comprendre');setAnswer(null);setChecked(false);setMissionReady(false);setCopied(false);setEditing(false);setEditableCode(module.code);},[key, module.code]);
   const right=checked && answer===module.quiz.correct;
   const stages: Array<[Stage,string,string]> = [['comprendre','01','Comprendre'],['pratiquer','02','Pratiquer'],['valider','03','Valider']];
   async function copyExample() {
-    try { await navigator.clipboard.writeText(module.code); setCopied(true); }
+    try { await navigator.clipboard.writeText(editableCode); setCopied(true); }
     catch { setCopied(false); }
   }
   return <div className="formation-lesson">
@@ -238,10 +241,11 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote}: {
         {stage==='pratiquer' && <div className="formation-content-section" role="tabpanel">
           <span className="formation-eyebrow">02 · APPLICATION GUIDÉE</span><h2>Observer le code et ses résultats</h2><p>Exemple autonome à reproduire dans un notebook. Lis les commentaires, exécute, puis modifie les paramètres pour vérifier ce que tu as compris.</p>
           <div className="formation-code">
-            <div className="formation-code__header"><span>{module.codeLanguage==='excel'?'FORMULES EXCEL':module.codeLanguage==='dax'?'MESURES DAX':module.codeLanguage==='sql'?'SQL / PYTHON':'PYTHON 3'}</span><button type="button" onClick={copyExample}>{copied?'✓ Copié':'Copier le code'}</button></div>
-            <pre><code>{module.code}</code></pre>
+            <div className="formation-code__header"><span>{module.codeLanguage==='excel'?'FORMULES EXCEL':module.codeLanguage==='dax'?'MESURES DAX':module.codeLanguage==='sql'?'SQL / PYTHON':'PYTHON 3'}</span><div className="formation-code__controls"><button type="button" onClick={()=>setEditing(v=>!v)}>{editing?'Voir l’aperçu':'Modifier le code'}</button><button type="button" onClick={copyExample}>{copied?'✓ Copié':'Copier le code'}</button></div></div>
+            {editing?<textarea className="formation-code__editor" spellCheck={false} aria-label="Éditeur de code de l’exemple" value={editableCode} onChange={e=>setEditableCode(e.target.value)} rows={Math.max(12,editableCode.split('\n').length+2)}/>:<pre><code>{editableCode}</code></pre>}
           </div>
-          <div className="formation-code-actions"><button className="formation-secondary-action" type="button" onClick={()=>downloadNotebook(track,module)}>↓ Télécharger le notebook .ipynb</button><a className="formation-link-button" href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Ouvrir Google Colab ↗</a></div>
+          <p className="formation-code__notice">Tu peux modifier le code avant de le copier ou de télécharger le notebook. L’exécution Python se fait dans Jupyter ou Google Colab.</p>
+          <div className="formation-code-actions"><button className="formation-secondary-action" type="button" onClick={()=>downloadNotebook(track,module,editableCode)}>↓ Télécharger mon notebook .ipynb</button><a className="formation-link-button" href="https://colab.research.google.com/" target="_blank" rel="noopener noreferrer">Ouvrir Google Colab ↗</a></div>
           <div className="formation-result"><strong>Comment interpréter le résultat ?</strong><p>{module.result}</p></div>
           <div className="formation-business-case"><strong>À toi de modifier</strong><p>{module.instructions}</p></div>
           {module.codeLanguage!=='python'&&<p className="formation-tool-warning">Cet exemple {module.codeLanguage?.toUpperCase()} doit être exécuté dans l’outil correspondant. Il est inclus comme référence dans le notebook, pas en cellule Python exécutable.</p>}
