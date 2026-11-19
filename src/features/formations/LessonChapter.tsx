@@ -45,8 +45,8 @@ export function LessonChapter({module,topic,index,guide}:{module:FormationModule
     </section>
     <nav className="learning-article__toc" aria-label="Sommaire de cette leçon">
       <span>Dans cette leçon</span>
-      <a href={'#'+anchor+'-idea'}>1. L’idée</a><a href={'#'+anchor+'-visual'}>2. Visualiser</a>
-      <a href={'#'+anchor+'-code'}>3. Coder</a><a href={'#'+anchor+'-exercise'}>4. Appliquer</a>
+      {([['idea','1. L’idée'],['visual','2. Visualiser'],['code','3. Coder'],['exercise','4. Appliquer']] as const).map(([id,label])=>
+        <button key={id} type="button" onClick={()=>document.getElementById(anchor+'-'+id)?.scrollIntoView({behavior:'smooth',block:'start'})}>{label}</button>)}
     </nav>
     <section id={anchor+'-idea'} className="learning-article__section">
       <div className="learning-article__section-marker">01</div>
