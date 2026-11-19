@@ -1022,6 +1022,109 @@ for(const [id,handler] of Object.entries({
  root.querySelector('#'+id)?.addEventListener('click',handler);
 }
 
+
+/* Harvard editor: live sections, entries, list items, rearrangement, and safe imports. */
+function hvMake(cls,value){
+ const n=document.createElement('div');n.className=cls;n.contentEditable='true';n.textContent=value;return n;
+}
+function hvSection(key){return current().querySelector('.hv-section[data-section="'+key+'"]')}
+function harvardAddSection(){
+ capture();const section=document.createElement('section');section.className='hv-section';section.dataset.section='custom-'+Date.now();
+ section.append(hvMake('hv-heading','NOUVELLE RUBRIQUE'),hvMake('hv-paragraph','Texte de la nouvelle rubrique'));
+ current().querySelector('.harvard-page').appendChild(section);focusEditable(section.querySelector('.hv-heading'));persistCurrent();note('Rubrique ajoutée.');
+}
+function harvardAddEntry(){
+ capture();
+ const selected=lastField?.closest('.hv-section'),section=selected||hvSection('experience');
+ const item=document.createElement('div');item.className='hv-item';
+ const row=document.createElement('div');row.className='hv-row';
+ row.append(hvMake('hv-title','Nouvelle expérience — Intitulé'),hvMake('hv-date','Dates'));
+ item.append(row,hvMake('hv-org','Organisation · Lieu'),hvMake('hv-bullet','• Réalisation concrète et résultat'));
+ section.appendChild(item);focusEditable(item.querySelector('.hv-title'));persistCurrent();note('Expérience ajoutée.');
+}
+function harvardAddBullet(key){
+ capture();const section=(key?hvSection(key):lastField?.closest('.hv-section'))||hvSection('experience');
+ const bullet=hvMake('hv-bullet','• Nouvelle réalisation');
+ const selected=lastField?.closest('.hv-bullet,.hv-item,.hv-paragraph');
+ if(selected&&section.contains(selected)){
+  if(selected.matches('.hv-item'))selected.appendChild(bullet);else selected.after(bullet);
+ }else section.appendChild(bullet);
+ focusEditable(bullet);persistCurrent();note('Puce ajoutée.');
+}
+function hvBlock(){
+ if(!lastField||!current().contains(lastField))return null;
+ return lastField.matches('.hv-heading')?lastField.closest('.hv-section'):lastField.closest('.hv-bullet,.hv-item,.hv-section');
+}
+function hvMove(direction){
+ const block=hvBlock();if(!block)return note('Sélectionne une rubrique ou une expérience.');
+ const near=direction<0?block.previousElementSibling:block.nextElementSibling;
+ if(!near||near.classList[0]!==block.classList[0])return note('Cet élément ne peut pas être déplacé davantage.');
+ capture();if(direction<0)near.before(block);else near.after(block);
+ persistCurrent();note('Ordre mis à jour.');
+}
+function hvDelete(){
+ const block=hvBlock();if(!block)return note('Sélectionne un élément à supprimer.');
+ if(!confirm('Supprimer cet élément du CV Harvard ?'))return;
+ capture();block.remove();lastField=null;savedRange=null;persistCurrent();note('Élément supprimé.');
+}
+function hvTemplate(){
+ const t=document.createElement('template');t.innerHTML=harvardDefault;return t.content.firstElementChild;
+}
+function hvNew(){
+ if(!confirm('Créer un nouveau CV Harvard ? Le document actuel sera ajouté aux versions.'))return;
+ saveSnapshot('previous');capture();const doc=hvTemplate();
+ doc.querySelector('.hv-name').textContent='NOM PRÉNOM';
+ doc.querySelector('.hv-contact').textContent='Ville | Téléphone | Email | LinkedIn';
+ doc.querySelector('.hv-target').textContent='OBJECTIF PROFESSIONNEL';
+ doc.querySelector('.hv-section[data-section="profile"] .hv-paragraph').textContent='Présentez ici votre objectif professionnel.';
+ doc.querySelectorAll('.hv-section[data-section="education"] .hv-item,.hv-section[data-section="experience"] .hv-item').forEach((e,i)=>{if(i>0)e.remove();});
+ const edu=doc.querySelector('.hv-section[data-section="education"] .hv-item');
+ edu.querySelector('.hv-title').textContent='Diplôme — Université';edu.querySelector('.hv-date').textContent='Dates';edu.querySelector('.hv-org').textContent='Spécialité et lieu';
+ const exp=doc.querySelector('.hv-section[data-section="experience"] .hv-item');
+ exp.querySelector('.hv-title').textContent='Fonction — Projet';exp.querySelector('.hv-date').textContent='Dates';exp.querySelector('.hv-org').textContent='Entreprise · Lieu';
+ exp.querySelectorAll('.hv-bullet').forEach((b,i)=>{if(i)b.remove();else b.textContent='• Réalisation concrète et résultat';});
+ doc.querySelectorAll('.hv-section[data-section="skills"] .hv-paragraph').forEach((e,i)=>{if(i)e.remove();else e.textContent='Compétences techniques';});
+ doc.querySelector('.hv-section[data-section="languages"] .hv-paragraph').textContent='Langues et certifications';
+ replaceSheet(doc.outerHTML);note('Nouveau document Harvard prêt à remplir.');
+}
+function hvImport(plan){
+ if(!confirm('Copier le contenu du CV '+plan+' dans Harvard ? Le CV '+plan+' ne sera pas modifié et Harvard sera archivé.'))return;
+ const raw=(()=>{try{return localStorage.getItem(storageKey(plan));}catch{return null;}})();
+ const sourceTemplate=document.createElement('template');sourceTemplate.innerHTML=raw||'';
+ const candidate=sourceTemplate.content.firstElementChild;
+ const src=candidate?.matches('.sheet[data-sheet="'+plan+'"]')?candidate:cont.querySelector('.sheet[data-sheet="'+plan+'"]');
+ if(!src)return note('Le CV '+plan+' est introuvable.');
+ saveSnapshot('previous');capture();const doc=hvTemplate();
+ const name=src.querySelector('.identity .name')?.textContent;
+ if(name)doc.querySelector('.hv-name').textContent=name;
+ const contacts=Array.from(src.querySelectorAll('.contacts > [contenteditable]')).map(x=>x.textContent.trim()).filter(Boolean);
+ if(contacts.length)doc.querySelector('.hv-contact').textContent=contacts.join(' | ');
+ const title=src.querySelector('.identity .job')?.textContent;
+ if(title)doc.querySelector('.hv-target').textContent=title;
+ const profile=src.querySelector('.profile-text')?.textContent;
+ if(profile)doc.querySelector('.hv-section[data-section="profile"] .hv-paragraph').textContent=profile;
+ const edu=doc.querySelector('.hv-section[data-section="education"]');edu.querySelectorAll('.hv-item').forEach(x=>x.remove());
+ src.querySelectorAll('aside .edu').forEach(x=>{const item=document.createElement('div');item.className='hv-item';item.append(hvMake('hv-paragraph',x.textContent));edu.append(item)});
+ const exp=doc.querySelector('.hv-section[data-section="experience"]');exp.querySelectorAll('.hv-item').forEach(x=>x.remove());
+ src.querySelectorAll('.experience').forEach(x=>{
+  const item=document.createElement('div');item.className='hv-item';const row=document.createElement('div');row.className='hv-row';
+  row.append(hvMake('hv-title',x.querySelector('.jobname [contenteditable]')?.textContent||'Expérience'),hvMake('hv-date',x.querySelector('.date')?.textContent||''));
+  item.append(row,hvMake('hv-org',x.querySelector('.company')?.textContent||''));
+  x.querySelectorAll('.desc').forEach(d=>item.append(hvMake('hv-bullet','• '+d.textContent.trim())));
+  exp.append(item);
+ });
+ const skills=doc.querySelector('.hv-section[data-section="skills"]');skills.querySelectorAll('.hv-paragraph').forEach(x=>x.remove());
+ src.querySelectorAll('.skills .skill-title,.skills .skill-bullet').forEach(x=>{
+  const value=x.textContent.trim();if(value)skills.append(hvMake('hv-paragraph',x.classList.contains('skill-title')?value.toUpperCase():'• '+value));
+ });
+ replaceSheet(doc.outerHTML);note('Contenu copié depuis CV '+plan+'. CV original inchangé.');
+}
+for(const [id,callback] of Object.entries({
+ 'hv-add-section':harvardAddSection,'hv-add-entry':harvardAddEntry,'hv-add-bullet':()=>harvardAddBullet(),
+ 'hv-up':()=>hvMove(-1),'hv-down':()=>hvMove(1),'hv-delete':hvDelete,
+ 'hv-new':hvNew,'hv-import-a':()=>hvImport('A'),'hv-import-b':()=>hvImport('B')
+}))root.querySelector('#'+id)?.addEventListener('click',callback);
+
 const menu=root.querySelector('#download-menu');const toggle=root.querySelector('#download');function closeMenu(){menu.classList.remove('open');toggle.setAttribute('aria-expanded','false')}
 toggle.onclick=()=>{menu.classList.toggle('open');toggle.setAttribute('aria-expanded',menu.classList.contains('open')?'true':'false')};
 document.addEventListener('click',e=>{if(!root.querySelector('.download-wrap').contains(e.target))closeMenu()});
