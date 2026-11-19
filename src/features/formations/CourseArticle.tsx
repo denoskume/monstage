@@ -5,6 +5,7 @@ import { getOpenCVArticle } from './courseArticleContent';
 import { pandasNumpyArticle } from './pandasNumPyArticle';
 import { pythonArticle, edaArticle } from './pythonEdaArticles';
 import { sqlArticle, powerBIArticle } from './sqlPowerBIArticles';
+import { visualizationArticle, spreadsheetArticle } from './visualSpreadsheetArticles';
 import { getLessonExample } from './lessonExamples';
 import { topicGuide } from './TopicLessons';
 import { LessonVisual } from './LessonVisual';
@@ -49,6 +50,8 @@ export function articleFor(track:FormationTrack,module:FormationModule):CourseAr
  if(module.id==='statistiques-eda')return edaArticle;
  if(module.id==='sql')return sqlArticle;
  if(module.id==='powerbi')return powerBIArticle;
+ if(module.id==='visualisation')return visualizationArticle;
+ if(module.id==='tableurs')return spreadsheetArticle;
  return createdArticle(track,module);
 }
 
