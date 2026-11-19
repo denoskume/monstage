@@ -1224,7 +1224,7 @@ function hvOpenLink(){
  if(!hvPendingField)return note('Clique d’abord sur un texte du CV ou sélectionne le texte à transformer en lien.');
  const range=savedRange&&hvPendingField.contains(savedRange.commonAncestorContainer)?savedRange.cloneRange():null;
  hvPendingRange=range;
- hvEditingLink=hvAnchoredFromRange(range)||hvPendingField.querySelector('a[href]');
+ hvEditingLink=hvAnchoredFromRange(range);
  if(hvEditingLink&&!hvPendingField.contains(hvEditingLink))hvEditingLink=null;
  hvLinkText.value=hvEditingLink?.textContent||(!range?.collapsed?range.toString():'');
  hvLinkUrl.value=hvEditingLink?.getAttribute('href')||'';
@@ -1625,6 +1625,24 @@ function directPDF(sheet){
     line(page,x,(top-page*pagePx)*k+fs,x+Math.min(r.width*k,target.length*fs*.62),(top-page*pagePx)*k+fs,0,0,0,.5);
   }
   range.detach?.();
+  // Collect visible hyperlink rectangles for native clickable PDF annotations.
+  const pdfLinksByPage=Array.from({length:pageCount},()=>[]);
+  if(sheet.dataset.sheet==='H'){
+    for(const a of sheet.querySelectorAll('a[href]')){
+      const url=hvSafeUrl(a.getAttribute('href')||'');
+      if(!url)continue;
+      const r=document.createRange();r.selectNodeContents(a);
+      for(const b of Array.from(r.getClientRects())){
+        if(!b.width||!b.height)continue;
+        const y=b.top-box.top,p=Math.floor(y/pagePx);
+        if(p<0||p>=pageCount)continue;
+        const x1=Math.max(0,(b.left-box.left)*k),x2=Math.min(W,(b.right-box.left)*k);
+        const top=(y-p*pagePx)*k,bottom=top+b.height*k;
+        if(x2>x1&&bottom>top)pdfLinksByPage[p].push({url,rect:[x1,H-bottom,x2,H-top]});
+      }
+      r.detach?.();
+    }
+  }
   // Strict ASCII PDF source (non-ASCII characters are escaped as WinAnsi octals).
   const objects=[];
   const put=s=>{objects.push(s);return objects.length};
@@ -1639,6 +1657,9 @@ function directPDF(sheet){
   const extraFonts=['Helvetica','Helvetica-Bold','Helvetica-Oblique','Helvetica-BoldOblique','Courier','Courier-Bold','Courier-Oblique','Courier-BoldOblique'];
   const fontStart=10+pages.length*2;
   const fontResources=extraFonts.map((_,i)=>' /F'+(i+5)+' '+(fontStart+i)+' 0 R').join('');
+  const annotationStart=fontStart+extraFonts.length;
+  let nextAnnotation=annotationStart;
+  const annotationRefs=pdfLinksByPage.map(links=>links.map(()=>nextAnnotation++));
   put('<< /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R /F4 6 0 R'+fontResources+' >> >>');
   const unicodeMap={128:0x20ac,130:0x201a,131:0x0192,132:0x201e,133:0x2026,134:0x2020,135:0x2021,136:0x02c6,137:0x2030,138:0x0160,139:0x2039,140:0x0152,142:0x017d,145:0x2018,146:0x2019,147:0x201c,148:0x201d,149:0x2022,150:0x2013,151:0x2014,152:0x02dc,153:0x2122,154:0x0161,155:0x203a,156:0x0153,158:0x017e,159:0x0178};
   const hex=n=>n.toString(16).toUpperCase().padStart(2,'0');
@@ -1651,11 +1672,14 @@ function directPDF(sheet){
   put(`<< /Length ${cmap.length} >>\nstream\n${cmap}endstream`);
   for(let p=0;p<pages.length;p++){
     const pageObj=10+p*2;
-    put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${fmt(W)} ${fmt(H)}] /Resources 8 0 R /Contents ${pageObj+1} 0 R >>`);
+    put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${fmt(W)} ${fmt(H)}] /Resources 8 0 R /Contents ${pageObj+1} 0 R${annotationRefs[p].length?' /Annots ['+annotationRefs[p].map(n=>n+' 0 R').join(' ')+']':''} >>`);
     const content=pages[p].join('\n')+'\n';
     put(`<< /Length ${content.length} >>\nstream\n${content}endstream`);
   }
   for(const name of extraFonts)put('<< /Type /Font /Subtype /Type1 /BaseFont /'+name+' /Encoding /WinAnsiEncoding /ToUnicode 9 0 R >>');
+  for(const links of pdfLinksByPage)for(const link of links){
+    put('<< /Type /Annot /Subtype /Link /Rect ['+link.rect.map(fmt).join(' ')+'] /Border [0 0 0] /A << /S /URI /URI '+pdfLiteral(link.url)+' >> >>');
+  }
   const pieces=['%PDF-1.4\n%PDF\n'],offsets=[0];
   let pos=pieces[0].length;
   objects.forEach((body,i)=>{offsets.push(pos);const s=`${i+1} 0 obj\n${body}\nendobj\n`;pieces.push(s);pos+=s.length;});
