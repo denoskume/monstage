@@ -40,6 +40,12 @@ describe('Formations pages',()=>{
     expect(screen.getAllByText(/0\/6 leçons/).length).toBeGreaterThan(0);
   });
 
+  it('opens real project briefs and their downloadable starter package',()=>{
+    mount('/formations/data-analyst/projets');
+    expect(screen.getByRole('heading',{name:'Projets pratiques et missions d’entreprise'})).toBeInTheDocument();
+    expect(screen.getByRole('link',{name:/Industrial Maintenance Analytics/})).toHaveAttribute('href','/formations/data-analyst/projets/industrial');
+  });
+
   it('lets a learner complete a specific lesson after practising and passing the quiz',async()=>{
     const user=userEvent.setup();
     mount('/formations/traitement-images/images-pixels/lecon-1');
