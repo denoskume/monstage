@@ -157,3 +157,14 @@
   .formations .formation-topic-quiz{margin-left:18px;margin-right:18px}
   .formations .formation-topic-actions{padding-left:18px;padding-right:18px}
 }
+
+.formations .formation-content-section--editorial>h2{max-width:720px;font-size:clamp(1.35rem,2.4vw,1.75rem);letter-spacing:-.035em}
+.formations .formation-content-section--editorial>.formation-featured-paragraph{max-width:780px;line-height:1.75!important;font-size:.91rem!important;color:var(--text-muted)!important;margin-bottom:12px}
+.learning-context-details{margin:15px 0;border:1px solid var(--border);border-radius:10px;background:var(--surface);overflow:hidden}
+.learning-context-details summary{cursor:pointer;font-size:.8rem;line-height:1.5;font-weight:700;color:var(--text-muted);padding:13px 16px;list-style-position:inside}
+.learning-context-details[open]{padding-bottom:10px}
+.learning-context-details .formation-mathematics,.learning-context-details .formation-notions{margin:13px 16px}
+.learning-context-details--lab .formation-lab{margin:0 16px 16px}
+.formations .formation-content-section--editorial .formation-stage-footer{margin-top:22px}
+.formations .formation-content-section--editorial .learning-article__hero p{color:var(--text-muted)!important}
+@media(max-width:650px){.formations .formation-content-section--editorial{padding:17px!important}}
