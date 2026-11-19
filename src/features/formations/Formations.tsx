@@ -8,7 +8,7 @@ import { computerVisionTrack } from './computerVisionTrack';
 import { FormationLab } from './FormationLabs';
 import { ImageWorkbench } from './ImageWorkbench';
 import { DataWorkbench } from './DataWorkbench';
-import { TopicLessons } from './TopicLessons';
+import { TopicLessons, topicGuide } from './TopicLessons';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
@@ -80,12 +80,31 @@ function downloadNotebook(track: FormationTrack, module: FormationModule, codeOv
 function downloadTrack(track: FormationTrack) {
   const archive: Record<string, Uint8Array> = {};
   track.modules.forEach((module, i) => {
-    const name = String(i+1).padStart(2,'0') + '-' + module.id + '.ipynb';
+    const prefix = String(i+1).padStart(2,'0') + '-' + module.id;
+    const name = prefix + '/00-notebook-module.ipynb';
     archive[name] = strToU8(notebookSource(track, module));
+    module.points.forEach((point, j) => {
+      const guide = topicGuide(point, module);
+      const markdown = (source:string) => ({cell_type:'markdown',metadata:{},source});
+      const code=(source:string)=>({cell_type:'code',metadata:{},source,execution_count:null,outputs:[]});
+      const cells = [
+        markdown('# Leçon '+(j+1)+' — '+point+'\n\n'+track.title+' · '+module.title),
+        markdown('## Pourquoi apprendre cette notion ?\n'+guide.explanation),
+        markdown('## Exemple guidé\n'+guide.example),
+        markdown('## Erreur à éviter\n'+guide.pitfall),
+        markdown('## Code du module : retrouve la partie correspondante\nChaque leçon utilise le contexte de la mission du module pour que les notions restent liées à un projet réel.'),
+        ...(module.codeLanguage === 'python' ? [code(module.code)] : [markdown('```'+(module.codeLanguage||'')+'\n'+module.code+'\n```')]),
+        markdown('## Mission autonome\nDans ce code, retrouve la partie correspondant à « '+point+' ». Modifie un paramètre, prédis l’effet, vérifie le résultat et rédige une observation.'),
+        ...(module.codeLanguage === 'python' ? [code('# Ton expérience pratique\n')] : []),
+        markdown('## Validation\nExplique la notion sans lire ton code. Justifie les limites de ton résultat et ajoute une capture ou une mesure.\n\n**Carnet de bord :**')
+      ];
+      const notebook={nbformat:4,nbformat_minor:5,metadata:{kernelspec:{name:'python3',display_name:'Python 3',language:'python'},language_info:{name:'python'}},cells};
+      archive[prefix+'/'+String(j+1).padStart(2,'0')+'-'+point.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,60)+'.ipynb']=strToU8(JSON.stringify(notebook,null,2));
+    });
   });
   archive['LIRE-AVANT-DE-COMMENCER.md'] = strToU8(
     '# ' + track.title + '\n\n' + track.objective + '\n\n' +
-    'Chaque notebook contient une explication, un exemple, une interprétation, un exercice et une mission.\n' +
+    'L’archive comprend un notebook complet par module et un notebook ciblé pour chaque notion du sommaire. Tous utilisent le cas pratique du module comme fil conducteur.\n' +
     'Les notebooks Python peuvent être importés dans Jupyter ou Google Colab. Les exemples SQL, Excel et DAX doivent être exécutés dans leurs outils respectifs.\n\n' +
     track.modules.map((m,i)=> (i+1) + '. ' + m.title).join('\n') + '\n'
   );
@@ -174,7 +193,7 @@ function Overview({track,completed}: {track:FormationTrack;completed:string[]}) 
         <div className="formation-overview__stats"><strong>{done} / {track.modules.length}</strong><span>modules validés</span></div>
         <ProgressBar value={done} count={track.modules.length}/>
         <Link className="formation-primary-action" to={'/formations/'+track.id+'/'+firstIncomplete.id}>{done ? 'Continuer le parcours':'Commencer le parcours'} <span aria-hidden="true">→</span></Link>
-        <button className="formation-secondary-action" type="button" onClick={()=>downloadTrack(track)}>↓ Télécharger les notebooks (.zip)</button>
+        <button className="formation-secondary-action" type="button" onClick={()=>downloadTrack(track)}>↓ Télécharger tous les notebooks (.zip)</button>
       </div>
     </header>
     <section className="formation-syllabus"><div className="formation-section-heading"><div><span className="formation-eyebrow">PROGRAMME DÉTAILLÉ</span><h2>Les {track.modules.length} modules</h2></div><span className="formation-syllabus__duration">{track.weeks}</span></div>
