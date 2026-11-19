@@ -133,7 +133,6 @@ const labels:Record<Operation,string>={
 function thumbInfo(operation:Operation) {
   if(operation==='canny-like') return 'Démonstration pédagogique : gradient lissé puis seuillé. Ce n’est pas le détecteur Canny complet (sans suppression des non-maxima ni hystérésis).';
   if(operation==='morphology')return 'Ouverture = érosion puis dilatation, avec un noyau 3×3. Les petits objets peuvent disparaître.';
-  if(operation==='fourier')return '';
   return 'Les deux images proviennent exactement de la même source. Les traitements sont calculés dans ce navigateur.';
 }
 export function ImageWorkbench({moduleId}:{moduleId:string}) {
@@ -145,8 +144,9 @@ export function ImageWorkbench({moduleId}:{moduleId:string}) {
   const [error,setError]=useState('');
   const processed=useMemo(()=>processImage(image,operation,amount),[image,operation,amount]);
   const metrics=useMemo(()=>{
-    const min=Math.min(...processed),max=Math.max(...processed);
-    const avg=Math.round(processed.reduce((a,v)=>a+v,0)/processed.length);
+    let min=255,max=0,sum=0;
+    for(const value of processed){min=Math.min(min,value);max=Math.max(max,value);sum+=value;}
+    const avg=Math.round(sum/processed.length);
     return {min,max,avg,active:processed.filter(v=>v>0).length};
   },[processed]);
   useEffect(()=>{setOperation(tasks[moduleId]||'contrast');setAmount(120);},[moduleId]);
