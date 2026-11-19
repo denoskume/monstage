@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import {pythonConceptArticles,deepConceptsFor} from './deepConceptIndex';
 import {CourseArticle} from './CourseArticle';
 import {dataAnalystTrack} from './dataAnalystTrack';
+import {conceptNotebookSource} from './conceptNotebook';
 
 describe('complete individual notion articles',()=>{
   it('does not hide brief one-paragraph definitions behind full article titles',()=>{
@@ -26,6 +27,19 @@ describe('complete individual notion articles',()=>{
       expect(article.mistakes.length,entry.slug).toBeGreaterThanOrEqual(5);
       expect(article.faq.length,entry.slug).toBeGreaterThanOrEqual(5);
       expect(article.conclusion.length,entry.slug).toBeGreaterThanOrEqual(2);
+    }
+  });
+  it('exports the entire lesson to an executable Jupyter notebook, not a single code cell',()=>{
+    for(const item of pythonConceptArticles){
+      const notebook=JSON.parse(conceptNotebookSource(item)) as {
+        nbformat:number;cells:Array<{cell_type:string;source:string}>;
+      };
+      expect(notebook.nbformat).toBe(4);
+      expect(notebook.cells.filter(c=>c.cell_type==='code').length,item.slug).toBeGreaterThanOrEqual(6);
+      expect(notebook.cells.filter(c=>c.cell_type==='markdown').length,item.slug).toBeGreaterThanOrEqual(12);
+      expect(notebook.cells[0].source).toContain(item.article.title);
+      expect(notebook.cells.some(c=>c.source.includes('Common Mistakes'))).toBe(true);
+      expect(notebook.cells.some(c=>c.source.includes('FAQs'))).toBe(true);
     }
   });
   it('separates variables, data types, built-in functions and user-defined functions',()=>{
