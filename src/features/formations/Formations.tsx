@@ -7,7 +7,7 @@ import { imageProcessingTrack } from './imageProcessingTrack';
 import { computerVisionTrack } from './computerVisionTrack';
 import { FormationLab } from './FormationLabs';
 import FormationTopicPage from './FormationTopicPage';
-import { allTopics, topicById, topicProgressKey } from './detailedLessons';
+import { allTopics, topicById, topicProgressKey, lessonNotebook } from './detailedLessons';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
 
@@ -79,11 +79,15 @@ function downloadTrack(track: FormationTrack) {
   const archive: Record<string, Uint8Array> = {};
   track.modules.forEach((module, i) => {
     const name = String(i+1).padStart(2,'0') + '-' + module.id + '.ipynb';
-    archive[name] = strToU8(notebookSource(track, module));
+    archive['modules/'+name] = strToU8(notebookSource(track, module));
+    for(const topic of allTopics(track,module)) {
+      archive['lecons/'+String(i+1).padStart(2,'0')+'-'+module.id+'/'+topic.id+'.ipynb']=strToU8(lessonNotebook(track,module,topic));
+    }
   });
   archive['LIRE-AVANT-DE-COMMENCER.md'] = strToU8(
     '# ' + track.title + '\n\n' + track.objective + '\n\n' +
     'Chaque notebook contient une explication, un exemple, une interprétation, un exercice et une mission.\n' +
+    'Le dossier lecons/ contient un notebook par sous-leçon ; modules/ contient la synthèse pratique.\n' +
     'Les notebooks Python peuvent être importés dans Jupyter ou Google Colab. Les exemples SQL, Excel et DAX doivent être exécutés dans leurs outils respectifs.\n\n' +
     track.modules.map((m,i)=> (i+1) + '. ' + m.title).join('\n') + '\n'
   );
