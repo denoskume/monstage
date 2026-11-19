@@ -353,7 +353,7 @@
 <label for="hv-style">Style <select id="hv-style" aria-label="Style du CV"><option value="modern">Moderne · Bleu</option><option value="classic">Harvard classique</option><option value="minimal">Minimaliste</option><option value="executive">Executive</option></select></label>
 <label for="hv-page-color">Couleur de page <select id="hv-page-color" aria-label="Couleur de fond de page"><option value="white">Défaut · Blanc</option><option value="lightgray">Gris clair</option></select></label>
 <span class="design-description">Style modifiable sans perdre le contenu · A4 · ATS</span>
-</div><div class="harvard-tools" id="harvard-tools" hidden aria-label="Édition Harvard"><strong>Harvard · 1 colonne</strong><button type="button" id="hv-add-section">+ Rubrique</button><button type="button" id="hv-add-entry">+ Expérience</button><button type="button" id="hv-add-bullet">+ Puce</button><button type="button" id="hv-up">↑ Monter</button><button type="button" id="hv-down">↓ Descendre</button><button type="button" id="hv-delete">Supprimer</button><span class="hv-divider"></span><button type="button" id="hv-new">Nouveau</button><button type="button" id="hv-link">🔗 Insérer / modifier lien</button><button type="button" id="hv-unlink">Retirer lien</button><button type="button" id="hv-import-a">Copier CV A</button><button type="button" id="hv-import-b">Copier CV B</button></div><dialog id="hv-link-dialog" class="hv-link-dialog" aria-labelledby="hv-link-heading"><form method="dialog" id="hv-link-form">
+</div><div class="harvard-tools" id="harvard-tools" hidden aria-label="Édition Harvard"><strong>Harvard · 1 colonne</strong><button type="button" id="hv-add-section">+ Rubrique</button><button type="button" id="hv-add-entry">+ Expérience</button><button type="button" id="hv-add-bullet">+ Puce</button><button type="button" id="hv-up">↑ Monter</button><button type="button" id="hv-down">↓ Descendre</button><button type="button" id="hv-delete">Supprimer</button><span class="hv-divider"></span><button type="button" id="hv-new">Nouveau</button><button type="button" id="hv-link" title="Sélectionner du texte puis Ctrl+K">🔗 Lien (Ctrl+K)</button><button type="button" id="hv-unlink">Retirer lien</button><button type="button" id="hv-import-a">Copier CV A</button><button type="button" id="hv-import-b">Copier CV B</button></div><dialog id="hv-link-dialog" class="hv-link-dialog" aria-labelledby="hv-link-heading"><form method="dialog" id="hv-link-form">
 <strong id="hv-link-heading">Insérer ou modifier un lien</strong>
 <label for="hv-link-text">Texte visible<input id="hv-link-text" type="text" placeholder="LinkedIn, GitHub, Portfolio…" required></label>
 <label for="hv-link-url">Adresse du lien<input id="hv-link-url" type="url" placeholder="https://…" required></label>
@@ -814,7 +814,8 @@ root.addEventListener('keydown',e=>{
  if(!((e.ctrlKey||e.metaKey)&&!e.altKey))return;
  if(searchBox.open)return;
  if(['f','h'].includes(e.key.toLowerCase())){e.preventDefault();findText(e.key.toLowerCase()==='h');return;}
- if(e.key.toLowerCase()==='s'){e.preventDefault();root.querySelector('#save-cv').click();return;}
+ if(chosen==='H'&&e.key.toLowerCase()==='k'){e.preventDefault();hvOpenLink();return;}
+  if(e.key.toLowerCase()==='s'){e.preventDefault();root.querySelector('#save-cv').click();return;}
  if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
  if(e.key.toLowerCase()==='y'){e.preventDefault();redo();}
 });
@@ -1262,7 +1263,7 @@ root.querySelector('#hv-link-form').addEventListener('submit',event=>{
    }else hvPendingField.append(anchor);
  }
  hvLinkDialog.close();lastField=hvPendingField;savedRange=null;hvPendingRange=null;hvEditingLink=null;
- persistCurrent();note('Lien cliquable ajouté au CV et aux exports.');
+ persistCurrent();note('Lien cliquable ajouté au CV et aux exports (Ctrl+clic pour ouvrir).');
 });
 root.querySelector('#hv-link-cancel').onclick=()=>hvLinkDialog.close();
 hvLinkDialog.addEventListener('close',()=>{hvPendingRange=null;hvEditingLink=null;});
