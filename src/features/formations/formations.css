@@ -262,3 +262,12 @@
 .formation-backup__actions {display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:9px;max-width:530px;}
 .formation-backup__actions p {width:100%;text-align:right;}
 @media(max-width:650px){.formation-backup__actions {justify-content:flex-start;}.formation-backup__actions p {text-align:left;}}
+
+.formation-topic-quiz {display:grid;gap:10px;border:1px solid var(--border);border-radius:11px;padding:17px;margin-top:20px;background:var(--surface);}
+.formation-topic-quiz legend {font-weight:750;font-size:.84rem;line-height:1.5;padding:0 5px;}
+.formation-topic-quiz label {display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--surface-muted);border-radius:8px;font-size:.81rem;line-height:1.5;cursor:pointer;}
+.formation-topic-quiz input {accent-color:#168f7b;margin-top:4px;}
+.formation-topic-quiz button {justify-self:start;}
+.formation-topic-quiz p {margin:0;font-size:.79rem;line-height:1.65;padding:12px;border-radius:8px;}
+.formation-topic-correct {color:var(--success);background:var(--success-soft);}
+.formation-topic-retry {color:var(--warning);background:var(--warning-soft);}
