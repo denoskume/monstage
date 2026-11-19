@@ -65,6 +65,17 @@ export function DataWorkbench(){
     return [...sums.entries()].map(([label,v])=>({label,total:v.total,count:v.count})).sort((a,b)=>b.total-a.total).slice(0,15);
   },[visible,category,metric]);
   const max=Math.max(1,...groups.map(g=>Math.max(0,g.total)));
+  const lineValues=useMemo(()=>visible.map(r=>toNumber(r[metric])).filter((n):n is number=>n!==null).slice(0,60),[visible,metric]);
+  const yBounds=useMemo(()=>{
+    if(!lineValues.length)return {min:0,max:1};
+    const min=Math.min(0,...lineValues), max=Math.max(1,...lineValues);
+    return {min,max};
+  },[lineValues]);
+  const linePoints=lineValues.map((v,i)=>{
+    const x=54+(lineValues.length===1?0:i/(lineValues.length-1)*470);
+    const y=166-(v-yBounds.min)/(yBounds.max-yBounds.min)*128;
+    return x+','+y;
+  }).join(' ');
   function parseAndSet(input:string){
     try{
       const parsed=parseCsv(input);
@@ -104,6 +115,27 @@ export function DataWorkbench(){
       <label>Somme de <select aria-label="Somme de" value={metric} onChange={e=>setMetric(e.target.value)}>{numeric.map(h=><option key={h}>{h}</option>)}</select></label>
       <label>Filtre texte <input aria-label="Filtrer les lignes" type="search" placeholder="Filtrer les données…" value={filter} onChange={e=>setFilter(e.target.value)}/></label>
     </div>
+    <figure className="formation-data-lineplot">
+      <figcaption>Évolution de {metric} selon l’ordre des observations filtrées</figcaption>
+      <svg viewBox="0 0 560 213" role="img" aria-label={'Courbe de '+metric+' sur '+lineValues.length+' observations, avec axes et valeurs'}>
+        <line x1="54" y1="28" x2="54" y2="166" stroke="currentColor" opacity=".5"/>
+        <line x1="54" y1="166" x2="525" y2="166" stroke="currentColor" opacity=".5"/>
+        {[0,1,2,3,4].map(i=><g key={i}>
+          <line x1="54" y1={166-i*32} x2="525" y2={166-i*32} stroke="currentColor" opacity=".12"/>
+          <text x="48" y={170-i*32} textAnchor="end" fontSize="10" fill="currentColor">{currency(yBounds.min+(yBounds.max-yBounds.min)*i/4)}</text>
+        </g>)}
+        <polyline points={linePoints} stroke="#178b7a" strokeWidth="2.5" fill="none" strokeLinejoin="round" strokeLinecap="round"/>
+        {lineValues.map((v,i)=>{
+          const x=54+(lineValues.length===1?0:i/(lineValues.length-1)*470);
+          const y=166-(v-yBounds.min)/(yBounds.max-yBounds.min)*128;
+          return <circle key={i} cx={x} cy={y} r="3.2" fill="#178b7a"><title>{'Observation '+(i+1)+' : '+currency(v)}</title></circle>;
+        })}
+        <text x="54" y="183" fontSize="11" fill="currentColor">1</text>
+        <text x="518" y="183" textAnchor="end" fontSize="11" fill="currentColor">{Math.max(1,lineValues.length)}</text>
+        <text x="235" y="201" fontSize="12" fill="currentColor">Index des observations</text>
+      </svg>
+      <small>Il s’agit de l’ordre du fichier, pas nécessairement d’une série temporelle. Pour étudier le temps, les dates doivent être correctement triées.</small>
+    </figure>
     <div className="formation-data-plot" role="img" aria-label={groups.map(g=>g.label+' : '+currency(g.total)).join(', ')}>
       <div className="formation-data-plot__axis">Total de {metric} par {category}</div>
       {groups.map(g=><div className="formation-data-bar" key={g.label}><span title={g.label}>{g.label}</span><div><i style={{width:Math.max(0,g.total)/max*100+'%'}}/></div><strong>{currency(g.total)}</strong></div>)}
