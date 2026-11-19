@@ -329,3 +329,36 @@
 .formation-stat-bars i { display:block; width:100%; max-width:44px; background:linear-gradient(#2ec9ab,#157f75); border-radius:4px 4px 0 0; min-height:4px; }
 .formation-stat-bars span { font-size:.67rem; color:var(--text-muted); font-variant-numeric:tabular-nums; }
 @media(max-width:620px) {.formation-data-controls { grid-template-columns:1fr; }.formation-data-kpi-grid { grid-template-columns:1fr 1fr; }.formation-data-bar { grid-template-columns:42px minmax(0,1fr) 74px; gap:6px; }.formation-data-lab { padding:13px; } }
+
+/* Portfolio projects with briefs, starter datasets and explicit checklists. */
+.formation-projects-hero { padding:clamp(23px,3.5vw,40px); background:linear-gradient(110deg,#102238,#153f48); border-radius:18px; color:#f5ffff; margin-bottom:21px; }
+.formation-projects-hero .formation-eyebrow { color:#9de5d8; }
+.formation-projects-hero h1 { font-size:clamp(1.65rem,3.1vw,2.6rem); letter-spacing:-.048em; margin:12px 0; line-height:1.2; }
+.formation-projects-hero p { line-height:1.75; font-size:.9rem; color:#d4e9ec; max-width:850px; }
+.formation-projects-hero>strong { display:inline-block; margin-top:7px; font-size:.82rem; }
+.formation-projects-hero .formation-primary-action { margin-top:12px; background:#eafef8; border-color:#eafef8; color:#135a53; }
+.formation-projects-hero .formation-tags span { background:#ffffff15; border-color:#ffffff35; color:#fff; }
+.formation-projects-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.formation-project-card { padding:23px; border:1px solid var(--border); border-radius:15px; background:var(--surface); display:flex; flex-direction:column; min-height:276px; transition:transform .15s ease,border-color .15s ease; }
+.formation-project-card:hover { transform:translateY(-2px); border-color:#2eaa95; }
+.formation-project-card>div:first-child { display:flex; justify-content:space-between; gap:8px; font-size:.69rem; color:#138d77; font-weight:850; letter-spacing:.05em; }
+.formation-project-card>div:first-child b { color:var(--success); }
+.formation-project-card h2 { font-size:1.15rem; letter-spacing:-.025em; margin:18px 0 10px; }
+.formation-project-card p { font-size:.81rem; line-height:1.65; color:var(--text-muted); }
+.formation-project-card>div:nth-last-child(2) { display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; }
+.formation-project-card>div:nth-last-child(2) span { background:var(--surface-muted); border:1px solid var(--border); color:var(--text-muted); border-radius:7px; padding:5px 8px; font-size:.69rem; }
+.formation-project-card footer { display:flex; justify-content:space-between; gap:8px; color:var(--accent); border-top:1px solid var(--border); margin-top:15px; padding-top:12px; font-size:.76rem; font-weight:750; }
+.formation-project-detail { display:grid; gap:13px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.formation-project-detail>section { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; min-width:0; }
+.formation-project-detail>section:nth-child(n+4) { grid-column:1/-1; }
+.formation-project-detail h2 { font-size:1.13rem; letter-spacing:-.02em; margin:11px 0 17px; }
+.formation-project-detail p,.formation-project-detail li { color:var(--text-muted); font-size:.84rem; line-height:1.8; }
+.formation-project-detail ul,.formation-project-detail ol { padding-left:22px; margin:0; }
+.formation-project-detail li+li { margin-top:7px; }
+.formation-project-code { white-space:pre; overflow-x:auto; max-width:100%; background:#0f1d30; color:#e9f5fa; padding:20px; border-radius:10px; font: .82rem/1.7 ui-monospace,Consolas,monospace; }
+.formation-project-rubric { display:grid; gap:8px; }
+.formation-project-rubric label { display:flex; align-items:start; gap:10px; padding:13px 15px; border:1px solid var(--border); border-radius:9px; cursor:pointer; font-size:.8rem; }
+.formation-project-rubric input { margin-top:3px; accent-color:#178d79; }
+.formation-project-outcome { font-weight:700; padding:12px 0 0; margin:0; }
+.formation-final-project .formation-primary-action { margin-top:15px; background:#e9fef5; border-color:#e9fef5; color:#11594e; }
+@media(max-width:720px){.formation-projects-grid,.formation-project-detail{grid-template-columns:1fr}.formation-project-detail>section:nth-child(n+4){grid-column:auto}.formation-projects-hero{padding:24px}.formation-project-detail>section{padding:19px}}
