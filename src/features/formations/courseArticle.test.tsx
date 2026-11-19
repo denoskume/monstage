@@ -61,7 +61,7 @@ describe('GUVI-reference complete article layout',()=>{
   showArticle(dataAnalystTrack,'python');
   const catalog=screen.getByRole('navigation',{name:'Articles complets du module'});
   expect(catalog.querySelectorAll('button')).toHaveLength(15);
-  await user.click(screen.getByRole('button',{name:/Jupyter Notebook and Markdown Cells/}));
+  await user.click(within(catalog).getByRole('button',{name:/Jupyter Notebook and Markdown Cells/}));
   const toc=screen.getByRole('navigation',{name:'Table of contents'});
   expect(toc.querySelectorAll('button').length).toBeGreaterThan(6);
   await user.click(screen.getByRole('button',{name:/Installer et ouvrir JupyterLab/}));
