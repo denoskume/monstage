@@ -227,3 +227,7 @@
 .learning-confusion__matrix b{background:#fff0dc;color:#955c18;font-size:.73rem}
 .learning-confusion>p{font-size:.77rem;color:var(--text-muted);margin:14px 0 0}
 @media(max-width:680px){.learning-intro-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.learning-intro-types{grid-template-columns:1fr}.learning-grain{grid-template-columns:1fr}.learning-class-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.learning-article__toc button{border:0;background:transparent;color:var(--accent);font:inherit;font-size:.8rem;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.learning-article__toc button:hover{text-decoration-thickness:2px}
+.learning-article__toc button:focus-visible{outline:2px solid #159b86;outline-offset:3px;border-radius:2px}
