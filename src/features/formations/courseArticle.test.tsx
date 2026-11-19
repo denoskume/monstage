@@ -59,9 +59,12 @@ describe('GUVI-reference complete article layout',()=>{
  it('renders a readable article TOC with scroll controls',async()=>{
   const user=userEvent.setup();
   showArticle(dataAnalystTrack,'python');
-  const nav=screen.getByRole('navigation',{name:'Table of contents'});
-  expect(nav.querySelectorAll('button').length).toBeGreaterThan(6);
-  await user.click(screen.getByRole('button',{name:/Installing Python and Jupyter/}));
-  expect(screen.getByRole('heading',{name:'Installing Python and Jupyter'})).toBeInTheDocument();
+  const catalog=screen.getByRole('navigation',{name:'Articles complets du module'});
+  expect(catalog.querySelectorAll('button')).toHaveLength(15);
+  await user.click(screen.getByRole('button',{name:/Jupyter Notebook and Markdown Cells/}));
+  const toc=screen.getByRole('navigation',{name:'Table of contents'});
+  expect(toc.querySelectorAll('button').length).toBeGreaterThan(6);
+  await user.click(screen.getByRole('button',{name:/Installer et ouvrir JupyterLab/}));
+  expect(screen.getByRole('heading',{name:'Installer et ouvrir JupyterLab'})).toBeInTheDocument();
  });
 });
