@@ -271,3 +271,18 @@
 .formation-topic-quiz p {margin:0;font-size:.79rem;line-height:1.65;padding:12px;border-radius:8px;}
 .formation-topic-correct {color:var(--success);background:var(--success-soft);}
 .formation-topic-retry {color:var(--warning);background:var(--warning-soft);}
+
+.formation-advanced-lab {margin:20px 0;background:var(--surface-muted);border:1px solid var(--border);border-radius:13px;padding:20px;}
+.formation-advanced-plots {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:15px 0;}
+.formation-advanced-plot {min-width:0;padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:0;}
+.formation-advanced-plot figcaption {font-weight:750;font-size:.77rem;margin-bottom:10px;color:var(--text);}
+.formation-advanced-plot svg {width:100%;height:auto;display:block;}
+.formation-video-toggle {display:flex!important;align-items:center!important;flex-direction:row!important;gap:10px!important;}
+.formation-video-toggle input {accent-color:#168a77;}
+.formation-cnn-grids {display:flex;gap:18px;align-items:center;justify-content:space-around;flex-wrap:wrap;padding:15px 0;}
+.formation-cnn-grids>div {display:grid;gap:10px;font-size:.76rem;font-weight:750;text-align:center;}
+.formation-cnn-grid {display:grid;grid-template-columns:repeat(3,40px);gap:3px;}
+.formation-cnn-grid--five {grid-template-columns:repeat(5,32px);}
+.formation-cnn-grid b {display:grid;place-items:center;border:1px solid var(--border);border-radius:4px;background:var(--surface);height:40px;font-size:.78rem;font-variant-numeric:tabular-nums;}
+.formation-cnn-grid--five b {height:32px;font-size:.69rem;}
+@media(max-width:680px){.formation-advanced-plots {grid-template-columns:1fr;}.formation-advanced-lab {padding:13px;}}
