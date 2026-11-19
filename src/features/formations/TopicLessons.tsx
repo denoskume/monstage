@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { FormationModule } from './formationTypes';
 import { topicQuiz } from './topicQuizzes';
+import { LessonChapter } from './LessonChapter';
 
 type TopicGuide={explanation:string;example:string;pitfall:string};
 const guides:Array<[RegExp,TopicGuide]>=[
@@ -59,12 +60,7 @@ export function TopicLessons({module,completed,onToggle}:{module:FormationModule
       </button>)}
     </nav>
     <article className="formation-topic-body">
-      <span className="formation-eyebrow">LEÇON {selected+1}/{module.points.length}</span>
-      <h4>{title}</h4>
-      <div className="formation-topic-body__block"><strong>Comprendre l’essentiel</strong><p>{guide.explanation}</p></div>
-      <div className="formation-topic-body__block"><strong>Exemple concret à reproduire</strong><p>{guide.example}</p></div>
-      <div className="formation-topic-body__block formation-topic-pitfall"><strong>Erreur fréquente à éviter</strong><p>{guide.pitfall}</p></div>
-      <div className="formation-topic-body__block"><strong>À toi de jouer</strong><p>Dans l’exemple Python ou SQL du module, retrouve l’étape correspondant à « {title} ». Modifie un paramètre et prédis ce qui doit changer. Vérifie ensuite avec le code ou le laboratoire.</p></div>
+      <LessonChapter module={module} topic={title} index={selected} guide={guide}/>
       <fieldset className="formation-topic-quiz">
         <legend>Vérifie ta compréhension — {quiz.question}</legend>
         {quiz.options.map((option,i)=><label key={option}><input type="radio" name={'topic-'+module.id+'-'+selected} checked={answers[selected]===i} onChange={()=>{setAnswers(prev=>({...prev,[selected]:i}));setVerified(prev=>({...prev,[selected]:false}));}}/>{option}</label>)}
