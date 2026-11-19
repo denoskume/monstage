@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { FormationModule } from './formationTypes';
+import { topicQuiz } from './topicQuizzes';
 
 type TopicGuide={explanation:string;example:string;pitfall:string};
 const guides:Array<[RegExp,TopicGuide]>=[
@@ -44,8 +45,12 @@ export function topicGuide(point:string,module:FormationModule):TopicGuide {
 }
 export function TopicLessons({module,completed,onToggle}:{module:FormationModule;completed:number[];onToggle:(index:number)=>void}){
   const [selected,setSelected]=useState(0);
+  const [answers,setAnswers]=useState<Record<number,number>>({});
+  const [verified,setVerified]=useState<Record<number,boolean>>({});
   const title=module.points[selected];
   const guide=useMemo(()=>topicGuide(title,module),[title,module]);
+  const quiz=useMemo(()=>topicQuiz(title),[title]);
+  const valid=verified[selected] && answers[selected]===quiz.correct;
   return <section className="formation-topic-lessons" aria-label="Leçons progressives de ce module">
     <header><div><span className="formation-eyebrow">PARCOURS PAS À PAS</span><h3>{module.points.length} leçons à maîtriser</h3></div><span>{completed.length}/{module.points.length} étudiées</span></header>
     <nav className="formation-topic-nav" aria-label="Choisir une notion">
@@ -60,8 +65,14 @@ export function TopicLessons({module,completed,onToggle}:{module:FormationModule
       <div className="formation-topic-body__block"><strong>Exemple concret à reproduire</strong><p>{guide.example}</p></div>
       <div className="formation-topic-body__block formation-topic-pitfall"><strong>Erreur fréquente à éviter</strong><p>{guide.pitfall}</p></div>
       <div className="formation-topic-body__block"><strong>À toi de jouer</strong><p>Dans l’exemple Python ou SQL du module, retrouve l’étape correspondant à « {title} ». Modifie un paramètre et prédis ce qui doit changer. Vérifie ensuite avec le code ou le laboratoire.</p></div>
+      <fieldset className="formation-topic-quiz">
+        <legend>Vérifie ta compréhension — {quiz.question}</legend>
+        {quiz.options.map((option,i)=><label key={option}><input type="radio" name={'topic-'+module.id+'-'+selected} checked={answers[selected]===i} onChange={()=>{setAnswers(prev=>({...prev,[selected]:i}));setVerified(prev=>({...prev,[selected]:false}));}}/>{option}</label>)}
+        <button type="button" className="formation-secondary-action" disabled={answers[selected]===undefined} onClick={()=>setVerified(prev=>({...prev,[selected]:true}))}>Corriger ma réponse</button>
+        {verified[selected]&&<p role="status" className={valid?'formation-topic-correct':'formation-topic-retry'}><strong>{valid?'Bonne réponse !':'Revois la notion.'}</strong> {quiz.explanation}</p>}
+      </fieldset>
       <div className="formation-topic-actions">
-        <label><input type="checkbox" checked={completed.includes(selected)} onChange={()=>onToggle(selected)}/> J’ai étudié, testé et compris cette notion.</label>
+        <label><input type="checkbox" disabled={!valid && !completed.includes(selected)} checked={completed.includes(selected)} onChange={()=>onToggle(selected)}/> J’ai étudié, testé et compris cette notion.</label>
         {selected<module.points.length-1&&<button type="button" className="formation-secondary-action" onClick={()=>setSelected(s=>s+1)}>Notion suivante →</button>}
       </div>
     </article>
