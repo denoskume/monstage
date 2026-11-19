@@ -70,7 +70,16 @@ function ConceptVisual({visual,module,pointIndex}:{visual:NonNullable<ArticleSec
  if(visual==='pixels')return <LessonVisual topic="Pixel, lignes/colonnes et origine des coordonnées" module={{...module,id:'images-pixels'}}/>;
  if(visual==='data'||visual==='pandas')return <LessonVisual topic="Question métier, indicateur, décision" module={{...module,id:'metier-donnees'}}/>;
  if(visual==='numpy')return <div className="course-article-array" aria-label="Tableau NumPy deux dimensions"><div>{[21,22,23,19,20,22].map((n,i)=><span key={i}>{n}</span>)}</div><p><strong>shape = (2, 3)</strong> · deux lignes et trois colonnes. La moyenne des six valeurs vaut environ 21,17.</p></div>;
- if(visual==='operations'||visual==='edges'||visual==='video')return <LessonVisual topic={topic} module={module}/>;
+ if(visual==='operations')return <figure className="course-article-diagram"><figcaption>Les opérations courantes d'une chaîne de traitement d'images</figcaption>
+   <div className="course-article-diagram__steps"><div><strong>Image originale</strong><span className="image-demo image-demo--original">▣</span><small>Acquérir</small></div><b aria-hidden="true">→</b><div><strong>Resize / Blur</strong><span className="image-demo image-demo--blur">▣</span><small>Prétraiter</small></div><b aria-hidden="true">→</b><div><strong>Edges</strong><span className="image-demo image-demo--edge">▣</span><small>Analyser</small></div></div>
+   <p>Un même objet est préparé puis analysé. Les formes sont schématiques ; le résultat réel est produit par le code OpenCV juste après.</p>
+ </figure>;
+ if(visual==='edges')return <figure className="course-article-diagram"><figcaption>Les étapes du détecteur Canny</figcaption><div className="course-article-canny">
+   {['Image','Lissage gaussien','Gradient','Contours affinés','Double seuil'].map((step,i)=><div key={step}><span>{String(i+1).padStart(2,'0')}</span><strong>{step}</strong></div>)}
+   </div><p>Canny ne prédit pas une classe d'objet : il détecte une frontière à partir des variations d'intensité.</p></figure>;
+ if(visual==='video')return <figure className="course-article-diagram"><figcaption>Lire une vidéo image par image</figcaption><div className="course-article-frames">
+    {[0,1,2,3].map((i)=><div key={i}><svg viewBox="0 0 120 75" role="img" aria-label={'Frame '+(i+1)}><rect width="120" height="75" fill="#182c40"/><circle cx={22+i*22} cy="39" r="14" fill="#d6f9e6"/></svg><span>Frame {i+1}</span></div>)}
+   </div><p>Chaque frame est une nouvelle image. Il faut vérifier le succès de lecture avant toute transformation.</p></figure>;
  return null;
 }
 
