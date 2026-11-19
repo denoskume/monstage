@@ -144,7 +144,7 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
  function scrollTo(id:string) {const target=document.getElementById(prefix+id);if(target&&typeof target.scrollIntoView==='function')target.scrollIntoView({behavior:'smooth',block:'start'});}
  return <div className="course-article-shell">
    {concepts.length>0&&<nav className="course-article-library" aria-label="Articles complets du module">
-     <div className="course-article-library__heading"><span>PROGRAMME PYTHON · COURS INDIVIDUELS</span><h2>{concepts.length} articles complets pour maîtriser Python</h2><p>Choisis une notion. Chaque article contient son introduction, ses explications progressives, plusieurs exemples de code, leurs sorties, des erreurs fréquentes et une FAQ.</p></div>
+     <div className="course-article-library__heading"><span>{module.title.toUpperCase()} · COURS INDIVIDUELS</span><h2>{concepts.length} articles approfondis : {module.title}</h2><p>Choisis une notion. Chaque article contient son introduction, ses explications progressives, plusieurs exemples de code, leurs sorties, des erreurs fréquentes et une FAQ.</p></div>
      <ol>{concepts.map((item,i)=><li key={item.slug}><button type="button" className={concept?.slug===item.slug?'is-current':''} aria-current={concept?.slug===item.slug?'page':undefined} onClick={()=>setSelectedSlug(item.slug)}><span>{String(i+1).padStart(2,'0')}</span><strong>{item.article.title.replace(': A Complete Beginner’s Guide','').replace(': A Beginner’s Guide','')}</strong><span aria-hidden="true">›</span></button></li>)}</ol>
    </nav>}
    <article className="course-article" aria-label={article.title}>
