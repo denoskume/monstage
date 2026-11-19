@@ -369,3 +369,19 @@
 .formation-backup>div:nth-child(2) { display:flex; flex-wrap:wrap; gap:9px; }
 .formation-backup>p { grid-column:1/-1; color:var(--accent); }
 @media(max-width:850px) {.formation-backup { grid-template-columns:1fr; }}
+
+/* Real local image processing: no network upload, responsive pixel preview. */
+.formation-upload-lab {margin:24px 0; padding:22px; border:1px solid var(--border); background:var(--surface-muted); border-radius:14px; min-width:0;}
+.formation-upload-lab>p {color:var(--text-muted); font-size:.81rem; line-height:1.7;}
+.formation-upload-controls {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:18px 0;}
+.formation-upload-controls label {display:grid; gap:7px; font-size:.75rem; font-weight:750; color:var(--text-muted); min-width:0;}
+.formation-upload-controls input,.formation-upload-controls select {width:100%; min-width:0; padding:9px 10px; border:1px solid var(--border-strong); border-radius:9px; background:var(--surface); color:var(--text); font-size:.78rem;}
+.formation-upload-slider {display:grid; gap:7px; font-size:.77rem; font-weight:700; color:var(--text-muted); margin:12px 0 16px;}
+.formation-upload-slider input {width:100%; accent-color:#138f79;}
+.formation-upload-images {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:start;}
+.formation-upload-images figure {margin:0; min-width:0; padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--surface); text-align:center;}
+.formation-upload-images canvas {display:block; width:100%; max-width:320px; aspect-ratio:1; height:auto; object-fit:contain; margin:0 auto; image-rendering:auto; background:repeating-conic-gradient(#e3e6e9 0% 25%,#fff 0% 50%) 50%/16px 16px;}
+.formation-upload-images figcaption {font-size:.74rem; color:var(--text-muted); margin-top:10px;}
+.formation-upload-error {color:var(--danger)!important; font-weight:700;}
+.formation-upload-placeholder {font-style:italic; margin:10px 0 0;}
+@media(max-width:620px){.formation-upload-lab{padding:14px}.formation-upload-controls{grid-template-columns:1fr}.formation-upload-images{gap:8px}.formation-upload-images figure{padding:7px}}
