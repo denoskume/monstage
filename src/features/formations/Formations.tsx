@@ -16,6 +16,7 @@ import { AuthContext } from '../../auth/useAuth';
 import { formationsCloudRequest } from './formationCloud';
 import LegacyFormations from './LegacyFormations';
 import './formations.css';
+import './editorialLearning.css';
 
 export const formationTracks = [imageProcessingTrack, computerVisionTrack, dataAnalystTrack];
 const PROGRESS_KEY = 'monstage:formations:completed:v2';
@@ -288,21 +289,27 @@ function ModuleScreen({track,module,completed,onComplete,notes,onNote,topics,onT
         <div className="formation-step-tabs" role="tablist" aria-label="Étapes pédagogiques">
           {stages.map(([id,num,name])=><button key={id} type="button" role="tab" aria-selected={stage===id} className={stage===id?'is-active':''} onClick={()=>setStage(id)}><span>{num}</span>{name}</button>)}
         </div>
-        {stage==='comprendre' && <div className="formation-content-section" role="tabpanel">
-          <span className="formation-eyebrow">01 · THÉORIE ESSENTIELLE</span><h2>Comprendre avant de coder</h2>
+        {stage==='comprendre' && <div className="formation-content-section formation-content-section--editorial" role="tabpanel">
+          <span className="formation-eyebrow">01 · APPRENDRE SIMPLEMENT</span>
+          <h2>Une notion. Une explication. Un résultat concret.</h2>
           <p className="formation-featured-paragraph">{module.concept}</p>
-          {mathematicsNotes[module.id]&&<div className="formation-mathematics">
-            <span className="formation-eyebrow">MATHÉMATIQUES ESSENTIELLES</span>
-            <h3>{mathematicsNotes[module.id].title}</h3>
-            <div className="formation-math-formula">{mathematicsNotes[module.id].equation}</div>
-            <p>{mathematicsNotes[module.id].interpretation}</p>
-            <div className="formation-math-example"><strong>Exemple numérique</strong><p>{mathematicsNotes[module.id].example}</p></div>
-          </div>}
-          <div className="formation-notions"><h3>Ce que tu vas apprendre</h3><ol>{module.points.map((point,i)=><li key={point}><b>{String(i+1).padStart(2,'0')}</b><span>{point}</span></li>)}</ol></div>
-          <div className="formation-business-case"><strong>Exemple concret</strong><p>{module.example}</p></div>
+          <details className="learning-context-details">
+            <summary>Afficher les objectifs et les bases mathématiques du module</summary>
+            {mathematicsNotes[module.id]&&<div className="formation-mathematics">
+              <span className="formation-eyebrow">LE MINIMUM MATHÉMATIQUE UTILE</span>
+              <h3>{mathematicsNotes[module.id].title}</h3>
+              <div className="formation-math-formula">{mathematicsNotes[module.id].equation}</div>
+              <p>{mathematicsNotes[module.id].interpretation}</p>
+              <div className="formation-math-example"><strong>Exemple numérique</strong><p>{mathematicsNotes[module.id].example}</p></div>
+            </div>}
+            <div className="formation-notions"><h3>Les notions du module</h3><ol>{module.points.map((point,i)=><li key={point}><b>{String(i+1).padStart(2,'0')}</b><span>{point}</span></li>)}</ol></div>
+          </details>
           <TopicLessons module={module} completed={topicProgress} onToggle={i=>onToggleTopic(key,i)}/>
-          <FormationLab moduleId={module.id}/>
-          <div className="formation-stage-footer"><p>Lis la théorie, essaie de reformuler le concept, puis explore le code.</p><button className="formation-primary-action" type="button" onClick={()=>setStage('pratiquer')}>Passer à la pratique <span aria-hidden="true">→</span></button></div>
+          <details className="learning-context-details learning-context-details--lab">
+            <summary>Laboratoire supplémentaire du module</summary>
+            <FormationLab moduleId={module.id}/>
+          </details>
+          <div className="formation-stage-footer"><p>À chaque notion : un exemple visuel, quelques lignes commentées, un résultat expliqué et un contrôle de compréhension.</p><button className="formation-primary-action" type="button" onClick={()=>setStage('pratiquer')}>Passer au projet du module <span aria-hidden="true">→</span></button></div>
         </div>}
         {stage==='pratiquer' && <div className="formation-content-section" role="tabpanel">
           <span className="formation-eyebrow">02 · APPLICATION GUIDÉE</span><h2>Observer le code et ses résultats</h2><p>Exemple autonome à reproduire dans un notebook. Lis les commentaires, exécute, puis modifie les paramètres pour vérifier ce que tu as compris.</p>
