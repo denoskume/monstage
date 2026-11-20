@@ -14,6 +14,17 @@ import { PythonConceptVisual, type PythonDiagramKind } from './PythonConceptVisu
 import { downloadConceptNotebook } from './conceptNotebook';
 import { DeepConceptVisual } from './DeepConceptVisual';
 
+const ARTICLE_PROGRESS_STORAGE='monstage:formations:articles:read:v1';
+function articleFromHash():string|null {
+ const query=window.location.hash.split('?')[1]||'';
+ return new URLSearchParams(query).get('article');
+}
+function readArticlesStudied():string[]{
+ try{
+  const found=JSON.parse(window.localStorage.getItem(ARTICLE_PROGRESS_STORAGE)||'[]') as unknown;
+  return Array.isArray(found)?found.filter((v):v is string=>typeof v==='string'):[];
+ }catch{return [];}
+}
 const articleDiagrams:Record<string,PythonDiagramKind> = {
  'python-introduction':'python-flow', 'jupyter-notebook':'jupyter',
  'python-variables':'variables','python-data-types':'types','python-operators':'operators',
@@ -119,8 +130,32 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
  track:FormationTrack;module:FormationModule;learned:number[];onToggle:(index:number)=>void;onPractice:()=>void;onValidate:()=>void;
 }) {
  const concepts=useMemo(()=>deepConceptsFor(module.id),[module.id]);
- const [selectedSlug,setSelectedSlug]=useState<string|null>(null);
- useEffect(()=>{setSelectedSlug(null);},[module.id]);
+ const [selectedSlug,setSelectedSlug]=useState<string|null>(articleFromHash);
+ const [studied,setStudied]=useState<string[]>(readArticlesStudied);
+ useEffect(()=>{
+   const sync=()=>setSelectedSlug(articleFromHash());
+   sync();
+   window.addEventListener('popstate',sync);
+   window.addEventListener('hashchange',sync);
+   return ()=>{window.removeEventListener('popstate',sync);window.removeEventListener('hashchange',sync);};
+ },[module.id]);
+ function selectArticle(slug:string){
+   setSelectedSlug(slug);
+   if(window.location.hash){
+     const [pathname,search='']=window.location.hash.slice(1).split('?');
+     const params=new URLSearchParams(search);
+     params.set('article',slug);
+     window.history.replaceState(null,'',window.location.pathname+window.location.search+'#'+pathname+'?'+params.toString());
+   }
+   const top=document.querySelector('.course-article__header');
+   if(top&&typeof top.scrollIntoView==='function')top.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ function toggleStudied(slug:string){
+   const key=track.id+':'+module.id+':'+slug;
+   const next=studied.includes(key)?studied.filter(x=>x!==key):[...studied,key];
+   setStudied(next);
+   try{window.localStorage.setItem(ARTICLE_PROGRESS_STORAGE,JSON.stringify(next));}catch{/* progress remains in memory */}
+ }
  const selectedIndex=concepts.findIndex(x=>x.slug===(selectedSlug??concepts[0]?.slug));
  const concept=selectedIndex>=0?concepts[selectedIndex]:undefined;
  const article=useMemo(()=>{
@@ -145,8 +180,8 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
  function scrollTo(id:string) {const target=document.getElementById(prefix+id);if(target&&typeof target.scrollIntoView==='function')target.scrollIntoView({behavior:'smooth',block:'start'});}
  return <div className="course-article-shell">
    {concepts.length>0&&<nav className="course-article-library" aria-label="Articles complets du module">
-     <div className="course-article-library__heading"><span>{module.title.toUpperCase()} · COURS INDIVIDUELS</span><h2>{concepts.length} articles approfondis : {module.title}</h2><p>Choisis une notion. Chaque article contient son introduction, ses explications progressives, plusieurs exemples de code, leurs sorties, des erreurs fréquentes et une FAQ.</p></div>
-     <ol>{concepts.map((item,i)=><li key={item.slug}><button type="button" className={concept?.slug===item.slug?'is-current':''} aria-current={concept?.slug===item.slug?'page':undefined} onClick={()=>setSelectedSlug(item.slug)}><span>{String(i+1).padStart(2,'0')}</span><strong>{item.article.title.replace(': A Complete Beginner’s Guide','').replace(': A Beginner’s Guide','')}</strong><span aria-hidden="true">›</span></button></li>)}</ol>
+     <div className="course-article-library__heading"><span>{module.title.toUpperCase()} · COURS INDIVIDUELS</span><h2>{concepts.length} articles approfondis : {module.title}</h2><p>Choisis une notion. Chaque article contient son introduction, ses explications progressives, plusieurs exemples de code, leurs sorties, des erreurs fréquentes et une FAQ.</p><small>{concepts.filter(item=>studied.includes(track.id+':'+module.id+':'+item.slug)).length} / {concepts.length} articles étudiés</small></div>
+     <ol>{concepts.map((item,i)=><li key={item.slug}><button type="button" className={concept?.slug===item.slug?'is-current':''} aria-current={concept?.slug===item.slug?'page':undefined} onClick={()=>selectArticle(item.slug)}><span>{String(i+1).padStart(2,'0')}</span><strong>{item.article.title.replace(': A Complete Beginner’s Guide','').replace(': A Beginner’s Guide','')}</strong><span aria-hidden="true">{studied.includes(track.id+':'+module.id+':'+item.slug)?'✓':'›'}</span></button></li>)}</ol>
    </nav>}
    <article className="course-article" aria-label={article.title}>
    <header className="course-article__header">
@@ -203,8 +238,9 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
      <details><summary>Voir mon suivi des objectifs du module ({learned.length}/{module.points.length})</summary>
        <div className="course-article__checks">{module.points.map((topic,index)=><label key={index}><input type="checkbox" checked={learned.includes(index)} onChange={()=>onToggle(index)}/>{topic}</label>)}</div>
      </details>
+     {concept&&<button className="course-article__studied" type="button" aria-pressed={studied.includes(track.id+':'+module.id+':'+concept.slug)} onClick={()=>toggleStudied(concept.slug)}>{studied.includes(track.id+':'+module.id+':'+concept.slug)?'✓ Article étudié — marquer comme à revoir':'○ Marquer cette notion comme étudiée'}</button>}
      {concept&&<div className="course-article__notebook"><strong>Notebook de cette notion</strong><p>Un carnet Jupyter contient toutes les explications et tous les exemples de cet article, avec une cellule distincte par opération et les résultats attendus.</p><button className="formation-secondary-action" type="button" onClick={()=>downloadConceptNotebook(concept)}>↓ Télécharger le notebook complet de cet article (.ipynb)</button></div>}
-     {concept&&selectedIndex<concepts.length-1&&<button className="course-article-library__next" type="button" onClick={()=>setSelectedSlug(concepts[selectedIndex+1].slug)}>Article suivant : {concepts[selectedIndex+1].article.title} →</button>}
+     {concept&&selectedIndex<concepts.length-1&&<button className="course-article-library__next" type="button" onClick={()=>selectArticle(concepts[selectedIndex+1].slug)}>Article suivant : {concepts[selectedIndex+1].article.title} →</button>}
      <div className="course-article__actions"><button className="formation-primary-action" type="button" onClick={onPractice}>Pratiquer avec le projet du module →</button><button className="formation-secondary-action" type="button" onClick={onValidate}>Évaluer mes connaissances</button></div>
    </section>
  </article></div>;
