@@ -10,6 +10,8 @@ import { AdvancedImageLab } from './AdvancedImageLabs';
 import { DataWorkbench } from './DataWorkbench';
 import { topicGuide } from './TopicLessons';
 import { CourseArticle } from './CourseArticle';
+import { deepConceptsFor } from './deepConceptIndex';
+import { conceptNotebookSource } from './conceptNotebook';
 import { validateFormationBackup } from './formationBackup';
 import { mathematicsNotes } from './mathematicsNotes';
 import { AuthContext } from '../../auth/useAuth';
@@ -91,6 +93,12 @@ function downloadTrack(track: FormationTrack) {
     const prefix = String(i+1).padStart(2,'0') + '-' + module.id;
     const name = prefix + '/00-notebook-module.ipynb';
     archive[name] = strToU8(notebookSource(track, module));
+    // The independent, fully authored articles are exported separately in addition
+    // to the existing short reference notebooks, never replacing prior material.
+    deepConceptsFor(module.id).forEach((lesson,index)=>{
+      archive[prefix+'/articles-complets/'+String(index+1).padStart(2,'0')+'-'+lesson.slug+'.ipynb']=
+        strToU8(conceptNotebookSource(lesson));
+    });
     module.points.forEach((point, j) => {
       const guide = topicGuide(point, module);
       const markdown = (source:string) => ({cell_type:'markdown',metadata:{},source});
@@ -113,7 +121,7 @@ function downloadTrack(track: FormationTrack) {
   });
   archive['LIRE-AVANT-DE-COMMENCER.md'] = strToU8(
     '# ' + track.title + '\n\n' + track.objective + '\n\n' +
-    'L’archive comprend un notebook complet par module et un notebook ciblé pour chaque notion du sommaire. Tous utilisent le cas pratique du module comme fil conducteur.\n' +
+    'L’archive comprend un notebook par module, ses références ciblées et, lorsqu’ils ont été rédigés, les articles complets dans le dossier articles-complets de chaque module.\n' +
     'Les notebooks Python peuvent être importés dans Jupyter ou Google Colab. Les exemples SQL, Excel et DAX doivent être exécutés dans leurs outils respectifs.\n\n' +
     track.modules.map((m,i)=> (i+1) + '. ' + m.title).join('\n') + '\n'
   );
