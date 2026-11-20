@@ -83,6 +83,16 @@ describe('complete individual notion articles',()=>{
     expect(screen.getByRole('heading',{name:'Pandas GroupBy, Aggregation and Pivot Tables: A Beginner’s Guide'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Calculate Several Indicators with agg'})).toBeInTheDocument();
   });
+  it('covers each Python image-processing notion with six full articles, including reusable fundamentals',()=>{
+    const lessons=deepConceptsFor('python-images');
+    expect(lessons.map(x=>x.slug)).toEqual([
+      'jupyter-notebook','numpy-shape-dtype','image-roi-slicing',
+      'image-boolean-masks','image-vectorization-clipping','image-compare-matplotlib'
+    ]);
+    expect(lessons).toHaveLength(6);
+    expect(lessons.every(x=>x.article.sections.length>=6)).toBe(true);
+    expect(lessons.every(x=>x.article.sections.filter(s=>s.code).length>=5)).toBe(true);
+  });
   it('separates variables, data types, built-in functions and user-defined functions',()=>{
     const articles=deepConceptsFor('python');
     expect(articles.find(a=>a.slug==='python-variables')?.article.sections.some(s=>s.title.includes('Assignment'))).toBe(true);
