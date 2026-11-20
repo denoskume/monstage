@@ -21,7 +21,7 @@ describe('Formations pages',()=>{
   it('provides continuous article, article TOC, module practice and validated completion',async()=>{
     const user=userEvent.setup();
     mount('/formations/traitement-images/images-pixels');
-    expect(screen.getByRole('heading',{name:/Images numériques, pixels et signaux 2D — A Beginner/})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:/Pixels, Rows and Columns: A Complete Beginner/})).toBeInTheDocument();
     expect(screen.getByRole('navigation',{name:'Table of contents'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'TL;DR Summary'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'Common Mistakes Beginners Make'})).toBeInTheDocument();
