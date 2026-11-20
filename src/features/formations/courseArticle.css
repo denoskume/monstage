@@ -92,3 +92,136 @@
 .course-article-frames svg{display:block;width:100%;height:auto;border-radius:5px}
 .course-article-frames span{display:block;text-align:center;margin-top:5px;font-size:.7rem;color:#667b88}
 @media(max-width:600px){.course-article-diagram__steps{gap:4px}.image-demo{height:50px;font-size:1.9rem}.course-article-diagram__steps>div strong{font-size:.61rem}.course-article-canny{grid-template-columns:repeat(3,minmax(0,1fr))}.course-article-frames{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Each teaching notion is a self-contained reading page, not a short entry in the module. */
+.course-article-shell{max-width:940px;min-width:0}
+.course-article-library{background:#fff;color:#24313c;border:1px solid #e0e6eb;border-radius:7px;padding:24px 24px 15px;margin-bottom:20px}
+.course-article-library__heading>span{display:block;font-size:.66rem;letter-spacing:.1em;color:#13816d;font-weight:800;margin-bottom:8px}
+.course-article-library__heading h2{font-size:1.27rem;line-height:1.36;font-weight:800;letter-spacing:-.025em;margin:0 0 8px;color:#1f2d38}
+.course-article-library__heading p{font-size:.87rem;line-height:1.7;color:#637480;margin:0 0 15px}
+.course-article-library ol{list-style:none;margin:0;padding:5px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 9px}
+.course-article-library li{min-width:0}
+.course-article-library li button{width:100%;min-width:0;display:grid;grid-template-columns:24px minmax(0,1fr) 12px;gap:10px;align-items:center;text-align:left;padding:11px 10px;border:1px solid #e4e9ee;background:#f9fafb;color:#465767;border-radius:7px;cursor:pointer}
+.course-article-library li button>span:first-child{font-size:.65rem;font-weight:850;color:#238b79}
+.course-article-library li button>span:last-child{font-size:1.1rem;color:#929ca4}
+.course-article-library li button strong{font-size:.75rem;line-height:1.5;font-weight:650}
+.course-article-library li button:hover{border-color:#80baaa;background:#f2fbf6}
+.course-article-library li button.is-current{background:#e9f8f2;border-color:#2aaa8e;color:#215a50;box-shadow:inset 3px 0 #189b82}
+.course-article-library li button:focus-visible{outline:3px solid #54ac9a;outline-offset:2px}
+.course-article-library__next{width:100%;text-align:left;padding:12px 15px;margin:12px 0;border:1px solid #7fbaa9;border-radius:8px;background:#eaf8f2;color:#187862;font-size:.81rem;font-weight:750;line-height:1.5;cursor:pointer}
+.course-article-library__next:hover{background:#d7f3e8}
+@media(max-width:720px){.course-article-library{padding:16px 12px}.course-article-library ol{grid-template-columns:1fr}.course-article-library__heading h2{font-size:1.05rem}}
+
+/* Fully explained Python concept figures */
+.python-concept-figure{border:1px solid #dce8e4;background:#f8fbfa;border-radius:10px;margin:22px 0 26px;overflow:hidden}
+.python-concept-figure__heading{padding:14px 19px;border-bottom:1px solid #dce8e4;background:#eff9f4;display:grid;gap:4px}
+.python-concept-figure__heading>span{font-size:.62rem;letter-spacing:.13em;color:#278a71;font-weight:850}
+.python-concept-figure__heading>strong{font-size:.9rem;color:#263e3c}
+.python-concept-figure__body{padding:19px 15px}
+.python-concept-figure figcaption{padding:12px 19px;color:#687883;font-size:.73rem;line-height:1.6;border-top:1px solid #dde9e2}
+.python-concept-flow{display:flex;align-items:stretch;gap:7px;justify-content:center;flex-wrap:wrap}
+.python-concept-flow__part{background:#fff;border:1px solid #bdded3;border-radius:8px;min-width:90px;flex:1 1 96px;max-width:180px;padding:11px 9px;display:grid;gap:6px}
+.python-concept-flow__part span{font-size:.61rem;color:#1d9b81;font-weight:900}
+.python-concept-flow__part strong{font-size:.76rem;color:#244d46}
+.python-concept-flow__part small{font-size:.67rem;color:#697b79;line-height:1.4}
+.python-concept-jupyter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.python-concept-jupyter>div{display:grid;gap:6px;background:#fff;border:1px solid #d8e5dd;border-radius:8px;padding:13px}
+.python-concept-jupyter span{font-size:.64rem;color:#218872;font-weight:800}
+.python-concept-jupyter strong{font-size:.83rem}
+.python-concept-jupyter small{font-size:.74rem;color:#6a797d}
+.python-concept-jupyter code{font-size:.77rem;background:#eef3ef;padding:7px;border-radius:5px}
+.python-concept-jupyter .python-concept-jupyter__out{font-size:1.6rem;color:#187d68}
+.python-concept-pairs{display:grid;gap:11px;max-width:520px;margin:auto}
+.python-concept-pairs>div{display:grid;grid-template-columns:minmax(100px,1fr) 30px minmax(90px,1.2fr);gap:10px;align-items:center;text-align:center}
+.python-concept-pairs code{font-size:.82rem;background:#e2f7ec;border:1px solid #a6daca;border-radius:6px;padding:10px;color:#176c5d;overflow-wrap:anywhere}
+.python-concept-pairs b{font-size:1.3rem;color:#438d7e}
+.python-concept-pairs strong{font-size:.88rem;background:#fff;border:1px solid #cadfd6;border-radius:6px;padding:10px;overflow-wrap:anywhere}
+.python-concept-types{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.python-concept-types>div{display:grid;justify-items:center;gap:7px;background:#fff;border:1px solid #d9e8df;padding:13px 6px;border-radius:8px;min-width:0}
+.python-concept-types code{font-size:.68rem;color:#148970}
+.python-concept-types strong{font-size:.84rem;color:#2e404a}
+.python-concept-types small{font-size:.62rem;color:#72848c}
+.python-concept-indexed{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.python-concept-indexed>div{border:1px solid #a8d8c8;border-radius:8px;background:#fff;display:grid;justify-items:center;gap:7px;padding:10px 7px;min-width:74px}
+.python-concept-indexed span{font-size:.65rem;color:#248b76}
+.python-concept-indexed strong{font-size:1.35rem;color:#294d45}
+.python-concept-indexed small{font-size:.66rem;color:#7d8d8f}
+.python-concept-dict{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-width:450px;margin:auto}
+.python-concept-dict>*{display:grid;place-items:center;padding:10px 8px;min-width:0;background:#fff;border:1px solid #dae8df;border-radius:4px;font-size:.79rem;overflow-wrap:anywhere}
+.python-concept-dict>span{background:#dff4e9;color:#216e5d;font-weight:850}
+.python-concept-dict code{color:#147a66}
+.python-concept-decision>strong{display:block;text-align:center;max-width:360px;margin:0 auto 20px;padding:14px;border:2px solid #8dcbb7;border-radius:9px;background:#f6fff9;color:#186e5c}
+.python-concept-decision>div{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.python-concept-decision>div>span{padding:12px 8px;text-align:center;border:1px solid #bbd9cf;border-radius:8px;background:#fff;font-size:.74rem;font-weight:750;color:#42635c}
+.python-concept-functions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.python-concept-functions>div{display:grid;gap:7px;justify-items:center;text-align:center;background:#fff;border:1px solid #d9e4dc;border-radius:8px;padding:11px 6px}
+.python-concept-functions>div:first-child{grid-column:1/-1;background:#eaf7ef}
+.python-concept-functions code{font-size:.72rem;color:#247f67;overflow-wrap:anywhere}
+.python-concept-functions b{font-size:1.3rem;color:#34585a}
+.python-concept-json{max-width:540px;margin:auto;background:#1e3641;color:#d5f5e9;padding:19px;border-radius:8px;font-size:.76rem;line-height:1.8;overflow:auto}
+.python-concept-json>div{padding-left:16px}
+.python-concept-json__nested{padding-left:38px!important}
+.python-concept-json code{color:#96e6c9}
+@media(max-width:680px){.python-concept-types{grid-template-columns:repeat(3,minmax(0,1fr))}.python-concept-functions{grid-template-columns:1fr 1fr}.python-concept-flow__part{min-width:105px}}
+@media(max-width:480px){.python-concept-jupyter{grid-template-columns:1fr}.python-concept-types{grid-template-columns:repeat(2,minmax(0,1fr))}.python-concept-flow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.python-concept-flow__part{max-width:unset;min-width:0}.python-concept-pairs>div{grid-template-columns:minmax(70px,1fr) 14px minmax(70px,1fr);gap:5px}}
+
+.course-article__notebook{margin:18px 0;padding:18px 20px;border:1px solid #bfdfd4;background:#edf9f4;border-radius:9px}
+.course-article__notebook>strong{display:block;color:#215d4f;font-size:.9rem;margin:0 0 7px}
+.course-article__notebook>p{margin:0 0 12px!important;line-height:1.65!important;font-size:.78rem!important;color:#527266!important}
+.course-article__notebook button{background:#fff;border:1px solid #91c7b6;color:#1a705c;font-size:.8rem;line-height:1.5}
+
+/* Real, concept-specific figures for the NumPy / Pandas / OpenCV standalone courses */
+.concept-deep-visual{border:1px solid #d7e4de;background:#fafdfb;border-radius:9px;overflow:hidden;margin:22px 0 26px}
+.concept-deep-visual__head{display:grid;gap:5px;background:#edf8f3;border-bottom:1px solid #d7e4de;padding:14px 18px}
+.concept-deep-visual__head span{font-size:.61rem;font-weight:850;letter-spacing:.12em;color:#25896e}
+.concept-deep-visual__head strong{font-size:.93rem;color:#24473d}
+.concept-deep-visual__body{padding:20px;min-width:0}
+.concept-deep-visual figcaption{font-size:.74rem;line-height:1.6;color:#667c75;padding:12px 19px;border-top:1px solid #dae6df}
+.concept-deep-visual__table{border-collapse:collapse;font-size:.76rem;width:100%;table-layout:auto;color:#324c45}
+.concept-deep-visual__table th,.concept-deep-visual__table td{padding:9px 11px;border:1px solid #d1e1d9;white-space:nowrap;text-align:center}
+.concept-deep-visual__table th{background:#dff4e9;color:#226b56;font-weight:800}
+.concept-deep-visual__table td{background:#fff}
+.concept-deep-visual__side{display:flex;align-items:center;justify-content:center;gap:20px}
+.concept-deep-visual__reading{background:#e8f6ef;border:1px solid #bdddd0;padding:15px;border-radius:7px;min-width:150px;display:grid;gap:7px;color:#315c50}
+.concept-deep-visual__reading span{font-size:.67rem}
+.concept-deep-visual__reading strong{font-size:.89rem}
+.concept-deep-visual__reading p{font-size:.78rem!important;margin:0!important;color:#437e68!important}
+.concept-deep-visual__reading small{font-size:.72rem}
+.concept-deep-visual__stats{display:flex;gap:9px;flex-wrap:wrap}
+.concept-deep-visual__stats>div{flex:1 1 96px;min-width:0;background:white;border:1px solid #d4e7dc;border-radius:8px;padding:13px 9px;display:grid;gap:6px;text-align:center}
+.concept-deep-visual__stats span{color:#168b72;font-size:.67rem;font-weight:800}
+.concept-deep-visual__stats strong{color:#305149;font-size:1.05rem;overflow-wrap:anywhere}
+.concept-deep-visual__stats small{color:#75857e;font-size:.67rem;line-height:1.4}
+.concept-deep-visual__matrix{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;flex:1;max-width:290px}
+.concept-deep-visual__matrix button{padding:10px 0;background:#fff;color:#315a4e;border:1px solid #bfdfd1;border-radius:5px;cursor:pointer;font-size:.8rem}
+.concept-deep-visual__matrix button:hover{border-color:#19866c}
+.concept-deep-visual__matrix button.is-selected{background:#197e67;color:#fff;font-weight:850}
+.concept-deep-visual__arrows{display:flex;gap:8px;align-items:stretch;justify-content:center;flex-wrap:wrap}
+.concept-deep-visual__arrows>div{flex:1 1 112px;background:white;border:1px solid #cde1d5;border-radius:7px;padding:15px 9px;display:grid;gap:8px;align-content:center;text-align:center;min-width:0}
+.concept-deep-visual__arrows strong{color:#267a67;font-size:.81rem;overflow-wrap:anywhere}
+.concept-deep-visual__arrows small{font-size:.67rem;color:#69847b}
+.concept-deep-visual__equation{display:flex;align-items:center;justify-content:center;gap:13px;min-width:0}
+.concept-deep-visual__equation>.concept-deep-visual__table{width:auto}
+.concept-deep-visual__equation>b{color:#208c6f;font-size:1.25rem}
+.concept-deep-visual__bars{display:flex;align-items:end;justify-content:space-around;gap:10px;height:136px;border-bottom:1px solid #93b9aa;padding:0 15px}
+.concept-deep-visual__bars>div{height:100%;width:15%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.concept-deep-visual__bars>div>span{width:60%;min-height:3px;background:#268d74;border-radius:4px 4px 0 0}
+.concept-deep-visual__bars>div>small{font-size:.7rem;color:#577469}
+.concept-deep-visual__pair{display:flex;gap:12px;justify-content:center;margin-top:16px}
+.concept-deep-visual__pair strong{background:#edf7f0;border:1px solid #bfdccd;color:#246d56;padding:9px 13px;border-radius:7px;font-size:.77rem}
+.concept-deep-visual__filter label{display:grid;gap:9px;color:#47665a;font-size:.82rem}
+.concept-deep-visual__filter input{accent-color:#168d73;width:100%}
+.concept-deep-visual__filter table{margin-top:13px}
+.concept-deep-visual__channels{display:grid;gap:10px;text-align:center;min-width:130px}
+.concept-deep-visual__channels strong{font-size:.83rem;color:#236a54}
+.concept-deep-visual__channels>div{display:flex;gap:4px;justify-content:center}
+.concept-deep-visual__channels span{background:#e1f5e9;border:1px solid #add9c6;border-radius:5px;padding:13px;color:#296d58}
+.concept-deep-visual__channels small{color:#758a80;font-size:.68rem}
+.concept-deep-visual__hue{height:37px;border-radius:6px;background:linear-gradient(90deg,#ff3c4f,#ffda32,#33d77b,#2fa8eb,#8150e4,#ff3c4f);margin:0 0 13px}
+@media(max-width:720px){.concept-deep-visual__side{flex-wrap:wrap}.concept-deep-visual__equation{flex-wrap:wrap}.concept-deep-visual__body{padding:13px}.concept-deep-visual__table{font-size:.69rem}.concept-deep-visual__table th,.concept-deep-visual__table td{padding:6px}.concept-deep-visual__reading{min-width:120px}}
+
+.course-article-library__heading small{display:inline-flex;color:#176e59;background:#e8f7ee;border:1px solid #b5ddca;padding:6px 11px;border-radius:6px;font-weight:800;font-size:.73rem;margin-bottom:9px}
+.course-article__studied{width:100%;padding:12px 14px;border:1px solid #83bba4;background:#e9f8f0;color:#256e56;border-radius:8px;font-size:.83rem;font-weight:780;text-align:left;cursor:pointer;margin:10px 0}
+.course-article__studied:hover{background:#def1e5}
+.course-article__studied[aria-pressed="true"]{background:#daf2e5;color:#185f4c}
+.course-article__studied:focus-visible{outline:3px solid #2c9a76;outline-offset:2px}

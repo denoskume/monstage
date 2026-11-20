@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormationModule, FormationTrack } from './formationTypes';
 import type { CourseArticleData, ArticleSection } from './courseArticleContent';
 import { getOpenCVArticle } from './courseArticleContent';
@@ -9,7 +9,30 @@ import { visualizationArticle, spreadsheetArticle } from './visualSpreadsheetArt
 import { getLessonExample } from './lessonExamples';
 import { topicGuide } from './TopicLessons';
 import { LessonVisual } from './LessonVisual';
+import { deepConceptsFor } from './deepConceptIndex';
+import { PythonConceptVisual, type PythonDiagramKind } from './PythonConceptVisual';
+import { downloadConceptNotebook } from './conceptNotebook';
+import { DeepConceptVisual } from './DeepConceptVisual';
 
+const ARTICLE_PROGRESS_STORAGE='monstage:formations:articles:read:v1';
+function articleFromHash():string|null {
+ const query=window.location.hash.split('?')[1]||'';
+ return new URLSearchParams(query).get('article');
+}
+function readArticlesStudied():string[]{
+ try{
+  const found=JSON.parse(window.localStorage.getItem(ARTICLE_PROGRESS_STORAGE)||'[]') as unknown;
+  return Array.isArray(found)?found.filter((v):v is string=>typeof v==='string'):[];
+ }catch{return [];}
+}
+const articleDiagrams:Record<string,PythonDiagramKind> = {
+ 'python-introduction':'python-flow', 'jupyter-notebook':'jupyter',
+ 'python-variables':'variables','python-data-types':'types','python-operators':'operators',
+ 'python-lists':'lists','python-tuples':'tuples','python-dictionaries':'dictionaries',
+ 'python-conditions':'conditions','python-loops':'loops',
+ 'python-builtins':'builtins','python-user-defined-functions':'functions',
+ 'python-csv':'csv','python-json':'json','python-exceptions':'exceptions'
+};
 function createdArticle(track:FormationTrack,module:FormationModule):CourseArticleData {
   const sections:ArticleSection[]=module.points.map((topic,index)=>{
     const guide=topicGuide(topic,module),example=getLessonExample(topic,module,index);
@@ -70,6 +93,7 @@ function OpenCVMap(){
 }
 
 function ConceptVisual({visual,module}:{visual:NonNullable<ArticleSection['visual']>;module:FormationModule;pointIndex:number}){
+ if(Object.values(articleDiagrams).includes(visual as PythonDiagramKind))return <PythonConceptVisual kind={visual as PythonDiagramKind}/>;
  if(visual==='opencv')return <OpenCVMap/>;
  if(visual==='colors')return <div className="course-article-color-demo" aria-label="Comparaison des représentations d’une couleur"><div><b style={{background:'#bf3d49'}}/>RGB<br/><small>Rouge, vert, bleu</small></div><div><b style={{background:'#bf3d49'}}/>BGR<br/><small>Bleu, vert, rouge</small></div><div><b style={{background:'linear-gradient(90deg,#f34660,#faa354,#f5e55a,#5dc477,#53b7de,#9672bc)'}}/>HSV<br/><small>Teinte, saturation, valeur</small></div><p>Il s’agit de représentations numériques différentes : pour conserver l’aspect visuel, on convertit les canaux avec cv2.cvtColor.</p></div>;
  if(visual==='pixels')return <LessonVisual topic="Pixel, lignes/colonnes et origine des coordonnées" module={{...module,id:'images-pixels'}}/>;
@@ -105,11 +129,44 @@ function CodeExample({section}:{section:ArticleSection}) {
 export function CourseArticle({track,module,learned,onToggle,onPractice,onValidate}:{
  track:FormationTrack;module:FormationModule;learned:number[];onToggle:(index:number)=>void;onPractice:()=>void;onValidate:()=>void;
 }) {
- const article=useMemo(()=>articleFor(track,module),[track,module]);
+ const concepts=useMemo(()=>deepConceptsFor(module.id),[module.id]);
+ const [selectedSlug,setSelectedSlug]=useState<string|null>(articleFromHash);
+ const [studied,setStudied]=useState<string[]>(readArticlesStudied);
+ useEffect(()=>{
+   const sync=()=>setSelectedSlug(articleFromHash());
+   sync();
+   window.addEventListener('popstate',sync);
+   window.addEventListener('hashchange',sync);
+   return ()=>{window.removeEventListener('popstate',sync);window.removeEventListener('hashchange',sync);};
+ },[module.id]);
+ function selectArticle(slug:string){
+   setSelectedSlug(slug);
+   if(window.location.hash){
+     const [pathname,search='']=window.location.hash.slice(1).split('?');
+     const params=new URLSearchParams(search);
+     params.set('article',slug);
+     window.history.replaceState(null,'',window.location.pathname+window.location.search+'#'+pathname+'?'+params.toString());
+   }
+   const top=document.querySelector('.course-article__header');
+   if(top&&typeof top.scrollIntoView==='function')top.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ function toggleStudied(slug:string){
+   const key=track.id+':'+module.id+':'+slug;
+   const next=studied.includes(key)?studied.filter(x=>x!==key):[...studied,key];
+   setStudied(next);
+   try{window.localStorage.setItem(ARTICLE_PROGRESS_STORAGE,JSON.stringify(next));}catch{/* progress remains in memory */}
+ }
+ const selectedIndex=concepts.findIndex(x=>x.slug===(selectedSlug??concepts[0]?.slug));
+ const concept=selectedIndex>=0?concepts[selectedIndex]:undefined;
+ const article=useMemo(()=>{
+   if(!concept)return articleFor(track,module);
+   return {...concept.article,sections:concept.article.sections.map((part,i)=>
+     i===0?{...part,visual:articleDiagrams[concept.slug]}:part)};
+ },[concept,track,module]);
  const [copied,setCopied]=useState(false);
  const length=article.intro.join(' ').length+article.sections.map(s=>s.paragraphs.join(' ')+(s.code||'')).join(' ').length;
  const readTime=Math.max(4,Math.round(length/900));
- const prefix='course-'+module.id+'-';
+ const prefix='course-'+module.id+'-'+(concept?.slug??'overview')+'-';
  const sections = [
    {id:'tldr',title:'TL;DR Summary',depth:1},
    ...article.sections.map(s=>({id:s.id,title:s.title,depth:s.depth||1})),
@@ -121,7 +178,12 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
    try{await navigator.clipboard.writeText(window.location.href);setCopied(true);}catch{setCopied(false);}
  }
  function scrollTo(id:string) {const target=document.getElementById(prefix+id);if(target&&typeof target.scrollIntoView==='function')target.scrollIntoView({behavior:'smooth',block:'start'});}
- return <article className="course-article" aria-label={article.title}>
+ return <div className="course-article-shell">
+   {concepts.length>0&&<nav className="course-article-library" aria-label="Articles complets du module">
+     <div className="course-article-library__heading"><span>{module.title.toUpperCase()} · COURS INDIVIDUELS</span><h2>{concepts.length} articles approfondis : {module.title}</h2><p>Choisis une notion. Chaque article contient son introduction, ses explications progressives, plusieurs exemples de code, leurs sorties, des erreurs fréquentes et une FAQ.</p><small>{concepts.filter(item=>studied.includes(track.id+':'+module.id+':'+item.slug)).length} / {concepts.length} articles étudiés</small></div>
+     <ol>{concepts.map((item,i)=><li key={item.slug}><button type="button" className={concept?.slug===item.slug?'is-current':''} aria-current={concept?.slug===item.slug?'page':undefined} onClick={()=>selectArticle(item.slug)}><span>{String(i+1).padStart(2,'0')}</span><strong>{item.article.title.replace(': A Complete Beginner’s Guide','').replace(': A Beginner’s Guide','')}</strong><span aria-hidden="true">{studied.includes(track.id+':'+module.id+':'+item.slug)?'✓':'›'}</span></button></li>)}</ol>
+   </nav>}
+   <article className="course-article" aria-label={article.title}>
    <header className="course-article__header">
      <span className="course-article__category">{article.eyebrow}</span>
      <h1>{article.title}</h1>
@@ -147,6 +209,7 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
    {article.sections.map((section,index)=><section key={section.id} id={prefix+section.id} className={'course-article__section'+(section.depth===2?' is-subsection':'')}>
      {section.depth===2?<h3>{section.title}</h3>:<h2>{section.title}</h2>}
      {section.visual&&<ConceptVisual visual={section.visual} module={module} pointIndex={section.pointIndex??index}/>}
+     {concept&&index===0&&!articleDiagrams[concept.slug]&&<DeepConceptVisual key={concept.slug} slug={concept.slug}/>}
      {section.paragraphs.map((p,i)=><p key={i}>{p}</p>)}
      {section.bullets&&<ul>{section.bullets.map(b=><li key={b}>{b}</li>)}</ul>}
      <CodeExample key={section.id} section={section}/>
@@ -172,10 +235,13 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
    <section className="course-article__practice" aria-label="Poursuivre la formation">
      <h2>Passer de la lecture à la pratique</h2>
      <p>Une lecture devient une compétence lorsque tu peux exécuter le code, observer le résultat, modifier un paramètre et expliquer ton choix.</p>
-     <details><summary>Voir mon suivi des notions du module ({learned.length}/{module.points.length})</summary>
+     <details><summary>Voir mon suivi des objectifs du module ({learned.length}/{module.points.length})</summary>
        <div className="course-article__checks">{module.points.map((topic,index)=><label key={index}><input type="checkbox" checked={learned.includes(index)} onChange={()=>onToggle(index)}/>{topic}</label>)}</div>
      </details>
+     {concept&&<button className="course-article__studied" type="button" aria-pressed={studied.includes(track.id+':'+module.id+':'+concept.slug)} onClick={()=>toggleStudied(concept.slug)}>{studied.includes(track.id+':'+module.id+':'+concept.slug)?'✓ Article étudié — marquer comme à revoir':'○ Marquer cette notion comme étudiée'}</button>}
+     {concept&&<div className="course-article__notebook"><strong>Notebook de cette notion</strong><p>Un carnet Jupyter contient toutes les explications et tous les exemples de cet article, avec une cellule distincte par opération et les résultats attendus.</p><button className="formation-secondary-action" type="button" onClick={()=>downloadConceptNotebook(concept)}>↓ Télécharger le notebook complet de cet article (.ipynb)</button></div>}
+     {concept&&selectedIndex<concepts.length-1&&<button className="course-article-library__next" type="button" onClick={()=>selectArticle(concepts[selectedIndex+1].slug)}>Article suivant : {concepts[selectedIndex+1].article.title} →</button>}
      <div className="course-article__actions"><button className="formation-primary-action" type="button" onClick={onPractice}>Pratiquer avec le projet du module →</button><button className="formation-secondary-action" type="button" onClick={onValidate}>Évaluer mes connaissances</button></div>
    </section>
- </article>;
+ </article></div>;
 }
