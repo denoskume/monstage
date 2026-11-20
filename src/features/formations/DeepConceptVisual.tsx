@@ -18,6 +18,18 @@ export function DeepConceptVisual({slug}:{slug:string}){
  const [threshold,setThreshold]=useState(20);
  const matrix=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
  switch(slug){
+ case 'image-roi-slicing':return <Figure title="Une ROI est une fenêtre sur la matrice" caption="image[2:5,4:8] sélectionne les lignes 2–4 et les colonnes 4–7 ; la forme est (3,4).">
+  <div className="concept-deep-visual__side"><Table head={['x4','x5','x6','x7']} rows={[[24,25,26,27],[34,35,36,37],[44,45,46,47]]}/><div className="concept-deep-visual__reading"><span>Origine locale</span><strong>ROI[0,0] = 24</strong><small>Image[2,4] = 24</small></div></div>
+ </Figure>;
+ case 'image-boolean-masks':return <Figure title="Chaque pixel est classé True ou False" caption="Un seuil transforme la matrice de niveaux de gris en masque qui conserve les positions des pixels.">
+  <div className="concept-deep-visual__equation"><Table head={['p0','p1','p2','p3']} rows={[[50,100,150,220]]}/><b> &gt; 120 → </b><Table head={['p0','p1','p2','p3']} rows={[[0,0,1,1]]}/></div>
+ </Figure>;
+ case 'image-vectorization-clipping':return <Figure title="Augmenter l'intensité sans déborder de uint8" caption="La valeur 250 + 20 doit être limitée à 255 au lieu de produire une valeur hors plage.">
+  <div className="concept-deep-visual__equation"><Table head={['Pixel 1','Pixel 2']} rows={[[200,250]]}/><b> +20 → </b><Table head={['Pixel 1','Pixel 2']} rows={[[220,255]]}/></div>
+ </Figure>;
+ case 'image-compare-matplotlib':return <Figure title="Comparer les traitements, pas seulement la sortie" caption="Montre l'image originale, la version traitée et une mesure de leurs différences à échelle identique.">
+  <Arrows items={[[ 'Original','Matrice initiale'],['Traitement','Transformation explicite'],['Différence','Carte |après - avant|'],['Conclusion','Effet et limites']]}/>
+ </Figure>;
  case 'images-signal-2d':return <Figure title="Une image est une fonction I(y,x)" caption="Un même profil d’intensité se répète sur toutes les lignes, formant une transition verticale.">
   <Table head={['x=0','x=1','x=2','x=3','x=4']} rows={[[0,0,0,100,100],[0,0,0,100,100],[0,0,0,100,100]]}/>
  </Figure>;
