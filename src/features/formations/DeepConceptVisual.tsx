@@ -18,12 +18,26 @@ export function DeepConceptVisual({slug}:{slug:string}){
  const [threshold,setThreshold]=useState(20);
  const matrix=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
  switch(slug){
+ case 'images-signal-2d':return <Figure title="Une image est une fonction I(y,x)" caption="Un même profil d’intensité se répète sur toutes les lignes, formant une transition verticale.">
+  <Table head={['x=0','x=1','x=2','x=3','x=4']} rows={[[0,0,0,100,100],[0,0,0,100,100],[0,0,0,100,100]]}/>
+ </Figure>;
+ case 'image-resolution':return <Figure title="Largeur × hauteur = nombre de pixels" caption="Attention : l’image est annoncée comme 640 × 480, mais NumPy l’enregistre avec shape (480,640).">
+  <div className="concept-deep-visual__stats"><div><span>Largeur</span><strong>640</strong><small>Colonnes</small></div><div><span>Hauteur</span><strong>480</strong><small>Lignes</small></div><div><span>Pixels</span><strong>307 200</strong><small>640 × 480</small></div><div><span>Rapport</span><strong>4:3</strong><small>1,333...</small></div></div>
+ </Figure>;
+ case 'image-quantization':return <Figure title="Même nombre de pixels, moins de niveaux" caption="La quantification conserve ici les 8 positions, mais transforme leurs intensités vers seulement 4 niveaux.">
+  <div className="concept-deep-visual__equation"><Table head={['p0','p1','p2','p3']} rows={[[0,50,100,150]]}/><b>→</b><Table head={['p0','p1','p2','p3']} rows={[[0,0,64,128]]}/></div>
+ </Figure>;
+ case 'image-industry-examples':return <Figure title="La même logique pour trois domaines" caption="Les données et les métriques diffèrent selon la mission ; la validation reste indispensable.">
+  <div className="concept-deep-visual__stats"><div><span>INDUSTRIE</span><strong>Défauts</strong><small>Détection, vitesse, faux rejets</small></div><div><span>MÉDECINE</span><strong>Structures</strong><small>Segmentation et annotations</small></div><div><span>ROBOTIQUE</span><strong>Objets</strong><small>Localisation, calibration</small></div></div>
+ </Figure>;
  case 'numpy-introduction':return <Figure title="Des mesures à un tableau NumPy" caption="Deux lignes représentent deux machines ; trois colonnes représentent trois périodes.">
    <div className="concept-deep-visual__side"><Table head={['Période 1','Période 2','Période 3']} rows={[[20,22,24],[19,21,23]]}/><div className="concept-deep-visual__reading"><strong>ndarray</strong><p>shape = (2, 3)</p><p>ndim = 2</p><p>size = 6</p></div></div>
  </Figure>;
+ case 'image-channels':
  case 'numpy-shape-dtype':return <Figure title="Shape, ndim, dtype : trois informations différentes" caption="La forme concerne les axes ; dtype concerne la représentation des valeurs.">
    <div className="concept-deep-visual__stats"><div><span>shape</span><strong>(4, 6, 3)</strong><small>Hauteur × largeur × canaux</small></div><div><span>ndim</span><strong>3</strong><small>Trois axes</small></div><div><span>dtype</span><strong>uint8</strong><small>0–255 par composante</small></div></div>
  </Figure>;
+ case 'pixels-coordinates':
  case 'numpy-indexing':return <Figure title="Sélectionne un élément de la matrice 4×4" caption="La ligne et la colonne commencent à zéro ; modifier la sélection permet de comprendre l'indexation.">
    <div className="concept-deep-visual__side"><div className="concept-deep-visual__matrix">{matrix.map((v,i)=><button key={i} type="button" onClick={()=>setSelected(i)} className={selected===i?'is-selected':''} aria-label={'Ligne '+Math.floor(i/4)+' colonne '+i%4+' valeur '+v}>{v}</button>)}</div><div className="concept-deep-visual__reading"><span>Valeur sélectionnée</span><strong>m[{Math.floor(selected/4)},{selected%4}] = {selected}</strong><small>m[ligne, colonne]</small></div></div>
  </Figure>;
