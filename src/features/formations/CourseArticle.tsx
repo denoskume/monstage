@@ -12,6 +12,7 @@ import { LessonVisual } from './LessonVisual';
 import { deepConceptsFor } from './deepConceptIndex';
 import { PythonConceptVisual, type PythonDiagramKind } from './PythonConceptVisual';
 import { downloadConceptNotebook } from './conceptNotebook';
+import { DeepConceptVisual } from './DeepConceptVisual';
 
 const articleDiagrams:Record<string,PythonDiagramKind> = {
  'python-introduction':'python-flow', 'jupyter-notebook':'jupyter',
@@ -173,6 +174,7 @@ export function CourseArticle({track,module,learned,onToggle,onPractice,onValida
    {article.sections.map((section,index)=><section key={section.id} id={prefix+section.id} className={'course-article__section'+(section.depth===2?' is-subsection':'')}>
      {section.depth===2?<h3>{section.title}</h3>:<h2>{section.title}</h2>}
      {section.visual&&<ConceptVisual visual={section.visual} module={module} pointIndex={section.pointIndex??index}/>}
+     {concept&&index===0&&!articleDiagrams[concept.slug]&&<DeepConceptVisual key={concept.slug} slug={concept.slug}/>}
      {section.paragraphs.map((p,i)=><p key={i}>{p}</p>)}
      {section.bullets&&<ul>{section.bullets.map(b=><li key={b}>{b}</li>)}</ul>}
      <CodeExample key={section.id} section={section}/>
