@@ -219,3 +219,9 @@
 .concept-deep-visual__channels small{color:#758a80;font-size:.68rem}
 .concept-deep-visual__hue{height:37px;border-radius:6px;background:linear-gradient(90deg,#ff3c4f,#ffda32,#33d77b,#2fa8eb,#8150e4,#ff3c4f);margin:0 0 13px}
 @media(max-width:720px){.concept-deep-visual__side{flex-wrap:wrap}.concept-deep-visual__equation{flex-wrap:wrap}.concept-deep-visual__body{padding:13px}.concept-deep-visual__table{font-size:.69rem}.concept-deep-visual__table th,.concept-deep-visual__table td{padding:6px}.concept-deep-visual__reading{min-width:120px}}
+
+.course-article-library__heading small{display:inline-flex;color:#176e59;background:#e8f7ee;border:1px solid #b5ddca;padding:6px 11px;border-radius:6px;font-weight:800;font-size:.73rem;margin-bottom:9px}
+.course-article__studied{width:100%;padding:12px 14px;border:1px solid #83bba4;background:#e9f8f0;color:#256e56;border-radius:8px;font-size:.83rem;font-weight:780;text-align:left;cursor:pointer;margin:10px 0}
+.course-article__studied:hover{background:#def1e5}
+.course-article__studied[aria-pressed="true"]{background:#daf2e5;color:#185f4c}
+.course-article__studied:focus-visible{outline:3px solid #2c9a76;outline-offset:2px}
