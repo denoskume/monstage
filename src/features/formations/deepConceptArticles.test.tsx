@@ -43,13 +43,14 @@ describe('complete individual notion articles',()=>{
       expect(notebook.cells.some(c=>c.source.includes('FAQs'))).toBe(true);
     }
   });
-  it('maintains 33 independently authored, inspectable tutorials across Python, NumPy, Pandas and OpenCV',()=>{
+  it('maintains 39 independently authored, inspectable tutorials across Python, NumPy, Pandas, images and OpenCV',()=>{
     const all=[
       ...deepConceptsFor('python'),
       ...deepConceptsFor('pandas-numpy'),
-      ...deepConceptsFor('opencv-couleurs')
+      ...deepConceptsFor('opencv-couleurs'),
+      ...deepConceptsFor('images-pixels')
     ];
-    expect(all).toHaveLength(33);
+    expect(all).toHaveLength(39);
     expect(new Set(all.map(a=>a.slug)).size).toBe(33);
     for(const {slug,article} of all){
       expect(article.intro.length,slug).toBeGreaterThanOrEqual(2);
@@ -72,7 +73,7 @@ describe('complete individual notion articles',()=>{
     await user.click(within(nav).getByRole('button',{name:/HSV Colour Space/}));
     expect(screen.getByRole('heading',{name:'HSV Colour Space in OpenCV: A Complete Beginner’s Guide'})).toBeInTheDocument();
     expect(screen.getByRole('heading',{name:'OpenCV HSV Channel Ranges'})).toBeInTheDocument();
-    expect(screen.getByText('Hue, Saturation and Value')).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:/Hue, Saturation and Value Explained/})).toBeInTheDocument();
     unmount();
     const pandas=dataAnalystTrack.modules.find(m=>m.id==='pandas-numpy')!;
     render(<CourseArticle track={dataAnalystTrack} module={pandas} learned={[]}
