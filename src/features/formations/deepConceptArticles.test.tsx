@@ -5,6 +5,7 @@ import {pythonConceptArticles,deepConceptsFor} from './deepConceptIndex';
 import {CourseArticle} from './CourseArticle';
 import {dataAnalystTrack} from './dataAnalystTrack';
 import {conceptNotebookSource} from './conceptNotebook';
+import {imageProcessingTrack} from './imageProcessingTrack';
 
 describe('complete individual notion articles',()=>{
   it('does not hide brief one-paragraph definitions behind full article titles',()=>{
@@ -41,6 +42,45 @@ describe('complete individual notion articles',()=>{
       expect(notebook.cells.some(c=>c.source.includes('Common Mistakes'))).toBe(true);
       expect(notebook.cells.some(c=>c.source.includes('FAQs'))).toBe(true);
     }
+  });
+  it('maintains 33 independently authored, inspectable tutorials across Python, NumPy, Pandas and OpenCV',()=>{
+    const all=[
+      ...deepConceptsFor('python'),
+      ...deepConceptsFor('pandas-numpy'),
+      ...deepConceptsFor('opencv-couleurs')
+    ];
+    expect(all).toHaveLength(33);
+    expect(new Set(all.map(a=>a.slug)).size).toBe(33);
+    for(const {slug,article} of all){
+      expect(article.intro.length,slug).toBeGreaterThanOrEqual(2);
+      expect(article.sections.length,slug).toBeGreaterThanOrEqual(6);
+      expect(article.sections.filter(s=>s.language==='python'&&s.code).length,slug).toBeGreaterThanOrEqual(5);
+      expect(article.sections.every(s=>s.paragraphs.length>=2),slug).toBe(true);
+      expect(article.sections.every(s=>Boolean(s.output&&s.interpretation)),slug).toBe(true);
+      expect(article.mistakes.length,slug).toBeGreaterThanOrEqual(5);
+      expect(article.faq.length,slug).toBeGreaterThanOrEqual(5);
+      const notebook=JSON.parse(conceptNotebookSource({slug,pointIndex:0,article})) as {cells:{cell_type:string}[]};
+      expect(notebook.cells.filter(c=>c.cell_type==='code').length,slug).toBeGreaterThanOrEqual(6);
+    }
+  });
+  it('opens OpenCV colour and Pandas GroupBy as independent lesson pages',async()=>{
+    const user=userEvent.setup();
+    const opencv=imageProcessingTrack.modules.find(m=>m.id==='opencv-couleurs')!;
+    const {unmount}=render(<CourseArticle track={imageProcessingTrack} module={opencv} learned={[]}
+      onToggle={()=>{}} onPractice={()=>{}} onValidate={()=>{}}/>);
+    let nav=screen.getByRole('navigation',{name:'Articles complets du module'});
+    await user.click(within(nav).getByRole('button',{name:/HSV Colour Space/}));
+    expect(screen.getByRole('heading',{name:'HSV Colour Space in OpenCV: A Complete Beginner’s Guide'})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'OpenCV HSV Channel Ranges'})).toBeInTheDocument();
+    expect(screen.getByText('Hue, Saturation and Value')).toBeInTheDocument();
+    unmount();
+    const pandas=dataAnalystTrack.modules.find(m=>m.id==='pandas-numpy')!;
+    render(<CourseArticle track={dataAnalystTrack} module={pandas} learned={[]}
+      onToggle={()=>{}} onPractice={()=>{}} onValidate={()=>{}}/>);
+    nav=screen.getByRole('navigation',{name:'Articles complets du module'});
+    await user.click(within(nav).getByRole('button',{name:/GroupBy, Aggregation and Pivot Tables/}));
+    expect(screen.getByRole('heading',{name:'Pandas GroupBy, Aggregation and Pivot Tables: A Beginner’s Guide'})).toBeInTheDocument();
+    expect(screen.getByRole('heading',{name:'Calculate Several Indicators with agg'})).toBeInTheDocument();
   });
   it('separates variables, data types, built-in functions and user-defined functions',()=>{
     const articles=deepConceptsFor('python');
