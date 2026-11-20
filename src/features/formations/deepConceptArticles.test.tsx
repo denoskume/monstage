@@ -51,7 +51,7 @@ describe('complete individual notion articles',()=>{
       ...deepConceptsFor('images-pixels')
     ];
     expect(all).toHaveLength(39);
-    expect(new Set(all.map(a=>a.slug)).size).toBe(33);
+    expect(new Set(all.map(a=>a.slug)).size).toBe(39);
     for(const {slug,article} of all){
       expect(article.intro.length,slug).toBeGreaterThanOrEqual(2);
       expect(article.sections.length,slug).toBeGreaterThanOrEqual(6);
