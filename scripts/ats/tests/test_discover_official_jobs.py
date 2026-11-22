@@ -1,5 +1,9 @@
 """Deterministic checks for employer-verified public vacancy URLs."""
 import unittest
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from discover_official_jobs import candidate_plans, extract_official_jobs, dedupe_official_leads
 

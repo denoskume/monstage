@@ -11,7 +11,7 @@ import urllib.parse
 
 from discover_official_jobs import candidate_plans
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "artifacts" / "career-additional-workday-leads.json"
 
 # Every host/site pair is grounded in existing individual employer job links.

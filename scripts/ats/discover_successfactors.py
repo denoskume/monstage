@@ -12,7 +12,7 @@ import urllib.request
 
 from discover_official_jobs import extract_official_jobs, dedupe_official_leads
 
-OUTPUT = Path(__file__).resolve().parent.parent / "artifacts" / "career-successfactors-leads.json"
+OUTPUT = Path(__file__).resolve().parents[2] / "artifacts" / "career-successfactors-leads.json"
 SITES = [
     {"name": "Alstom", "domain": "alstom.com", "base": "https://jobsearch.alstom.com"},
     {"name": "Nestlé", "domain": "nestle.fr", "base": "https://jobdetails.nestle.com"},

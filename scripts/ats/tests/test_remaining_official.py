@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ingest_remaining_official import (
     CONFIG, source_matches, canonical_url, extract_listing_links, verify_html,
     publication_from_page, visible_location, JobHTML, extract_rss_job_links,

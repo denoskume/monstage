@@ -24,8 +24,8 @@ from discover_official_jobs import candidate_plans, _LinkParser
 from ingest_public_ats import ingest, fetch_json_with_backoff
 from ingest_successfactors import JobHTML, job_postings, structured_location, labelled_france_location, normalized, parse_official_date
 
-ROOT = Path(__file__).resolve().parent.parent
-CONFIG = ROOT / "scripts" / "remaining_official_sources.json"
+ROOT = Path(__file__).resolve().parents[2]
+CONFIG = ROOT / "scripts" / "ats" / "config" / "remaining_official_sources.json"
 OUTPUT = ROOT / "artifacts" / "career-remaining-13-verified.json"
 USER_AGENT = "Mozilla/5.0 (compatible; MonStageOfficialInternships/1.0)"
 MAX_LISTING_LINKS = 25

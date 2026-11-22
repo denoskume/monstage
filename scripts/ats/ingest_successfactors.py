@@ -18,7 +18,7 @@ import urllib.request
 from discover_official_jobs import candidate_plans
 from ingest_public_ats import ingest
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 DISCOVERED = ROOT / "artifacts" / "career-successfactors-leads.json"
 OUTPUT = ROOT / "artifacts" / "career-verified-official-jobs.json"
 

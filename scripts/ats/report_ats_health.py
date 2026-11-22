@@ -12,9 +12,9 @@ from pathlib import Path
 import re
 import urllib.request
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 ART = ROOT / "artifacts"
-TARGETS = ROOT / "scripts" / "target_career_sources.json"
+TARGETS = ROOT / "scripts" / "ats" / "config" / "target_career_sources.json"
 
 # Configured provider IDs are grounded in allowlists enforced by Apps Script.
 ATS_COMPANIES = {

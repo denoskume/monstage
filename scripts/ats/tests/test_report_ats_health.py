@@ -5,10 +5,10 @@ from pathlib import Path
 import sys
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from report_ats_health import report, saved_official_counts, publication_date
 
-TARGETS = json.loads((Path(__file__).parent / "target_career_sources.json").read_text(encoding="utf-8"))
+TARGETS = json.loads((Path(__file__).resolve().parents[1] / "config" / "target_career_sources.json").read_text(encoding="utf-8"))
 NOW = datetime(2026, 11, 15, 10, 0, tzinfo=timezone.utc)
 
 

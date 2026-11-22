@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from ingest_successfactors import (
     verified_job, is_official_url, parse_official_date, labelled_france_location
 )

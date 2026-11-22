@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 import pandas as pd
-SOURCE=Path(__file__).resolve().parents[1]/'src/features/training/dataAnalysis/starter_data_analysis.py'
+SOURCE=Path(__file__).resolve().parents[2]/'src/features/training/dataAnalysis/starter_data_analysis.py'
 spec=importlib.util.spec_from_file_location('data_starter',SOURCE)
 starter=importlib.util.module_from_spec(spec);spec.loader.exec_module(starter)
 class StarterTests(unittest.TestCase):

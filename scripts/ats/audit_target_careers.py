@@ -17,8 +17,8 @@ import xml.etree.ElementTree as ET
 
 from discover_official_jobs import dedupe_official_leads, extract_official_jobs
 
-ROOT = Path(__file__).resolve().parent.parent
-INVENTORY = ROOT / "scripts" / "target_career_sources.json"
+ROOT = Path(__file__).resolve().parents[2]
+INVENTORY = ROOT / "scripts" / "ats" / "config" / "target_career_sources.json"
 OUTPUT = ROOT / "artifacts"
 KEYWORDS = {
     "A": '("computer vision" OR "traitement d images" OR "vision industrielle" OR "maintenance predictive" OR "machine learning") (stage OR internship) France',

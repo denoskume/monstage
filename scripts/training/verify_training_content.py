@@ -3,7 +3,7 @@ import ast
 import json
 from pathlib import Path
 
-root = Path(__file__).resolve().parents[1] / 'src/features/training/daily'
+root = Path(__file__).resolve().parents[2] / 'src/features/training/daily'
 lessons = []
 for name in ['weeks1to4.ts', 'weeks5to8.ts']:
     text = (root / name).read_text(encoding='utf-8')

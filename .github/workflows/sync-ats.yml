@@ -4,22 +4,22 @@ on:
   push:
     paths:
       - '.github/workflows/sync-ats.yml'
-      - 'scripts/audit_target_careers.py'
-      - 'scripts/discover_official_jobs.py'
-      - 'scripts/discover_additional_workday.py'
-      - 'scripts/discover_successfactors.py'
-      - 'scripts/ingest_successfactors.py'
-      - 'scripts/remaining_official_sources.json'
-      - 'scripts/ingest_remaining_official.py'
-      - 'scripts/test_remaining_official.py'
-      - 'scripts/test_successfactors_verified.py'
-      - 'scripts/report_ats_health.py'
-      - 'scripts/test_report_ats_health.py'
-      - 'scripts/test_discover_official_jobs.py'
-      - 'scripts/ingest_public_ats.py'
-      - 'scripts/test_ingest_public_ats.py'
-      - 'scripts/test_apps_script_runner.cjs'
-      - 'scripts/target_career_sources.json'
+      - 'scripts/ats/audit_target_careers.py'
+      - 'scripts/ats/discover_official_jobs.py'
+      - 'scripts/ats/discover_additional_workday.py'
+      - 'scripts/ats/discover_successfactors.py'
+      - 'scripts/ats/ingest_successfactors.py'
+      - 'scripts/ats/config/remaining_official_sources.json'
+      - 'scripts/ats/ingest_remaining_official.py'
+      - 'scripts/ats/tests/test_remaining_official.py'
+      - 'scripts/ats/tests/test_successfactors_verified.py'
+      - 'scripts/ats/report_ats_health.py'
+      - 'scripts/ats/tests/test_report_ats_health.py'
+      - 'scripts/ats/tests/test_discover_official_jobs.py'
+      - 'scripts/ats/ingest_public_ats.py'
+      - 'scripts/ats/tests/test_ingest_public_ats.py'
+      - 'scripts/ats/tests/test_apps_script_runner.cjs'
+      - 'scripts/ats/config/target_career_sources.json'
       - 'apps-script/Code.gs'
   workflow_run:
     # Import only after the UI/backend deployment workflow has completed.
@@ -45,14 +45,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test official-source discovery and ATS ingestion safety
         run: |
-          python -m unittest discover -s scripts -p 'test_discover_official_jobs.py' -v
-          python -m unittest discover -s scripts -p 'test_ingest_public_ats.py' -v
-          python -m unittest discover -s scripts -p 'test_successfactors_verified.py' -v
-          python -m unittest discover -s scripts -p 'test_remaining_official.py' -v
-          python -m unittest discover -s scripts -p 'test_report_ats_health.py' -v
+          python -m compileall -q scripts/ats scripts/training
+          python -m unittest discover -s scripts/ats/tests -p 'test_discover_official_jobs.py' -v
+          python -m unittest discover -s scripts/ats/tests -p 'test_ingest_public_ats.py' -v
+          python -m unittest discover -s scripts/ats/tests -p 'test_successfactors_verified.py' -v
+          python -m unittest discover -s scripts/ats/tests -p 'test_remaining_official.py' -v
+          python -m unittest discover -s scripts/ats/tests -p 'test_report_ats_health.py' -v
           cp apps-script/Code.gs /tmp/monstage-apps-script-check.js
           node --check /tmp/monstage-apps-script-check.js
-          node scripts/test_apps_script_runner.cjs
+          node scripts/ats/tests/test_apps_script_runner.cjs
 
   refresh:
     # Never write into the production Sheets from an unmerged feature branch.
@@ -75,31 +76,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate official-source adapters
-        run: python -m unittest discover -s scripts -p 'test_discover_official_jobs.py' -v
+        run: python -m unittest discover -s scripts/ats/tests -p 'test_discover_official_jobs.py' -v
       - name: Audit all 30 employer career portals and public job sources
         id: audit
         continue-on-error: true
-        run: python scripts/audit_target_careers.py
+        run: python scripts/ats/audit_target_careers.py
       - name: Discover SuccessFactors employer job pages (read-only)
         id: successfactors
         continue-on-error: true
-        run: python scripts/discover_successfactors.py
+        run: python scripts/ats/discover_successfactors.py
       - name: Validate and ingest individual SuccessFactors employer pages
         id: official_pages
         continue-on-error: true
-        run: python scripts/ingest_successfactors.py
+        run: python scripts/ats/ingest_successfactors.py
       - name: Validate and ingest employer-hosted listings for the remaining 13 target groups
         id: remaining_official
         continue-on-error: true
-        run: python scripts/ingest_remaining_official.py
+        run: python scripts/ats/ingest_remaining_official.py
       - name: Discover additional verified Workday tenants (read-only pending gateway authorization)
         id: additional_workday
         continue-on-error: true
-        run: python scripts/discover_additional_workday.py
+        run: python scripts/ats/discover_additional_workday.py
       - name: Ingest Workday and Veolia SmartRecruiters jobs through runner
         id: ingest
         continue-on-error: true
-        run: python scripts/ingest_public_ats.py
+        run: python scripts/ats/ingest_public_ats.py
       - name: Verify ATS offers persisted without triggering a destructive second sync
         run: |
           python - <<'PY'
@@ -139,7 +140,7 @@ jobs:
         id: health
         if: always()
         continue-on-error: true
-        run: python scripts/report_ats_health.py
+        run: python scripts/ats/report_ats_health.py
       - name: Publish per-company A/B coverage audit
         if: always()
         uses: actions/upload-artifact@v4
