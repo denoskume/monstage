@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TARGET_COMPANIES, targetCompany, getOfferPlan, isTargetOffer, restrictOffersPayload } from '../../../shared/searchScope';
+import { TARGET_COMPANIES, targetCompany, getOfferPlan, isTargetOffer, restrictOffersPayload } from '../../../../../packages/shared/searchScope';
 
 describe('thirty target groups · A/B only', () => {
   it('targets exactly thirty groups in eight sectors', () => {

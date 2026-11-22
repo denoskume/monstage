@@ -42,7 +42,7 @@ const context = vm.createContext({
   SpreadsheetApp: {flush() {}},
 });
 vm.runInContext(
-  fs.readFileSync(path.join(__dirname, '../../../apps-script/Code.gs'), 'utf8'), context,
+  fs.readFileSync(path.join(__dirname, '../../../integrations/apps-script/Code.gs'), 'utf8'), context,
   {filename:'Code.gs'}
 );
 context.strictEligible_ = () => true;

@@ -1,7 +1,7 @@
 import type { Env } from './env';
-import { validateDataStage } from '../../src/features/training/dataAnalysis/state';
-import { validateTraining } from '../../src/features/training/training';
-import { validateFormationBackup } from '../../src/features/formations/formationBackup';
+import { validateDataStage } from '../../web/src/features/training/dataAnalysis/state';
+import { validateTraining } from '../../web/src/features/training/training';
+import { validateFormationBackup } from '../../web/src/features/formations/formationBackup';
 const ROOT = 'https://api.github.com/repos/denoskume/Candidatures_Stages/contents/';
 export async function handleTraining(env: Env, body: Record<string, unknown>): Promise<{ status: number; payload: Record<string, unknown> }> {
   const error = (status: number, message: string) => ({ status, payload: { error: message } });

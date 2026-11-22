@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   testDir: './e2e',
@@ -9,6 +10,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
+    cwd: fileURLToPath(new URL('../../', import.meta.url)),
     command: 'npm run dev -- --host 127.0.0.1',
     port: 5173,
     reuseExistingServer: !process.env.CI,

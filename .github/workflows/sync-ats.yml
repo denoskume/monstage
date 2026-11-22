@@ -20,7 +20,7 @@ on:
       - 'scripts/ats/tests/test_ingest_public_ats.py'
       - 'scripts/ats/tests/test_apps_script_runner.cjs'
       - 'scripts/ats/config/target_career_sources.json'
-      - 'apps-script/Code.gs'
+      - 'integrations/apps-script/Code.gs'
   workflow_run:
     # Import only after the UI/backend deployment workflow has completed.
     # The prior push-triggered import raced against clasp and lost the first
@@ -51,7 +51,7 @@ jobs:
           python -m unittest discover -s scripts/ats/tests -p 'test_successfactors_verified.py' -v
           python -m unittest discover -s scripts/ats/tests -p 'test_remaining_official.py' -v
           python -m unittest discover -s scripts/ats/tests -p 'test_report_ats_health.py' -v
-          cp apps-script/Code.gs /tmp/monstage-apps-script-check.js
+          cp integrations/apps-script/Code.gs /tmp/monstage-apps-script-check.js
           node --check /tmp/monstage-apps-script-check.js
           node scripts/ats/tests/test_apps_script_runner.cjs
 

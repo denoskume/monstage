@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - 'worker/src/githubArchive.ts'
-      - 'worker/test/githubArchive.test.ts'
+      - 'apps/worker/src/githubArchive.ts'
+      - 'apps/worker/test/githubArchive.test.ts'
       - '.github/workflows/archive-integration.yml'
 permissions:
   contents: read

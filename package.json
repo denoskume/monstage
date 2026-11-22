@@ -4,14 +4,14 @@
   "version": "0.3.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:worker": "npm --prefix worker test",
-    "typecheck:worker": "npm --prefix worker run typecheck"
+    "dev": "vite --config apps/web/vite.config.ts",
+    "build": "tsc -b apps/web/tsconfig.json && vite build --config apps/web/vite.config.ts",
+    "preview": "vite preview --config apps/web/vite.config.ts",
+    "test": "vitest run --config apps/web/vite.config.ts",
+    "test:watch": "vitest --config apps/web/vite.config.ts",
+    "test:e2e": "playwright test --config apps/web/playwright.config.ts",
+    "test:worker": "npm --prefix apps/worker test",
+    "typecheck:worker": "npm --prefix apps/worker run typecheck"
   },
   "dependencies": {
     "@docx-editor.dev/core": "2.39.0",

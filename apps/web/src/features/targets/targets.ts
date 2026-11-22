@@ -1,4 +1,4 @@
-import { isVisionMission, getOfferPlan, type SearchPlan } from '../../../shared/searchScope';
+import { isVisionMission, getOfferPlan, type SearchPlan } from '../../../../../packages/shared/searchScope';
 import type { InternshipOffer } from '../../api/contract';
 /** Thirty large employers in France. Both A and B share the same roster. */
 export const sectors = [

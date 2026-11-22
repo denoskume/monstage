@@ -1,4 +1,4 @@
-import { targetCompany, getOfferPlan, isTargetOffer } from '../../shared/searchScope';
+import { targetCompany, getOfferPlan, isTargetOffer } from '../../../packages/shared/searchScope';
 export interface ExternalOffer {
   id: string;
   company: string;

@@ -1,4 +1,4 @@
-import { restrictOffersPayload } from '../../shared/searchScope';
+import { restrictOffersPayload } from '../../../packages/shared/searchScope';
 import { handleTraining } from './training';
 import { AuthError, verifyAuthorizedUser } from './auth';
 import { handleGithubDocuments, moveGithubApplicationArchive } from './githubArchive';

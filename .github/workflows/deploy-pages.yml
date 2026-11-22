@@ -26,6 +26,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Verify organized workspace without modifying application data
+        run: |
+          test -f apps/web/index.html
+          test -f apps/web/src/main.tsx
+          test -f apps/worker/src/index.ts
+          test -f integrations/apps-script/Code.gs
+          test -f packages/shared/searchScope.ts
+          test ! -d src && test ! -d worker && test ! -d apps-script
       - name: Verify public auth configuration
         run: |
           test -n "$VITE_GOOGLE_CLIENT_ID" || { echo "VITE_GOOGLE_CLIENT_ID is not configured"; exit 1; }
@@ -44,15 +52,15 @@ jobs:
         run: npm run build
       - name: Scan production bundle for protected values
         run: |
-          if grep -R "script.google.com/macros/s/" dist; then
+          if grep -R "script.google.com/macros/s/" apps/web/dist; then
             echo "Apps Script URL found in production bundle"
             exit 1
           fi
-          if grep -R "@gmail.com" dist; then
+          if grep -R "@gmail.com" apps/web/dist; then
             echo "Personal email found in production bundle"
             exit 1
           fi
-          if grep -R "MONSTAGE_GATEWAY_SECRET" dist; then
+          if grep -R "MONSTAGE_GATEWAY_SECRET" apps/web/dist; then
             echo "Gateway secret identifier found in production bundle"
             exit 1
           fi
@@ -61,7 +69,7 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
         with:
-          path: dist
+          path: apps/web/dist
 
 
 
@@ -73,7 +81,7 @@ jobs:
         with:
           node-version: 22
       - name: Install Worker dependencies
-        run: npm --prefix worker install --no-audit --no-fund
+        run: npm --prefix apps/worker install --no-audit --no-fund
       - name: Worker tests
         run: npm run test:worker
       - name: Worker typecheck
@@ -175,12 +183,12 @@ jobs:
 
       - name: Install Worker dependencies
         if: steps.cloudflare.outputs.configured == 'true'
-        run: npm --prefix worker install --no-audit --no-fund
+        run: npm --prefix apps/worker install --no-audit --no-fund
       - name: Deploy Cloudflare Worker
         if: steps.cloudflare.outputs.configured == 'true'
         run: |
           for attempt in 1 2 3; do
-            npm --prefix worker run deploy && break
+            npm --prefix apps/worker run deploy && break
             [ "$attempt" = 3 ] && exit 1
             sleep $((attempt * 5))
           done
@@ -188,7 +196,7 @@ jobs:
         if: steps.cloudflare.outputs.configured == 'true'
         run: |
           if [ -n "$GITHUB_ARCHIVE_TOKEN" ]; then
-            printf '%s' "$GITHUB_ARCHIVE_TOKEN" | npx wrangler secret put GITHUB_ARCHIVE_TOKEN --config worker/wrangler.toml
+            printf '%s' "$GITHUB_ARCHIVE_TOKEN" | npx wrangler secret put GITHUB_ARCHIVE_TOKEN --config apps/worker/wrangler.toml
             echo "Private GitHub archive token configured in Cloudflare Worker."
           else
             echo "::warning::MONSTAGE_ARCHIVE_GITHUB_TOKEN is not configured; private PDF archiving will remain disabled."
@@ -307,7 +315,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: .monstage-apps-deployed-marker
-          key: monstage-apps-deployed-${{ hashFiles('apps-script/**') }}
+          key: monstage-apps-deployed-${{ hashFiles('integrations/apps-script/**') }}
       - name: Check if Apps Script backend actually needs deployment
         id: apps_changed
         shell: bash
@@ -341,7 +349,7 @@ jobs:
           exit 1
       - name: Deploy Apps Script
         if: steps.apps_changed.outputs.changed == 'true' && steps.clasp.outputs.configured == 'true'
-        working-directory: apps-script
+        working-directory: integrations/apps-script
         run: |
           printf '%s' "$CLASPRC_JSON" > "$HOME/.clasprc.json"
           printf '{"scriptId":"%s","rootDir":"."}\n' "$APPS_SCRIPT_SCRIPT_ID" > .clasp.json
@@ -362,7 +370,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: .monstage-apps-deployed-marker
-          key: monstage-apps-deployed-${{ hashFiles('apps-script/**') }}
+          key: monstage-apps-deployed-${{ hashFiles('integrations/apps-script/**') }}
 
   deploy:
     if: github.ref == 'refs/heads/main'
