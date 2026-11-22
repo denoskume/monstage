@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import './strategy.css';
-import { PLAN_LABELS, type SearchPlan } from '../../../shared/searchScope';
+import { PLAN_LABELS, type SearchPlan } from '../../../../../packages/shared/searchScope';
 
 type SkillId = 'offers' | 'spontaneous' | 'outreach' | 'profile' | 'interviews';
 type Status = 'planned' | 'in_progress' | 'completed';

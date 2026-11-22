@@ -1,4 +1,4 @@
-import { isTargetOffer } from '../../../shared/searchScope';
+import { isTargetOffer } from '../../../../../packages/shared/searchScope';
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { EmptyState } from '../../components/EmptyState';
