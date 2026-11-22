@@ -1,4 +1,4 @@
-import { isTargetOffer, getOfferPlan, PLAN_LABELS, type SearchPlan } from '../../../shared/searchScope';
+import { isTargetOffer, getOfferPlan, PLAN_LABELS, type SearchPlan } from '../../../../../packages/shared/searchScope';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
