@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const source = readFileSync(resolve(process.cwd(), 'apps-script/Code.gs'), 'utf8');
+const source = readFileSync(resolve(process.cwd(), 'integrations/apps-script/Code.gs'), 'utf8');
 
 test('Apps Script exposes offers only through secret-gated POST', () => {
   expect(source).toContain("getProperty('MONSTAGE_GATEWAY_SECRET')");

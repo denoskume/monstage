@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { it, expect } from 'vitest';
 import { TARGET_COMPANIES, targetCompany, isVisionMission, isTargetOffer } from '../../../../../packages/shared/searchScope';
 
 it('keeps Apps Script ingestion aligned with the same 30-company A/B scope', () => {
-  const source = readFileSync(fileURLToPath(new URL('../../../../../integrations/apps-script/Code.gs', import.meta.url)),'utf8');
+  const source = readFileSync(resolve(process.cwd(), 'integrations/apps-script/Code.gs'),'utf8');
   const helper = source.slice(source.indexOf('var TARGET_COMPANY_GROUPS_'),source.indexOf('function targetSignalScore_'));
   const ctx = runInNewContext(helper + ';({groups:TARGET_COMPANY_GROUPS_,company:strictCompany_,vision:strictVision_,relevant:strictRelevant_,eligible:strictEligible_})');
   expect(JSON.parse(JSON.stringify(ctx.groups))).toEqual(TARGET_COMPANIES);

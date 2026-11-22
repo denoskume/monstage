@@ -1,4 +1,4 @@
-import { isTargetOrTrackedOffer } from '../../shared/searchScope';
+import { isTargetOrTrackedOffer } from '../../../../packages/shared/searchScope';
 import type { OffersApiResponse } from './contract';
 import { ApiAuthError, apiBaseUrl } from './authClient';
 

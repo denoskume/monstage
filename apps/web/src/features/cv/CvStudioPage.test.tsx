@@ -26,7 +26,7 @@ describe('Studio CV — éditeur HTML unique', () => {
   });
 
   test('sert le fichier HTML approuvé avec A/B, édition directe et exports PDF/Word', () => {
-    const html = readFileSync(resolve('public/cv/thierry-editor.html'), 'utf8');
+    const html = readFileSync(resolve('apps/web/public/cv/thierry-editor.html'), 'utf8');
     expect(html).toContain('data-tab="B"');
     expect(html).toContain('Data Scientist');
     expect(html).toContain('contenteditable');
@@ -37,7 +37,7 @@ describe('Studio CV — éditeur HTML unique', () => {
     expect(html).toContain('Expériences acquises :');
   });
   test('propose une barre mini-Word et permet l’édition de tous les titres de sections', () => {
-    const html = readFileSync(resolve('public/cv/thierry-editor.html'), 'utf8');
+    const html = readFileSync(resolve('apps/web/public/cv/thierry-editor.html'), 'utf8');
     for (const control of [
       'font-family','font-size','font-color','highlight-color','block-bg',
       'paper-bg','sidebar-bg','underline','strike','align-left','align-center',

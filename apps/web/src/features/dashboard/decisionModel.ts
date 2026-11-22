@@ -1,5 +1,5 @@
 import type { InternshipOffer } from '../../api/contract';
-import { getOfferPlan, isDataAnalystMission, isVisionMission, targetCompany } from '../../../shared/searchScope';
+import { getOfferPlan, isDataAnalystMission, isVisionMission, targetCompany } from '../../../../../packages/shared/searchScope';
 import { sectors, dateKey, followUpDue, matchesCompany } from '../targets/targets';
 
 export type DashboardPlan = 'all' | 'A' | 'B';

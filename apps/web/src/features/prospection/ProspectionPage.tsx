@@ -1,4 +1,4 @@
-import { isTargetOffer, getOfferPlan, PLAN_LABELS, type SearchPlan } from '../../../shared/searchScope';
+import { isTargetOffer, getOfferPlan, PLAN_LABELS, type SearchPlan } from '../../../../../packages/shared/searchScope';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import './ProspectionPage.css';

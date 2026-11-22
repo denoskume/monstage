@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { InternshipOffer } from '../../api/contract';
-import { getOfferPlan, targetCompany } from '../../../shared/searchScope';
+import { getOfferPlan, targetCompany } from '../../../../../packages/shared/searchScope';
 import { sectors, dateKey, wasSent } from '../targets/targets';
 
 const CALL_NOTES_KEY = 'monstage:company-call-notes:v1';
