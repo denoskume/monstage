@@ -35,22 +35,14 @@ export const TARGET_COMPANIES = [
   ['EDF', 'edf'], ['ENGIE', 'engie', 'grdf'], ['L’Oréal', 'l oreal', 'loreal'],
 ] as const;
 
-/** Major employers outside the 30-group monitoring baseline, admitted after the
- * user's 16 Nov 2026 expansion. Preserve TARGET_COMPANIES as the core 30.
- * Only genuine Plan A/B internships qualify; this is not a blanket import of
- * unrelated offers or already rejected applications.
+/** Named employers are a ranking preference, NEVER a gate on discoveries.
+ * The internship mission (Plan A / Plan B), not the corporate name, defines scope.
  */
 export const EXPANDED_LARGE_EMPLOYERS = [
   ['Groupe Atlantic', 'groupe atlantic'],
   ['Caterpillar', 'caterpillar'],
   ['RTE', 'rte reseau de transport electricite', 'rte'],
 ] as const;
-
-function additionalLargeEmployer(company: string | null | undefined): boolean {
-  const normalized = ' ' + normalizeScope(company) + ' ';
-  return EXPANDED_LARGE_EMPLOYERS.some(([, ...aliases]) =>
-    aliases.some(alias => normalized.includes(' ' + normalizeScope(alias) + ' ')));
-}
 
 function matchingCompany(company: string | null | undefined): string | null {
   const text = ' ' + normalizeScope(company) + ' ';
@@ -108,30 +100,30 @@ export function isIndustrialMachineLearningMission(offer: ScopeOffer): boolean {
     && INDUSTRIAL_ML_TITLE.test(title) && INDUSTRIAL_ML_CONTEXT.test(context);
 }
 /** Explicit Data Analyst role takes Plan B precedence even when the department mentions imaging. */
+/** Nationwide discovery in fields relevant to the user's MSc.
+ * Location and the 30 target companies affect ranking only. Tracking is kept
+ * independent from discovery, so previous applications remain untouched.
+ */
+const APPLIED_ML_ROLE = /\b(machine learning|deep learning|apprentissage automatique|apprentissage profond|ml engineer|machine learning engineer|ingenieur ia|ingenieure ia|ai engineer|ingenieur intelligence artificielle|artificial intelligence|intelligence artificielle|computer vision|signal processing|traitement du signal|audio signal|image processing|robotic perception|perception robotique|data scientist|data science|scientifique des donnees|science des donnees)\b/;
+const SIGNAL_AND_ROBOTICS = /\b(signal|audio|acoustique|speech|lidar|radar|robotique|robotics|robotique mobile|systemes autonomes|autonomous systems|calibration de camera)\b/;
+const ENGINEERING_CONTEXT = /\b(python|pytorch|tensorflow|opencv|machine learning|deep learning|vision|imagerie|traitement d images|segmentation|classification|capteurs|sensors|algorithme|algorithm|intelligence artificielle|image processing|signal processing)\b/;
+
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
-  // Explicit user-saved application outside the automated 30-company discovery scope.
-  // Do not add BNP Paribas to TARGET_COMPANIES or expand the automatic monitoring perimeter.
-  if (offer.id === 'BNP-RHG27-002'
-      && normalizeScope(offer.company) === 'bnp paribas'
-      && normalizeScope(offer.title).includes('stage data analyst rh power bi')) return 'B';
-  // Reserved ID namespace for manually verified major-employer internships written
-  // into the authenticated MonStage source after official offer validation.
-  // It lets future user-approved employers appear without adding arbitrary
-  // historical search results or weakening Plan A/B eligibility checks.
-  const manuallyVerifiedMajorEmployer = /^MST-[A-Z0-9-]{4,}$/i.test(offer.id || '');
-  if (!(matchingCompany(offer.company) || additionalLargeEmployer(offer.company) || manuallyVerifiedMajorEmployer)
-      || isFinanceRole(offer) || (isDataScientistRole(offer) && !manuallyVerifiedMajorEmployer)) return null;
-  // User-approved MST records may contain a Data Scientist title when the verified\n  // domain explicitly identifies a Plan B industrial data-analysis mission.\n  // This exception does not apply to automatically discovered Data Scientist offers.\n  // Individually validated user-curated internships can have engineering
-  // titles even when the actual mission is BI / data analysis. The explicit
-  // domain stored in the verified MonStage record determines their plan;
-  // never promote generic Data Engineering/ML roles automatically.
-  if (manuallyVerifiedMajorEmployer) {
-    const curatedDomain = normalizeScope([offer.domain, offer.specialization].filter(Boolean).join(' '));
-    if (/\b(computer vision|traitement d images|imagerie|vision industrielle|image processing)\b/.test(curatedDomain)) return 'A';
-    if (/\b(data analyst|data analysis|analyse de donnees|business intelligence|bi)\b/.test(curatedDomain)) return 'B';
-  }
+  const title = normalizeScope(offer.title);
+  const context = normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' '));
+  if (!title || isFinanceRole(offer)) return null;
+  // Titles explicitly indicating data analysis/BI are Plan B even in medical
+  // imaging or manufacturing contexts. Engineering and scientist titles belong
+  // to applied ML / Plan A, not to the junior Data Analyst backup.
   if (isDataAnalystMission(offer) || isDataDrivenMaintenanceMission(offer)) return 'B';
   if (isVisionMission(offer) || isIndustrialMachineLearningMission(offer)) return 'A';
+  if (APPLIED_ML_ROLE.test(title)) return 'A';
+  if (SIGNAL_AND_ROBOTICS.test(title) && ENGINEERING_CONTEXT.test(context)) return 'A';
+  // This includes a verified industrial data-analysis mission with an
+  // engineering title, without admitting generic software development.
+  if (/\b(data analysis|analyse de donnees|business intelligence|data analytics|power bi|tableau de bord)\b/.test(context)
+      && /\b(stage|stagiaire|intern|analys|performance industrielle|donnees|data|reporting)\b/.test(title)
+      && !/\b(developpeur logiciel|software engineer|backend|frontend)\b/.test(title)) return 'B';
   return null;
 }
 export function isTargetOffer(offer: ScopeOffer): boolean {
