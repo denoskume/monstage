@@ -1,4 +1,4 @@
-import { isTargetOffer, getOfferPlan, PLAN_LABELS, type SearchPlan } from '../../../../../packages/shared/searchScope';
+import { getOfferPlan, PLAN_LABELS, type SearchPlan } from '../../../../../packages/shared/searchScope';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import './ProspectionPage.css';
@@ -6,7 +6,10 @@ import { PROSPECTION_EVENT } from '../targets/prospectionAdapter';
 
 type Status = 'À identifier' | 'À contacter' | 'Contacté' | 'Candidature envoyée' | 'Relance prévue' | 'Entretien' | 'Refus' | 'Terminé';
 type Lead = { id: string; company: string; site: string; team: string; role: string; contact: string; contactLink: string; channel: string; status: Status; date: string; followUp: string; notes: string; };
-function inScope(lead: Omit<Lead, 'id'>) { return isTargetOffer({company:lead.company,title:lead.role,domain:lead.team}); }
+// A spontaneous lead is a proposed internship mission, not a published vacancy.
+// Classify the role without requiring a "Stage" word, while the live offers
+// feed still requires a confirmed internship signal.
+function inScope(lead: Omit<Lead, 'id'>) { return getOfferPlan({company:lead.company,title:lead.role,domain:lead.team}) !== null; }
 const KEY = 'monstage.prospection.v1';
 const SAFRAN_REFUS_NOTE = 'Refus reçu par email Safran.AI le 02/11/2026 à 17 h 31 : aucune opportunité cohérente identifiée avec le profil. Candidature spontanée déposée le 25/10/2026. Pas de relance sur ce même dossier.';
 const SAFRAN_ORIGINAL_ROLE = 'Stage de fin d’études — Machine Learning et Computer Vision';
