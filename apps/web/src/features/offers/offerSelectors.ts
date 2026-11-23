@@ -226,14 +226,14 @@ export function selectVisibleOffers(
  */
 function nantesAreaRank(offer: InternshipOffer): number {
   const place = normalize(offer.city).replace(/[^a-z0-9 -]/g, ' ');
-  if (/(^|\\b)(nantes|saint herblain|saint-herblain|reze|orvault|carquefou|bouguenais|saint sebastien sur loire|sainte luce sur loire|vertou|la chapelle sur erdre|basse goulaine)(\\b|$)/.test(place)) return 2;
+  if (/(^|\b)(nantes|saint herblain|saint-herblain|reze|orvault|carquefou|bouguenais|saint sebastien sur loire|sainte luce sur loire|vertou|la chapelle sur erdre|basse goulaine)(\b|$)/.test(place)) return 2;
   if (normalize(offer.region).includes('pays de la loire')) return 1;
   return 0;
 }
 
 function isClosedOpportunity(offer: InternshipOffer): boolean {
-  return /\\b(ferme confirme|expiree?|pourvue?|closed|filled|retiree?)\\b/.test(normalize(offer.offerStatus)) ||
-    /\\b(refus|abandonne)\\b/.test(normalize(offer.applicationStatus));
+  return /\b(ferme confirme|expiree?|pourvue?|closed|filled|retiree?)\b/.test(normalize(offer.offerStatus)) ||
+    /\b(refus|abandonne)\b/.test(normalize(offer.applicationStatus));
 }
 
 function compareBest(a: InternshipOffer, b: InternshipOffer): number {
