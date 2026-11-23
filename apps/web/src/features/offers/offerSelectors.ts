@@ -46,7 +46,7 @@ export function offerIdentity(offer: InternshipOffer): string {
 
 function duplicateKey(offer: InternshipOffer): string {
   const canonical = canonicalOfferUrl(offer.applicationUrl);
-  return canonical ? 'url::' + canonical : 'role::' +
+  return canonical ? 'url::' + canonical + '::' + identityText(offer.company) : 'role::' +
     [offer.company, offer.title, offer.city].map(identityText).join('::');
 }
 

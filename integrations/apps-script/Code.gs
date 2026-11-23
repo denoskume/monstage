@@ -2472,12 +2472,20 @@ function addExternalApplication_(application) {
 
 function externalSourceDiagnostics_() {
   var properties = PropertiesService.getScriptProperties();
+  // Runner imports use incremental upserts and do not update native-sync
+  // counters. Count actual persisted rows instead of falsely reporting zero.
+  var spreadsheet = getSpreadsheet_();
+  function persistedRows(sheetName) {
+    var sheet = spreadsheet.getSheetByName(sheetName);
+    return sheet ? Math.max(0, sheet.getLastRow() - 1) : 0;
+  }
   return {
-    lever: Number(properties.getProperty('LEVER_LAST_COUNT') || 0),
-    greenhouse: Number(properties.getProperty('GREENHOUSE_LAST_COUNT') || 0),
-    ashby: Number(properties.getProperty('ASHBY_LAST_COUNT') || 0),
-    smartRecruiters: Number(properties.getProperty('SMARTRECRUITERS_LAST_COUNT') || 0),
-    workday: Number(properties.getProperty('WORKDAY_LAST_COUNT') || 0),
+    lever: persistedRows('Offres - Lever'),
+    greenhouse: persistedRows('Offres - Greenhouse'),
+    ashby: persistedRows('Offres - Ashby'),
+    smartRecruiters: persistedRows('Offres - SmartRecruiters'),
+    workday: persistedRows('Offres - Workday'),
+    countMode: 'persisted_rows_not_freshness',
     leverLastSync: properties.getProperty('LEVER_LAST_SYNC'),
     greenhouseLastSync: properties.getProperty('GREENHOUSE_LAST_SYNC'),
     ashbyLastSync: properties.getProperty('ASHBY_LAST_SYNC'),
