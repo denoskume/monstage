@@ -259,6 +259,12 @@ test('canonical duplicate URLs collapse source IDs but separate job references r
   expect(dedupeOffers([{ ...candidate, addedAt: null }, imported])[0].addedAt).toBeNull();
 });
 
+test('a reused vacancy URL across different employers does not hide either offer', () => {
+  const first = { ...base, id: 'company-a', company: 'Safran', title: 'Computer Vision Intern', applicationUrl: 'https://jobs.example/jobs/shared' };
+  const second = { ...base, id: 'company-b', company: 'Other Company', title: 'Stage Computer Vision 3D', applicationUrl: 'https://jobs.example/jobs/shared' };
+  expect(dedupeOffers([first, second]).map(offer => offer.id)).toEqual(['company-a', 'company-b']);
+});
+
 test('duplicate candidates preserve a tracked application, without treating it as new', () => {
   const tracked = { ...base, id: 'historic', applicationStatus: 'Entretien', applicationUrl: 'https://example.com/jobs/JR88', addedAt: null };
   const discovered = { ...base, id: 'fresh', applicationStatus: 'À candidater', applicationUrl: 'https://example.com/jobs/JR88', addedAt: '2026-11-16' };

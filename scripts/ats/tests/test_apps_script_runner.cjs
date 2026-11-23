@@ -117,4 +117,24 @@ assert.equal(context.strictRelevant_(
 assert.equal(context.strictRelevant_(
   'Stage Data Scientist',
   'Python et tableaux de bord'), true);
+context.getSpreadsheet_ = () => ({
+  getSheetByName: name => {
+    const stored = {
+      'Offres - Workday': 32, 'Offres - Greenhouse': 3,
+      'Offres - SmartRecruiters': 1, 'Offres - Lever': 0,
+      'Offres - Ashby': 0,
+    };
+    return Object.hasOwn(stored, name) ? { getLastRow: () => stored[name] + 1 } : null;
+  }
+});
+context.PropertiesService = {
+  getScriptProperties: () => ({ getProperty: () => null })
+};
+const diagnostic = context.externalSourceDiagnostics_();
+assert.equal(diagnostic.workday, 32, 'Runner-persisted rows must be visible in health diagnostics');
+assert.equal(diagnostic.greenhouse, 3);
+assert.equal(diagnostic.smartRecruiters, 1);
+assert.equal(diagnostic.lever, 0);
+assert.equal(diagnostic.countMode, 'persisted_rows_not_freshness');
+
 console.log('ATS incremental upserts: 61 preserved, idempotent, saved applications unchanged');

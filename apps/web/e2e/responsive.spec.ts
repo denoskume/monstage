@@ -14,8 +14,8 @@ const payload = {
   source: 'Stage Intelligence France',
   offers: [
     makeOffer(),
-    makeOffer({id:'outside-company',company:'Other Company',title:'Excluded Computer Vision Intern'}),
-    makeOffer({id:'data-backup',company:'Safran',title:'Data Analyst Intern',city:'Strasbourg',domain:'Data Analytics',specialization:'Business Intelligence',applicationStatus:'Candidature envoyée'}),
+    makeOffer({id:'outside-company',company:'Other Company',title:'Stage Computer Vision 3D',city:'Paris',applicationUrl:'https://company.example/jobs/outside'}),
+    makeOffer({id:'data-backup',company:'Safran',title:'Data Analyst Intern',city:'Strasbourg',domain:'Data Analytics',specialization:'Business Intelligence',applicationStatus:'Candidature envoyée',applicationUrl:'https://company.example/jobs/backup'}),
     makeOffer({ id: '2', company: 'Airbus', title: 'Machine Learning Intern', city: 'Paris', specialization: 'Machine Learning / Deep Learning', decisionScore: 96, priority: 'A', shortlist: false, applicationUrl: 'https://company.example/jobs/2' }),
     makeOffer({ id: '3', company: 'Thales', title: 'Data AI Intern', city: 'Rennes', specialization: 'Data / AI', decisionScore: 82, priority: 'B+', m2Fit: 'Possible', shortlist: false, applicationUrl: 'https://company.example/jobs/3' }),
     makeOffer({ id: '4', company: 'Alstom', title: 'ML Engineer Intern', city: 'Puteaux', specialization: 'Machine Learning / Deep Learning', decisionScore: 94, priority: 'A', applicationStatus: 'Candidature envoyée', appliedAt: '14/09/2026', shortlist: false, applicationUrl: 'https://company.example/jobs/4' }),
@@ -132,7 +132,7 @@ test('desktop authenticated flow works and sign out relocks the workspace', asyn
   await signIn(page);
 
   await expect(page.getByRole('button', { name: 'Account' })).toBeVisible();
-  await expect(page.getByText('Excluded Computer Vision Intern')).toHaveCount(0);
+  await expect(page.getByText('Stage Computer Vision 3D').first()).toBeVisible();
   // Switching to B must reveal the non-financial Data Analyst job, even
   // when the old CV-only "Recommended for me" preference was active.
   await page.getByRole('button', { name: /Plan B/ }).click();
