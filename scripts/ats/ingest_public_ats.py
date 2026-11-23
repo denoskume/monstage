@@ -305,6 +305,12 @@ def main():
                 "first_published_at": job.get("first_published_at") or job.get("published_at"),
             } for job in jobs if job.get("id")]
             print("Greenhouse", board, "fetched", len(jobs))
+            # Upload internship candidates only. Save the backend from
+            # receiving hundreds of permanent jobs per public board.
+            jobs = [job for job in jobs
+                    if re.search(r"\b(stage|stagiaire|internship|intern|pfe)\b",
+                                 str(job.get("title", "")), re.I)]
+            print("Greenhouse", board, "internship candidates", len(jobs))
             for offset in range(0, len(jobs), 200):
                 accepted += ingest("greenhouse", board, jobs[offset:offset+200])
         except Exception as exc:
