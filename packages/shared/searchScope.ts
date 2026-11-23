@@ -7,6 +7,9 @@ export interface ScopeOffer {
   specialization?: string | null;
   applicationStatus?: string | null;
   appliedAt?: string | null;
+  duration?: string | null;
+  start?: string | null;
+  m2Fit?: string | null;
 }
 export type SearchPlan = 'A' | 'B';
 export const PLAN_LABELS: Record<SearchPlan, string> = {
@@ -111,7 +114,13 @@ const ENGINEERING_CONTEXT = /\b(python|pytorch|tensorflow|opencv|machine learnin
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   const title = normalizeScope(offer.title);
   const context = normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' '));
-  if (!title || isFinanceRole(offer)) return null;
+  // One verified internship signal is required: title, length or the MSc
+  // internship metadata. Never widen discovery to ordinary full-time jobs.
+  const internship = /\b(stage|stagiaire|internship|intern|pfe)\b/.test(title) ||
+    /\b(mois|months|internship|stage)\b/.test(normalizeScope(offer.duration)) ||
+    (Boolean(offer.start) && /\b(2027|fevrier|february)\b/.test(normalizeScope(offer.start)) &&
+      /\b(oui|master|m2|bac 5)\b/.test(normalizeScope(offer.m2Fit)));
+  if (!title || !internship || isFinanceRole(offer)) return null;
   // Titles explicitly indicating data analysis/BI are Plan B even in medical
   // imaging or manufacturing contexts. Engineering and scientist titles belong
   // to applied ML / Plan A, not to the junior Data Analyst backup.
