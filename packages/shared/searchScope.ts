@@ -126,7 +126,7 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   if (SIGNAL_AND_ROBOTICS.test(title) && ENGINEERING_CONTEXT.test(context)) return 'A';
   // This includes a verified industrial data-analysis mission with an
   // engineering title, without admitting generic software development.
-  if (/\b(data analysis|analyse de donnees|business intelligence|data analytics|power bi|tableau de bord)\b/.test(context)
+  if (/\b(data analyst|analyste data|data analysis|analyse de donnees|business intelligence|data analytics|power bi|bi|tableau de bord)\b/.test(context)
       && /\b(stage|stagiaire|intern|analys|performance industrielle|donnees|data|reporting)\b/.test(title)
       && !/\b(developpeur logiciel|software engineer|backend|frontend)\b/.test(title)) return 'B';
   return null;
