@@ -301,6 +301,20 @@ function strictCompany_(company) {
     return group.slice(1).some(function (alias) { return text.indexOf(' ' + alias + ' ') !== -1; });
   });
 }
+/** Small, verified public ATS expansion; avoid querying every ATS tenant at
+ * every refresh. The 30 original groups remain priority, not an exclusion.
+ */
+var EXPANDED_PUBLIC_ATS_COMPANIES_ = [
+  'Owkin', 'Mistral AI', 'Nabla', 'ILLUIN Technology', 'ScorePlay',
+  'Sopra Steria', 'Bosch Group', 'Eurofins', 'ALTEN',
+  'Scaleway', 'MARGO'
+];
+function allowedPublicSource_(company) {
+  return strictCompany_(company) ||
+    EXPANDED_PUBLIC_ATS_COMPANIES_.some(function (value) {
+      return scopeNorm_(company) === scopeNorm_(value);
+    });
+}
 var SCOPE_FINANCE_ = /\b(finance|financial|financier|financiere|financement|banque|bancaire|banking|insurance|assurance|actuariat|actuarial|comptabilite|accounting|controle de gestion|gestion financiere|tresorerie|treasury|trading|investment|investissement|credit risk|credit analyst|risque de credit|audit financier|audit comptable|marches financiers|financial markets)\b/;
 var SCOPE_SCIENTIST_ = /\b(data scientist|data science|scientifique des donnees|science des donnees|scientifique de donnees)\b/;
 var SCOPE_ANALYST_ = /\b(data analyst(?:e|s)?|analyste data|analyste de donnees|analyste des donnees|bi analyst|analyste bi|analyste business intelligence|business intelligence analyst|reporting analyst|analyste reporting|data analytics|data analysis|analyse de donnees|analyse des donnees|business intelligence|power bi|tableaux? de bord|data insights)\b/;
@@ -327,16 +341,22 @@ function strictRelevant_(title, context) {
   // incidental "finance" word in the entire job description.
   var roleContext = scopeNorm_(String(context || '').slice(0,420));
   var financeDepartment = /\b(direction financiere|direction finance|departement finance|finance department|equipe finance|finance team|service financier|service finance|audit financier|controle de gestion|comptabilite|accounting department)\b/.test(roleContext);
-  if (SCOPE_FINANCE_.test(name) || financeDepartment || SCOPE_SCIENTIST_.test(name)) return false;
+  if (SCOPE_FINANCE_.test(name) || financeDepartment) return false;
   var analyticalContext = scopeNorm_(context);
   var dataDrivenMaintenance = !SCOPE_FINANCE_.test(name) && !SCOPE_SCIENTIST_.test(name) &&
     /\b(maintenance|performance industrielle|maintenance predictive)\b/.test(name) &&
     SCOPE_ANALYST_.test(analyticalContext);
   var appliedIndustrialML = SCOPE_INDUSTRIAL_ML_TITLE_.test(name) && SCOPE_INDUSTRIAL_ML_CONTEXT_.test(full);
-  return strictAnalyst_(title) || strictVision_(title, context) || dataDrivenMaintenance || appliedIndustrialML;
+  var broadAppliedML = /\\b(data scientist|data science|machine learning|deep learning|apprentissage automatique|traitement du signal|signal processing|ingenieur ia|ingenieure ia|ai engineer|robotic perception|perception robotique)\\b/.test(name);
+  var roboticsWithAppliedTech = /\\b(robotique|robotics|lidar|radar|acoustique|audio signal|systemes autonomes)\\b/.test(name) &&
+    /\\b(python|pytorch|machine learning|deep learning|vision|capteurs|sensors|imagerie|traitement d images|segmentation|signal processing|algorithme)\\b/.test(full);
+  return strictAnalyst_(title) || strictVision_(title, context) ||
+    dataDrivenMaintenance || appliedIndustrialML || broadAppliedML || roboticsWithAppliedTech;
 }
 function strictEligible_(company, title, context) {
-  return strictCompany_(company) && strictRelevant_(title, context);
+  // Employer names are for prioritization. Do not discard internships at
+  // relevant SMEs, laboratories, NGOs or large employers outside the core 30.
+  return Boolean(normalizeText_(company)) && strictRelevant_(title, context);
 }
 
 function targetSignalScore_(posting) {
@@ -649,7 +669,7 @@ function syncLeverSources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  LEVER_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
+  LEVER_SOURCES_.filter(function (source) { return allowedPublicSource_(source.company); }).forEach(function (source) {
     fetchLeverPostings_(source).forEach(function (posting) {
       recordAtsMetric_('Lever', 'fetched');
       var location = posting.categories && posting.categories.location ? posting.categories.location : '';
@@ -765,7 +785,7 @@ function syncGreenhouseSources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  GREENHOUSE_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
+  GREENHOUSE_SOURCES_.filter(function (source) { return allowedPublicSource_(source.company); }).forEach(function (source) {
     fetchGreenhouseJobs_(source).forEach(function (job) {
       recordAtsMetric_('Greenhouse', 'fetched');
       var posting = greenhouseAsTargetPosting_(job);
@@ -904,7 +924,7 @@ function syncAshbySources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  ASHBY_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
+  ASHBY_SOURCES_.filter(function (source) { return allowedPublicSource_(source.company); }).forEach(function (source) {
     fetchAshbyJobs_(source).forEach(function (job) {
       recordAtsMetric_('Ashby', 'fetched');
       if (job.isListed === false) return;
@@ -1067,7 +1087,7 @@ function syncSmartRecruitersSources_() {
   var sheet = spreadsheet.getSheetByName(sheetName) || spreadsheet.insertSheet(sheetName);
   var rows = [];
 
-  SMARTRECRUITERS_SOURCES_.filter(function (source) { return strictCompany_(source.company); }).forEach(function (source) {
+  SMARTRECRUITERS_SOURCES_.filter(function (source) { return allowedPublicSource_(source.company); }).forEach(function (source) {
     smartRecruitersList_(source).forEach(function (job) {
       recordAtsMetric_('SmartRecruiters', 'fetched');
       if (!smartRecruitersIsInternship_(job)) { recordAtsMetric_('SmartRecruiters', 'notInternship'); return; }
