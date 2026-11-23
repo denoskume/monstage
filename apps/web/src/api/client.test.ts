@@ -61,7 +61,7 @@ test('discovers relevant stages nationwide while retaining previously tracked ap
   vi.stubEnv('VITE_MONSTAGE_API_URL', 'https://monstage-auth.example');
   const allowed = {id:'a',company:'Valeo',title:'Stage traitement d’images'};
   const tracked = {id:'b',company:'Inspemon',title:'Computer Vision',applicationStatus:'Entretien'};
-  const other = {id:'c',company:'Google',title:'Computer Vision'};
+  const other = {id:'c',company:'Google',title:'Stage Computer Vision'};
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok:true,status:200,json:async () => ({...payload,offers:[allowed,tracked,other]})}));
   const result = await fetchOffers('token');
   expect(result.offers).toEqual([allowed,tracked,other]);
