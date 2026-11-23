@@ -4,7 +4,6 @@ The Apps Script backend validates location, internship status and relevance befo
 No job posting dates are inferred: only original ATS timestamps are passed through.
 """
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import os
 import re
 import sys
@@ -39,7 +38,9 @@ def fetch_json_with_backoff(request, timeout=22):
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 return json.load(response)
         except urllib.error.HTTPError as exc:
-            if exc.code not in (429, 500, 502, 503, 504) or attempt == 3:
+            # Do not hammer a portal after a 429; the next scheduled run
+            # provides the cooldown. Retrying 429 is counterproductive.
+            if exc.code == 429 or exc.code not in (500, 502, 503, 504) or attempt == 3:
                 raise
             retry_after = (exc.headers or {}).get("Retry-After", "")
             try:
@@ -95,25 +96,28 @@ def workday_details(tenant, host, site, external_path):
 
 
 def enrich_workday_candidates(tenant, host, site, jobs):
-    """Attach job-specific descriptions; report incomplete details separately."""
+    """Enrich a small bounded batch sequentially without an HTTP burst.
+
+    All other listing-only candidates are still submitted; the gateway will
+    classify them as unconfirmed instead of treating missing details as 0 jobs.
+    """
     successes, failures = 0, 0
-    with ThreadPoolExecutor(max_workers=2) as pool:
-        futures = {
-            pool.submit(workday_details, tenant, host, site, job["externalPath"]): job
-            for job in jobs
-        }
-        for future in as_completed(futures):
-            job = futures[future]
-            try:
-                detail = future.result()
-                if detail and detail.get("jobDescription"):
-                    successes += 1
-                else:
-                    failures += 1
-                if detail:
-                    job["details"] = detail
-            except (OSError, ValueError):
+    for job in jobs[:5]:
+        try:
+            detail = workday_details(tenant, host, site, job["externalPath"])
+            if detail and detail.get("jobDescription"):
+                successes += 1
+            else:
                 failures += 1
+            if detail:
+                job["details"] = detail
+        except urllib.error.HTTPError as exc:
+            failures += 1
+            if exc.code == 429:
+                break
+        except (OSError, ValueError):
+            failures += 1
+        time.sleep(0.5)
     return successes, failures
 
 
@@ -125,17 +129,20 @@ def refresh_workday():
     across 3 cycles; every run still covers BOTH plans and all nine configured
     tenants. Never mistake a rate-limited source for 'no internships'.
     """
+    # One listing search per tenant, once every 3 hours. The term cycles
+    # across both plans instead of 4+ parallel keywords on each invocation.
     term_groups = (
-        ("stage vision", "stage image", "stage data analyst", "power bi"),
-        ("stage computer vision", "stage traitement image", "stage data", "analyse de données"),
-        ("stage machine learning", "stage maintenance", "stage 2027", "stage data analyste"),
+        ("stage",), ("stage data analyst",), ("stage image",),
+        ("stage machine learning",), ("stage data",),
+        ("stage vision",), ("stage maintenance",),
     )
-    rotation = int(time.time() // 3600) % len(term_groups)
+    rotation = int(time.time() // (3 * 3600)) % len(term_groups)
     selected_terms = term_groups[rotation]
     print("Workday throttled keyword rotation", rotation, "of", len(term_groups),
           "terms", len(selected_terms), "covering Plans A/B")
     accepted = 0
     failures = []
+    reached = 0
     for tenant, host, site in WORKDAY:
         jobs = {}
         successes = 0
@@ -176,6 +183,7 @@ def refresh_workday():
         ]
         print("Workday", tenant, "internship-title candidates", len(candidates))
         if successes:
+            reached += 1
             enriched, incomplete = enrich_workday_candidates(tenant, host, site, candidates)
             print("Workday", tenant, "job descriptions retrieved", enriched,
                   "missing/blocked detail pages", incomplete)
@@ -188,12 +196,18 @@ def refresh_workday():
     print("Workday runner accepted", accepted, "warnings", len(failures))
     for message in failures[:12]:
         print("Workday warning:", message)
-    if failures:
-        raise RuntimeError("Workday degraded / partial failure: " + "; ".join(failures[:8]))
+    if not reached:
+        raise RuntimeError("No Workday tenant was reachable; all previous snapshots preserved")
+    # Partial ATS rate limits are logged as degraded coverage, not a full
+    # workflow failure that sends repeated GitHub failure emails.
     return accepted
 
-GREENHOUSE = []
-SMARTRECRUITERS = ["veoliaenvironnementsa"]
+# Only previously configured and employer-verified public ATS boards.
+# Expand coverage by discipline without high-volume anonymous crawling.
+GREENHOUSE = ["artefactjobs", "mirakllabs", "mirakl"]
+SMARTRECRUITERS = [
+    "veoliaenvironnementsa", "SopraSteria1", "BoschGroup", "Eurofins", "alten"
+]
 
 
 def read_json(url):
@@ -298,29 +312,30 @@ def main():
     for company in SMARTRECRUITERS:
         try:
             collected = {}
-            for phrase in ("stage data", "stage data analyst", "stage vision", "stage maintenance", "power bi"):
-                for offset in (0, 100, 200):
-                    params = urllib.parse.urlencode({
-                        "limit": 100, "offset": offset, "country": "fr", "q": phrase
-                    })
-                    url = ("https://api.smartrecruiters.com/v1/companies/"
-                           + urllib.parse.quote(company) + "/postings?" + params)
-                    feed = read_json(url)
-                    batch = feed.get("content") or []
-                    for job in batch:
-                        if job.get("id"):
-                            collected[str(job["id"])] = {
-                                "id": job.get("id"),
-                                "name": job.get("name"),
-                                "ref": job.get("ref"),
-                                "releasedDate": job.get("releasedDate"),
-                                "location": job.get("location") or {},
-                                "department": job.get("department") or {},
-                                "function": job.get("function") or {},
-                                "typeOfEmployment": job.get("typeOfEmployment") or {},
-                            }
-                    if len(batch) < 100 or offset + len(batch) >= int(feed.get("totalFound") or 0):
-                        break
+            # Two bounded listing requests, never 5 terms × 3 pages.
+            # The gateway validates internship, France and Plan A/B relevance.
+            for offset in (0, 100):
+                params = urllib.parse.urlencode({
+                    "limit": 100, "offset": offset, "country": "fr", "q": "stage"
+                })
+                url = ("https://api.smartrecruiters.com/v1/companies/"
+                       + urllib.parse.quote(company) + "/postings?" + params)
+                feed = read_json(url)
+                batch = feed.get("content") or []
+                for job in batch:
+                    if job.get("id"):
+                        collected[str(job["id"])] = {
+                            "id": job.get("id"),
+                            "name": job.get("name"),
+                            "ref": job.get("ref"),
+                            "releasedDate": job.get("releasedDate"),
+                            "location": job.get("location") or {},
+                            "department": job.get("department") or {},
+                            "function": job.get("function") or {},
+                            "typeOfEmployment": job.get("typeOfEmployment") or {},
+                        }
+                if len(batch) < 100 or offset + len(batch) >= int(feed.get("totalFound") or 0):
+                    break
             jobs = list(collected.values())
             print("SmartRecruiters", company, "unique official postings", len(jobs))
             # The idempotent backend accepts mini-batches without source replacement.
@@ -335,8 +350,14 @@ def main():
     print("ATS runner ingestion: accepted", accepted, "errors", len(errors))
     for error in errors:
         print("ATS source warning:", error)
+    # HTTP 429 or a temporarily unavailable site must not generate failure
+    # mails after other providers were successfully processed.
+    fatal = [message for message in errors
+             if "Apps Script" in message or "/ingestion:" in message]
+    if fatal:
+        raise SystemExit("ATS backend ingestion failed: " + "; ".join(fatal[:4]))
     if errors:
-        raise SystemExit("ATS ingestion incomplete: " + "; ".join(errors[:8]))
+        print("ATS partial coverage: preserved last-known results; source diagnostics above")
 
 
 if __name__ == "__main__":
