@@ -116,5 +116,5 @@ assert.equal(context.strictRelevant_(
   'Finance Department. Financial reports et consolidation comptable'), false);
 assert.equal(context.strictRelevant_(
   'Stage Data Scientist',
-  'Python et tableaux de bord'), false);
+  'Python et tableaux de bord'), true);
 console.log('ATS incremental upserts: 61 preserved, idempotent, saved applications unchanged');

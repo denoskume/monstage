@@ -73,11 +73,21 @@ class AtsIngestionTests(TestCase):
         self.assertTrue(all(p["merge"] is True for p in calls))
         self.assertEqual([i for p in calls for i in [j["id"] for j in p["jobs"]]], list(range(75)))
 
-    def test_retries_only_transient_429_errors(self):
+    def test_429_stops_requests_and_waits_until_next_scheduled_run(self):
         from urllib.error import HTTPError
         limited = HTTPError("https://ratp.example", 429, "Too Many Requests", {}, None)
+        with mock.patch.object(ats.urllib.request, "urlopen", side_effect=limited) as fetch, \
+             mock.patch.object(ats.time, "sleep") as sleep:
+            with self.assertRaises(HTTPError):
+                ats.workday_search("ratp", "wd3", "RATP_Externe", "stage data")
+        fetch.assert_called_once()
+        sleep.assert_not_called()
+
+    def test_retries_transient_503_once(self):
+        from urllib.error import HTTPError
+        temporarily_unavailable = HTTPError("https://ratp.example", 503, "Temporary", {}, None)
         with mock.patch.object(ats.urllib.request, "urlopen", side_effect=[
-            limited, fake_response({"jobPostings": [{"title": "Stage Data Analyst"}], "total": 1}),
+            temporarily_unavailable, fake_response({"jobPostings": [{"title": "Stage Data Analyst"}], "total": 1}),
         ]) as fetch, mock.patch.object(ats.time, "sleep") as sleep:
             jobs = ats.workday_search("ratp", "wd3", "RATP_Externe", "stage data")
         self.assertEqual(jobs[0]["title"], "Stage Data Analyst")

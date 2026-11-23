@@ -4,7 +4,7 @@ import { runInNewContext } from 'node:vm';
 import { it, expect } from 'vitest';
 import { TARGET_COMPANIES, targetCompany, isVisionMission, isTargetOffer } from '../../../../../packages/shared/searchScope';
 
-it('keeps Apps Script ingestion aligned with the same 30-company A/B scope', () => {
+it('keeps Apps Script classifications aligned while permitting vetted external employers', () => {
   const source = readFileSync(resolve(process.cwd(), 'integrations/apps-script/Code.gs'),'utf8');
   const helper = source.slice(source.indexOf('var TARGET_COMPANY_GROUPS_'),source.indexOf('function targetSignalScore_'));
   const ctx = runInNewContext(helper + ';({groups:TARGET_COMPANY_GROUPS_,company:strictCompany_,vision:strictVision_,relevant:strictRelevant_,eligible:strictEligible_})');
@@ -22,10 +22,10 @@ it('keeps Apps Script ingestion aligned with the same 30-company A/B scope', () 
     ['SNCF','Stage Data Analyst exploitation',true],
     ['Air France','Stage Data Analyst reporting',true],
     ['RATP','Stage Data Analyst fiabilité',true],
-    ['Airbus','Stage Data Scientist maintenance prédictive',false],
+    ['Airbus','Stage Data Scientist maintenance prédictive',true],
     ['Michelin','Stage Data Analyst Finance',false],
     ['Safran','Stage Machine Learning Engineer Computer Vision',true],
-    ['Bosch','Stage Computer Vision',false],
+    ['Bosch','Stage Computer Vision',true],
     ['EDF','Stage Data Analyst',true],
     ['Siemens Healthineers','Stage traitement images',true],
     ['Danone','Stage Ingénieur Maintenance Industrielle',false],
@@ -35,7 +35,7 @@ it('keeps Apps Script ingestion aligned with the same 30-company A/B scope', () 
     expect(isTargetOffer({company,title})).toBe(expected);
   }
 });
-it('surfaces explicitly vetted engineering-titled Data Analyst offers without unlocking arbitrary other companies', () => {
+it('surfaces verified roles at any employer, including engineering-titled curated Plan B offers', () => {
   expect(isTargetOffer({ id: 'MST-JR10446777', company: 'Airbus Atlantic',
     title: 'STAGE 2027 - Ingénieur data et qualité fournisseurs', domain: 'Data Analyst / BI' })).toBe(true);
   expect(isTargetOffer({ id: 'MST-ATLANTIC-FVMOM', company: 'Groupe Atlantic',
@@ -43,5 +43,5 @@ it('surfaces explicitly vetted engineering-titled Data Analyst offers without un
   expect(isTargetOffer({ id: 'MST-SATELLITE-001', company: 'Grand Groupe Industriel',
     title: 'Stage traitement images', domain: 'Computer Vision / traitement d’images' })).toBe(true);
   expect(isTargetOffer({ company: 'Grand Groupe Industriel',
-    title: 'Stage traitement images', domain: 'Computer Vision' })).toBe(false);
+    title: 'Stage traitement images', domain: 'Computer Vision' })).toBe(true);
 });

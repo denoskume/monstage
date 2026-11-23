@@ -23,9 +23,9 @@ describe('ProspectionPage', () => {
     expect(screen.getByText(/Candidature spontanée clôturée/)).toBeInTheDocument();
     expect(screen.getByRole('link',{name:'Consulter le dossier conservé'})).toHaveAttribute('href','/workspace?offer=EXT-SAFRANAI-20261025');
     expect(screen.queryByRole('link',{name:'Candidature spontanée officielle'})).not.toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
     fireEvent.click(screen.getByRole('button',{name:/Ajouter les pistes Safran/}));
-    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(3);
+    expect(JSON.parse(localStorage.getItem('monstage.prospection.v1') || '[]')).toHaveLength(4);
   });
   it('prefills and saves an Alstom Plan B spontaneous application', () => {
     render(<MemoryRouter initialEntries={['/prospection?company=Alstom&plan=B']}><ProspectionPage /></MemoryRouter>);

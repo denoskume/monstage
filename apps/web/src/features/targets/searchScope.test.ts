@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { TARGET_COMPANIES, targetCompany, getOfferPlan, isTargetOffer, restrictOffersPayload } from '../../../../../packages/shared/searchScope';
 
-describe('thirty target groups · A/B only', () => {
+describe('thirty priority groups · open A/B discovery', () => {
   it('targets exactly thirty groups in eight sectors', () => {
     expect(TARGET_COMPANIES).toHaveLength(30);
     expect(new Set(TARGET_COMPANIES.map(group => group[0])).size).toBe(30);
@@ -35,19 +35,19 @@ describe('thirty target groups · A/B only', () => {
     expect((restrictOffersPayload({offers}) as {offers:typeof offers}).offers).toHaveLength(5);
   });
 
-  it('keeps one explicitly saved BNP offer without adding a 31st monitored company', () => {
+  it('keeps BNP visible without adding a 31st priority company', () => {
     const manual = {id:'BNP-RHG27-002',company:'BNP Paribas',title:'Stage - Data Analyst RH Power BI H/F'};
     expect(getOfferPlan(manual)).toBe('B');
     expect(isTargetOffer(manual)).toBe(true);
     expect(targetCompany('BNP Paribas')).toBeNull();
-    expect(getOfferPlan({...manual,id:'UNTRACKED-BNP'})).toBeNull();
+    expect(getOfferPlan({...manual,id:'UNTRACKED-BNP'})).toBe('B');
   });
 
-  it('excludes companies outside the thirty, even if the title matches', () => {
+  it('discovers matching internships at additional employers while keeping thirty priority groups', () => {
     for (const company of ['Orange', 'Capgemini', 'Wabtec', 'Bosch', 'RTX', 'KPMG']) {
       expect(targetCompany(company)).toBeNull();
-      expect(isTargetOffer({company,title:'Stage Computer Vision'})).toBe(false);
-      expect(isTargetOffer({company,title:'Stage Data Analyst'})).toBe(false);
+      expect(isTargetOffer({company,title:'Stage Computer Vision'})).toBe(true);
+      expect(isTargetOffer({company,title:'Stage Data Analyst'})).toBe(true);
     }
     expect(targetCompany('Siemens')).toBeNull();
     expect(targetCompany('Siemens Healthineers')).toBe('Siemens Healthineers');
@@ -61,12 +61,12 @@ describe('thirty target groups · A/B only', () => {
     expect(getOfferPlan({company:'Danone',title:'Stage technicien maintenance mécanique',domain:'Maintenance mécanique'})).toBeNull();
   });
 
-  it('rejects finance and Data Scientist; accepts predictive industrial ML and vision for A', () => {
+  it('rejects finance and generic work while including applied Data Science and vision in Plan A', () => {
     expect(isTargetOffer({company:'Michelin',title:'Stage Data Analyst Finance'})).toBe(false);
-    expect(isTargetOffer({company:'Renault Group',title:'Stage Data Scientist maintenance prédictive'})).toBe(false);
+    expect(isTargetOffer({company:'Renault Group',title:'Stage Data Scientist maintenance prédictive'})).toBe(true);
     expect(getOfferPlan({company:'Alstom',title:'Stage Machine Learning Engineer maintenance prédictive'})).toBe('A');
     expect(getOfferPlan({company:'Safran',title:'Stage Ingénieur Développement Machine Learning pour maintenance aéronautique'})).toBe('A');
-    expect(isTargetOffer({company:'Alstom',title:'Stage Machine Learning Engineer - plateforme commerciale'})).toBe(false);
+    expect(isTargetOffer({company:'Alstom',title:'Stage Machine Learning Engineer - plateforme commerciale'})).toBe(true);
     expect(isTargetOffer({company:'Alstom',title:'Stage maintenance mécanique'})).toBe(false);
     expect(getOfferPlan({company:'EDF',title:'Stage - Data Analyste - Prévisions de Consommation Énergétique F/H'})).toBe('B');
     expect(isTargetOffer({company:'Alstom',title:'Stage Marketing'})).toBe(false);

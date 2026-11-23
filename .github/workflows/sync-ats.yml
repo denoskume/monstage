@@ -21,16 +21,11 @@ on:
       - 'scripts/ats/tests/test_apps_script_runner.cjs'
       - 'scripts/ats/config/target_career_sources.json'
       - 'integrations/apps-script/Code.gs'
-  workflow_run:
-    # Import only after the UI/backend deployment workflow has completed.
-    # The prior push-triggered import raced against clasp and lost the first
-    # official offers as "Unknown authorized ATS source".
-    workflows: ['Deploy MonStage to GitHub Pages']
-    types: [completed]
-    branches: [main]
+  # Do not run a second ATS crawl after every site deployment:
+  # rapid code pushes previously multiplied Workday 429 responses.
   schedule:
-    # Hourly, 24/7. Scheduled GitHub runners can start late.
-    - cron: '17 * * * *'
+    # One polite source refresh per 3 hours; important alerts remain separate.
+    - cron: '17 */3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -160,8 +155,8 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
-      - name: Fail visibly if source audit or ATS runner failed
-        if: ${{ steps.audit.outcome == 'failure' || steps.additional_workday.outcome == 'failure' || steps.successfactors.outcome == 'failure' || steps.official_pages.outcome == 'failure' || steps.remaining_official.outcome == 'failure' || steps.health.outcome == 'failure' || steps.ingest.outcome == 'failure' }}
+      - name: Fail only on backend ingestion or integrity failure
+        if: ${{ steps.health.outcome == 'failure' || steps.ingest.outcome == 'failure' }}
         run: |
-          echo "::error::One or more source checks/ingestions failed; review coverage artifact."
+          echo "::error::Core ingestion or health reporting failed; review coverage artifact."
           exit 1

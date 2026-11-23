@@ -221,8 +221,25 @@ export function selectVisibleOffers(
   return sortOffers(filteredOffers, sort);
 }
 
+/** Travel-from-Nantes priority, without hiding strong opportunities elsewhere.
+ * Towns here are in or very near Nantes Métropole; no relocation required.
+ */
+function nantesAreaRank(offer: InternshipOffer): number {
+  const place = normalize(offer.city).replace(/[^a-z0-9 -]/g, ' ');
+  if (/(^|\b)(nantes|saint herblain|saint-herblain|reze|orvault|carquefou|bouguenais|saint sebastien sur loire|sainte luce sur loire|vertou|la chapelle sur erdre|basse goulaine)(\b|$)/.test(place)) return 2;
+  if (normalize(offer.region).includes('pays de la loire')) return 1;
+  return 0;
+}
+
+function isClosedOpportunity(offer: InternshipOffer): boolean {
+  return /\b(ferme confirme|expiree?|pourvue?|closed|filled|retiree?)\b/.test(normalize(offer.offerStatus)) ||
+    /\b(refus|abandonne)\b/.test(normalize(offer.applicationStatus));
+}
+
 function compareBest(a: InternshipOffer, b: InternshipOffer): number {
-  return (verifiedCvMatchScore(b) ?? -1) - (verifiedCvMatchScore(a) ?? -1)
+  return Number(isClosedOpportunity(a)) - Number(isClosedOpportunity(b))
+    || nantesAreaRank(b) - nantesAreaRank(a)
+    || (verifiedCvMatchScore(b) ?? -1) - (verifiedCvMatchScore(a) ?? -1)
     || (priorityRank[b.priority] ?? 0) - (priorityRank[a.priority] ?? 0)
     || (b.technicalFit ?? -1) - (a.technicalFit ?? -1)
     || recentValue(b) - recentValue(a)
