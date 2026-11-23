@@ -114,13 +114,9 @@ const ENGINEERING_CONTEXT = /\b(python|pytorch|tensorflow|opencv|machine learnin
 export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   const title = normalizeScope(offer.title);
   const context = normalizeScope([offer.title, offer.domain, offer.specialization].filter(Boolean).join(' '));
-  // One verified internship signal is required: title, length or the MSc
-  // internship metadata. Never widen discovery to ordinary full-time jobs.
-  const internship = /\b(stage|stagiaire|internship|intern|pfe)\b/.test(title) ||
-    /\b(mois|months|internship|stage)\b/.test(normalizeScope(offer.duration)) ||
-    (Boolean(offer.start) && /\b(2027|fevrier|february)\b/.test(normalizeScope(offer.start)) &&
-      /\b(oui|master|m2|bac 5)\b/.test(normalizeScope(offer.m2Fit)));
-  if (!title || !internship || isFinanceRole(offer)) return null;
+  // Role classification is reusable for spontaneous leads without a
+  // published vacancy; the published-offer feed applies a separate stage gate.
+  if (!title || isFinanceRole(offer)) return null;
   // Titles explicitly indicating data analysis/BI are Plan B even in medical
   // imaging or manufacturing contexts. Engineering and scientist titles belong
   // to applied ML / Plan A, not to the junior Data Analyst backup.
@@ -136,7 +132,13 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   return null;
 }
 export function isTargetOffer(offer: ScopeOffer): boolean {
-  return getOfferPlan(offer) !== null;
+  // The discovery feed is for internships only, not permanent engineering jobs.
+  const title = normalizeScope(offer.title);
+  const internship = /\b(stage|stagiaire|internship|intern|pfe)\b/.test(title) ||
+    /\b(mois|months|internship|stage)\b/.test(normalizeScope(offer.duration)) ||
+    (Boolean(offer.start) && /\b(2027|fevrier|february)\b/.test(normalizeScope(offer.start)) &&
+      /\b(oui|master|m2|bac 5)\b/.test(normalizeScope(offer.m2Fit)));
+  return internship && getOfferPlan(offer) !== null;
 }
 /** Preserve already-tracked applications even outside the 30-company discovery scope.
  * This affects the applications/interviews archive, not new-offer discovery.
