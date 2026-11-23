@@ -201,46 +201,13 @@ jobs:
           else
             echo "::warning::MONSTAGE_ARCHIVE_GITHUB_TOKEN is not configured; private PDF archiving will remain disabled."
           fi
-      - name: Force and diagnose external source sync
+      # Never run a multi-source ATS crawl during each web deployment.
+      # Repeated pushes used to re-query employer portals and trigger HTTP 429.
+      # apps-script/Code.gs updates are deployed in the independent job below;
+      # actual vacancy discovery is owned by the scheduled sync-ats workflow.
+      - name: Confirm ATS source refresh is independently scheduled
         if: steps.cloudflare.outputs.configured == 'true'
-        run: |
-          python - <<'PY'
-          import json, os, urllib.request
-
-          payload = json.dumps({
-              "gatewaySecret": os.environ["APPS_SCRIPT_GATEWAY_SECRET"],
-              "action": "syncExternalSources",
-          }).encode()
-
-          request = urllib.request.Request(
-              os.environ["APPS_SCRIPT_URL"],
-              data=payload,
-              headers={"Content-Type": "application/json"},
-              method="POST",
-          )
-          with urllib.request.urlopen(request, timeout=300) as response:
-              body = json.loads(response.read().decode())
-
-          print("External sync diagnostics:")
-          print(json.dumps(body.get("sync", {}), sort_keys=True))
-
-          failures = {
-              name: details.get("error")
-              for name, details in (body.get("sync") or {}).items()
-              if isinstance(details, dict) and details.get("error")
-          }
-          if failures:
-              print("Native Apps Script ATS warning:", json.dumps(failures, sort_keys=True))
-          expected = ["lever", "greenhouse", "ashby", "smartRecruiters", "workday"]
-          counts = {key: (body.get("sync") or {}).get(key, {}).get("count", 0) for key in expected}
-          print("Native ATS counts:", counts)
-          if not any(counts.values()):
-              print("Native ATS yielded zero; verifying alternate CI runner ingestion next.")
-          PY
-      # Workday and SmartRecruiters ingestion is owned by sync-ats.yml,
-      # which runs hourly and after this deployment completes successfully.
-      # Do not run a second multi-minute import here: duplicate concurrent
-      # queries provoke ATS rate limits and delay deployment readiness.
+        run: echo "No ATS crawl on deployment; source sync runs in sync-ats.yml."
 
       - name: Smoke test Apps Script offers backend
         if: steps.cloudflare.outputs.configured == 'true'
