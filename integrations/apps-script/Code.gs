@@ -356,7 +356,7 @@ function strictRelevant_(title, context) {
 function strictEligible_(company, title, context) {
   // Employer names are for prioritization. Do not discard internships at
   // relevant SMEs, laboratories, NGOs or large employers outside the core 30.
-  return Boolean(normalizeText_(company)) && strictRelevant_(title, context);
+  return Boolean(String(company || '').trim()) && strictRelevant_(title, context);
 }
 
 function targetSignalScore_(posting) {
