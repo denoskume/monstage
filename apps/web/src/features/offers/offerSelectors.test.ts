@@ -272,3 +272,10 @@ test('duplicate candidates preserve a tracked application, without treating it a
   expect(offer.applicationStatus).toBe('Entretien');
   expect(offer.addedAt).toBeNull();
 });
+
+
+test('best sort prioritizes technical fit nationally, not Nantes', () => {
+  const local = { ...base, id: 'local', city: 'Nantes', region: 'Pays de la Loire', technicalFit: 60 };
+  const national = { ...base, id: 'national', city: 'Toulouse', region: 'Occitanie', technicalFit: 99 };
+  expect(sortOffers([local, national], 'best').map(offer => offer.id)).toEqual(['national', 'local']);
+});
