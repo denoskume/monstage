@@ -207,7 +207,7 @@ export function DashboardPage() {
             <section className="db-mini-panel db-operational-card">
               <PanelHeader title="Conversion" detail="Campagne filtrée"/>
               {[
-                {label:'Opportunités',count:metrics.total,denominator:metrics.total,color:'#7565dc'},
+                {label:'Offres identifiées',count:metrics.total,denominator:metrics.total,color:'#7565dc'},
                 {label:'Candidatures envoyées',count:metrics.sent,denominator:metrics.total,color:'#7565dc'},
                 {label:'Retours recruteur',count:metrics.responses,denominator:metrics.sent,color:'#229b85'},
                 {label:'Entretiens',count:metrics.interviews,denominator:metrics.sent,color:'#ce873c'},
