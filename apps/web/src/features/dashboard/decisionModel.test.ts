@@ -64,9 +64,12 @@ test('a job advert incorrectly marked "Offre reçue" is not an employment offer'
   expect(m.offersReceived).toBe(1);
   expect(m.unverifiedOutcomes).toBe(1);
 });
-test('does not duplicate source records and excludes untracked unrelated jobs',()=>{
-  const extras=[...sample,sample[0],offer('noise','Stage Computer Vision','Unrelated Co','À candidater')];
-  expect(uniqueDashboardOffers(extras)).toHaveLength(4);
+test('matches expanded discovery scope, deduplicates vacancies and preserves tracked history',()=>{
+  const relevant=offer('new-company','Stage Computer Vision','New Company','À candidater');
+  const noise=offer('noise','Stage Comptabilité','Unrelated Co','À candidater');
+  const history=offer('history','Stage Comptabilité','Other Company','Refus',{appliedAt:'2026-10-10'});
+  const rows=uniqueDashboardOffers([...sample,sample[0],relevant,{...relevant,id:'duplicate'},noise,history]);
+  expect(rows.map(x=>x.id)).toEqual(['vision','analyst','interview','refus','new-company','history']);
 });
 
 test('weekly activity includes empty weeks and filters the exact week',()=>{
