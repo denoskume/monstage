@@ -997,3 +997,46 @@
 .db-screen .db-campaign-chart{min-height:145px}
 @media(prefers-reduced-motion:reduce){.db-pie-slice{transition:none}}
 @media(max-width:850px){.db-chart-toolbar button{font-size:.55rem;padding:3px 5px}.db-chart-zoom{font-size:.55rem;gap:4px}}
+
+
+/* Operational dashboard: readable, responsive, scrollable analytical workspace. */
+.db-screen .db-stage-content{display:block;overflow:auto;padding:20px;overscroll-behavior:contain;scrollbar-gutter:stable}
+.db-screen .db-primary{display:grid;height:auto;min-height:100%;grid-template-rows:auto auto auto;gap:16px;overflow:visible}
+.db-screen .db-kpis{gap:14px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.db-screen .db-kpis .db-metric{height:auto;min-height:126px;padding:16px 18px;gap:7px;border:1px solid #e8e6f0;border-radius:15px;box-shadow:0 3px 14px #28244106}
+.db-screen .db-kpis .db-metric:after{display:grid;top:14px;right:14px;width:32px;height:32px;color:var(--metric-accent);background:#f2effb}
+.db-screen .db-kpis .db-metric>span{font-size:.8rem;color:#5b6174;padding-right:32px}
+.db-screen .db-kpis .db-metric>strong{font-size:clamp(1.8rem,3vw,2.6rem);color:#20243a}
+.db-screen .db-kpis .db-metric>small{font-size:.74rem;white-space:normal;color:#646b7c}
+.db-kpi-progress,.db-conversion-track{height:5px;background:#efedf5;overflow:hidden;border-radius:99px}
+.db-kpi-progress i,.db-conversion-track i{display:block;height:100%;border-radius:inherit;background:var(--metric-accent,#7565dc);transition:width .2s ease}
+.db-screen .db-visual-panels{height:auto;overflow:visible;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch}
+.db-screen .db-mini-panel{height:auto;min-height:0;border:1px solid #e8e6f0;border-radius:16px;padding:18px;gap:13px;box-shadow:0 3px 14px #28244106}
+.db-screen .db-visual-panels>.db-mini-panel{min-height:390px}
+.db-screen .db-mini-panel-header h2,.db-operational-card .db-panel-header h2{font-size:1rem;color:#24263b;font-weight:760;letter-spacing:-.025em}
+.db-screen .db-campaign-chart{min-height:195px}
+.db-screen .db-pie-layout{grid-template-rows:180px auto;gap:12px}
+.db-screen .db-pie-graphic svg{max-width:235px;max-height:210px}
+.db-screen .db-pie-legend{grid-template-columns:1fr;gap:3px}
+.db-screen .db-pie-item{grid-template-columns:9px minmax(0,1fr) auto 44px;gap:7px;font-size:.72rem;min-height:25px;padding:3px}
+.db-screen .db-pie-item small{text-align:right;font-size:.68rem;color:#72758a;font-variant-numeric:tabular-nums}
+.db-screen .db-map-mini .db-google-map-shell--compact{height:auto!important;min-height:290px!important}
+.db-operational-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.db-screen .db-operational-card{min-height:250px;gap:12px}
+.db-operational-card .db-panel-header{margin:0;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.db-operational-card .db-panel-header span{font-size:.7rem;color:#74778b}
+.db-conversion-row{display:grid;grid-template-columns:minmax(0,1fr) auto 55px;align-items:center;gap:5px 10px;font-size:.76rem;color:#555b70}
+.db-conversion-row strong,.db-goal-label strong,.db-city-summary strong{font-variant-numeric:tabular-nums;color:#25263d}
+.db-conversion-row small{text-align:right;color:#75788a}
+.db-conversion-row .db-conversion-track{grid-column:1/-1}
+.db-operational-note{font-size:.68rem;color:#72758a;margin:0;line-height:1.45}
+.db-goal-number{display:flex;align-items:baseline;gap:9px;color:#62667a;font-size:.8rem}
+.db-goal-number strong{font-size:2.25rem;color:#24263b;letter-spacing:-.06em;line-height:1.1}
+.db-goal-label{display:flex;justify-content:space-between;font-size:.78rem;color:#555b70}
+.db-action-link{border:0;background:#f2efff;color:#5949b9;padding:9px 12px;border-radius:8px;text-align:left;font:inherit;font-size:.75rem;font-weight:700;cursor:pointer;margin-top:auto}
+.db-action-link:hover{background:#e8e2ff}
+.db-city-summary{display:grid;grid-template-columns:minmax(0,1fr) minmax(30px,.7fr) auto;gap:10px;align-items:center;border:0;background:transparent;text-align:left;font:inherit;font-size:.75rem;color:#555b70;padding:4px 0;cursor:pointer}
+.db-city-summary span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-city-summary:hover,.db-city-summary[aria-pressed=true]{color:#5949b9;background:#f6f3ff}
+@media(max-width:1100px){.db-screen .db-visual-panels{grid-template-columns:repeat(2,minmax(0,1fr))}.db-screen .db-map-mini{grid-column:1/-1}.db-screen .db-visual-panels>.db-map-mini{min-height:340px}}
+@media(max-width:780px){.db-screen .db-stage-content{padding:12px}.db-screen .db-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.db-screen .db-kpis .db-metric{min-height:120px;padding:12px}.db-screen .db-visual-panels,.db-operational-grid{grid-template-columns:1fr;gap:12px}.db-screen .db-map-mini{grid-column:auto}.db-screen .db-mini-panel{padding:14px}.db-screen .db-visual-panels>.db-mini-panel{min-height:350px}.db-screen .db-pie-layout{grid-template-rows:170px auto}.db-screen .db-pie-item{font-size:.75rem}.db-screen .db-campaign-legend{font-size:.7rem}}
