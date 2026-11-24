@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useOffers } from '../../hooks/useOffers';
 import { loadApplicationDossier, prepareApplicationDossier } from '../applications/applicationDossiers';
-import { publicProjectCatalog } from '../applications/publicProjectCatalog';
 import type { CvLanguage } from '../cv/cvStorage';
 import { useAuth } from '../../auth/useAuth';
 import { saveApplicationStatus } from '../../api/applications';
@@ -117,15 +116,6 @@ export function StudioPage() {
           ) : <p>Cette offre n’est pas disponible dans la liste actuelle. Aucune donnée existante n’a été modifiée.</p>}
         </section>
       ) : null}
-      <details className="card" style={{ padding: 18, marginBottom: 20 }}>
-        <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Catalogue GitHub vérifié — {publicProjectCatalog.length} projets publics et laboratoires</summary>
-        <ul style={{ paddingLeft: 20 }}>
-          {publicProjectCatalog.map(entry => <li key={entry.id} style={{ marginBottom: 9 }}>
-            <a href={entry.url} target="_blank" rel="noopener noreferrer">{entry.cv[language].name}</a>
-            <span style={{ marginLeft: 8, opacity: .75, fontSize: 12 }}>{entry.tags.slice(0, 4).join(' · ')}</span>
-          </li>)}
-        </ul>
-      </details>
       <div className="studio-grid">
         <article className="card studio-card">
           <div className="studio-card__icon" aria-hidden="true">CV</div>
