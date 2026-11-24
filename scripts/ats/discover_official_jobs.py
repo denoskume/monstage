@@ -37,7 +37,9 @@ PLAN_TERMS = {
         r"vision|traitement.{0,12}image|imagerie|image processing|"
         r"computer vision|maintenance predict|maintenance pr[eé]dict|"
         r"machine learning|apprentissage automatique|deep learning|"
-        r"inspection automat|perception|lidar", re.I
+        r"inspection automat|perception|lidar|radar|optronique|"
+        r"traitement.{0,12}signa|signal processing|algorithm|photogramm|"
+        r"fusion de capteurs|sensor fusion|data scientist|data science", re.I
     ),
     "B": re.compile(
         r"data|analyst|analyse de donn|business intelligence|"
@@ -47,7 +49,7 @@ PLAN_TERMS = {
 }
 NEGATIVE = re.compile(r"controle de gestion|contr[oô]le de gestion|"
                       r"finance|financial|bancaire|accounting|"
-                      r"data scientist|ing[eé]nieur data engineer", re.I)
+                      r"ing[eé]nieur data engineer", re.I)
 
 
 def hostname_allowed(company, hostname):
