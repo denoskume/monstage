@@ -229,6 +229,9 @@ export function CampaignStatusPie({offers,selected,onSelect}:PieProps) {
             onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();onSelect(part.id);}}}>
             <title>{part.label} · {part.count} ({total?Math.round(part.count/total*100):0} %)</title>
           </path>)}
+          <circle cx="60" cy="60" r="29" fill="#fff" pointerEvents="none"/>
+          <text x="60" y="59" textAnchor="middle" fontSize="15" fontWeight="800" fill="#29283f" pointerEvents="none">{total.toLocaleString('fr-FR')}</text>
+          <text x="60" y="69" textAnchor="middle" fontSize="6" fill="#777389" pointerEvents="none">Dossiers</text>
         </svg>
       </div>
       {detail&&<div className="db-status-tooltip" role="tooltip">
@@ -246,7 +249,7 @@ export function CampaignStatusPie({offers,selected,onSelect}:PieProps) {
             aria-label={'Filtrer statut '+part.label}>
             <i style={{backgroundColor:part.color}}/>
             <span>{part.label}</span>
-            <strong>{found?.count||0}</strong>
+            <strong>{found?.count||0}</strong><small>{total?((found?.count||0)/total*100).toLocaleString('fr-FR',{maximumFractionDigits:1}):0} %</small>
           </button>;
         })}
       </div>
