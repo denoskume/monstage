@@ -13,7 +13,7 @@ export interface ScopeOffer {
 }
 export type SearchPlan = 'A' | 'B';
 export const PLAN_LABELS: Record<SearchPlan, string> = {
-  A: 'Computer Vision & traitement d’images',
+  A: 'Vision, imagerie, signal, algorithmique & IA appliquée',
   B: 'Data Analyst · Industrie & opérations',
 };
 export function normalizeScope(value: string | null | undefined): string {
@@ -108,6 +108,7 @@ export function isIndustrialMachineLearningMission(offer: ScopeOffer): boolean {
  * independent from discovery, so previous applications remain untouched.
  */
 const APPLIED_ML_ROLE = /\b(machine learning|deep learning|apprentissage automatique|apprentissage profond|ml engineer|machine learning engineer|ingenieur ia|ingenieure ia|ai engineer|ingenieur intelligence artificielle|artificial intelligence|intelligence artificielle|computer vision|signal processing|traitement du signal|audio signal|image processing|robotic perception|perception robotique|data scientist|data science|scientifique des donnees|science des donnees)\b/;
+const SPECIALIZED_ENGINEERING = /\b(traitement (du|de|des) signaux?|signal processing|digital signal processing|traitement (audio|radar|lidar)|imagerie medicale|medical imaging|optronique|photogrammetrie|vision embarquee|perception 2d|perception 3d|sensor fusion|fusion de capteurs|ingenieur(?:e)? algorithmique|ingenieur(?:e)? algorithmes?|algorithm engineer|algorithm development|developpement d algorithmes|algorithmie|algorithmique)\b/;
 const SIGNAL_AND_ROBOTICS = /\b(signal|audio|acoustique|speech|lidar|radar|robotique|robotics|robotique mobile|systemes autonomes|autonomous systems|calibration de camera)\b/;
 const ENGINEERING_CONTEXT = /\b(python|pytorch|tensorflow|opencv|machine learning|deep learning|vision|imagerie|traitement d images|segmentation|classification|capteurs|sensors|algorithme|algorithm|intelligence artificielle|image processing|signal processing)\b/;
 
@@ -122,7 +123,7 @@ export function getOfferPlan(offer: ScopeOffer): SearchPlan | null {
   // to applied ML / Plan A, not to the junior Data Analyst backup.
   if (isDataAnalystMission(offer) || isDataDrivenMaintenanceMission(offer)) return 'B';
   if (isVisionMission(offer) || isIndustrialMachineLearningMission(offer)) return 'A';
-  if (APPLIED_ML_ROLE.test(title)) return 'A';
+  if (SPECIALIZED_ENGINEERING.test(title) || APPLIED_ML_ROLE.test(title)) return 'A';
   if (SIGNAL_AND_ROBOTICS.test(title) && ENGINEERING_CONTEXT.test(context)) return 'A';
   // This includes a verified industrial data-analysis mission with an
   // engineering title, without admitting generic software development.
