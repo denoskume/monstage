@@ -1,6 +1,7 @@
 import type { InternshipOffer } from '../../api/contract';
-import { getOfferPlan, isDataAnalystMission, isVisionMission, targetCompany } from '../../../../../packages/shared/searchScope';
+import { getOfferPlan, isTargetOffer, isDataAnalystMission, isVisionMission, targetCompany } from '../../../../../packages/shared/searchScope';
 import { sectors, dateKey, followUpDue, matchesCompany } from '../targets/targets';
+import { dedupeOffers } from '../offers/offerSelectors';
 
 export type DashboardPlan = 'all' | 'A' | 'B';
 export type DashboardStatus = 'À candidater' | 'À qualifier' | 'À vérifier' | 'Envoyée' | 'Relance' | 'Réponse' | 'Entretien' | 'Offre' | 'Refus' | 'Archivée';
@@ -70,19 +71,12 @@ export function statusGroup(offer: InternshipOffer): DashboardStatus {
   return 'À qualifier';
 }
 export function uniqueDashboardOffers(offers: InternshipOffer[]): InternshipOffer[] {
-  const ids = new Set<string>(); const knownLinks = new Set<string>();
-  return offers.filter(offer => {
-    if (!offer.id || ids.has(offer.id)) return false;
-    ids.add(offer.id);
-    const url = (offer.applicationUrl || '').split('?')[0].replace(/\/$/, '');
-    const normalizedUrl = url && url.toLowerCase();
-    if (normalizedUrl && knownLinks.has(normalizedUrl)) return false;
-    // Keep the 30-company feed and explicitly saved / tracked applications.
-    const eligible = Boolean(targetCompany(offer.company) || offer.id === 'BNP-RHG27-002' ||
-      offer.id.startsWith('prospection:') || hasSubmissionEvidence(offer) || statusGroup(offer) === 'Refus');
-    if (eligible && normalizedUrl) knownLinks.add(normalizedUrl);
-    return eligible;
-  });
+  // Match the Offers page discovery scope and vacancy identity. Historical
+  // applications remain visible even when they are outside today's scope.
+  return dedupeOffers(offers.filter(offer => Boolean(offer.id) &&
+    (isTargetOffer(offer) || offer.id === 'BNP-RHG27-002' ||
+      offer.id.startsWith('prospection:') || hasSubmissionEvidence(offer) ||
+      statusGroup(offer) === 'Refus' || statusGroup(offer) === 'Archivée')));
 }
 export function filterDashboardOffers(offers: InternshipOffer[], filters: DashboardFilters, now = new Date()): InternshipOffer[] {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
