@@ -75,6 +75,14 @@ describe('thirty priority groups · open A/B discovery', () => {
     expect(getOfferPlan({company:'Air France-KLM',title:'Stage Data Analyst',domain:'Imagerie'})).toBe('B');
   });
 
+  it('includes specialized MSc internships without vision keywords', () => {
+    for (const title of ['Stage Ingénieur algorithmique', 'Stage Traitement du signal', 'Stage Traitement des signaux', 'Stage Optronique', 'Stage Fusion de capteurs', 'Stage Perception 3D', 'Stage Data Scientist Imagerie', 'Stage Signal Processing']) {
+      expect(getOfferPlan({title})).toBe('A');
+      expect(isTargetOffer({title})).toBe(true);
+    }
+    expect(isTargetOffer({title:'Stage Développeur logiciel'})).toBe(false);
+  });
+
   it('never deletes original records when narrowing discovery', () => {
     const offers = [
       {company:'EDF',title:'Stage Data Analyst',applicationStatus:'Candidature envoyée'},
