@@ -28,6 +28,8 @@ WORKDAY_TERMS = (
     "analyse de données", "stage data", "stage maintenance", "stage 2027",
     "power bi", "stage computer vision", "stage machine learning",
     "stage traitement image", "stage data analyste",
+    "stage traitement signal", "stage algorithmique", "stage imagerie",
+    "stage perception", "stage data science", "stage optronique",
 )
 
 
@@ -135,6 +137,9 @@ def refresh_workday():
         ("stage",), ("stage data analyst",), ("stage image",),
         ("stage machine learning",), ("stage data",),
         ("stage vision",), ("stage maintenance",),
+        ("stage traitement signal",), ("stage algorithmique",),
+        ("stage imagerie",), ("stage perception",),
+        ("stage data science",), ("stage optronique",),
     )
     rotation = int(time.time() // (3 * 3600)) % len(term_groups)
     selected_terms = term_groups[rotation]
