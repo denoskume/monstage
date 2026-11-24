@@ -347,7 +347,7 @@ function strictRelevant_(title, context) {
     /\b(maintenance|performance industrielle|maintenance predictive)\b/.test(name) &&
     SCOPE_ANALYST_.test(analyticalContext);
   var appliedIndustrialML = SCOPE_INDUSTRIAL_ML_TITLE_.test(name) && SCOPE_INDUSTRIAL_ML_CONTEXT_.test(full);
-  var broadAppliedML = /\b(data scientist|data science|machine learning|deep learning|apprentissage automatique|traitement du signal|signal processing|ingenieur ia|ingenieure ia|ai engineer|robotic perception|perception robotique)\b/.test(name);
+  var broadAppliedML = /\b(data scientist|data science|machine learning|deep learning|apprentissage automatique|traitement du signal|signal processing|ingenieur ia|ingenieure ia|ai engineer|robotic perception|perception robotique|traitement des signaux|traitement de signaux|optronique|photogrammetrie|vision embarquee|perception 2d|perception 3d|sensor fusion|fusion de capteurs|ingenieur algorithmique|ingenieure algorithmique|algorithm engineer|algorithm development|developpement d algorithmes|algorithmique)\b/.test(name);
   var roboticsWithAppliedTech = /\b(robotique|robotics|lidar|radar|acoustique|audio signal|systemes autonomes)\b/.test(name) &&
     /\b(python|pytorch|machine learning|deep learning|vision|capteurs|sensors|imagerie|traitement d images|segmentation|signal processing|algorithme)\b/.test(full);
   return strictAnalyst_(title) || strictVision_(title, context) ||
