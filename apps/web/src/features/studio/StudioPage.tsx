@@ -135,7 +135,7 @@ export function StudioPage() {
         <article className="card studio-card">
           <div className="studio-card__icon" aria-hidden="true">CL</div>
           <div><h2>Cover Letter</h2></div>
-          <Link className="button button--secondary" to={offer ? `/cl?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cl'} aria-label="Open Cover Letter Studio">Ouvrir la lettre</Link>
+          <Link className="button button--secondary" to={offer ? `/cl?offer=${encodeURIComponent(offer.id)}&language=${language}` : '/cl'} aria-label="Open Cover Letter Studio">Ouvrir l'éditeur CL</Link>
         </article>
       </div>
     </section>
