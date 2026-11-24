@@ -1,3 +1,8 @@
+import { isTargetOffer } from '../../../../../packages/shared/searchScope';
+import { sortOffers } from '../offers/offerSelectors';
+import { resolveTrackingStage } from '../shortlist/trackingStage';
+import { getWorkspaceState } from '../workspace/workspaceStorage';
+import { withSavedManualOffers } from '../applications/thalesSavedOffer';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useOffers } from '../../hooks/useOffers';
@@ -28,6 +33,12 @@ export function StudioPage() {
     : activeOfferId === THALES_DATA_DOSSIER_ID ? thalesSavedOffer
     : activeOfferId ? data?.offers.find(item => item.id === activeOfferId) : undefined;
   const selectedOfferId = offerId || chosenOfferId;
+  const savedOffers = sortOffers(withSavedManualOffers(data?.offers ?? []).filter(item => {
+    const manual = item.id === EDF_EOD_DOSSIER_ID || item.id === THALES_DATA_DOSSIER_ID;
+    return (isTargetOffer(item) || manual) && !actions.isHidden(item.id) &&
+      actions.isSaved(item.id, item.shortlist) &&
+      resolveTrackingStage(item, actions.stages[item.id], getWorkspaceState(item.id).submitted, manual) === null;
+  }), 'best');
 
   // Each offer and language has its own saved, reviewable dossier.
   useEffect(() => {
@@ -85,7 +96,7 @@ export function StudioPage() {
   return (
     <section className="page studio-page">
       <h1 className="sr-only">Studio</h1>
-      {!offerId && data?.offers?.length ? <div className="card" style={{ padding: 20, marginBottom: 20 }}><label>Choisir une offre à préparer <select aria-label="Choisir une offre à préparer" value={chosenOfferId} onChange={event => setChosenOfferId(event.target.value)}><option value="">Sélectionner une offre</option>{data.offers.filter(item => item.applicationStatus === 'À candidater').slice(0, 150).map(item => <option key={item.id} value={item.id}>{item.company} — {item.title}</option>)}</select></label></div> : null}
+      {!offerId ? <div className="card" style={{ padding: 20, marginBottom: 20 }}><label>Choisir une offre à préparer <select aria-label="Choisir une offre à préparer" value={chosenOfferId} onChange={event => setChosenOfferId(event.target.value)}><option value="">{savedOffers.length ? "Sélectionner une offre enregistrée" : "Aucune offre enregistrée"}</option>{savedOffers.map(item => <option key={item.id} value={item.id}>{item.company} — {item.title}</option>)}</select></label></div> : null}
       {selectedOfferId ? (
         <section className="card" aria-label="Préparation de candidature" style={{ padding: 24, marginBottom: 24 }}>
           {loading && !data ? <p>Chargement de l’offre…</p> : offer ? (
