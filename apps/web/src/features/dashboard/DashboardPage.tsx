@@ -26,10 +26,10 @@ function formatMonth(s: string) {
   const date = new Date(s + '-01T12:00:00');
   return Number.isNaN(date.getTime()) ? s : date.toLocaleDateString('fr-FR', {month:'short', year:'2-digit'});
 }
-function Metric({ label, value, hint, accent }: {label:string; value:number|string; hint:string; accent?:string}) {
+function Metric({ label, value, hint, accent, progress }: {label:string; value:number|string; hint:string; accent?:string; progress?:number}) {
   return <article className="db-metric" style={{'--metric-accent':accent || '#3168d5'} as React.CSSProperties}>
     <span>{label}</span><strong>{typeof value === 'number' ? number.format(value) : value}</strong>
-    <small>{hint}</small>
+    <small>{hint}</small>{progress!==undefined&&<div className="db-kpi-progress" aria-hidden="true"><i style={{width:Math.max(0,Math.min(100,progress))+'%'}}/></div>}
   </article>;
 }
 function PanelHeader({title,detail}: {title:string;detail?:string}) {
@@ -118,6 +118,9 @@ export function DashboardPage() {
   const dashboardTitle = titleParts.length > 2
     ? 'Dashboard — ' + titleParts.slice(0, 2).join(' · ') + ' (+' + (titleParts.length-2) + ')'
     : dashboardFullTitle;
+  const ratio = (n:number,d:number) => d ? n/d*100 : 0;
+  const sentToday = shown.filter(o=>hasSubmissionEvidence(o)&&canonicalDate(o.appliedAt)===today).length;
+  const daysLeft = Math.max(0, Math.round((Date.parse('2026-12-31T00:00:00Z')-Date.parse(today+'T00:00:00Z'))/86400000));
   const sourceTime = data?.generatedAt && Number.isFinite(Date.parse(data.generatedAt))
     ? new Date(data.generatedAt).toLocaleString('fr-FR',{dateStyle:'short',timeStyle:'short'})
     : 'horodatage indisponible';
@@ -182,10 +185,10 @@ export function DashboardPage() {
       <main className="db-stage-content">
         <div className="db-primary">
           <section className="db-kpis" aria-label="Indicateurs clés">
-            <Metric label="Opportunités" value={metrics.total} hint={metrics.toApply+' à candidater'} accent="#9d86f6"/>
-            <Metric label="Progression" value={metrics.sent} hint="Candidatures envoyées" accent="#7679dc"/>
-            <Metric label="Taux de réponse" value={percent(metrics.responseRate)} hint={metrics.responses+' retour(s) recruteur'} accent="#7dc4ad"/>
-            <Metric label="Entretiens" value={metrics.interviews} hint={metrics.due+' relance(s) échue(s)'} accent="#b898f1"/>
+            <Metric label="Opportunités" value={metrics.total} hint={metrics.toApply+' à candidater'} accent="#7565dc" progress={ratio(metrics.toApply,metrics.total)}/>
+            <Metric label="Progression" value={metrics.sent} hint="Candidatures envoyées" accent="#7565dc" progress={ratio(metrics.sent,metrics.total)}/>
+            <Metric label="Taux de réponse" value={percent(metrics.responseRate)} hint={metrics.responses+' retours sur '+metrics.sent+' candidatures'} accent="#229b85" progress={metrics.responseRate}/>
+            <Metric label="Entretiens" value={metrics.interviews} hint={metrics.due+' relance(s) échue(s)'} accent="#ce873c" progress={metrics.interviewRate}/>
           </section>
           <div className="db-visual-panels">
             <CampaignLines offers={shown} now={now} selectedMonth={filters.sentMonth}
@@ -198,6 +201,31 @@ export function DashboardPage() {
               </div>
               <GoogleFranceMap cities={mapped} selectedCity={filters.city}
                 onCitySelect={city => toggleFilter('city',city)} compact/>
+            </section>
+          </div>
+          <div className="db-operational-grid">
+            <section className="db-mini-panel db-operational-card">
+              <PanelHeader title="Conversion" detail="Campagne filtrée"/>
+              {[
+                {label:'Opportunités',count:metrics.total,denominator:metrics.total,color:'#7565dc'},
+                {label:'Candidatures envoyées',count:metrics.sent,denominator:metrics.total,color:'#7565dc'},
+                {label:'Retours recruteur',count:metrics.responses,denominator:metrics.sent,color:'#229b85'},
+                {label:'Entretiens',count:metrics.interviews,denominator:metrics.sent,color:'#ce873c'},
+              ].map(row=><div className="db-conversion-row" key={row.label}><span>{row.label}</span><strong>{number.format(row.count)}</strong><small>{ratio(row.count,row.denominator).toLocaleString('fr-FR',{maximumFractionDigits:1})} %</small><div className="db-conversion-track"><i style={{width:Math.min(100,ratio(row.count,row.denominator))+'%',background:row.color}}/></div></div>)}
+              <p className="db-operational-note">Retours et entretiens rapportés aux candidatures envoyées.</p>
+            </section>
+            <section className="db-mini-panel db-operational-card">
+              <PanelHeader title="Objectifs de candidature" detail="31 déc. 2026"/>
+              <div className="db-goal-number"><strong>{daysLeft}</strong><span>jours avant l’échéance</span></div>
+              <div className="db-goal-label"><span>Aujourd’hui · objectif 10</span><strong>{sentToday}/10</strong></div>
+              <div className="db-conversion-track"><i style={{width:Math.min(100,sentToday*10)+'%',background:'#7565dc'}}/></div>
+              <div className="db-goal-label"><span>Relances échues</span><strong>{metrics.due}</strong></div>
+              <button className="db-action-link" type="button" onClick={()=>setPanel('queue')}>Voir les dossiers prioritaires →</button>
+            </section>
+            <section className="db-mini-panel db-operational-card">
+              <PanelHeader title="Villes principales" detail={cityGroups.length+' villes'}/>
+              {cityGroups.slice(0,5).map(row=><button className="db-city-summary" key={row.city} type="button" onClick={()=>toggleFilter('city',row.city)} aria-pressed={filters.city===row.city}><span>{row.city}</span><div className="db-conversion-track"><i style={{width:ratio(row.count,cityGroups[0]?.count||0)+'%',background:'#7565dc'}}/></div><strong>{row.count}</strong></button>)}
+              <button type="button" className="db-action-link" onClick={()=>setPanel('map')}>Explorer la carte →</button>
             </section>
           </div>
         </div>
