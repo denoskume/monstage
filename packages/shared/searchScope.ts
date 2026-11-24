@@ -104,7 +104,7 @@ export function isIndustrialMachineLearningMission(offer: ScopeOffer): boolean {
 }
 /** Explicit Data Analyst role takes Plan B precedence even when the department mentions imaging. */
 /** Nationwide discovery in fields relevant to the user's MSc.
- * Location and the 30 target companies affect ranking only. Tracking is kept
+ * No geographic priority; the 30 target companies are a discovery preference only. Tracking is kept
  * independent from discovery, so previous applications remain untouched.
  */
 const APPLIED_ML_ROLE = /\b(machine learning|deep learning|apprentissage automatique|apprentissage profond|ml engineer|machine learning engineer|ingenieur ia|ingenieure ia|ai engineer|ingenieur intelligence artificielle|artificial intelligence|intelligence artificielle|computer vision|signal processing|traitement du signal|audio signal|image processing|robotic perception|perception robotique|data scientist|data science|scientifique des donnees|science des donnees)\b/;
