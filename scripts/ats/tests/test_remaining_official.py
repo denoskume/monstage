@@ -314,7 +314,17 @@ class RemainingOfficialTests(unittest.TestCase):
         link=s["seed"][0]
         self.assertIsNone(verify_html(s,link,"<h1>Stage Data Analyst</h1><p>Boston, USA</p>"))
         self.assertIsNone(verify_html(s,link,"<h1>Senior Data Analyst</h1><p>Gentilly, France</p>"))
-        self.assertIsNone(verify_html(s,link,"<h1>Stage Data Scientist</h1><p>Gentilly, France</p>"))
+        self.assertIsNone(verify_html(s,link,"<h1>Stage Comptabilité</h1><p>Gentilly, France</p>"))
+
+    def test_three_cv_directions_are_eligible(self):
+        s = BY_COMPANY["Sanofi"]
+        for title in ("Stage Computer Vision", "Stage Data Scientist", "Stage Data Analyst Power BI"):
+            with self.subTest(title=title):
+                page = f"<h1>{title}</h1><p>Gentilly, France</p>"
+                record = verify_html(s, s["seed"][0], page)
+                self.assertIsNotNone(record)
+                self.assertEqual(record["title"], title)
+                self.assertEqual(record["location"], "Gentilly, France")
 
     def test_extracts_only_official_individual_job_links(self):
         s=BY_COMPANY["Stellantis"]
