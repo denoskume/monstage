@@ -48,8 +48,18 @@ class OfficialJobPageTests(unittest.TestCase):
            "jobLocation": {"address": {"addressCountry": "US", "addressLocality": "Boston"}}
         }</script>"""
         self.assertIsNone(verified_job("Alstom", URL, html))
-        data_scientist = "<h1>Stage Data Scientist</h1><p>Location: Paris, France</p>"
-        self.assertIsNone(verified_job("Alstom", URL, data_scientist))
+        irrelevant = "<h1>Stage Comptabilité</h1><p>Location: Paris, France</p>"
+        self.assertIsNone(verified_job("Alstom", URL, irrelevant))
+
+    def test_accepts_all_three_target_directions(self):
+        for title in ("Stage Computer Vision", "Stage Data Scientist", "Stage Data Analyst Power BI"):
+            with self.subTest(title=title):
+                html = f"<h1>{title}</h1><p>Location: Paris, France</p>"
+                url = "https://jobsearch.alstom.com/job/Paris-" + title.replace(" ", "-") + "/123456/"
+                record = verified_job("Alstom", url, html)
+                self.assertIsNotNone(record)
+                self.assertEqual(record["title"], title)
+                self.assertEqual(record["location"], "Paris, France")
 
     def test_rejects_off_domain_redirect(self):
         html = "<h1>Stage Data Analyst</h1><p>Location: Paris, France</p>"
